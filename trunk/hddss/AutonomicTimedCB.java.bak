@@ -1,0 +1,218 @@
+
+import java.util.Hashtable;
+
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/**
+ *
+ * @author aliriosa
+ */
+public class AutonomicTimedCB extends AgenteTimedCB{
+
+    double minTS  = 0;
+    double maxTS  = 0;
+    double ctrTS  = 0;
+
+    double iarrv[];
+    double larrv[];
+
+    long nrecv = 0;
+    long nts = 0;
+    
+    double meanOVH = -1.0;
+    
+    double now = 0;
+    double old = 0;
+    
+    double dmean = -1.0;
+    double dmin  = -1.0;
+    double dmax  = -1.0;
+
+    double RCRef = 0.0;
+    double RC    = 0.0;
+    
+    Hashtable<String, Integer> buffer = new Hashtable<String, Integer>();
+    
+    public AutonomicTimedCB() {
+        super();
+    }
+
+    public void setDesiredResourceConsumption(String v){
+        RCRef = Double.parseDouble(v);
+    }
+
+    public double computeSetPoint(){
+        
+        double maxOVH = (((double)(controle.n - 1))/controle.n);        
+        return (maxOVH * (RCRef - RC));
+
+    }
+
+    @Override
+    public void inicializacaoEspecifica() {
+        super.inicializacaoEspecifica();
+
+        iarrv = new double[controle.n];
+        larrv = new double[controle.n];
+
+        for(int i = 0; i < controle.n; i++) {
+            iarrv[i]  = 0;
+            larrv[i]  = 0;
+        }
+    }
+    @Override
+    public void processarRecepcao(Mensagem msg) {
+        nrecv++;
+        
+        estimateDelay(msg);
+
+        if(msg.tipo == TIMEDCB_TS){
+                nts++;
+        }
+
+        super.processarRecepcao(msg);
+
+    }
+
+    public void estimateDelay(Mensagem msg){
+
+        if(msg.conteudo instanceof ConteudoTimedCB){
+            ConteudoTimedCB content = (ConteudoTimedCB)msg.conteudo;
+            Acknowledge ack = content.vack[msg.destinatario];
+
+            //compute the round-trip-time
+            double rtt = msg.tempoRecepcao - ack.lsendTime;
+            
+            //compute the remote proc time
+            double ptime = (ack.rsendTime - ack.rrecvTime) * (1 - controle.maxro * controle.ro);
+
+            double delay = (rtt - ptime)/2;
+            
+            if(dmean < 0) dmean = delay;
+
+            dmean = 0.99 * dmean + 0.01 * delay;
+
+            if(dmin < 0){
+                dmin = dmean;
+                dmax = dmean;                
+            }
+
+            if(delay > dmax) dmax = 1.1 * delay;
+            if(delay < dmin) dmin = delay;
+
+            dmin = dmin * 0.99999 + delay * 0.0001;
+            dmax = dmax * 0.99999 + delay * 0.0001;
+            
+            
+            computeRC();
+
+        }
+        
+    }
+
+    public void computeRC(){
+        RC = 0;
+        
+        if(dmax > dmin){
+            RC = (dmean - dmin)/(dmax - dmin);
+        }
+        
+    }
+
+    @Override
+    public int getMaxTS() {
+
+        if(maxTS <= 0.0)
+            return super.getMaxTS();
+        
+        return (int)maxTS;
+    }
+
+
+    @Override
+    public int getDeltaMax() {
+        if(dmax < 0)
+            return super.getDeltaMax();
+        
+        return (int) round(dmax, 0);
+        
+    }
+
+    @Override
+    public int getDeltaMin() {
+        if(dmin < 0)
+            return super.getDeltaMin();
+        
+        return (int) round(dmin, 0);
+    }
+
+
+    @Override
+    public void processarEntrega(Mensagem msg) {
+        super.processarEntrega(msg);
+
+        if(msg.tipo == TIMEDCB_APP){
+
+            iarrv[msg.remetente] = clock - larrv[msg.remetente];
+            larrv[msg.remetente] = clock;
+            
+            estimateTSMax();
+
+        }
+        
+        old = now;
+        now = clock;
+        control();
+    }
+
+    public void estimateTSMax(){
+        for(int i =0; i < controle.n; i++){
+            if(iarrv[i] > maxTS){
+                maxTS = 1.1 * iarrv[i];
+            }else{
+                maxTS = 0.999 * maxTS + 0.001 * iarrv[i];
+            }
+        }
+    }
+
+    private double round(double v, int dig){
+        double pow = Math.pow(10, dig);
+        return Math.ceil(v * pow)/pow;
+    }
+
+    public void control(){
+        double error = computeSetPoint() - sensing();
+
+        double dtsOvh = (-1.0/maxTS) * ((controle.n - 1)/((double)controle.n)) * error;
+
+        double dt = now - old;
+        
+        double action =  1000 * dtsOvh * dt;
+        
+        ctrTS += action;
+
+        if(ctrTS > maxTS) ctrTS = maxTS;
+        
+        if(ctrTS < 0) ctrTS = 0;
+        
+        actuate(ctrTS);
+        
+    }
+    
+    public double sensing(){
+        double OVH = ((double)nts) / nrecv;
+
+        if(meanOVH < 0) meanOVH = OVH;
+        
+        meanOVH = 0.9 * meanOVH + 0.1 * OVH;
+
+        return meanOVH;
+    }
+
+    public void actuate(double value){
+        ts = (int)value;
+    }    
+}

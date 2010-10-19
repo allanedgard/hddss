@@ -1,0 +1,402 @@
+import org.apache.commons.math.stat.descriptive.*;
+
+public class Simulador  extends Thread
+{
+    java.io.PrintStream out;
+    char modo;
+    int clock;
+    int m;
+    int n;
+    int tempofinal;
+    Canal Meio[][];
+    Agente p[];
+    int contadoresBroadcast[];
+    int contadoresUnicast[];
+    Statistica atraso_recepcao;
+    Statistica tempo_transmissao;
+    Statistica atraso_entrega;
+
+    double DESVIO;
+    boolean debug_mode;
+    boolean fim;
+    char tipo;
+    int charge;
+    public static double ro = .001;
+    public static int maxro = 5;
+    public static Configurations config;
+    
+    public final void negociaCanal(String canal, int p_i, int p_j) {
+    	try {
+
+    	    Class c = Class.forName(canal);
+    	    Meio[p_i][p_j] =
+                    (Canal)
+                    c.newInstance();
+            Meio[p_i][p_j].inicializaCanal(p[p_i], p[p_j]);
+            
+            java.util.Iterator x = config.getKeys("canal.");
+            while (x.hasNext()) {
+                    String a = (String) x.next();
+                    Meio[p_i][p_j].definePropriedade(a.substring(6), config.getString(a));
+                }
+        } catch (Exception e) {
+                e.printStackTrace();
+    	}
+    }
+
+    public final int msgsOnFloat() {
+        int j=0;
+        for (int i=0;i<n;i++) {
+            j += p[i].Recepcao.totalMsgs(p[i].clock);
+        }
+        return j;
+    }
+
+    public final synchronized void  Enviar(Mensagem msg)
+    {
+        /*
+         * Verifica se a mensagem é multicast ou unicast
+         */
+        if (msg.relayTo == -1) {
+            if (msg.destinatario != n) {
+                contadoresUnicast[msg.tipo]++;
+                if (msg.remetente == msg.destinatario) {
+                    p[msg.destinatario].Recepcao.adiciona(p[msg.destinatario].clock+1, msg);
+                        
+                }
+                else {
+                    if (verificaCanal(msg.remetente, msg.destinatario))
+                        Meio[msg.remetente][msg.destinatario].entregaMensagem(msg);
+                }
+            }
+            else {
+                contadoresBroadcast[msg.tipo]++;
+                for (int k=0;k<n;k++) {
+                    if (msg.remetente == k) {
+                        p[k].Recepcao.adiciona(p[k].clock+1, msg);
+                    }
+                    else {
+                        if (verificaCanal(msg.remetente, k))
+                            Meio[msg.remetente][k].entregaMensagem(msg);
+                    }
+                }
+            }
+        }
+        else {
+                contadoresUnicast[msg.tipo]++;
+                if (msg.relayFrom == msg.relayTo) {
+                    // p[msg.relayTo].Recepcao.adiciona(p[msg.destinatario].clock+1, msg);
+                        
+                }
+                else {
+                    if (verificaCanal(msg.relayFrom, msg.relayTo))
+                        Meio[msg.relayFrom][msg.relayTo].entregaMensagem(msg);
+                }
+            
+        }
+    }
+
+    public final int obtemAtraso(int i, int j)
+    {
+                return (int) (Meio[i][j].atraso());
+         
+    }
+    
+    public final boolean verificaCanal(int i, int j) {
+        if (Meio[i][j] == null) {
+            return false;
+        }
+        else return Meio[i][j].status();
+            
+    }
+ 
+    public final synchronized void ok() {
+        m++;
+        if (m==n) {
+            fim = true;
+            try {
+                this.notifyAll();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }                 
+
+    }
+
+    public final synchronized void iniciaModoHwClock() {
+        Randomico r = new Randomico ();
+        int z=0;
+        int a;
+        int b;
+        try {
+            out.println("modo emulação de relógio");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        int i;
+        for (i=0;i<n;i++) {
+            p[i].iniciar();
+        }; 
+        int fim[] = new int[n];
+        for (i=0 ; i<n ; i++) {
+            fim[i]=0;
+        } 
+        int f;
+        f = 0;
+        while (f ==0) {
+            f=1;
+            for (i=0; i<n; i++) {
+                p[i].avancaTick();
+                if (p[i].clock >= this.tempofinal) 
+                    fim[i]=1;
+                else if (p[i].status()==false) {
+                           fim[i]=1; }
+                      else fim[i]=0;
+                f= f*fim[i];
+            }
+        }
+    } 
+    
+    public final synchronized void inicia() {
+        try {
+            out.println("modo thread");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        for(int i = 0; i < n; i++)
+        {
+            p[i].start();
+        }
+    
+                
+
+    } 
+    
+    public final synchronized void finaliza() {
+        for(int i = 0; i < n; i++)
+        {
+            p[i].stop();
+        }
+    } 
+    
+    public final boolean sincTicks(int j) {
+        double clockreal[] = new double[n];
+        double menor;
+        menor = Double.MAX_VALUE;
+        for (int i = 0;i<n;i++ ){
+            clockreal[i] = p[i].clock + ro * p[i].tick;
+            if (clockreal[i] < menor) menor = clockreal[i];
+        }
+        for (int i = 0;i<n;i++ )
+            if ( (p[i].tipo == 's') && p[i].status() ) 
+                if (Math.abs(clockreal[i] - clockreal[j]) > DESVIO ) {
+                    if (clockreal[j] == menor) {
+                            return true;            
+                        }
+                    else return false;
+            }
+        return true;
+    }
+    
+    public final double calculaDiferenca(int i, int j) {
+        double clockr_i, clockr_j;
+        clockr_i = p[i].clock + ro * p[i].tick;
+        clockr_j = p[j].clock + ro * p[j].tick;
+        return Math.abs(clockr_i - clockr_j);
+    }
+    
+    private final synchronized void verificaPausa() throws InterruptedException {
+        while (!fim) {
+            wait();
+        }
+    }
+    
+    public final void run()
+    {
+        m = 0;
+        Meio = new Canal[n][n];
+        p = new Agente[n];
+        
+        defineAgentesCanais();
+        
+        if (modo == 't') {
+        
+        inicia();
+        
+        try {
+        verificaPausa();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        finaliza();
+        
+        }
+        
+        else 
+            
+        iniciaModoHwClock();
+
+        estatisticas();
+    }
+
+    public void estatisticas() {
+        System.out.println("execucao terminada:");
+        java.util.Date data = new java.util.Date();
+        System.out.println(data.toString());
+        for (int i = 0; i< 256; i++){
+            if (contadoresUnicast[i] != 0) {
+                System.out.println("total de unicast classe "+i+" = "+contadoresUnicast[i]);
+            }
+            if (contadoresBroadcast[i] != 0) {
+                System.out.println("total de broadcast classe "+i+" = "+contadoresBroadcast[i]);
+            }
+        }
+        System.out.println("media atraso fim-a-fim = "+this.atraso_entrega.getMean()+", std dev atraso fim-a-fim = "+atraso_entrega.getStandardDeviation()  
+                           +", maximo atraso fim-a-fim = "+this.atraso_entrega.getMax()+", min atraso fim-a-fim = "+atraso_entrega.getMin() 
+                           );
+        System.out.println("media atraso recepcao-entrega = "+this.atraso_recepcao.getMean()+", std dev atraso recepcao-entrega = "+atraso_recepcao.getStandardDeviation()
+                           +", maximo atraso recepcao-entrega = "+this.atraso_recepcao.getMax()+", min atraso recepcao-entrega = "+atraso_recepcao.getMin() 
+                           );  
+        System.out.println("media atraso envio-recepcao = "+this.tempo_transmissao.getMean()+", std dev atraso envio-recepcao = "+tempo_transmissao.getStandardDeviation()
+                           +", maximo atraso envio-recepcao = "+this.tempo_transmissao.getMax()+", min atraso envio-recepcao = "+tempo_transmissao.getMin() 
+                           );  
+        System.out.println("total: "+this.tempo_transmissao.getN());
+        out.close();
+    }
+
+
+    /*
+     * O método defineAgentesCanais() e o 
+     * método main podem ser sobre-carregados
+     * para se implementar protocolos de agentes 
+     * específicos
+     */ 
+    
+    public final synchronized void avanco(Agente a) {
+        a.avancaTick();
+    }
+    
+    public void defineAgentesCanais() {
+        /*
+         * Neste ponto se inicia os agentes e
+         * os meios de comunicacao entre estes
+         */
+
+
+        try {
+    		Class c = Class.forName(config.getString("agente", "Agente"));
+            Class c1 = Class.forName(config.getString("canal", "Canal"));
+            Class c_esp;
+            for(int i = 0; i < n; i++) {
+                String n = config.getString("agente["+i+"]", "none");
+                System.out.println("processo "+i);
+                if (!n.equals("none"))
+                   c_esp = Class.forName(n);
+                p[i] = (Agente) c.newInstance();
+                p[i].inicializarAgente(this, i, tipo);
+                if ( n.equals("none") ) {
+                    java.util.Iterator x = config.getKeys("agente.");
+                    while (x.hasNext()) {
+                        String a = (String) x.next();
+                        p[i].definePropriedade(a.substring(7), config.getString(a));
+                    }
+                    x = config.getKeys("agente["+i+"].");
+                    while (x.hasNext()) {
+                        String a = (String) x.next();
+                        int y = (int) Math.floor(Math.log10(i));
+                        System.out.println("prop="+a.substring(10+y));
+                        p[i].definePropriedade(a.substring(10+y), config.getString(a)); // ARMENGUE!!!!
+                    }
+                } else {
+                    java.util.Iterator x = config.getKeys("agente["+i+"].");
+                    while (x.hasNext()) {
+                        String a = (String) x.next();
+                        int y = (int) Math.floor(Math.log(i));
+                        System.out.println("prop="+a.substring(10+y));
+                        p[i].definePropriedade(a.substring(10+y), config.getString(a)); // ARMENGUE!!!!
+                    }                                        
+                }
+            }
+            
+            for(int i = 0; i < n; i++)
+                for(int j = 0; j < n; j++)
+                    negociaCanal(config.getString("canal", "Canal"), i, j);
+    	} catch (Exception e) {
+    		e.printStackTrace();
+    	}
+
+        //System.out.println("Sistema inicializado!");
+        
+    }
+
+    public static Configurations getConfig(String[] args) {
+
+        if (args.length != 1) {
+            System.out.println("Usage: program_name configuration_file");
+            System.exit(2);
+        }
+
+        ExtendedProperties ep;
+        try {
+            ep = new ExtendedProperties(args[0]);
+        } catch (java.io.IOException ex) {
+            throw new RuntimeException("Configuration file " + args[0]
+                                       + " unreadable!");
+        }
+        return new Configurations(ep);
+    }
+
+
+    public static void main(String args[])
+    {
+        
+        Configurations configGeral = getConfig(args);
+        String WorkDir = configGeral.getString("WorkDir", ".");
+        System.out.println("configurando");
+        System.out.println(WorkDir);
+        String[] classNames =
+            configGeral.getStringArray("cenarios");
+        if (classNames == null) {
+            classNames = new String[0];
+        }
+        for (int i = 0; i < classNames.length; i++) {
+            java.util.Date data = new java.util.Date();
+            System.out.println(data.toString());
+            System.out.println("cenario simulado: "+WorkDir+classNames[i]);
+            config = getConfig(new String[] {WorkDir+classNames[i]});
+            Simulador simulador = new Simulador(WorkDir+classNames[i]);
+            simulador.run();
+        }
+
+        /*
+        config = getConfig(args);
+        Simulador simulador = new Simulador();
+        simulador.run();*/
+    }
+
+    Simulador(String filename)
+    {
+        contadoresBroadcast = new int[256];
+        contadoresUnicast = new int[256];
+        atraso_recepcao =  new Statistica();
+        atraso_entrega = new Statistica();
+        tempo_transmissao = new Statistica();
+        clock = 0;
+        fim = false;
+        debug_mode = false;
+        try {
+            out = new java.io.PrintStream(new java.io.FileOutputStream(filename+".saida.txt"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        tipo = config.getString("Tipo", "s").charAt(0);
+        modo = config.getString("Modo", "t").charAt(0);
+        debug_mode = config.getBoolean("Debug", debug_mode);
+        tempofinal = config.getInteger("TempoFinal");
+        n = config.getInteger("NumeroAgentes");
+        DESVIO = config.getInteger("DesvioMaximo", 2);
+    }
+
+}
