@@ -17,7 +17,7 @@ public class ChannelDeterministic extends Channel {
         delay = t;
     }
     
-    int atraso() {
+    int delay() {
         return delay;
     }
     

@@ -34,7 +34,7 @@ public class FaultModelAgent_CrashRecovery extends FaultModelAgent {
         prob_repair = r.uniform();
     }
     
-    public void avancaTick() {
+    public void increaseTick() {
             if (!parado) {
                 if (r.uniform() <= prob) {
                     this.crash();

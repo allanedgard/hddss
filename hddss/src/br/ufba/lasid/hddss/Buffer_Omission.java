@@ -27,11 +27,11 @@ public class Buffer_Omission extends Buffer {
      };
      
      
-     public synchronized void adiciona(int tempo, Message msg) {
+     public synchronized void add(int tempo, Message msg) {
                 if (r.uniform() <= prob) {
                     return;
                 }
-                else super.adiciona(tempo, msg);     
+                else super.add(tempo, msg);
      }
     
 }

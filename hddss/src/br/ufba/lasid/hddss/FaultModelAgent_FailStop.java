@@ -30,7 +30,7 @@ public class FaultModelAgent_FailStop extends FaultModelAgent {
         prob = r.uniform();
         parado = false;
     }
-    public void avancaTick() {
+    public void increaseTick() {
             if (!parado)
                 infra.agent.done = true;
                 if (r.uniform() <= prob) {

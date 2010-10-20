@@ -28,13 +28,13 @@ public class FaultModelAgent_BizantineValue extends FaultModelAgent {
         prob = r.uniform();
     }   
 
-    public void enviaMensagem(int c, Message msg) {
+    public void sendMessage(int c, Message msg) {
         if (r.uniform() <= prob) {
-                    super.enviaMensagem(c, msg);
+                    super.sendMessage(c, msg);
                 }
         else {
-            msg = new Message(msg.remetente, msg.destinatario, (int) r.expntl((double) msg.tipo), (int) r.expntl((double) msg.relogioLogico), msg.relogioFisico, msg.conteudo);
-            super.enviaMensagem(c, msg);
+            msg = new Message(msg.sender, msg.destination, (int) r.expntl((double) msg.type), (int) r.expntl((double) msg.logicalClock), msg.physicalClock, msg.content);
+            super.sendMessage(c, msg);
             
         }
     }    

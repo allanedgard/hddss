@@ -108,8 +108,8 @@ public class Agent_CristianPgc extends SimulatedAgent {
         }
 
         public void deliver(Message msg) {
-            if (msg.relogioLogico > LogicalClock) {
-                LogicalClock = msg.relogioLogico+1;
+            if (msg.logicalClock > LogicalClock) {
+                LogicalClock = msg.logicalClock+1;
             }
             else {
                 LogicalClock ++;
@@ -127,27 +127,27 @@ public class Agent_CristianPgc extends SimulatedAgent {
             int tick  = (int)infra.clock.tickValue();
 
             Content_Sync sc;
-            switch (msg.tipo) {
+            switch (msg.type) {
                 case PG_NEW_GROUP: 
-                    V = ( (Content_PGC) msg.conteudo).V;
-                    M = ( (Content_PGC) msg.conteudo).M;
+                    V = ( (Content_PGC) msg.content).V;
+                    M = ( (Content_PGC) msg.content).M;
                     // if (V <= clock) {
                         this.criamensagem(V, this.id, infra.nprocess, PG_PRESENT, new Content_PGC(V, id), 0 );
                         Renewal_Time = V+pi;
                     // }                    
                     break;
                 case PG_PRESENT:
-                    V = ( (Content_PGC) msg.conteudo).V;
-                    M = ( (Content_PGC) msg.conteudo).M;
+                    V = ( (Content_PGC) msg.content).V;
+                    M = ( (Content_PGC) msg.content).M;
                     membership[M] = V; 
                     break;
                 case PG_APP:
                     /* Alterado para incluir Flood
                      * 
                      */
-                    int t_e = msg.relogioFisico + (int) infra.context.DESVIO + (1+resiliencia) * DELTA;
+                    int t_e = msg.physicalClock + (int) infra.context.DESVIO + (1+resiliencia) * DELTA;
                     if (msgRecebidas.contains(msg.getId()) == false) {
-                        infra.debug("p"+id+": relayed from "+msg.remetente);
+                        infra.debug("p"+id+": relayed from "+msg.sender);
                         msgRecebidas.add(msg.getId());
                         if (msg.hops < resiliencia) {
                             msg.hops++;
@@ -156,23 +156,23 @@ public class Agent_CristianPgc extends SimulatedAgent {
                                 relaymensagem(clock, msg, i);
                             }
                         };
-                        infra.app_in.adiciona(t_e, msg);
+                        infra.app_in.add(t_e, msg);
                     } else {
-                        infra.context.network.unicasts[msg.tipo]++;
+                        infra.context.network.unicasts[msg.type]++;
                     }                        
                     // (int r, int d, int t, int rL, int rF, Object c);
                     // Original  int t_e = msg.relogioFisico + (int) controle.DESVIO + DELTA;
                     // Entrega.adiciona(t_e, msg);
                     break;
                 case CK_REQ:
-                    sc = (Content_Sync) msg.conteudo;
+                    sc = (Content_Sync) msg.content;
                     sc.atual = clock + infra.context.ro * tick;
-                    this.criamensagem(clock,this.id,msg.remetente,CK_REP,sc, msg.relogioLogico);
+                    this.criamensagem(clock,this.id,msg.sender,CK_REP,sc, msg.logicalClock);
                     break;
                 case CK_REP:
                     double agora = clock + infra.context.ro * tick;
-                    sc = (Content_Sync) msg.conteudo;
-                    if (msg.relogioLogico == lastClock) {
+                    sc = (Content_Sync) msg.content;
+                    if (msg.logicalClock == lastClock) {
                         //System.nic_out.println("CLK");
                         numeroClocks++;
                         somaClocks += sc.atual+(agora-sc.inicio)/2;

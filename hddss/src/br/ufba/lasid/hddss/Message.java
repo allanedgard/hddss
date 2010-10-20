@@ -16,35 +16,35 @@ package br.ufba.lasid.hddss;
 
 public final class Message  implements Comparable<Message> {
     
-    int remetente;
+    int sender;
     int relayFrom;
     int relayTo;
-    int destinatario;
-    int tipo;
-    int relogioLogico;
-    int relogioFisico;
+    int destination;
+    int type;
+    int logicalClock;
+    int physicalClock;
     int tempoRecepcao;
     int hops;
-    Object conteudo;
+    Object content;
     boolean payload;
      
     
     /** Creates a new instance of Mensagem */
     public Message(int r, int d, int t, int rL, int rF, Object c) {
-        remetente = r;
-        destinatario = d;
-        tipo = t;
+        sender = r;
+        destination = d;
+        type = t;
         hops =0;
-        relogioLogico = rL;
-        relogioFisico = rF;
-        conteudo = c;
+        logicalClock = rL;
+        physicalClock = rF;
+        content = c;
         relayFrom = -1;
         relayTo = -1;
         payload = false;
     }
     
     public String getId() {
-        return "p"+remetente+" para p"+destinatario+" em "+relogioFisico;
+        return "p"+sender+" para p"+destination+" em "+physicalClock;
     }
 
     @Override public boolean equals( Object aThat ) {
@@ -52,18 +52,18 @@ public final class Message  implements Comparable<Message> {
      if ( !(aThat instanceof Message) ) return false;
 
      return (
-                (this.destinatario== ((Message)aThat).destinatario) &&
-                (this.remetente==((Message)aThat).remetente) &&
-                (this.relogioLogico==((Message)aThat).relogioLogico) &&
-                (this.relogioFisico==((Message)aThat).relogioFisico) &&
-                (this.tipo==((Message)aThat).tipo) &&
-                (this.conteudo==((Message)aThat).conteudo) );
+                (this.destination== ((Message)aThat).destination) &&
+                (this.sender==((Message)aThat).sender) &&
+                (this.logicalClock==((Message)aThat).logicalClock) &&
+                (this.physicalClock==((Message)aThat).physicalClock) &&
+                (this.type==((Message)aThat).type) &&
+                (this.content==((Message)aThat).content) );
    }
 
    @Override public int hashCode() {
      int result = HashCodeUtil.SEED;
-     result = HashCodeUtil.hash( result,  this.relogioLogico);
-     result = HashCodeUtil.hash( result,  this.remetente);
+     result = HashCodeUtil.hash( result,  this.logicalClock);
+     result = HashCodeUtil.hash( result,  this.sender);
      return result;
    }
 
@@ -74,18 +74,18 @@ public final class Message  implements Comparable<Message> {
         final int EQUAL = 0;
         final int AFTER = 1;
 
-    if ( this.relogioLogico == this.relogioLogico ) return EQUAL;
+    if ( this.logicalClock == this.logicalClock ) return EQUAL;
 
-    if (this.relogioLogico < aThat.relogioLogico)
+    if (this.logicalClock < aThat.logicalClock)
         return BEFORE;
     else
-    if (this.relogioLogico > aThat.relogioLogico)
+    if (this.logicalClock > aThat.logicalClock)
         return AFTER;
     else
-    if (this.remetente < aThat.remetente)
+    if (this.sender < aThat.sender)
         return BEFORE;
     else
-    if (this.remetente > aThat.remetente)
+    if (this.sender > aThat.sender)
         return AFTER;
     else
         return EQUAL;
@@ -94,12 +94,12 @@ public final class Message  implements Comparable<Message> {
   @Override
     public String toString() {
                 return ""+
-                this.remetente+"; "+
-                this.destinatario+"; "+
-                this.relogioFisico+"; "+
-                this.relogioLogico+"; "+
-                this.tipo+"; "+
-                this.conteudo;
+                this.sender+"; "+
+                this.destination+"; "+
+                this.physicalClock+"; "+
+                this.logicalClock+"; "+
+                this.type+"; "+
+                this.content;
   }
 
 }

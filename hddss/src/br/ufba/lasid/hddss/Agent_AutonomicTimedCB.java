@@ -62,7 +62,7 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
         
         estimateDelay(msg);
 
-        if(msg.tipo == TIMEDCB_TS){
+        if(msg.type == TIMEDCB_TS){
                 nts++;
         }
 
@@ -72,9 +72,9 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
 
     public void estimateDelay(Message msg){
 
-        if(msg.conteudo instanceof Content_TimedCB){
-            Content_TimedCB content = (Content_TimedCB)msg.conteudo;
-            Acknowledge ack = content.vack[msg.destinatario];
+        if(msg.content instanceof Content_TimedCB){
+            Content_TimedCB content = (Content_TimedCB) msg.content;
+            Content_Acknowledge ack = content.vack[msg.destination];
 
             //compute the round-trip-time
             double rtt = msg.tempoRecepcao - ack.lsendTime;
@@ -148,10 +148,10 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
         super.deliver(msg);
         int clock = (int)infra.clock.value();
 
-        if(msg.tipo == TIMEDCB_APP){
+        if(msg.type == TIMEDCB_APP){
 
-            iarrv[msg.remetente] = clock - larrv[msg.remetente];
-            larrv[msg.remetente] = clock;
+            iarrv[msg.sender] = clock - larrv[msg.sender];
+            larrv[msg.sender] = clock;
             
             estimateTSMax();
 

@@ -20,8 +20,8 @@ public class ChannelOmissionDeterministic extends ChannelOmission {
             c = new ChannelDeterministic(t);
         }
         
-        int atraso() {
-            return c.atraso();
+        int delay() {
+            return c.delay();
         }           
     
 }

@@ -24,12 +24,12 @@ public class IntegerSet  implements Comparable<IntegerSet> {
 
      IntegerSet that = (IntegerSet)aThat;
      return
-       ( this.interseccao(that).tamanho()==this.tamanho() );
+       ( this.intersection(that).size()==this.size() );
    }
     
    @Override public int hashCode() {
      int result = HashCodeUtil.SEED;
-     for (int i =0;i<this.tamanho() ;i++) 
+     for (int i =0;i<this.size() ;i++)
         result = HashCodeUtil.hash( result,  ((Integer) this.c.get(i)).intValue() );
      return result;
    }
@@ -47,13 +47,13 @@ public class IntegerSet  implements Comparable<IntegerSet> {
     if ( this == aThat ) return EQUAL;
 
     //primitive numbers follow this form
-    if (this.tamanho() < aThat.tamanho()) return BEFORE;
-    if (this.tamanho() > aThat.tamanho()) return AFTER;
+    if (this.size() < aThat.size()) return BEFORE;
+    if (this.size() > aThat.size()) return AFTER;
 
     int s1, s2;
     s1 = 0;
     s2 = 0;
-    for (int i =0;i<this.tamanho() ;i++) {
+    for (int i =0;i<this.size() ;i++) {
         s1 += ((Integer) this.c.get(i)).intValue();
         s2 += ((Integer) aThat.c.get(i)).intValue();
     }
@@ -71,12 +71,12 @@ public class IntegerSet  implements Comparable<IntegerSet> {
   }
 
     
-    void adiciona(int v) {
+    void add(int v) {
         if (!c.contains(v))
             c.add(v);
     }
 
-    void limpa() {
+    void clean() {
         c.clear();
     }
     
@@ -86,7 +86,7 @@ public class IntegerSet  implements Comparable<IntegerSet> {
                 c.remove(i);        
     }
     
-    boolean existe(int v) {
+    boolean exists(int v) {
         for (int i=0;i<c.size();i++)
             if (c.get(i).equals(v)) 
                 return true;
@@ -94,7 +94,7 @@ public class IntegerSet  implements Comparable<IntegerSet> {
     }
 
     
-    int minimo() {
+    int min() {
         int v = Integer.MAX_VALUE;
         for (int i=0;i<c.size();i++)
             if ( ((Integer) c.get(i)).intValue() <v)
@@ -102,7 +102,7 @@ public class IntegerSet  implements Comparable<IntegerSet> {
         return v;
     }
     
-    int tamanho () {
+    int size () {
         return  c.size();
     }
 
@@ -116,21 +116,21 @@ public class IntegerSet  implements Comparable<IntegerSet> {
                 
     }    
     
-    IntegerSet interseccao(IntegerSet x) {
+    IntegerSet intersection(IntegerSet x) {
         IntegerSet y = new IntegerSet();
         for (int i=0; i<x.c.size(); i++) {
             int v = ((Integer) x.c.get(i)).intValue();
-            if (this.existe(v))
-               y.adiciona(v);
+            if (this.exists(v))
+               y.add(v);
         }
         return y;
     }
     
-   void adiciona(IntegerSet x) {
+   void add(IntegerSet x) {
         for (int i=0; i<x.c.size(); i++) {
             int v = ((Integer) x.c.get(i)).intValue();
-            if (!this.existe(v))
-               this.adiciona(v);
+            if (!this.exists(v))
+               this.add(v);
         }
     }
     

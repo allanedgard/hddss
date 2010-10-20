@@ -133,13 +133,13 @@ public abstract class Network extends Thread{
     }
 
     public void loopback(Message msg){
-        int address = msg.destinatario;
+        int address = msg.destination;
         Agent p = conteiner.p[address];
-        p.infra.nic_in.adiciona((int)p.infra.clock.value() + 1, msg);
+        p.infra.nic_in.add((int)p.infra.clock.value() + 1, msg);
     }
 
     public boolean isLoopback(Message msg){
-        return isLoopback(msg.remetente, msg.destinatario);
+        return isLoopback(msg.sender, msg.destination);
     }
 
     public boolean isLoopback(int p_i, int p_j){
@@ -147,7 +147,7 @@ public abstract class Network extends Thread{
     }
 
     public boolean isBroadcast(Message msg){
-        return (msg.destinatario == conteiner.n);
+        return (msg.destination == conteiner.n);
     }
 
     public boolean isRelay(Message msg){
@@ -162,25 +162,25 @@ public abstract class Network extends Thread{
     }
     
     public void unicast(Message msg, double atraso){
-        unicasts[msg.tipo]++;
+        unicasts[msg.type]++;
         if (isLoopback(msg)) {
             loopback(msg);
             return;
         }
 
-        if (verifyChannel(msg.remetente, msg.destinatario))
-            transfer(msg.remetente, msg.destinatario, msg, atraso);
+        if (verifyChannel(msg.sender, msg.destination))
+            transfer(msg.sender, msg.destination, msg, atraso);
     }
 
     public void transfer(int p_i, int p_j, Message msg, double atraso){
-        Channels[p_i][p_j].entregaMensagem(msg, atraso);
+        Channels[p_i][p_j].deliverMsg(msg, atraso);
     }
 
     public void broadcast(Message msg, double atraso){
 
-        broadcasts[msg.tipo]++;
+        broadcasts[msg.type]++;
         
-        int p_i = msg.remetente;
+        int p_i = msg.sender;
 
         for (int p_j=0; p_j < conteiner.n; p_j++) {
 

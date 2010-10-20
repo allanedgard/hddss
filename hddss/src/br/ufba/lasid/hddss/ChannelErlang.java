@@ -10,17 +10,17 @@ package br.ufba.lasid.hddss;
  * @author ALLAN
  */
 public class ChannelErlang {
-    double media;
-    double desvio;
+    double mean;
+    double std;
     
     ChannelErlang (double t, double s) {
-        media = t;
-        desvio = s;
+        mean = t;
+        std = s;
     }
     
     int atraso() {
         Randomize x = new Randomize();
-        return (int) (x.erlang(media, desvio));
+        return (int) (x.erlang(mean, std));
     }
     
     boolean status() {

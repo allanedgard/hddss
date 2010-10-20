@@ -113,7 +113,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             
             visaoProposta = new IntegerSet();
             
-            iniciaConjuntos();
+            initializeSets();
             quorum= new int[100000];
             timeout= new int[100000];
             // Mensagens instáveis que serão usadas no consenso
@@ -125,14 +125,14 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             
         }
         
-        public void iniciaConjuntos() {
+        public void initializeSets() {
             /*
              *  Inicia conjuntos, incluindo todos os processos 
              *  como LIVE na visao!
              */ 
             for (int i=0;i<infra.nprocess;i++) {
-                live.adiciona(i);
-                visao.adiciona(i);
+                live.add(i);
+                visao.add(i);
             }
         }
 
@@ -140,11 +140,11 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
          *  Definem parâmetros do algoritmo
          */
         
-        public void setDeltaMaximo(String dt) {
+        public void setDeltaMax(String dt) {
             DELTA = Integer.parseInt(dt);
         }
 
-        public void setProbabilidadeGerarPacote (String po) {
+        public void setPacketGenerationProb (String po) {
             prob = Double.parseDouble(po);
         }
  
@@ -176,17 +176,17 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
         /*
          *  Envia mensagem a grupo
          */
-        public void enviaMensagemGrupo(int clock, int tipo, Object valor, int LC) {
+        public void sendGroupMsg(int clock, int tipo, Object valor, int LC) {
             for (int j=0; j<infra.nprocess;j++)
                 this.criamensagem(clock, this.id, j, tipo, valor, LC);
         }
         
-        public void enviaMensagemGrupo(int clock, int tipo, Object valor, int LC, boolean pay) {
+        public void sendGroupMsg(int clock, int tipo, Object valor, int LC, boolean pay) {
             for (int j=0; j<infra.nprocess;j++)
                 this.criamensagem(clock, this.id, j, tipo, valor, LC, pay);
         }
 
-        public void relayMensagemGrupo(int clock, int i, int tipo, Object valor, int LC, boolean pay) {
+        public void relayGroupMsg(int clock, int i, int tipo, Object valor, int LC, boolean pay) {
             for (int j=0; j<infra.nprocess;j++)
                 this.criamensagem(clock, i, j, tipo, valor, LC, pay);
         }        
@@ -201,120 +201,120 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             Content_Unstable uC;
             Consensus c;
             int clock = (int)infra.clock.value();
-            switch (msg.tipo) {
+            switch (msg.type) {
                 case REQ_SEQ:
                     if (SouLider) {
                         Sequencia++;
-                        relayMensagemGrupo(clock, msg.remetente, APP, msg.conteudo, Sequencia, true);
+                        relayGroupMsg(clock, msg.sender, APP, msg.content, Sequencia, true);
                         quorum[Sequencia]=0;
                     }
                     break;
                 case APP:
-                    msgs.adiciona(msg.relogioLogico, msg);
-                    this.criamensagem(clock, id, Lider, ACK, msg, msg.relogioLogico);      
+                    msgs.add(msg.logicalClock, msg);
+                    this.criamensagem(clock, id, Lider, ACK, msg, msg.logicalClock);
                     
                     break;
                 case ACK:
                     if (SouLider) {
-                        quorum[msg.relogioLogico]++;
+                        quorum[msg.logicalClock]++;
                         infra.debug("seq "+Sequencia+" count "+quorum[Sequencia]);
-                        if ( quorum[msg.relogioLogico] == infra.nprocess )
-                            this.enviaMensagemGrupo(clock, DLV, msg.conteudo, msg.relogioLogico);                   
+                        if ( quorum[msg.logicalClock] == infra.nprocess )
+                            this.sendGroupMsg(clock, DLV, msg.content, msg.logicalClock);
                     }
                     break;
                 case DLV:
-                    infra.app_in.adiciona(clock, (Message) msg.conteudo);
+                    infra.app_in.add(clock, (Message) msg.content);
                     break;
                 case CHANGE_VIEW_REQUEST:
-                    if ( UnstableMensagensEnviadas.contains(msg.conteudo) )
+                    if ( UnstableMensagensEnviadas.contains(msg.content) )
                             break;
-                    UnstableMensagensEnviadas.add(msg.conteudo);
+                    UnstableMensagensEnviadas.add(msg.content);
                     bloquearEntrega = true;
-                    int b = Integer.parseInt((String) msg.conteudo);
-                    uC = new Content_Unstable(b, bufferDeMensagensInstaveis, msg.remetente, down);
-                    enviaMensagemGrupo(clock, UNSTABLE, uC, LogicalClock);
+                    int b = Integer.parseInt((String) msg.content);
+                    uC = new Content_Unstable(b, bufferDeMensagensInstaveis, msg.sender, down);
+                    sendGroupMsg(clock, UNSTABLE, uC, LogicalClock);
                     break;
                 case UNSTABLE:
                     if (!consenso) {
-                        uC = (Content_Unstable) msg.conteudo;
+                        uC = (Content_Unstable) msg.content;
                         // DOWN = DOWN U DOWN PERCEBIDO!
-                        down.adiciona(uC.down); 
+                        down.add(uC.down);
                         adicionaVisao(uC);
                         if (obtidoUnstableMensagens() ) {
                             consenso = true;
-                            down.adiciona(live);
-                            live.adiciona(down);
+                            down.add(live);
+                            live.add(down);
                             down.remove(visaoProposta);
-                            uC.down.limpa();
-                            uC.down.adiciona(down);
-                            uC.visaoProposta.limpa();
-                            uC.visaoProposta.adiciona(this.visaoProposta);
+                            uC.down.clean();
+                            uC.down.add(down);
+                            uC.visaoProposta.clean();
+                            uC.visaoProposta.add(this.visaoProposta);
 
                             Consensus[uC.bloco] = iniciaConsensus(uC);
                             
                             if (Consensus[uC.bloco].getRound()%infra.nprocess == id)
-                                enviaMensagemGrupo(clock, CONSENSUS_P1,Consensus[uC.bloco], LogicalClock);
+                                sendGroupMsg(clock, CONSENSUS_P1,Consensus[uC.bloco], LogicalClock);
                         
                         }
                     }
                     break;
                 case CONSENSUS_P1:
-                    c = (Consensus) msg.conteudo;
+                    c = (Consensus) msg.content;
                     // Mensagem do mesmo round
-                    if (Consensus[c.numero]==null)
-                        Consensus[c.numero] = iniciaConsensus( (Content_Unstable) c.estimado );
+                    if (Consensus[c.number]==null)
+                        Consensus[c.number] = iniciaConsensus( (Content_Unstable) c.estimated );
                     
-                    if (c.getRound()==(Consensus[c.numero].getRound())) {
-                        if (msg.remetente == c.getRound() % infra.nprocess) {
-                            Consensus[c.numero].estimado = c.estimado;
-                            enviaMensagemGrupo(clock, CONSENSUS_P2,Consensus[c.numero], LogicalClock);
+                    if (c.getRound()==(Consensus[c.number].getRound())) {
+                        if (msg.sender == c.getRound() % infra.nprocess) {
+                            Consensus[c.number].estimated = c.estimated;
+                            sendGroupMsg(clock, CONSENSUS_P2,Consensus[c.number], LogicalClock);
                         }
                     }
-                    else if  (c.getRound()<(Consensus[c.numero].getRound())){
-                                c.alteraRound(Consensus[c.numero].getRound() );
-                                if (msg.remetente == c.getRound() % infra.nprocess) {
-                                   Consensus[c.numero].estimado = c.estimado;
-                                    enviaMensagemGrupo(clock, CONSENSUS_P2,Consensus[c.numero], LogicalClock);
+                    else if  (c.getRound()<(Consensus[c.number].getRound())){
+                                c.alteraRound(Consensus[c.number].getRound() );
+                                if (msg.sender == c.getRound() % infra.nprocess) {
+                                   Consensus[c.number].estimated = c.estimated;
+                                    sendGroupMsg(clock, CONSENSUS_P2,Consensus[c.number], LogicalClock);
                                 }
                     }                    
                     break;
                 case CONSENSUS_P2:
-                    c = (Consensus) msg.conteudo;
+                    c = (Consensus) msg.content;
                     /* 
                      *  Se recebe a mensagem de FASE 2 do consenso n:
                      *  - verifica se há um QUÓRUM de processos:
                      *      - se não há inclui as contribuições no
                      *        conjunto de mensagens recebidas
                      */
-                    if (Consensus[c.numero]==null)
-                        Consensus[c.numero] = iniciaConsensus( (Content_Unstable) c.estimado );
+                    if (Consensus[c.number]==null)
+                        Consensus[c.number] = iniciaConsensus( (Content_Unstable) c.estimated );
                     
-                    if (!Consensus[c.numero].atingiuQuorum) {
-                        Consensus[c.numero].quorum.adiciona(msg.remetente);
+                    if (!Consensus[c.number].gotQuorum) {
+                        Consensus[c.number].quorum.add(msg.sender);
                         // adicionaREC(c.numero, (UnstableContent) c.estimado);
-                        if ( ((Content_Unstable) c.estimado).tamanho() != 0)
-                                Consensus[c.numero].rec = c.estimado;
-                        if (obtidoQuorumConsenso(c.numero)) {
-                            if ( ((Content_Unstable) c.estimado).tamanho() == 0)
-                                Consensus[c.numero].noneREC = true;               
-                            if ( ( (Content_Unstable) Consensus[c.numero].rec).conteudo.size() == 0)
+                        if ( ((Content_Unstable) c.estimated).tamanho() != 0)
+                                Consensus[c.number].rec = c.estimated;
+                        if (obtidoQuorumConsenso(c.number)) {
+                            if ( ((Content_Unstable) c.estimated).tamanho() == 0)
+                                Consensus[c.number].noneREC = true;
+                            if ( ( (Content_Unstable) Consensus[c.number].rec).conteudo.size() == 0)
                             {
-                                if (Consensus[c.numero].noneREC) {
+                                if (Consensus[c.number].noneREC) {
                                 /*      - se sim, se a decisão é somente {_|_} 
                                 */
-                                rotacionaCoordenador(c.numero);
+                                rotacionaCoordenador(c.number);
                                 }
                                 else {
                                     /*      - se sim, se a decisão é {v, _|_} 
                                     */
-                                    rotacionaCoordenador(c.numero);
-                                    Consensus[c.numero].estimado = Consensus[c.numero].rec;
+                                    rotacionaCoordenador(c.number);
+                                    Consensus[c.number].estimated = Consensus[c.number].rec;
                                 }
                             } 
                             else {
                                 /*      - se sim, se a decisão é {v} 
                                 */                        
-                                enviaMensagemGrupo(clock, DECIDED,Consensus[c.numero], LogicalClock);
+                                sendGroupMsg(clock, DECIDED,Consensus[c.number], LogicalClock);
                             }
                         } 
                     }
@@ -328,34 +328,34 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                      *  - entrega as mensagens;
                      *  - finaliza o consenso n.
                      */
-                    c = (Consensus) msg.conteudo;
+                    c = (Consensus) msg.content;
                     // Implementa a decisao
-                    if (Consensus[c.numero].ativo) {
-                        Consensus[c.numero].ativo = false;
-                        Consensus[c.numero].estimado = c.rec;
-                        uC  =  (Content_Unstable) Consensus[c.numero].estimado;
+                    if (Consensus[c.number].active) {
+                        Consensus[c.number].active = false;
+                        Consensus[c.number].estimated = c.rec;
+                        uC  =  (Content_Unstable) Consensus[c.number].estimated;
                         java.util.ArrayList x = (java.util.ArrayList) uC.conteudo;
                         for (int i=0;i<x.size();i++) {
                             Message m = (Message) x.get(i);
-                            if (m.relogioLogico > BM[m.remetente])
-                                BM[m.remetente] = m.relogioLogico;
+                            if (m.logicalClock > BM[m.sender])
+                                BM[m.sender] = m.logicalClock;
                             bufferDeMensagens.add(m);
                         }
                         bloquearEntrega = false;
-                        down.adiciona(live);
-                        live = live.interseccao(uC.visaoProposta);
-                        uncertain = uncertain.interseccao(uC.visaoProposta);
+                        down.add(live);
+                        live = live.intersection(uC.visaoProposta);
+                        uncertain = uncertain.intersection(uC.visaoProposta);
                         down.remove(uC.visaoProposta);
-                        suspected.limpa();
-                        visao.limpa();
-                        visao.adiciona(visaoProposta);
+                        suspected.clean();
+                        visao.clean();
+                        visao.add(visaoProposta);
                         System.out.println("Consenso Obtido em "+clock);
                         System.out.println("Visao em p"+id);
                         for (int i=0; i<infra.nprocess; i++)
-                            if (visao.existe(i) )
+                            if (visao.exists(i) )
                                 System.out.print(i+" \t");
                         System.out.println("");
-                        Lider = visao.minimo();
+                        Lider = visao.min();
                         if (id == Lider) {
                             SouLider = true;
                         }
@@ -375,7 +375,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             Consensus[i].alteraRound(Consensus[i].getRound()+1);
             int clock = (int)infra.clock.value();
             if (Consensus[i].getRound()%infra.nprocess == id)
-                enviaMensagemGrupo(clock, CONSENSUS_P1,Consensus[i], LogicalClock);            
+                sendGroupMsg(clock, CONSENSUS_P1,Consensus[i], LogicalClock);
         }
         
         
@@ -398,8 +398,8 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
          *  Cria uma nova visão com os processos que participaram
          */
         void adicionaVisao(Content_Unstable uC) {
-            if (!visaoProposta.existe(uC.id)) {
-                visaoProposta.adiciona(uC.id);
+            if (!visaoProposta.exists(uC.id)) {
+                visaoProposta.add(uC.id);
                 infra.debug(visaoProposta.toString());
                 for (int i = 0; i < uC.conteudo.size(); i++ )
                     if (!AllUnstableMensagens.contains(uC.conteudo.get(i)))
@@ -423,18 +423,18 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             boolean liveOk;
             boolean uncertainOk;
             
-            liveOk = (live.tamanho()==live.interseccao(visaoProposta).tamanho());
+            liveOk = (live.size()==live.intersection(visaoProposta).size());
             
             infra.debug("live ok? "+liveOk);
-            infra.debug("tam live="+live.tamanho());
-            infra.debug("tam live inter View="+live.interseccao(visaoProposta).tamanho());
+            infra.debug("tam live="+live.size());
+            infra.debug("tam live inter View="+live.intersection(visaoProposta).size());
             infra.debug("live = "+live);
             infra.debug("view = "+visaoProposta);
             
-            int contaUncertain=visaoProposta.interseccao(uncertain).tamanho();
+            int contaUncertain=visaoProposta.intersection(uncertain).size();
 
-            if (uncertain.tamanho() >0) {
-                float perc = contaUncertain / uncertain.tamanho();  
+            if (uncertain.size() >0) {
+                float perc = contaUncertain / uncertain.size();
                 if (perc>.5) {uncertainOk = true;} else {uncertainOk = false;};
             } else 
                 uncertainOk = true;
@@ -452,12 +452,12 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             boolean liveOk;
             boolean uncertainOk;
             
-            liveOk = (live.tamanho()==live.interseccao(Consensus[i].quorum).tamanho());
+            liveOk = (live.size()==live.intersection(Consensus[i].quorum).size());
             
-            int contaUncertain=Consensus[i].quorum.interseccao(uncertain).tamanho();
+            int contaUncertain=Consensus[i].quorum.intersection(uncertain).size();
 
-            if (uncertain.tamanho() >0) {
-                float perc = contaUncertain / uncertain.tamanho();  
+            if (uncertain.size() >0) {
+                float perc = contaUncertain / uncertain.size();
                 if (perc>.5) {uncertainOk = true;} else {uncertainOk = false;};
             } else 
                 uncertainOk = true;

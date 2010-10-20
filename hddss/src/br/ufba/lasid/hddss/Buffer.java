@@ -13,49 +13,49 @@ import java.util.*;
 
 public  class Buffer {
     
-    int minimo;
-    int maximo;
+    int min;
+    int max;
 
-    TreeMap interno;
+    TreeMap inside;
    
      Buffer() {
-         interno = new TreeMap();
-         minimo = -1;
-         maximo = -1;
+         inside = new TreeMap();
+         min = -1;
+         max = -1;
      };
      
      
-     public synchronized void adiciona(int tempo, Message msg) {
+     public synchronized void add(int time, Message msg) {
          ArrayList a;
-         if (verificaTempo(tempo)==false) {
+         if (checkTime(time)==false) {
              a = new ArrayList();
              a.add(msg);
-             interno.put(tempo, a);
+             inside.put(time, a);
          }
          else  {
-             a = (ArrayList) interno.get(tempo);
+             a = (ArrayList) inside.get(time);
              a.add(msg);
-             interno.put(tempo, a);
+             inside.put(time, a);
          }
      }
      
-     public synchronized ArrayList obtemMensagens(int tempo) {
-         if (verificaTempo(tempo)==false) {
+     public synchronized ArrayList getMsgs(int time) {
+         if (checkTime(time)==false) {
              return new ArrayList();
          }
          else  { 
              ArrayList a, b;
-             a = (ArrayList) interno.get(tempo);
+             a = (ArrayList) inside.get(time);
              
              if (a.size() == 1) {
-                interno.remove(tempo);
+                inside.remove(time);
                 return a;
              }
              else {
                  b = new ArrayList();
                  b.add(a.get(0));
                  a.remove(0);
-                 interno.put(tempo, a);
+                 inside.put(time, a);
                  return b;
              }
 
@@ -63,8 +63,8 @@ public  class Buffer {
          
      }
      
-     private boolean verificaTempo(int tempo) {
-         if ( interno.containsKey(tempo) ) {
+     private boolean checkTime(int time) {
+         if ( inside.containsKey(time) ) {
              return true;
          }
          else return false;
@@ -74,17 +74,17 @@ public  class Buffer {
      int totalMsgs(int tempo) {
          int j = 0;
          java.util.ArrayList a;
-         for(int i=tempo;i<this.obtemUltimo();i++) {
-                      if (verificaTempo(i)!=false) {
-                            a = (ArrayList) interno.get(i);
+         for(int i=tempo;i<this.getLast();i++) {
+                      if (checkTime(i)!=false) {
+                            a = (ArrayList) inside.get(i);
                             j += a.size();
                         }
          }
          return j;
      }
      
-     int obtemUltimo() {
-         return ((Integer) interno.lastKey()).intValue();
+     int getLast() {
+         return ((Integer) inside.lastKey()).intValue();
      }
     
 }
