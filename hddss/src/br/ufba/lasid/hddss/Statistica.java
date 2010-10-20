@@ -1,8 +1,9 @@
 package br.ufba.lasid.hddss;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * This class allows to summarize a set of integer values in order to
+ * provide some statistics about it
+ * @author allanedgard
  */
 public class Statistica {
 
@@ -30,52 +31,55 @@ Statistica() {
     x = new double[10000000];
 }
 
+/**
+ * return the maximum value of the items evaluated
+ * @return the maximum value of the items evaluated
+ */
 double getMax() {
     return max;
 }
 
+/**
+ * return the minimum value of the items evaluated
+ * @return the minimum value of the items evaluated
+ */
 double getMin() {
     return min;
 }
 
+
+/**
+ * calculate the standard deviation of the items evaluated
+ * @return returns the standard deviation of the first i items
+ */
 double getStandardDeviation() {
     return Math.sqrt(variance);
-    //return Math.sqrt(getS(n)/(n-1));
 }
 
-double getS(int i) {
-    /*
-     * B.P. Welford, Technometrics, 4,(1962), 419-42
-     * Incremental Standard Deviation
-     */
-    if (i==1) {
-        return 0;
-    }
-    else
-        return getS(i-1) + ( x[i-1]- getM(i-1) ) * ( x[i-1] - getM(i) );
-}
 
-double getM(int i) {
-    /*
-     * B.P. Welford, Technometrics, 4,(1962), 419-42
-     * Incremental Standard Deviation
-     */
-    if (i==1) {
-        return x[0];
-    }
-    else
-        return getM(i-1) + ( x[i-1]- getM(i-1) ) / i;
-}
 
+
+/**
+ * return the total of items evaluated
+ * @return the total of items evaluated
+ */
 long getN() {
     return n;
 }
 
+/**
+ * calculate the mean of the items evaluated
+ * @return the mean of the items evaluated
+ */
 double getMean() {
     return (double) sum / n;
     //return getM(n);
 }
 
+/**
+ * add a value to the items evaluated
+ * @param a - the value
+ */
 synchronized void  addValue(int a) {
     if (n==0) {
         n = 1;
@@ -102,24 +106,5 @@ synchronized void  addValue(int a) {
 
 
 }
-
-    public static void main(String[] args) {
-        Statistica t = new Statistica();
-        Randomize r = new Randomize();
-        for (int i=1; i< 1000000; i++) {
-         t.addValue(5);
-         t.addValue(4);
-         t.addValue(3);
-         System.out.println(r.lognormal(15,10)+1);
-        }
-        System.out.println("media = "+t.getMean());
-        System.out.println("std = "+t.getStandardDeviation());
-        System.out.println("max = "+t.getMax());
-        System.out.println("min = "+t.getMin());
-        System.out.println("N = "+t.getN());
-
-
-
-    }
 
 }

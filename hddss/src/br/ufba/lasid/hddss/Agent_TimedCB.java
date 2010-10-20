@@ -353,7 +353,7 @@ public class Agent_TimedCB extends SimulatedAgent {
                 if(value instanceof Content_TimedCB){
                     ((Content_TimedCB)value).vack[j].rsendTime = clock;
                 }
-                this.criamensagem(clock, this.id, j, type, value, LC);
+                this.createMessage(clock, this.id, j, type, value, LC);
             }
         }
         
@@ -363,7 +363,7 @@ public class Agent_TimedCB extends SimulatedAgent {
                     ((Content_TimedCB)value).vack[j].rsendTime = clock;
                 }
 
-                this.criamensagem(clock, this.id, j, type, value, LC, pay);
+                this.createMessage(clock, this.id, j, type, value, LC, pay);
             }
         }
         
