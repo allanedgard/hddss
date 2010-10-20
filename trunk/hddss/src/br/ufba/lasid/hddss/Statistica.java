@@ -8,9 +8,9 @@ public class Statistica {
 
 private long n;
 
-private double media;
+private double mean;
 
-private long soma;
+private long sum;
 
 private double max;
 
@@ -18,13 +18,13 @@ private double x[];
 
 private double min;
 
-private double variancia;
+private double variance;
 
 Statistica() {
     n = 0;
-    media = 0;
-    soma = 0;
-    variancia = 0;
+    mean = 0;
+    sum = 0;
+    variance = 0;
     max = 0;
     min = 0;
     x = new double[10000000];
@@ -39,7 +39,7 @@ double getMin() {
 }
 
 double getStandardDeviation() {
-    return Math.sqrt(variancia);
+    return Math.sqrt(variance);
     //return Math.sqrt(getS(n)/(n-1));
 }
 
@@ -72,31 +72,31 @@ long getN() {
 }
 
 double getMean() {
-    return (double) soma / n;
+    return (double) sum / n;
     //return getM(n);
 }
 
 synchronized void  addValue(int a) {
     if (n==0) {
         n = 1;
-        variancia = 0;
-        soma=a;
-        media=a;
+        variance = 0;
+        sum=a;
+        mean=a;
         //x[0]=a;
         max = a;
         min = a;
     }
     else {
-        double media_ant = (double) soma / n;
-        media = (double) (soma +a) / (n+1);
-        double variancia_ant = variancia;
+        double mean_ant = (double) sum / n;
+        mean = (double) (sum +a) / (n+1);
+        double variance_ant = variance;
         //media = ((media_ant*n)+a) / (n+1);
-        double x = n*(variancia_ant+Math.pow(media_ant, 2));
-        variancia =  ( (x+Math.pow(a,2) ) / (n+1) ) - Math.pow(media,2);
+        double x = n*(variance_ant+Math.pow(mean_ant, 2));
+        variance =  ( (x+Math.pow(a,2) ) / (n+1) ) - Math.pow(mean,2);
         //[n]=a;
         if (a < min) min = a;
         if (a > max) max = a;
-        soma = soma+a;
+        sum = sum+a;
         n=n+1;
     }
 

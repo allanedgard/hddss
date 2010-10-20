@@ -16,7 +16,7 @@ public class FaultModelAgent_Omission extends FaultModelAgent {
         infra.nic_out = new Buffer_Omission(prob);
    }
 
-   public void avancaTick() {
+   public void increaseTick() {
        infra.execute();
    }
 

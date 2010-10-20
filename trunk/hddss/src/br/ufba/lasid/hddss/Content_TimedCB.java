@@ -12,30 +12,30 @@ package br.ufba.lasid.hddss;
 public class Content_TimedCB {
     
     int LCB;
-    String mensagem;
-    int [] ultimaMsgTimeStamp;
-    Acknowledge [] vack;
+    String message;
+    int [] lastMsgTimeStamp;
+    Content_Acknowledge [] vack;
 
-    Content_TimedCB(String m, int l, Acknowledge [] acks) {
+    Content_TimedCB(String m, int l, Content_Acknowledge [] acks) {
         LCB = l;
-        mensagem = m;
+        message = m;
         vack = acks;
     }
 
     Content_TimedCB(String m, int l, int [] u) {
         LCB = l;
-        mensagem = m;
-        ultimaMsgTimeStamp = u;
+        message = m;
+        lastMsgTimeStamp = u;
     }
 
     Content_TimedCB(String m, int l) {
         LCB = l;
-        mensagem = m;
+        message = m;
     }
     
     @Override  
     public String toString() {
-        return mensagem;
+        return message;
     }
 
 }

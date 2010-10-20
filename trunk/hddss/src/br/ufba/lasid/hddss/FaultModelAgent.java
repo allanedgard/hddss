@@ -17,14 +17,14 @@ public abstract class FaultModelAgent {
    FaultModelAgent() {
    }
 
-   void inicializa(RuntimeContainer a) {
+   void initialize(RuntimeContainer a) {
         infra = a;
         infra.nic_out = new Buffer();
         infra.nic_in = new Buffer();
 
    }
 
-   public void avancaTick(){
+   public void increaseTick(){
        infra.execute();
    };
 
@@ -32,8 +32,8 @@ public abstract class FaultModelAgent {
         return true;
    }
 
-   public void enviaMensagem(int c, Message msg) {
-       infra.nic_out.adiciona(c, msg);
+   public void sendMessage(int c, Message msg) {
+       infra.nic_out.add(c, msg);
    }
 
 }

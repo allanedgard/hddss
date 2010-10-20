@@ -10,22 +10,22 @@ package br.ufba.lasid.hddss;
  * @author allan
  */
 public class Consensus {
-    int numero;
+    int number;
     private int round;
-    Object estimado;
+    Object estimated;
     Object rec;
-    boolean ativo;
+    boolean active;
     boolean noneREC;
-    boolean atingiuQuorum;
+    boolean gotQuorum;
     IntegerSet quorum;
     
     Consensus (int n, int r, Object e) {
-        numero = n;
+        number = n;
         round = r;
-        estimado = e;
-        ativo = true;
+        estimated = e;
+        active = true;
         noneREC = false;
-        atingiuQuorum = false;
+        gotQuorum = false;
         quorum = new IntegerSet();
     }
     
@@ -33,8 +33,8 @@ public class Consensus {
         round = r;
         rec = null;
         noneREC = false;
-        atingiuQuorum = false;
-        quorum.limpa();
+        gotQuorum = false;
+        quorum.clean();
     }
     
     int getRound() {
@@ -43,7 +43,7 @@ public class Consensus {
     
     @Override  
     public String toString() {
-        return "Consenso numero: "+numero+", round: "+round+", est: " + estimado
+        return "Consensus number: "+number+", round: "+round+", est: " + estimated
                 + ", rec: "+rec;
     }
     

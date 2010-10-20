@@ -12,22 +12,22 @@ package br.ufba.lasid.hddss;
 
 public class ChannelExponential extends Channel {
     
-    double media;
+    double mean;
     
     ChannelExponential (double t) {
-        media = t;
+        mean = t;
     }
 
     ChannelExponential () {
     }    
     
-    public void setMedia(String dt) {
-            media = Float.parseFloat(dt);
+    public void setMean(String dt) {
+            mean = Float.parseFloat(dt);
     }
     
-    int atraso() {
+    int delay() {
         Randomize x = new Randomize();
-        return (int) (x.expntl(media)+media);
+        return (int) (x.expntl(mean)+mean);
     }
     
     boolean status() {

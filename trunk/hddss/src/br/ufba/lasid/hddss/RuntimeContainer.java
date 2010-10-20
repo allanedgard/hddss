@@ -61,7 +61,7 @@ public class RuntimeContainer extends Thread{
         if (faultModel == null) {
             execute();
         }
-        else faultModel.avancaTick();
+        else faultModel.increaseTick();
     }
 
     public final void setFaultModel(String fault_model) {
@@ -72,7 +72,7 @@ public class RuntimeContainer extends Thread{
                     (FaultModelAgent)
                     c.newInstance();
 
-                faultModel.inicializa(this);
+                faultModel.initialize(this);
 
                 debug("Modelo de Falhas "+fault_model+" implantado em p"+agent.id);
 
@@ -99,7 +99,7 @@ public class RuntimeContainer extends Thread{
 
 
     public synchronized boolean deliver(){
-        ArrayList a = app_in.obtemMensagens((int)clock.value());
+        ArrayList a = app_in.getMsgs((int)clock.value());
         if (a.isEmpty()) {
             return false;
         }
@@ -110,9 +110,9 @@ public class RuntimeContainer extends Thread{
         reportEvent(msg, 'd');
 
         if (msg.payload) {
-            context.atraso_entrega.addValue((int)clock.value() - msg.relogioFisico);
+            context.atraso_entrega.addValue((int)clock.value() - msg.physicalClock);
             context.atraso_recepcao.addValue((int)clock.value() - msg.tempoRecepcao);
-            context.tempo_transmissao.addValue(msg.tempoRecepcao-msg.relogioFisico);
+            context.tempo_transmissao.addValue(msg.tempoRecepcao-msg.physicalClock);
         }
         agent.deliver(msg);
         return true;
@@ -121,7 +121,7 @@ public class RuntimeContainer extends Thread{
     }
 
     public boolean receive(){
-        ArrayList a = nic_in.obtemMensagens((int)clock.value());
+        ArrayList a = nic_in.getMsgs((int)clock.value());
         if (a.isEmpty()) {
             return false;
         } 
@@ -137,7 +137,7 @@ public class RuntimeContainer extends Thread{
 
 
     public boolean send(){
-        ArrayList a = nic_out.obtemMensagens((int)clock.value());
+        ArrayList a = nic_out.getMsgs((int)clock.value());
         if (a.isEmpty()) {
             return false;
         }
@@ -155,13 +155,13 @@ public class RuntimeContainer extends Thread{
                 String saida = ""+
                 agent.id +"; "+
                 ev+"; "+
-                msg.remetente+"; "+
-                msg.destinatario+"; "+
+                msg.sender+"; "+
+                msg.destination+"; "+
                 (int)clock.value()+"; "+
-                msg.relogioFisico+"; "+
-                msg.relogioLogico+"; "+
-                msg.tipo+"; "+
-                msg.conteudo;
+                msg.physicalClock+"; "+
+                msg.logicalClock+"; "+
+                msg.type+"; "+
+                msg.content;
                 debug(saida);
         } catch (Exception e) {
                 e.printStackTrace();

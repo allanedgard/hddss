@@ -48,7 +48,7 @@ public class Agent extends Thread {
     }
     
    public void send(Message m){
-       infra.nic_out.adiciona((int)infra.clock.value(), m);
+       infra.nic_out.add((int)infra.clock.value(), m);
 
    }
     public void startup(){
@@ -72,7 +72,7 @@ public class Agent extends Thread {
          *   Este evento pode ser sobrecarregado pela ação específica 
          *   do protocolo
          */
-        infra.app_in.adiciona((int)this.infra.clock.value(), msg);
+        infra.app_in.add((int)this.infra.clock.value(), msg);
     }
     
     

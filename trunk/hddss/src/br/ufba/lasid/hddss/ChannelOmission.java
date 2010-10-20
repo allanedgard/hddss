@@ -17,7 +17,7 @@ public abstract class ChannelOmission extends Channel {
 
 
 
-    abstract int atraso();
+    abstract int delay();
     
     boolean status() {
         if (r.uniform() <= prob) {

@@ -30,7 +30,7 @@ public class Simulator  extends Thread
     
     public final int obtemAtraso(int i, int j)
     {
-                return (int) (network.Channels[i][j].atraso());
+                return (int) (network.Channels[i][j].delay());
          
     }
      

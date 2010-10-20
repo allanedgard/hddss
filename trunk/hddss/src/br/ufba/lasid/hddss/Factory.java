@@ -29,7 +29,7 @@ public class Factory {
             /*this keeps the compatibility with previous versions*/
 //            System.out.println(obj instanceof  Agent);
 //            System.out.println(value);
-            if(isInstanceof(obj, Agent.class)  && value.contains("FaultModel")){
+            if(isInstanceof(obj, Agent.class) && value.contains("FaultModel")){
                   ((Agent)obj).infra.setFaultModel(config.getString(value));
             }else{
                 setProperty(obj, value.substring(TAG.length() + 1), config.getString(value));

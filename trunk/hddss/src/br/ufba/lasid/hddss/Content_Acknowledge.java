@@ -9,7 +9,7 @@ package br.ufba.lasid.hddss;
  *
  * @author aliriosa
  */
-public class Acknowledge {
+public class Content_Acknowledge {
 
     int id;
     long rrecvTime = 0;

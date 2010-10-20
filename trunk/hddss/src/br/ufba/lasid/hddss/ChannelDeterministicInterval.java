@@ -19,7 +19,7 @@ public class ChannelDeterministicInterval extends Channel {
      }
 
     
-    int atraso() {
+    int delay() {
         return r.irandom(delay_min, delay_max);
     }
     

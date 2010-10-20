@@ -2,12 +2,12 @@ package br.ufba.lasid.hddss;
 
 public class ChannelLogNormal extends Channel {
 
-    double media;
+    double mean;
     double std;
     double min;
     Randomize x;
     ChannelLogNormal (double t, double s, double m) {
-        media = t;
+        mean = t;
         std = s;
         min = m;
         x = new Randomize();
@@ -17,8 +17,8 @@ public class ChannelLogNormal extends Channel {
         x = new Randomize();
     }
 
-    public void setMedia(String dt) {
-            media = Float.parseFloat(dt);
+    public void setMean(String dt) {
+            mean = Float.parseFloat(dt);
     }
 
     public void setMinDelay(String dt) {
@@ -30,9 +30,9 @@ public class ChannelLogNormal extends Channel {
     }
 
 
-    int atraso() {
+    int delay() {
         
-        return (int) ( min + x.normal(media,std) );
+        return (int) ( min + x.normal(mean,std) );
     }
 
     boolean status() {

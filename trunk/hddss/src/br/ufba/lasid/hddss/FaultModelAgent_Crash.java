@@ -42,7 +42,7 @@ public class FaultModelAgent_Crash extends FaultModelAgent {
     
 
     
-    public void avancaTick() {
+    public void increaseTick() {
             if (!parado) {
                 infra.agent.done = true;
                 
