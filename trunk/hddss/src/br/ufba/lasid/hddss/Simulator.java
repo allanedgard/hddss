@@ -1,9 +1,12 @@
 package br.ufba.lasid.hddss;
 
-
-import br.ufba.lasid.hddss.RuntimeContainer;
 import org.apache.commons.math.stat.descriptive.*;
 
+/**
+ * This is the main class of HDDSS, allowing to run a set of simulated
+ * scenarios described in the configuration files
+ * @author allan
+ */
 public class Simulator  extends Thread
 {
     java.io.PrintStream out;
@@ -14,9 +17,9 @@ public class Simulator  extends Thread
     int tempofinal;
     Agent p[];
     Network network;
-    DescriptiveStatistics atraso_recepcao;
+    DescriptiveStatistics receptionDelay;
     DescriptiveStatistics tempo_transmissao;
-    DescriptiveStatistics atraso_entrega;
+    DescriptiveStatistics deliveryDelay;
     DescriptiveStatistics atraso_fila;
 
     double DESVIO;
@@ -66,7 +69,7 @@ public class Simulator  extends Thread
 
             for(int i = 0; i < n; i++){
 
-                p[i].infra.avancaTick();
+                p[i].infra.increaseTick();
 
                 /* 
                   if simulation time isn't over and p is not crashed then 
@@ -181,11 +184,11 @@ public class Simulator  extends Thread
                 System.out.println("total de broadcast classe "+i+" = "+network.broadcasts[i]);
             }
         }
-        System.out.println("media atraso fim-a-fim = "+this.atraso_entrega.getMean()+", std dev atraso fim-a-fim = "+atraso_entrega.getStandardDeviation()  
-                           +", maximo atraso fim-a-fim = "+this.atraso_entrega.getMax()+", min atraso fim-a-fim = "+atraso_entrega.getMin() 
+        System.out.println("media atraso fim-a-fim = "+this.deliveryDelay.getMean()+", std dev atraso fim-a-fim = "+deliveryDelay.getStandardDeviation()
+                           +", maximo atraso fim-a-fim = "+this.deliveryDelay.getMax()+", min atraso fim-a-fim = "+deliveryDelay.getMin()
                            );
-        System.out.println("media atraso recepcao-entrega = "+this.atraso_recepcao.getMean()+", std dev atraso recepcao-entrega = "+atraso_recepcao.getStandardDeviation()
-                           +", maximo atraso recepcao-entrega = "+this.atraso_recepcao.getMax()+", min atraso recepcao-entrega = "+atraso_recepcao.getMin() 
+        System.out.println("media atraso recepcao-entrega = "+this.receptionDelay.getMean()+", std dev atraso recepcao-entrega = "+receptionDelay.getStandardDeviation()
+                           +", maximo atraso recepcao-entrega = "+this.receptionDelay.getMax()+", min atraso recepcao-entrega = "+receptionDelay.getMin()
                            );  
         System.out.println("media atraso envio-recepcao = "+this.tempo_transmissao.getMean()+", std dev atraso envio-recepcao = "+tempo_transmissao.getStandardDeviation()
                            +", maximo atraso envio-recepcao = "+this.tempo_transmissao.getMax()+", min atraso envio-recepcao = "+tempo_transmissao.getMin() 
@@ -207,7 +210,7 @@ public class Simulator  extends Thread
      */ 
     
     public final synchronized void avanco(RuntimeContainer rc) {
-        rc.avancaTick();
+        rc.increaseTick();
     }
 
     public void init() {
@@ -320,8 +323,8 @@ public class Simulator  extends Thread
 
     Simulator(String filename)
     {
-        atraso_recepcao =  new DescriptiveStatistics();
-        atraso_entrega = new DescriptiveStatistics();
+        receptionDelay =  new DescriptiveStatistics();
+        deliveryDelay = new DescriptiveStatistics();
         tempo_transmissao = new DescriptiveStatistics();
         atraso_fila = new DescriptiveStatistics();
         clock = 0;
@@ -333,12 +336,12 @@ public class Simulator  extends Thread
             e.printStackTrace();
         }
 
-        tipo = config.getString("Tipo", "s").charAt(0);
-        modo = config.getString("Modo", "t").charAt(0);
+        tipo = config.getString("Type", "s").charAt(0);
+        modo = config.getString("Mode", "t").charAt(0);
         debug_mode = config.getBoolean("Debug", debug_mode);
-        tempofinal = config.getInteger("TempoFinal");
-        n = config.getInteger("NumeroAgentes");
-        DESVIO = config.getInteger("DesvioMaximo", 2);
+        tempofinal = config.getInteger("FinalTime");
+        n = config.getInteger("NumberOfAgents");
+        DESVIO = config.getInteger("MaximumDeviation", 2);
     }
 
 }

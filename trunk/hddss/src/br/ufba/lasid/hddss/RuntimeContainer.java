@@ -4,11 +4,6 @@ import br.ufba.lasid.hddss.FaultModelAgent;
 import br.ufba.lasid.hddss.*;
 import java.util.ArrayList;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template nic_in the editor.
- */
-
 /**
  * A RuntimeContainer can be a Operating System, a Middleware or a Simulator.
  * It allows to hide details about the execution infra of the agent.
@@ -57,7 +52,7 @@ public class RuntimeContainer extends Thread{
         
     }
 
-    public final void avancaTick() {
+    public final void increaseTick() {
         if (faultModel == null) {
             execute();
         }
@@ -110,8 +105,8 @@ public class RuntimeContainer extends Thread{
         reportEvent(msg, 'd');
 
         if (msg.payload) {
-            context.atraso_entrega.addValue((int)clock.value() - msg.physicalClock);
-            context.atraso_recepcao.addValue((int)clock.value() - msg.tempoRecepcao);
+            context.deliveryDelay.addValue((int)clock.value() - msg.physicalClock);
+            context.receptionDelay.addValue((int)clock.value() - msg.tempoRecepcao);
             context.tempo_transmissao.addValue(msg.tempoRecepcao-msg.physicalClock);
         }
         agent.deliver(msg);

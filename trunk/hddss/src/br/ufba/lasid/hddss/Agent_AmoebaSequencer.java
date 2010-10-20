@@ -160,7 +160,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             if ( (r.uniform() <= prob) && !bloquearEntrega ) {
                 int clock = (int)infra.clock.value();
                 SENT = clock;    // Registra numero do bloco do ultimo envio
-                this.criamensagem(clock, id, Lider, REQ_SEQ, "payload", -1);
+                this.createMessage(clock, id, Lider, REQ_SEQ, "payload", -1);
             }
             /*
             if ((clock-SENT) > DELTA) {
@@ -178,17 +178,17 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
          */
         public void sendGroupMsg(int clock, int tipo, Object valor, int LC) {
             for (int j=0; j<infra.nprocess;j++)
-                this.criamensagem(clock, this.id, j, tipo, valor, LC);
+                this.createMessage(clock, this.id, j, tipo, valor, LC);
         }
         
         public void sendGroupMsg(int clock, int tipo, Object valor, int LC, boolean pay) {
             for (int j=0; j<infra.nprocess;j++)
-                this.criamensagem(clock, this.id, j, tipo, valor, LC, pay);
+                this.createMessage(clock, this.id, j, tipo, valor, LC, pay);
         }
 
         public void relayGroupMsg(int clock, int i, int tipo, Object valor, int LC, boolean pay) {
             for (int j=0; j<infra.nprocess;j++)
-                this.criamensagem(clock, i, j, tipo, valor, LC, pay);
+                this.createMessage(clock, i, j, tipo, valor, LC, pay);
         }        
 
         
@@ -211,7 +211,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                     break;
                 case APP:
                     msgs.add(msg.logicalClock, msg);
-                    this.criamensagem(clock, id, Lider, ACK, msg, msg.logicalClock);
+                    this.createMessage(clock, id, Lider, ACK, msg, msg.logicalClock);
                     
                     break;
                 case ACK:
