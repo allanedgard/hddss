@@ -24,8 +24,8 @@ public class Factory {
         java.util.Iterator properties = config.getKeys(TAG + ".");
 
         while (properties.hasNext()) {
+           
             String value = (String) properties.next();
-
             /*this keeps the compatibility with previous versions*/
 //            System.out.println(obj instanceof  Agent);
 //            System.out.println(value);
