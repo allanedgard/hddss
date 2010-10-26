@@ -1,5 +1,5 @@
 package br.ufba.lasid.hddss;
-
+//
 public class Agent extends Thread {
     int id;
     char tipo;
