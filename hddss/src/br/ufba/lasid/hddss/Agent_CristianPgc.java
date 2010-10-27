@@ -85,6 +85,7 @@ public class Agent_CristianPgc extends SimulatedAgent {
             boolean [] vs = visao();
             int clock = (int)infra.clock.value();
             int tick  = (int)infra.clock.tickValue();
+            double ro = infra.context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
             infra.debug("p"+id+": clock="+clock);
             if (r.uniform() <= prob) {
                 LogicalClock ++;
@@ -97,7 +98,7 @@ public class Agent_CristianPgc extends SimulatedAgent {
             }
             if (clock == CRT) {
                 infra.debug("p"+id+": sinc, clock="+clock);
-                Content_Sync sc = new Content_Sync(clock + infra.context.ro * tick);
+                Content_Sync sc = new Content_Sync(clock + ro * tick);
                 lastClock++;
                 this.createMessage(clock,this.id,infra.nprocess,CK_REQ,sc,lastClock);
                 somaClocks = 0.0;
@@ -125,7 +126,9 @@ public class Agent_CristianPgc extends SimulatedAgent {
             int M;
             int clock = (int)infra.clock.value();
             int tick  = (int)infra.clock.tickValue();
-
+            double DESVIO = infra.context.get(RuntimeSupport.Variable.MaxDeviation).<Double>value();
+            double ro = infra.context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
+            Network network = infra.context.get(RuntimeSupport.Variable.Network).<Network>value();
             Content_Sync sc;
             switch (msg.type) {
                 case PG_NEW_GROUP: 
@@ -145,7 +148,7 @@ public class Agent_CristianPgc extends SimulatedAgent {
                     /* Alterado para incluir Flood
                      * 
                      */
-                    int t_e = msg.physicalClock + (int) infra.context.DESVIO + (1+resiliencia) * DELTA;
+                    int t_e = msg.physicalClock + (int) DESVIO + (1+resiliencia) * DELTA;
                     if (msgRecebidas.contains(msg.getId()) == false) {
                         infra.debug("p"+id+": relayed from "+msg.sender);
                         msgRecebidas.add(msg.getId());
@@ -158,7 +161,7 @@ public class Agent_CristianPgc extends SimulatedAgent {
                         };
                         infra.app_in.add(t_e, msg);
                     } else {
-                        infra.context.network.unicasts[msg.type]++;
+                        network.unicasts[msg.type]++;
                     }                        
                     // (int r, int d, int t, int rL, int rF, Object c);
                     // Original  int t_e = msg.relogioFisico + (int) controle.DESVIO + DELTA;
@@ -166,11 +169,11 @@ public class Agent_CristianPgc extends SimulatedAgent {
                     break;
                 case CK_REQ:
                     sc = (Content_Sync) msg.content;
-                    sc.atual = clock + infra.context.ro * tick;
+                    sc.atual = clock + ro * tick;
                     this.createMessage(clock,this.id,msg.sender,CK_REP,sc, msg.logicalClock);
                     break;
                 case CK_REP:
-                    double agora = clock + infra.context.ro * tick;
+                    double agora = clock + ro * tick;
                     sc = (Content_Sync) msg.content;
                     if (msg.logicalClock == lastClock) {
                         //System.nic_out.println("CLK");
@@ -179,15 +182,15 @@ public class Agent_CristianPgc extends SimulatedAgent {
                         if (numeroClocks == infra.nprocess) {
                             infra.debug("p"+id+" clock atual:"+clock+" tick:"+tick);
                             double ajusta = somaClocks/numeroClocks;
-                            double atual = clock + infra.context.ro * tick;
+                            double atual = clock + ro * tick;
                             somaClocks = .0;
                             numeroClocks=0;
                             if (ajusta < atual){
-                                infra.clock.adjustCorrection((int) ( (atual - ajusta)*(1/infra.context.ro) ));
+                                infra.clock.adjustCorrection((int) ( (atual - ajusta)*(1/ro) ));
                             }
                             else {
                                 infra.clock.adjustValue((int)ajusta);
-                                infra.clock.adjustTickValue((int) (((ajusta - (int) ajusta)) * (1/infra.context.ro)));
+                                infra.clock.adjustTickValue((int) (((ajusta - (int) ajusta)) * (1/ro)));
                             }
                         }
                     }

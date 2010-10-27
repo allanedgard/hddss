@@ -71,7 +71,8 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
     }
 
     public void estimateDelay(Message msg){
-
+        double ro = infra.context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
+        int maxro = infra.context.get(RuntimeSupport.Variable.MaxClockDeviation).<Integer>value();
         if(msg.content instanceof Content_TimedCB){
             Content_TimedCB content = (Content_TimedCB) msg.content;
             Content_Acknowledge ack = content.vack[msg.destination];
@@ -80,7 +81,7 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
             double rtt = msg.tempoRecepcao - ack.lsendTime;
             
             //compute the remote proc time
-            double ptime = (ack.rsendTime - ack.rrecvTime) * (1 - infra.context.maxro * infra.context.ro);
+            double ptime = (ack.rsendTime - ack.rrecvTime) * (1 - maxro * ro);
 
             double delay = (rtt - ptime)/2;
             

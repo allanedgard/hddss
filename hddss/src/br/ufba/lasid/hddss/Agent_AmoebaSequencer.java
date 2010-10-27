@@ -74,6 +74,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
     
     @Override
         public void setup() {
+            int finalTime = infra.context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
             LSN = -1;
             bloquearEntrega = false;
             consenso = false;
@@ -120,7 +121,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             AllUnstableMensagens =  new java.util.ArrayList();
             
             // Consensos que podem ser mantidos por bloco
-            Consensus = new Consensus[infra.context.tempofinal*2];
+            Consensus = new Consensus[finalTime*2];
             
             
         }

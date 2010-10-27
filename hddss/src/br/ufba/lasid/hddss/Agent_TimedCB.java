@@ -82,6 +82,7 @@ public class Agent_TimedCB extends SimulatedAgent {
 
     @Override
         public void setup() {
+            int finalTime = infra.context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
             schedule = new java.util.TreeMap();
             stableMode = 0;
             logicalClock = 0;
@@ -92,7 +93,7 @@ public class Agent_TimedCB extends SimulatedAgent {
             acks = new Content_Acknowledge[infra.nprocess];
             
             r = new Randomize(id);
-            scheduler = new int[infra.context.tempofinal*2];
+            scheduler = new int[finalTime*2];
  //           BM_Matrix = new char[controle.n][controle.tempofinal*2];
             for (int j = 0;j<scheduler.length ;j++) {
                     scheduler[j]=-1;
@@ -141,7 +142,7 @@ public class Agent_TimedCB extends SimulatedAgent {
             allUnstableMsgs =  new java.util.ArrayList();
             
             // Consensos que podem ser mantidos por bloco
-            consensusArray = new Consensus[infra.context.tempofinal*2];
+            consensusArray = new Consensus[finalTime*2];
             
             // Inicia matriz de blocos e matriz de Last Complete Blocks
             for (int i = 0;i<infra.nprocess;i++) {
@@ -227,8 +228,16 @@ public class Agent_TimedCB extends SimulatedAgent {
        
        void blockRegister(int blocknumber, int sender, int ti) {
                 int TC;
+                int finalTime = infra.context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
+                int DESVIO = infra.context.get(RuntimeSupport.Variable.MaxDeviation).<Integer>value();
+                
                 Integer block = new Integer(blocknumber);
                 int clock = (int)infra.clock.value();
+
+                String mode = infra.context.get(RuntimeSupport.Variable.Mode).<String>value();
+                double ro = infra.context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
+                int maxro = infra.context.get(RuntimeSupport.Variable.MaxClockDeviation).<Integer>value();
+                
                 if (!blocks.containsKey(block)) {
                     /*
                      *  Cria o bloco!
@@ -236,18 +245,18 @@ public class Agent_TimedCB extends SimulatedAgent {
                         if (block > lastBlock)
                             lastBlock = block;
                         blocks.put(block, clock);
-                        if (infra.context.modo== 't') {
+                        if (mode.equals("t")) {
                             if (sender == id) {
-                                TC = (int) ( (clock+2 * getDeltaMax() + getMaxTS()) + infra.context.DESVIO+1);
+                                TC = (int) ( (clock+2 * getDeltaMax() + getMaxTS()) + DESVIO+1);
                             }
                             else
-                                TC = (int) ( (clock+2 * getDeltaMax() + getMaxTS()-getDeltaMin()) + infra.context.DESVIO+1);
+                                TC = (int) ( (clock+2 * getDeltaMax() + getMaxTS()-getDeltaMin()) + DESVIO+1);
                         } else {
                             if (sender == id) {
-                                TC = (int) ( (clock+2 *getDeltaMax() + getMaxTS() )* (1+infra.context.ro*infra.context.maxro))+1;
+                                TC = (int) ( (clock+2 *getDeltaMax() + getMaxTS() )* (1+ro*maxro))+1;
                             }
                             else
-                                TC = (int) ( (clock+2 * getDeltaMax() + getMaxTS()-getDeltaMin())* (1+infra.context.ro*infra.context.maxro))+1;
+                                TC = (int) ( (clock+2 * getDeltaMax() + getMaxTS()-getDeltaMin())* (1+ro*maxro))+1;
                         }
 
                         /*  
@@ -255,7 +264,7 @@ public class Agent_TimedCB extends SimulatedAgent {
                          *
                          */
                         
-                        if (TC <= infra.context.tempofinal)
+                        if (TC <= finalTime)
                                 if (scheduler[TC] < blocknumber) {
                                     scheduler[TC] = blocknumber;
                                     infra.debug("p"+id+" bloco "+blocknumber+" expira em "+TC+" criado em "+clock+" sender = "+sender);
