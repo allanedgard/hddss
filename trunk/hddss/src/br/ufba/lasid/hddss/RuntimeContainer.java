@@ -1,17 +1,16 @@
 package br.ufba.lasid.hddss;
 
-import br.ufba.lasid.hddss.FaultModelAgent;
-import br.ufba.lasid.hddss.*;
 import java.util.ArrayList;
+import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 
 /**
  * A RuntimeContainer can be a Operating System, a Middleware or a Simulator.
  * It allows to hide details about the execution infra of the agent.
  * @author aliriosa
  */
-public class RuntimeContainer extends Thread{
+public class RuntimeContainer extends Thread implements RuntimeSupport{
     Clock clock;
-    Simulator context;
+    RuntimeSupport context;
     
     Buffer nic_out; //send buffer
     Buffer nic_in;  //receive buffer
@@ -24,12 +23,15 @@ public class RuntimeContainer extends Thread{
     static int MAX_PROCESSA = 100;
 
     int nprocess = 0;
+
+    RuntimeVariables variables = new RuntimeVariables();
     
     public RuntimeContainer(Simulator context){
         this.context = context;
         nic_in = new Buffer();
         nic_out = new Buffer();
         app_in = new Buffer();
+        
     }
 
     public boolean register(Agent agent){
@@ -78,9 +80,10 @@ public class RuntimeContainer extends Thread{
 
     @Override
     public void run() {
+        int finalTime = context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
         agent.startup();
-        while (clock.value() < context.tempofinal) {
-            context.avanco(this);
+        while (clock.value() < finalTime) {
+            context.perform(this);
             this.yield();
             if (agent.done)
                 break;
@@ -105,9 +108,18 @@ public class RuntimeContainer extends Thread{
         reportEvent(msg, 'd');
 
         if (msg.payload) {
-            context.deliveryDelay.addValue((int)clock.value() - msg.physicalClock);
-            context.receptionDelay.addValue((int)clock.value() - msg.tempoRecepcao);
-            context.tempo_transmissao.addValue(msg.tempoRecepcao-msg.physicalClock);
+            context.get(Variable.DlvDelayTrace).<DescriptiveStatistics>value().addValue(
+                    (int)clock.value() - msg.physicalClock
+            );
+
+            context.get(Variable.RxDelayTrace).<DescriptiveStatistics>value().addValue(
+                    (int)clock.value() - msg.tempoRecepcao
+            );
+
+            context.get(Variable.RxDelayTrace).<DescriptiveStatistics>value().addValue(
+                    msg.tempoRecepcao-msg.physicalClock
+            );
+
         }
         agent.deliver(msg);
         return true;
@@ -138,8 +150,9 @@ public class RuntimeContainer extends Thread{
         }
 
         Message msg;
+        Network network = context.get(Variable.Network).<Network>value();
         msg = (Message) a.get(0);
-        context.network.send(msg);
+        network.send(msg);
         reportEvent(msg, 's');
         return true;
                     
@@ -177,8 +190,34 @@ public class RuntimeContainer extends Thread{
     }
 
     public final void debug(String d) {
-        if (context.debug_mode)
-            context.out.println(d);
+
+        boolean debug = context.get(Variable.Debug).<Boolean>value();
+        java.io.PrintStream out = context.get(Variable.StdOutput).<java.io.PrintStream>value();
+        
+        if (debug) out.println(d);
+    }
+
+    public Value get(Variable variable) {
+        return variables.get(variable);
+    }
+
+    public <U> void set(Variable variable, U value){
+        variables.set(variable, value);
+    }
+    public Value get(String name) {
+        return variables.get(name);
+    }
+
+    public <U> void set(String name, U value) {
+        variables.set(name, value);
+    }
+
+    public void perform(RuntimeContainer rs) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void ok() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 

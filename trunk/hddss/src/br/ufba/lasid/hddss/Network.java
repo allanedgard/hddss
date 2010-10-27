@@ -3,6 +3,7 @@ package br.ufba.lasid.hddss;
 
 import br.ufba.lasid.hddss.Simulator;
 import java.lang.reflect.Method;
+import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 
 /*
  * To change this template, choose Tools | Templates
@@ -67,7 +68,10 @@ public abstract class Network extends Thread{
     
     public final void init(Simulator cxt){
         conteiner = cxt;
-        Channels = new Channel[conteiner.n][conteiner.n];
+        
+        int n = cxt.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value().intValue();
+
+        Channels = new Channel[n][n];
         totalticks = (int)(1/conteiner.ro);
     }
 
@@ -110,7 +114,8 @@ public abstract class Network extends Thread{
 //        long at = delay();
         tqueue += delay();
         long at = (long) tqueue;
-        conteiner.atraso_fila.addValue(tqueue);
+        conteiner.get(RuntimeSupport.Variable.QueueDelayTrace).<DescriptiveStatistics>value().addValue(tqueue);
+//        conteiner.atraso_fila.addValue(tqueue);
        // System.nic_out.println("queue=" + tqueue);
         
         if(isRelay(msg)){
@@ -147,7 +152,8 @@ public abstract class Network extends Thread{
     }
 
     public boolean isBroadcast(Message msg){
-        return (msg.destination == conteiner.n);
+        int n = conteiner.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value().intValue();
+        return (msg.destination == n);
     }
 
     public boolean isRelay(Message msg){
@@ -177,12 +183,14 @@ public abstract class Network extends Thread{
     }
 
     public void broadcast(Message msg, double atraso){
-
+        
+        int n = conteiner.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value();
+        
         broadcasts[msg.type]++;
         
         int p_i = msg.sender;
 
-        for (int p_j=0; p_j < conteiner.n; p_j++) {
+        for (int p_j=0; p_j < n; p_j++) {
 
             if (isLoopback(p_i, p_j)){
 
@@ -198,7 +206,8 @@ public abstract class Network extends Thread{
     }
     
     public final void debug(String d) {
-        if (conteiner.debug_mode)
+        boolean debug = conteiner.get(RuntimeSupport.Variable.Debug).<Boolean>value();
+        if (debug)
             conteiner.out.println(d);
     }
 

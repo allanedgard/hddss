@@ -7,29 +7,31 @@ import org.apache.commons.math.stat.descriptive.*;
  * scenarios described in the configuration files
  * @author allan
  */
-public class Simulator  extends Thread
+public class Simulator  extends Thread implements RuntimeSupport
 {
     java.io.PrintStream out;
-    char modo;
+    //char modo;
     int clock;
-    int m;
-    int n;
-    int tempofinal;
+        int m;
+    //int n;
+    //int tempofinal;
     Agent p[];
     Network network;
-    DescriptiveStatistics receptionDelay;
-    DescriptiveStatistics tempo_transmissao;
-    DescriptiveStatistics deliveryDelay;
-    DescriptiveStatistics atraso_fila;
+//    DescriptiveStatistics receptionDelay;
+//    DescriptiveStatistics tempo_transmissao;
+//    DescriptiveStatistics deliveryDelay;
+//    DescriptiveStatistics atraso_fila;
 
-    double DESVIO;
-    boolean debug_mode;
+    //double DESVIO;
+    //boolean debug_mode;
     boolean fim;
-    char tipo;
+    //char tipo;
     int charge;
     public static double ro = .001;
     public static int maxro = 5;
     public static Configurations config;
+    
+    RuntimeVariables variables = new RuntimeVariables();
     
     public final int obtemAtraso(int i, int j)
     {
@@ -39,7 +41,7 @@ public class Simulator  extends Thread
      
     public final synchronized void ok() {
         m++;
-        if (m==n) {
+        if (m==get(Variable.NumberOfAgents).<Integer>value().intValue()) {
             fim = true;
             try {
                 this.notifyAll();
@@ -51,6 +53,10 @@ public class Simulator  extends Thread
     }
 
     public final synchronized void iniciaModoHwClock() {
+        
+        int n = get(Variable.NumberOfAgents).<Integer>value();
+        int finalTime = get(Variable.FinalTime).<Integer>value();
+
         try {
             out.println("modo emulação de relógio");
         } catch (Exception e) {
@@ -76,7 +82,7 @@ public class Simulator  extends Thread
                   it hasn't been done yet.
                  */
 
-                done = done && ((p[i].infra.clock.value() >= this.tempofinal) || !p[i].status());
+                done = done && ((p[i].infra.clock.value() >= finalTime) || !p[i].status());
             }
 
             network.avancaTick();
@@ -86,6 +92,9 @@ public class Simulator  extends Thread
     } 
     
     public final synchronized void inicia() {
+
+        int n = get(Variable.NumberOfAgents).<Integer>value();
+        
         try {
             out.println("modo thread");
         } catch (Exception e) {
@@ -104,6 +113,7 @@ public class Simulator  extends Thread
     } 
     
     public final synchronized void finaliza() {
+        int n = get(Variable.NumberOfAgents).<Integer>value();
         for(int i = 0; i < n; i++)
         {
             p[i].stop();
@@ -113,6 +123,10 @@ public class Simulator  extends Thread
     } 
     
     public final boolean sincTicks(int j) {
+        
+        double DESVIO = get(Variable.MaxDeviation).<Double>value();
+
+        int n = get(Variable.NumberOfAgents).<Integer>value();
         double clockreal[] = new double[n];
         double menor;
         menor = Double.MAX_VALUE;
@@ -146,12 +160,13 @@ public class Simulator  extends Thread
     
     public final void run()
     {
+        int n = get(Variable.NumberOfAgents).<Integer>value();
         m = 0;
         p = new Agent[n];
         
         init();
         
-        if (modo == 't') {
+        if (get(Variable.Mode).<String>value().equals("t")) {
         
         inicia();
         
@@ -176,6 +191,12 @@ public class Simulator  extends Thread
         System.out.println("execucao terminada:");
         java.util.Date data = new java.util.Date();
         System.out.println(data.toString());
+
+        DescriptiveStatistics deliveryDelay = get(Variable.DlvDelayTrace).<DescriptiveStatistics>value();
+        DescriptiveStatistics receptionDelay = get(Variable.RxDelayTrace).<DescriptiveStatistics>value();
+        DescriptiveStatistics tempo_transmissao = get(Variable.TxDelayTrace).<DescriptiveStatistics>value();
+        DescriptiveStatistics atraso_fila = get(Variable.QueueDelayTrace).<DescriptiveStatistics>value();
+        
         for (int i = 0; i< 256; i++){
             if (network.unicasts[i] != 0) {
                 System.out.println("total de unicast classe "+i+" = "+network.unicasts[i]);
@@ -184,20 +205,20 @@ public class Simulator  extends Thread
                 System.out.println("total de broadcast classe "+i+" = "+network.broadcasts[i]);
             }
         }
-        System.out.println("media atraso fim-a-fim = "+this.deliveryDelay.getMean()+", std dev atraso fim-a-fim = "+deliveryDelay.getStandardDeviation()
-                           +", maximo atraso fim-a-fim = "+this.deliveryDelay.getMax()+", min atraso fim-a-fim = "+deliveryDelay.getMin()
+        System.out.println("media atraso fim-a-fim = "+deliveryDelay.getMean()+", std dev atraso fim-a-fim = "+deliveryDelay.getStandardDeviation()
+                           +", maximo atraso fim-a-fim = "+deliveryDelay.getMax()+", min atraso fim-a-fim = "+deliveryDelay.getMin()
                            );
-        System.out.println("media atraso recepcao-entrega = "+this.receptionDelay.getMean()+", std dev atraso recepcao-entrega = "+receptionDelay.getStandardDeviation()
-                           +", maximo atraso recepcao-entrega = "+this.receptionDelay.getMax()+", min atraso recepcao-entrega = "+receptionDelay.getMin()
+        System.out.println("media atraso recepcao-entrega = "+receptionDelay.getMean()+", std dev atraso recepcao-entrega = "+receptionDelay.getStandardDeviation()
+                           +", maximo atraso recepcao-entrega = "+receptionDelay.getMax()+", min atraso recepcao-entrega = "+receptionDelay.getMin()
                            );  
-        System.out.println("media atraso envio-recepcao = "+this.tempo_transmissao.getMean()+", std dev atraso envio-recepcao = "+tempo_transmissao.getStandardDeviation()
-                           +", maximo atraso envio-recepcao = "+this.tempo_transmissao.getMax()+", min atraso envio-recepcao = "+tempo_transmissao.getMin() 
+        System.out.println("media atraso envio-recepcao = "+tempo_transmissao.getMean()+", std dev atraso envio-recepcao = "+tempo_transmissao.getStandardDeviation()
+                           +", maximo atraso envio-recepcao = "+tempo_transmissao.getMax()+", min atraso envio-recepcao = "+tempo_transmissao.getMin() 
                            );
-        System.out.println("media atraso fila= "+this.atraso_fila.getMean()+", std dev atraso fila = "+atraso_fila.getStandardDeviation()
-                           +", maximo atraso fila = "+this.atraso_fila.getMax()+", min atraso fila = "+atraso_fila.getMin()
+        System.out.println("media atraso fila= "+atraso_fila.getMean()+", std dev atraso fila = "+atraso_fila.getStandardDeviation()
+                           +", maximo atraso fila = "+atraso_fila.getMax()+", min atraso fila = "+atraso_fila.getMin()
                            );
 
-        System.out.println("total: "+this.tempo_transmissao.getN());
+        System.out.println("total: "+tempo_transmissao.getN());
         out.close();
     }
 
@@ -209,7 +230,8 @@ public class Simulator  extends Thread
      * específicos
      */ 
     
-    public final synchronized void avanco(RuntimeContainer rc) {
+    public final synchronized void perform(RuntimeContainer rc) {
+
         rc.increaseTick();
     }
 
@@ -218,7 +240,7 @@ public class Simulator  extends Thread
          * Neste ponto se inicia os agentes e
          * os meios de comunicacao entre estes
          */
-
+        int n = get(Variable.NumberOfAgents).<Integer>value();
         try {
             Factory.config = config;
 
@@ -226,6 +248,8 @@ public class Simulator  extends Thread
             network = (Network) Factory.create(Network.TAG, Network.class.getName());
             network.init(this);
             Factory.setup(network, Network.TAG);
+
+            set(Variable.Network, network);
             
             //initing and setuping the agents
             for(int i = 0; i < n; i++){
@@ -233,7 +257,7 @@ public class Simulator  extends Thread
                 String TAGi = TAG + "["+i+"]";
                 p[i] = (Agent) Factory.create(Agent.TAG, Agent.class.getName());
                 p[i].setId(i);
-                p[i].setType(tipo);
+                p[i].setType(get(Variable.Type).<String>value().charAt(0));
 
                 prepareAgent(p[i]);
 
@@ -259,6 +283,7 @@ public class Simulator  extends Thread
     }
 
     public void prepareAgent(Agent a) throws Exception{
+        int n = get(Variable.NumberOfAgents).<Integer>value();
         a.infra = new RuntimeContainer(this);
         a.infra.register(a);
         a.infra.nprocess = n;
@@ -323,25 +348,48 @@ public class Simulator  extends Thread
 
     Simulator(String filename)
     {
-        receptionDelay =  new DescriptiveStatistics();
-        deliveryDelay = new DescriptiveStatistics();
-        tempo_transmissao = new DescriptiveStatistics();
-        atraso_fila = new DescriptiveStatistics();
+//        receptionDelay =  new DescriptiveStatistics();
+//        deliveryDelay = new DescriptiveStatistics();
+//        tempo_transmissao = new DescriptiveStatistics();
+//        atraso_fila = new DescriptiveStatistics();
         clock = 0;
         fim = false;
-        debug_mode = false;
+
         try {
             out = new java.io.PrintStream(new java.io.FileOutputStream(filename+".saida.txt"));
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        tipo = config.getString("Type", "s").charAt(0);
-        modo = config.getString("Mode", "t").charAt(0);
-        debug_mode = config.getBoolean("Debug", debug_mode);
-        tempofinal = config.getInteger("FinalTime");
-        n = config.getInteger("NumberOfAgents");
-        DESVIO = config.getInteger("MaximumDeviation", 2);
+        set(Variable.RxDelayTrace,  new DescriptiveStatistics());
+        set(Variable.TxDelayTrace,  new DescriptiveStatistics());
+        set(Variable.DlvDelayTrace,  new DescriptiveStatistics());
+        set(Variable.QueueDelayTrace,  new DescriptiveStatistics());
+        set(Variable.Type,  config.getString("Type", "s").substring(0, 1));
+        set(Variable.Mode,  config.getString("Mode", "t").substring(0, 1));
+        set(Variable.Debug, config.getBoolean("Debug", false));
+        set(Variable.MaxSimulationTime, config.getInteger("FinalTime"));
+        set(Variable.FinalTime, config.getInteger("FinalTime"));
+        set(Variable.NumberOfAgents, config.getInteger("NumberOfAgents"));
+        set(Variable.MaxDeviation, config.getInteger("MaximumDeviation", 2));
+        set(Variable.StdOutput, out);
+        set(Variable.ClockDeviation, ro);
+        set(Variable.MaxClockDeviation, maxro);
+        
+    }
+    public Value get(Variable variable) {
+        return variables.get(variable);
+    }
+
+    public <U> void set(Variable variable, U value){
+        variables.set(variable, value);
+    }
+    public Value get(String name) {
+        return variables.get(name);
+    }
+
+    public <U> void set(String name, U value) {
+        variables.set(name, value);
     }
 
 }
