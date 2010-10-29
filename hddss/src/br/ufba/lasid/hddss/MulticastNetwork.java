@@ -9,7 +9,8 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 
 /**
- *
+ * This class provid the required support for multicast communication
+ * (i.e. one-to-group).
  * @author aliriosa
  */
 public class MulticastNetwork extends NetworkDeterministic{
