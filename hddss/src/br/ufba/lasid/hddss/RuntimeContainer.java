@@ -9,7 +9,7 @@ import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
  * @author aliriosa
  */
 public class RuntimeContainer extends Thread implements RuntimeSupport{
-    Clock clock;
+    public Clock clock;
     RuntimeSupport context;
     
     Buffer nic_out; //send buffer
@@ -26,7 +26,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport{
 
     RuntimeVariables variables = new RuntimeVariables();
     
-    public RuntimeContainer(Simulator context){
+    public RuntimeContainer(RuntimeSupport context){
         this.context = context;
         nic_in = new Buffer();
         nic_out = new Buffer();

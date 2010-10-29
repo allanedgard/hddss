@@ -1,15 +1,15 @@
 package br.ufba.lasid.hddss;
 //
 public class Agent extends Thread {
-    int id;
-    char tipo;
-    Context contexto;
-    boolean done;
+    public int id;
+    public char tipo;
+    public Context contexto;
+    public boolean done;
 
-    static final String TAG = "agent";
-    RuntimeContainer infra;
+    public static final String TAG = "agent";
+    public RuntimeContainer infra;
     
-    Agent() {
+    public Agent() {
         done = false;
     }
 

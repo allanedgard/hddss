@@ -4,7 +4,6 @@ package br.ufba.lasid.hddss;
  * To change this template, choose Tools | Templates
  * and open the template nic_in the editor.
  */
-import java.lang.reflect.Method;
 /**
  *
  * @author allan
