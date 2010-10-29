@@ -327,7 +327,7 @@ public class Simulator  extends Thread implements RuntimeSupport
         System.out.println("configurando");
         System.out.println(WorkDir);
         String[] classNames =
-            configGeral.getStringArray("cenarios");
+        configGeral.getStringArray("cenarios");
         if (classNames == null) {
             classNames = new String[0];
         }

@@ -14,7 +14,7 @@ package br.ufba.lasid.hddss;
  * @author root
  */
 
-public final class Message  implements Comparable<Message> {
+public class Message  implements Comparable<Message> {
     
     int sender;
     int relayFrom;
@@ -28,7 +28,11 @@ public final class Message  implements Comparable<Message> {
     Object content;
     boolean payload;
      
-    
+    public Message(int r, int d, Object c){
+        sender = r;
+        destination = d;
+        content =c ;
+    }
     /** Creates a new instance of Mensagem */
     public Message(int r, int d, int t, int rL, int rF, Object c) {
         sender = r;

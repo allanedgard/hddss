@@ -13,5 +13,5 @@ public interface Algorithm<T> {
     public T getOutput();
     public void setInput(T input);
     public long getLatency();
-    public void execute();
+    public void execute(Object ... args);
 }
