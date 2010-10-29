@@ -118,6 +118,11 @@ public abstract class Network extends Thread{
 //        conteiner.atraso_fila.addValue(tqueue);
        // System.nic_out.println("queue=" + tqueue);
         
+       propagate(msg, at);
+       
+    }
+
+    public void propagate(Message msg, double at){
         if(isRelay(msg)){
 
             relay(msg, at);
@@ -132,13 +137,11 @@ public abstract class Network extends Thread{
             }//end if isBroadcast
 
             unicast(msg, at);
-            
-        }//end if isRelay
 
+        }//end if isRelay        
     }
-
     public void loopback(Message msg){
-        int address = msg.destination;
+        int address = msg.sender;
         Agent p = conteiner.p[address];
         p.infra.nic_in.add((int)p.infra.clock.value() + 1, msg);
     }
