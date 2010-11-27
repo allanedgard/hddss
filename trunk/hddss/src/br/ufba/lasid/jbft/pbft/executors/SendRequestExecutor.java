@@ -5,12 +5,12 @@
 
 package br.ufba.lasid.jbft.pbft.executors;
 
-import br.ufba.lasid.jbft.Executor;
-import br.ufba.lasid.jbft.Group;
-import br.ufba.lasid.jbft.Message;
-import br.ufba.lasid.jbft.Process;
-import br.ufba.lasid.jbft.Protocol;
-import br.ufba.lasid.jbft.actions.Action;
+import br.ufba.lasid.util.Executor;
+import br.ufba.lasid.util.Group;
+import br.ufba.lasid.util.Message;
+import br.ufba.lasid.util.Process;
+import br.ufba.lasid.util.Protocol;
+import br.ufba.lasid.util.actions.Action;
 import br.ufba.lasid.jbft.pbft.PBFTMessage;
 
 /**
@@ -28,7 +28,9 @@ public class SendRequestExecutor extends Executor{
 
     @Override
     public void execute(Action act) {
+        System.out.println("[SendRequestExecutor] call SendRequestExecutor.execute");
         ((PBFTMessage) act.getMessage()).setType(PBFTMessage.TYPE.RECEIVEREQUEST);
+        
         protocol.getCommunicator().multicast((Message) act.getMessage(), (Process) group);
     }
 

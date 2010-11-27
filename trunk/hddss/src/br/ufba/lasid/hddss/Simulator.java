@@ -255,7 +255,13 @@ public class Simulator  extends Thread implements RuntimeSupport
             for(int i = 0; i < n; i++){
                 String TAG = Agent.TAG;
                 String TAGi = TAG + "["+i+"]";
-                p[i] = (Agent) Factory.create(Agent.TAG, Agent.class.getName());
+
+                if(!config.getString(TAGi, "null").equals("null")){
+                    p[i] = (Agent) Factory.create(TAGi, Agent.class.getName());
+                }else{
+                    p[i] = (Agent) Factory.create(Agent.TAG, Agent.class.getName());
+                }
+
                 p[i].setId(i);
                 p[i].setType(get(Variable.Type).<String>value().charAt(0));
 
@@ -361,9 +367,9 @@ public class Simulator  extends Thread implements RuntimeSupport
             e.printStackTrace();
         }
 
-        set(Variable.RxDelayTrace,  new Statistica());
-        set(Variable.TxDelayTrace,  new Statistica());
-        set(Variable.DlvDelayTrace,  new Statistica());
+        set(Variable.RxDelayTrace,  new DescriptiveStatistics());
+        set(Variable.TxDelayTrace,  new DescriptiveStatistics());
+        set(Variable.DlvDelayTrace,  new DescriptiveStatistics());
         set(Variable.QueueDelayTrace,  new DescriptiveStatistics());
         set(Variable.Type,  config.getString("Type", "s").substring(0, 1));
         set(Variable.Mode,  config.getString("Mode", "t").substring(0, 1));

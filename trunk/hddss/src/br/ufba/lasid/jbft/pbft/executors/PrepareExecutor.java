@@ -5,8 +5,8 @@
 
 package br.ufba.lasid.jbft.pbft.executors;
 
-import br.ufba.lasid.jbft.Executor;
-import br.ufba.lasid.jbft.Protocol;
+import br.ufba.lasid.util.Executor;
+import br.ufba.lasid.util.Protocol;
 
 /**
  *

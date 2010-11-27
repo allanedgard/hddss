@@ -5,10 +5,10 @@
 
 package br.ufba.lasid.jbft.pbft.actions;
 
-import br.ufba.lasid.jbft.Message;
-import br.ufba.lasid.jbft.Wrapper;
-import br.ufba.lasid.jbft.actions.Action;
-import br.ufba.lasid.jbft.actions.ActionFactory;
+import br.ufba.lasid.util.Message;
+import br.ufba.lasid.util.Wrapper;
+import br.ufba.lasid.util.actions.Action;
+import br.ufba.lasid.util.actions.ActionFactory;
 import br.ufba.lasid.jbft.pbft.PBFTMessage;
 
 /**

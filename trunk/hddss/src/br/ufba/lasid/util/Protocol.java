@@ -3,16 +3,18 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jbft;
+package br.ufba.lasid.util;
 
-import br.ufba.lasid.jbft.actions.Action;
-import br.ufba.lasid.jbft.actions.ActionFactory;
+import br.ufba.lasid.util.actions.Action;
+import br.ufba.lasid.util.actions.ActionFactory;
 
 /**
  *
  * @author aliriosa
  */
 public class Protocol {
+
+    Process process = null;
     
     Context context = null;
 
@@ -22,6 +24,14 @@ public class Protocol {
     
     public Communicator getCommunicator() {
         return this.comm;
+    }
+
+    public Process getProcess() {
+        return process;
+    }
+
+    public void setProcess(Process process) {
+        this.process = process;
     }
 
     public void setCommunicator(Communicator comm){
@@ -39,6 +49,7 @@ public class Protocol {
             execs = new ExecutorCollection();
         }
 
+        execs.add(executor);
         executors.put(type, execs);
     }
 
@@ -51,16 +62,24 @@ public class Protocol {
     }
 
     public void doAction(Wrapper w){
+        System.out.println("[Protocol] call Protocol.perform");
         perform(ActionFactory.create(w));
     }
 
     public void perform(Action action){
+        System.out.println("[Protocol] call Protocol.perform");
         notify(action);       
     }
 
     private void notify(Action action) {
+        System.out.println("[Protocol] call Protocol.notify");
         Class type =  action.getClass();
-        for(Executor executor : executors.get(type)){
+        ExecutorCollection executorList = executors.get(type);
+
+        if(executorList == null)
+               return;
+        
+        for(Executor executor : executorList){
             executor.execute(action);
         }
     }    

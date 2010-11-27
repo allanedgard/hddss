@@ -220,6 +220,10 @@ public class RuntimeContainer extends Thread implements RuntimeSupport{
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    public int getNumberOfProcess() {
+        return nprocess;
+    }
+
 
 
 }

@@ -3,9 +3,9 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jbft;
+package br.ufba.lasid.util;
 
-import br.ufba.lasid.jbft.actions.Action;
+import br.ufba.lasid.util.actions.Action;
 
 /**
  *
@@ -18,7 +18,7 @@ public class Executor {
         this.protocol = protocol;
     }
     public void execute(Action act) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        System.out.println("[Executor] call Executor.execute");
     }
 
 }

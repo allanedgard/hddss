@@ -3,14 +3,12 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jbft;
-
-import java.util.ArrayList;
+package br.ufba.lasid.util;
 
 /**
  *
  * @author aliriosa
  */
-public class ExecutorCollection extends ArrayList<Executor>{
+public interface Wrapper {
 
 }
