@@ -361,9 +361,9 @@ public class Simulator  extends Thread implements RuntimeSupport
             e.printStackTrace();
         }
 
-        set(Variable.RxDelayTrace,  new DescriptiveStatistics());
-        set(Variable.TxDelayTrace,  new DescriptiveStatistics());
-        set(Variable.DlvDelayTrace,  new DescriptiveStatistics());
+        set(Variable.RxDelayTrace,  new Statistica());
+        set(Variable.TxDelayTrace,  new Statistica());
+        set(Variable.DlvDelayTrace,  new Statistica());
         set(Variable.QueueDelayTrace,  new DescriptiveStatistics());
         set(Variable.Type,  config.getString("Type", "s").substring(0, 1));
         set(Variable.Mode,  config.getString("Mode", "t").substring(0, 1));
