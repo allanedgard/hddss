@@ -13,8 +13,18 @@ import java.util.Hashtable;
  * (i.e. one-to-group).
  * @author aliriosa
  */
-public class MulticastNetwork extends NetworkDeterministic{
-    NetworkMembership membership = new NetworkMembership();
+public class MulticastNetwork<T extends Network> extends Network{
+    NetworkMembership membership = new NetworkMembership();    
+    T net;
+    
+    public void setNetwork(T net){
+        this.net = net;
+    }
+    
+    @Override
+    public double delay() {
+        return net.delay();
+    }
 
     private class NetworkMembership extends Hashtable<Integer, ArrayList<Integer>>{
         
