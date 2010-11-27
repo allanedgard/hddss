@@ -5,14 +5,15 @@
 
 package br.ufba.lasid.jbft;
 
+import java.util.Hashtable;
 /**
  *
  * @author aliriosa
  */
-public class Context {
+public class Context extends Hashtable<String, Object>{
 
-    public void save(Message r) {
-        throw new UnsupportedOperationException("Not yet implemented");
+    public void save(String name, Object value) {
+        put(name, value);
     }
 
 }
