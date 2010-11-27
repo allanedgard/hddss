@@ -39,6 +39,7 @@ public class ExecuteExecutor extends Executor{
         int v = Integer.parseInt(parameters.split(",")[1]);
 
         //do something
+        System.out.println("[SERVER][EXECUTE]" + m);
         
         m.setType(PBFTMessage.TYPE.SENDREPLY);
         
