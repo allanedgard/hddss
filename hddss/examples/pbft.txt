@@ -7,9 +7,10 @@ Debug = false
 clock = br.ufba.lasid.hddss.Clock_Virtual
 clock.Mode = s
 
-agent = br.ufba.lasid.hddss.Agent_ServerPBFT
+agent = br.ufba.lasid.hddss.Agent_ClientPBFT
 agent.PacketGenerationProb = .1
-agent[1] = br.ufba.lasid.hddss.Agent_ClientPBFT
+
+agent[1] = br.ufba.lasid.hddss.Agent_ServerPBFT
 agent[1].PacketGenerationProb = .1
 
 channel = br.ufba.lasid.hddss.ChannelLogNormal
