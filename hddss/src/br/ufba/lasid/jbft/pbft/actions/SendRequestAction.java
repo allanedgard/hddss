@@ -5,8 +5,8 @@
 
 package br.ufba.lasid.jbft.pbft.actions;
 
-import br.ufba.lasid.jbft.Message;
-import br.ufba.lasid.jbft.actions.Action;
+import br.ufba.lasid.util.Message;
+import br.ufba.lasid.util.actions.Action;
 
 /**
  *
@@ -15,6 +15,7 @@ import br.ufba.lasid.jbft.actions.Action;
 public class SendRequestAction extends Action{
 
     public SendRequestAction(Message m) {
+        super(m);
     }
 
 }

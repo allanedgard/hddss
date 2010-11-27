@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jbft.pbft;
 
-import br.ufba.lasid.jbft.Message;
+import br.ufba.lasid.util.Message;
 import java.util.StringTokenizer;
 
 /**
@@ -20,13 +20,13 @@ public class PBFTMessage extends Message{
         body += more + value.toString();
 
         if(more.equals("")){
-            more = "|";
+            more = ";";
         }
         
     }
 
     public Object get(int i) {
-        return body.split("|")[i];
+        return body.split(";")[i];
     }
     
     public enum TYPE{

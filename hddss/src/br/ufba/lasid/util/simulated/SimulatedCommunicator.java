@@ -3,14 +3,14 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jbft.simulated;
+package br.ufba.lasid.util.simulated;
 
 import br.ufba.lasid.hddss.Agent;
 import br.ufba.lasid.hddss.Agent_ClientPBFT;
 import br.ufba.lasid.hddss.RuntimeSupport;
-import br.ufba.lasid.jbft.Communicator;
-import br.ufba.lasid.jbft.Message;
-import br.ufba.lasid.jbft.Process;
+import br.ufba.lasid.util.Communicator;
+import br.ufba.lasid.util.Message;
+import br.ufba.lasid.util.Process;
 
 /**
  *
@@ -28,7 +28,7 @@ public class SimulatedCommunicator implements Communicator{
         agent.send(
          new br.ufba.lasid.hddss.Message(
             agent.id,
-            agent.infra.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value().intValue(),
+            agent.infra.getNumberOfProcess(),
             m.getType(), 0, (int) agent.infra.clock.value(),
             m
          )

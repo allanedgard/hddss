@@ -3,14 +3,14 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jbft;
+package br.ufba.lasid.util;
 
-import java.util.Hashtable;
+import java.util.ArrayList;
 
 /**
  *
  * @author aliriosa
  */
-public class ExecutorMap extends Hashtable<Class, ExecutorCollection>{
+public class ExecutorCollection extends ArrayList<Executor>{
 
 }

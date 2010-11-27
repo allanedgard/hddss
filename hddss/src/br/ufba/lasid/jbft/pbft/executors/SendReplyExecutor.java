@@ -6,13 +6,11 @@
 package br.ufba.lasid.jbft.pbft.executors;
 
 import br.ufba.lasid.hddss.Agent_ClientPBFT;
-import br.ufba.lasid.hddss.Agent_PBFT;
-import br.ufba.lasid.jbft.Executor;
-import br.ufba.lasid.jbft.Process;
-import br.ufba.lasid.jbft.Protocol;
-import br.ufba.lasid.jbft.actions.Action;
+import br.ufba.lasid.util.Executor;
+import br.ufba.lasid.util.Process;
+import br.ufba.lasid.util.Protocol;
+import br.ufba.lasid.util.actions.Action;
 import br.ufba.lasid.jbft.pbft.PBFTMessage;
-import br.ufba.lasid.jbft.pbft.actions.PBFTActionFactory;
 
 /**
  *
@@ -26,6 +24,7 @@ public class SendReplyExecutor extends Executor{
 
     @Override
     public void execute(Action act) {
+        System.out.println("[SendReplyExecutor] call SendReplyExecutor.execute");
         PBFTMessage m = (PBFTMessage) act.getMessage();
 
         

@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.hddss;
 
-import br.ufba.lasid.jbft.Communicator;
+import br.ufba.lasid.util.Communicator;
 import br.ufba.lasid.jbft.pbft.PBFT;
 import br.ufba.lasid.jbft.pbft.PBFTMessage;
 import br.ufba.lasid.jbft.pbft.actions.ReceiveReplyAction;
@@ -21,13 +21,8 @@ import java.util.logging.Logger;
  */
 public class Agent_ClientPBFT extends Agent_PBFT{
     
-    double prob = 0.0;
     Randomize r = new Randomize();
     
-   public void setPacketGenerationProb (String po) {
-        prob = Double.parseDouble(po);
-    }
-
     @Override
     public void deliver(Message msg) {
         super.deliver(msg);
@@ -37,7 +32,7 @@ public class Agent_ClientPBFT extends Agent_PBFT{
     public void execute() {
         super.execute();
         if (r.uniform() <= prob) {
-
+            System.out.println("[Agent_ClientPBFT] call Agent_ClientPBFT.execute");
             int x = r.irandom(0, 3);
 
             int op = r.irandom(0, 1);
@@ -68,6 +63,7 @@ public class Agent_ClientPBFT extends Agent_PBFT{
 
     @Override
     public void setup() {
+        super.setup();
         pbft.addExecutor(SendRequestAction.class, new SendRequestExecutor(pbft));
         pbft.addExecutor(ReceiveReplyAction.class, new ReceiveReplyExecutor(pbft));
     }

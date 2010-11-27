@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jbft;
+package br.ufba.lasid.util;
 
 import java.util.Hashtable;
 /**

@@ -3,9 +3,9 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jbft.actions;
+package br.ufba.lasid.util.actions;
 
-import br.ufba.lasid.jbft.Wrapper;
+import br.ufba.lasid.util.Wrapper;
 
 /**
  *

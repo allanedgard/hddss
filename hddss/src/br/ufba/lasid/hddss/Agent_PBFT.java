@@ -5,11 +5,12 @@
 
 package br.ufba.lasid.hddss;
 
-import br.ufba.lasid.jbft.Communicator;
-import br.ufba.lasid.jbft.Message;
-import br.ufba.lasid.jbft.Process;
+import br.ufba.lasid.util.Communicator;
+import br.ufba.lasid.util.Message;
+import br.ufba.lasid.util.Process;
 import br.ufba.lasid.jbft.pbft.PBFT;
 import br.ufba.lasid.jbft.pbft.PBFTMessage;
+import br.ufba.lasid.util.simulated.SimulatedCommunicator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,14 +18,21 @@ import java.util.logging.Logger;
  *
  * @author aliriosa
  */
-public class Agent_PBFT extends Agent implements Communicator{
+public class Agent_PBFT extends Agent implements Communicator, Process{
 
     PBFT pbft = new PBFT();
     Communicator comm;
+    double prob = 0.0;
+
+    public void setPacketGenerationProb (String po) {
+        prob = Double.parseDouble(po);
+    }
 
     @Override
     public void setup() {
-        super.setup();        
+        super.setup();
+        pbft.setProcess(this);
+        pbft.setCommunicator((Communicator)(new SimulatedCommunicator(this)));
     }
 
     @Override

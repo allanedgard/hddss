@@ -5,8 +5,8 @@
 
 package br.ufba.lasid.jbft.pbft.actions;
 
-import br.ufba.lasid.jbft.actions.Action;
-import br.ufba.lasid.jbft.Message;
+import br.ufba.lasid.util.actions.Action;
+import br.ufba.lasid.util.Message;
 
 /**
  *
@@ -18,7 +18,7 @@ public class PrepareAction extends Action{
     }
 
    public PrepareAction(Message m) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        super(m);
     }
 
 }

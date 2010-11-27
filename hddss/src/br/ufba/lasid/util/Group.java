@@ -3,12 +3,12 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jbft;
+package br.ufba.lasid.util;
 
 /**
  *
  * @author aliriosa
  */
-public interface Wrapper {
+public class Group {
 
 }
