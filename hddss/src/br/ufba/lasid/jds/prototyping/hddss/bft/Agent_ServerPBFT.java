@@ -5,21 +5,14 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.bft;
 
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
-import br.ufba.lasid.jds.prototyping.hddss.Message;
+import br.ufba.lasid.jds.prototyping.hddss.cs.Agent_Server;
 
 /**
  *
  * @author aliriosa
  */
-public class Agent_ServerPBFT extends Agent_PBFT{    
-    public int x[];
+public class Agent_ServerPBFT extends Agent_Server{
 
-    @Override
-    public void receive(Message msg) {
-        PBFTMessage m = (PBFTMessage)msg.getContent();
-        pbft.doAction(m);
-    }
 
     @Override
     public void setup() {

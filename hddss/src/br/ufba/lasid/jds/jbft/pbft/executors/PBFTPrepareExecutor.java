@@ -12,9 +12,9 @@ import br.ufba.lasid.jds.Protocol;
  *
  * @author aliriosa
  */
-public class CommitExecutor extends Executor{
+public class PBFTPrepareExecutor extends Executor{
 
-    public CommitExecutor(Protocol protocol) {
+    public PBFTPrepareExecutor(Protocol protocol) {
         super(protocol);
     }
 

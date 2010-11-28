@@ -24,16 +24,6 @@ public class SimulatedClientServerCommunicator implements Communicator{
     
     public void multicast(Message m, Process group) {
         throw new UnsupportedOperationException("Not supported yet.");
-/*        Process<Integer> g = (Process<Integer>) group;
-        agent.send(
-         new br.ufba.lasid.jds.prototyping.hddss.Message(
-            agent.id,
-            g.getID().intValue(),
-            m.getType(), 0, (int) agent.infra.clock.value(),
-            m
-         )
-        );
- */
     }
 
     public void unicast(Message m, Process client) {

@@ -15,8 +15,9 @@ public class Executor {
     public Executor(Protocol protocol){
         this.protocol = protocol;
     }
-    public void execute(Action act) {
-        System.out.println("[Executor] call Executor.execute");
+    
+    public synchronized void execute(Action act) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

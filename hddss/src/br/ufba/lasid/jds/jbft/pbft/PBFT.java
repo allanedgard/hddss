@@ -6,6 +6,7 @@
 package br.ufba.lasid.jds.jbft.pbft;
 
 import br.ufba.lasid.jds.Protocol;
+import br.ufba.lasid.jds.cs.ClientServerProtocol;
 import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.util.Wrapper;
 import br.ufba.lasid.jds.factories.PBFTActionFactory;
@@ -14,13 +15,11 @@ import br.ufba.lasid.jds.factories.PBFTActionFactory;
  *
  * @author aliriosa
  */
-public class PBFT extends Protocol{
+public class PBFT extends ClientServerProtocol{
     
-    Group group;
-
     @Override
     public void doAction(Wrapper w){
-       System.out.println("[Protocol] call Protocol.perform");
+       //System.out.println("[Protocol] call Protocol.perform");
        perform(PBFTActionFactory.create(w));
     }
 
