@@ -7,11 +7,12 @@ Debug = false
 clock = br.ufba.lasid.jds.prototyping.hddss.Clock_Virtual
 clock.Mode = s
 
-agent[0] = br.ufba.lasid.jds.prototyping.hddss.examples.helloworldcs.HelloWorldClient
-agent[0].ServerAddress= 1
 
-agent[1] = br.ufba.lasid.jds.prototyping.hddss.examples.helloworldcs.HelloWorldServer
-agent[1].ClientAddress = 0
+agent[0] = br.ufba.lasid.jds.prototyping.hddss.examples.helloworldcs.HelloWorldServer
+agent[0].ClientAddress = 1
+
+agent[1] = br.ufba.lasid.jds.prototyping.hddss.examples.helloworldcs.HelloWorldClient
+agent[1].ServerAddress= 0
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal
 channel.Mean = 10

@@ -73,17 +73,17 @@ public class Protocol {
     }
 
     public void doAction(Wrapper w){
-        System.out.println("[Protocol] call Protocol.perform");
+        //System.out.println("[Protocol] call Protocol.perform");
         perform(ActionFactory.create(w));
     }
 
     public void perform(Action action){
-        System.out.println("[Protocol] call Protocol.perform");
+        //System.out.println("[Protocol] call Protocol.perform");
         notify(action);       
     }
 
     private void notify(Action action) {
-        System.out.println("[Protocol] call Protocol.notify");
+        //System.out.println("[Protocol] call Protocol.notify");
         Class type =  action.getClass();
         ExecutorCollection executorList = executors.get(type);
 
