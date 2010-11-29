@@ -16,24 +16,38 @@ import br.ufba.lasid.jds.Process;
  */
 public class SimulatedClientServerCommunicator implements Communicator{
     
-    Agent agent;
+    protected Agent agent;
 
+    public Agent getAgent() {
+        return agent;
+    }
+
+    public void setAgent(Agent agent) {
+        this.agent = agent;
+    }
+
+    
     public SimulatedClientServerCommunicator(Agent agent){
         this.agent = agent;
     }
     
     public void multicast(Message m, Process group) {
+
         throw new UnsupportedOperationException("Not supported yet.");
+
     }
 
     public void unicast(Message m, Process destination) {
+
         Process<Integer> dest = (Process<Integer>) destination;
+
+        int source = agent.id;
+        int destin = dest.getID().intValue();
+        int now   = (int) agent.infra.clock.value();
+
         agent.send(
          new br.ufba.lasid.jds.prototyping.hddss.Message(
-            agent.id,
-            dest.getID().intValue(),
-            m.getType(), 0, (int) agent.infra.clock.value(),
-            m
+            source, destin, m.getType(), 0, now, m
          )
         );
 

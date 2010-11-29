@@ -22,12 +22,12 @@ public class Protocol {
 
     ExecutorMap executors = new ExecutorMap();
 
-    public static String COMMUNICATOR = "__ProtocolCommunicator";
-    public static String PROCESS      = "__ProtocolProcess";
-
+    public static String COMMUNICATOR   = "__ProtocolCommunicator";
+    public static String PROCESS        = "__ProtocolProcess";
+    public static String TAG            = "protocol";
 
     public void setCommunicator(Communicator comm){
-
+        
         getContext().put(COMMUNICATOR, comm);
 
     }
@@ -74,6 +74,12 @@ public class Protocol {
 
     public void doAction(Wrapper w){
         //System.out.println("[Protocol] call Protocol.perform");
+        /**
+         * we can generalize this method by setting the action factory in the
+         * config file. It avoids all subclass of the overrides this method
+         * unnecesserily.
+         */
+
         perform(ActionFactory.create(w));
     }
 
