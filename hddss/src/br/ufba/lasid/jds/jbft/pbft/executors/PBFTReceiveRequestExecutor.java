@@ -25,11 +25,14 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
 
     @Override
     public synchronized void execute(Action act) {
+
         if(isPrimary(getProtocol().getLocalProcess())){
+
             PBFTMessage pp = createPrePrepare((PBFTMessage)act.getMessage());
             getProtocol().getCommunicator().multicast(
                 pp, (Group)getProtocol().getContext().get(PBFT.LOCALGROUP)
             );
+            
         }
         
     }
@@ -47,7 +50,7 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
      * @return
      */
     public boolean isPrimary(Process p){
-        return true;
+        return ((Process)getProtocol().getContext().get(PBFT.GROUPLEADER)).equals(p);
     }
 
 
