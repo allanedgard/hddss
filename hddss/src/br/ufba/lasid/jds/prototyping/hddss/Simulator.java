@@ -16,6 +16,9 @@ public class Simulator  extends Thread implements RuntimeSupport
     //int n;
     //int tempofinal;
     Agent p[];
+    
+    SimulatedScheduler scheduler = new SimulatedScheduler();
+
     Network network;
 //    DescriptiveStatistics receptionDelay;
 //    DescriptiveStatistics tempo_transmissao;
@@ -66,7 +69,9 @@ public class Simulator  extends Thread implements RuntimeSupport
         for (int i=0;i<n;i++) {
             p[i].startup();
         }
-        
+
+        scheduler.startup();
+
         boolean done = false;
 
         while(!done){
@@ -86,6 +91,9 @@ public class Simulator  extends Thread implements RuntimeSupport
             }
 
             network.avancaTick();
+
+            scheduler.infra.increaseTick();
+            
         }
 
         network.done = true;
@@ -102,6 +110,8 @@ public class Simulator  extends Thread implements RuntimeSupport
         }
 
         network.start();
+
+        scheduler.start();
         
         for(int i = 0; i < n; i++)
         {
@@ -119,6 +129,8 @@ public class Simulator  extends Thread implements RuntimeSupport
             p[i].stop();
         }
 
+        scheduler.stop();
+        
         network.stop();
     } 
     
@@ -250,6 +262,8 @@ public class Simulator  extends Thread implements RuntimeSupport
             Factory.setup(network, Network.TAG);
 
             set(Variable.Network, network);
+
+            prepareAgent(scheduler);
             
             //initing and setuping the agents
             for(int i = 0; i < n; i++){
@@ -381,6 +395,7 @@ public class Simulator  extends Thread implements RuntimeSupport
         set(Variable.StdOutput, out);
         set(Variable.ClockDeviation, ro);
         set(Variable.MaxClockDeviation, maxro);
+        set(Variable.Scheduler, scheduler);
         
     }
     public Value get(Variable variable) {
