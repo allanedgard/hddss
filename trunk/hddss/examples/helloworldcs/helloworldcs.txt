@@ -21,3 +21,5 @@ hannel.Std = 0
 
 network = br.ufba.lasid.jds.prototyping.hddss.NetworkDeterministic
 network.ProcessingTime = 0.001
+
+protocol.factory = 
