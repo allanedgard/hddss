@@ -40,6 +40,21 @@ public class PBFTMessage<T> extends ClientServerMessage<T>{
         }
     }
 
+    protected static long SEQ = 0;
+    protected long mySEQ = 0;
+
+    public static long newSequenceNumber(){
+        return ++SEQ;
+    }
+    public long getSequenceNumber(){
+        return mySEQ;
+    }
+
+    public void setSequenceNumber(long newSEQ){
+        mySEQ = newSEQ;
+    }
+
+    
     public PBFTMessage(TYPE type, Object content, Process<T> source, Process<T> destination) {
       super(type.castToSuperType(), content, source, destination);
     }
