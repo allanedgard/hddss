@@ -20,4 +20,10 @@ public class Executor {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    public Protocol getProtocol() {
+        return protocol;
+    }
+
+    
+
 }
