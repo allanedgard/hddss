@@ -35,10 +35,44 @@ public class PBFTCommitExecutor extends Executor{
      * @param m
      * @return
      */
-
     private boolean checkCommit(PBFTMessage m) {
+        getProtocol().getContext().put(null, m);
+        if ( belongsToCurrentView(m) )
+           if ( existsPrepare(m) )
+                if ( gotQuorum(m) )
+                    return true;
+        return false;
+    }
+
+        /**
+         * [TODO] this method verifies if there was a PrePrepare previously
+         * to this message
+         */
+    private boolean existsPrepare(PBFTMessage m) {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+        /**
+         * [TODO] this method verifies if there was a PrePrepare previously
+         * to this message
+         */
+    private boolean belongsToCurrentView(PBFTMessage m) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+
+        /**
+         * [TODO] this method verifies if there is at least 2F+1 COMMIT Messages
+         */
+    private boolean gotQuorum(PBFTMessage m) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+        /**
+         * [TODO] this method verifies if the Prepare Messages were processed
+         */
+    private boolean processedPrepare(PBFTMessage m) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
 
 }
