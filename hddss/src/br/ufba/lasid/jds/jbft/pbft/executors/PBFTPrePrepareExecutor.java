@@ -11,13 +11,14 @@ import br.ufba.lasid.jds.Protocol;
 import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
+import br.ufba.lasid.jds.security.Authenticator;
 
 /**
  *
  * @author aliriosa
  */
 public class PBFTPrePrepareExecutor extends Executor{
-
+    
     public PBFTPrePrepareExecutor(Protocol protocol) {
         super(protocol);
     }
@@ -27,7 +28,7 @@ public class PBFTPrePrepareExecutor extends Executor{
         PBFTMessage m = (PBFTMessage) act.getMessage();
 
         if(checkPrePrepare(m)){
-            m.setType(PBFTMessage.TYPE.PREPARE);
+            PBFTMessage p = createPrepare(m);
             getProtocol().getCommunicator().multicast(
                 m, (Group)getProtocol().getContext().get(PBFT.LOCALGROUP)
             );
@@ -43,7 +44,54 @@ public class PBFTPrePrepareExecutor extends Executor{
      */
 
     private boolean checkPrePrepare(PBFTMessage m) {
+
+        if(isValidPrepare(m)){
+            addToBuffer(m);
+            return hasQuorum();
+        }
+        return false;
+    }
+    /**
+     * [TODO]check authentication, view, and sequence number
+     * @param m
+     * @return
+     */
+    private boolean isValidPrepare(PBFTMessage m) {
         throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    private boolean hasQuorum() {
+       int f  = ((Integer)getProtocol().getContext().get(PBFT.ALLOWABLENUMBEROFFAULTREPLICAS)).intValue();
+       int quorum = 3 * f + 1;
+
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    private void addToBuffer(PBFTMessage m) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    /**
+     * [TODO]
+     * @param m
+     * @return
+     */
+    private PBFTMessage createPrepare(PBFTMessage pp) {
+        Authenticator<PBFTMessage> auth =
+                (Authenticator<PBFTMessage>) getProtocol().getContext().get(
+                    PBFT.CLIENTMSGAUTHENTICATOR
+                 );
+        
+        PBFTMessage p = new PBFTMessage(PBFTMessage.TYPE.PREPARE);
+
+        p.put(PBFTMessage.VIEWFIELD, pp.get(PBFTMessage.VIEWFIELD));
+        p.setSequenceNumber(pp.getSequenceNumber());
+        p.put(PBFTMessage.DIGESTFIELD, pp.get(PBFTMessage.DIGESTFIELD));
+        p.put(PBFTMessage.REPLICAIDFIELD, getProtocol().getLocalProcess().getID());
+
+        p = auth.encrypt(p);
+        
+        return p;
     }
 
 

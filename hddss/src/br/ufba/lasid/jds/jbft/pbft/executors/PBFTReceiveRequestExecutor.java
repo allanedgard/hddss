@@ -43,7 +43,7 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
         }
 
         if(isPrimary(getProtocol().getLocalProcess())){
-
+            addRequestToBuffer(m);
             PBFTMessage pp = createPrePrepare(m);
             getProtocol().getCommunicator().multicast(
                 pp, (Group)getProtocol().getContext().get(PBFT.LOCALGROUP)
@@ -62,8 +62,7 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
         
     }
     /*
-     *  [TODO]If the local process is the primary replica then it has to assign 
-        a sequence number for the request and create a preprepare message.
+     *  [REVIEW]
      */
     public PBFTMessage createPrePrepare(PBFTMessage request){
                 
@@ -74,21 +73,26 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
 
         PBFTMessage pp = new PBFTMessage(PBFTMessage.TYPE.PREPREPARE);
 
-        pp.put("REQUEST", request);
-        pp.put("VIEW", getProtocol().getContext().get(PBFT.CURRENTVIEW));
+        pp.put(PBFTMessage.REQUESTFIELD, request);
+        pp.put(PBFTMessage.VIEWFIELD, getProtocol().getContext().get(PBFT.CURRENTVIEW));
         pp.setSequenceNumber(PBFTMessage.newSequenceNumber());
-        pp.put("DIGEST", auth.digest(request));
+        pp.put(PBFTMessage.DIGESTFIELD, auth.digest(request));
         
         return pp;
         
     }
     /**
-     * [TODO] develop this method.
-     * @param p
-     * @return
+        [REVIEW]
      */
     public boolean isPrimary(Process p){
         return ((Process)getProtocol().getContext().get(PBFT.GROUPLEADER)).equals(p);
+    }
+    /**
+     * [TODO]
+     * @param m
+     */
+    private void addRequestToBuffer(PBFTMessage request) {
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
 
