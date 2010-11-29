@@ -16,11 +16,13 @@ import br.ufba.lasid.jds.factories.PBFTActionFactory;
 public class PBFT extends ClientServerProtocol{
 
     public static String LOCALGROUP = "__LOCALGROUP";
-    
+    public static String GROUPLEADER = "__GROUPLEADER";
+
     @Override
     public void doAction(Wrapper w){
        //System.out.println("[Protocol] call Protocol.perform");
        perform(PBFTActionFactory.create(w));
     }
+
 
 }
