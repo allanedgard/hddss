@@ -12,7 +12,9 @@ import br.ufba.lasid.jds.Process;
  * @author aliriosa
  */
 public interface Communicator {
-
+    
+    public static String TAG = "communicator";
+    
     public void multicast(Message m, Process group);
 
     void unicast(Message m, Process process);
