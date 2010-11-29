@@ -13,7 +13,7 @@ public interface RuntimeSupport {
     public enum Variable{
         NumberOfAgents, MaxDeviation, Mode, Type, Debug, MaxSimulationTime,
         FinalTime, RxDelayTrace, DlvDelayTrace, TxDelayTrace, QueueDelayTrace,
-        Network, StdOutput, StdInput, ClockDeviation, MaxClockDeviation
+        Network, StdOutput, StdInput, ClockDeviation, MaxClockDeviation, Scheduler
     }
     public Value get(Variable variable);
     public <U> void set(Variable variable, U value);

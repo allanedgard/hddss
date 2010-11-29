@@ -25,12 +25,14 @@ public class PBFTPrePrepareExecutor extends Executor{
     @Override
     public synchronized void execute(Action act) {
         PBFTMessage m = (PBFTMessage) act.getMessage();
+
         if(checkPrePrepare(m)){
             m.setType(PBFTMessage.TYPE.PREPARE);
             getProtocol().getCommunicator().multicast(
                 m, (Group)getProtocol().getContext().get(PBFT.LOCALGROUP)
             );
         }
+        
     }
 
     /**
