@@ -1,0 +1,3 @@
+WorkDir = D:\development\hdsss/
+
+cenarios = timedcb_15_50.txt
