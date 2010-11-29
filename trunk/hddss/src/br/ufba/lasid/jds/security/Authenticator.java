@@ -18,6 +18,8 @@ public interface Authenticator<T> {
 
     public SecurityKey getKey();
 
-    public boolean ckeck(T data);
+    public boolean check(T data);
+
+    public Digest digest(T data);
 
 }

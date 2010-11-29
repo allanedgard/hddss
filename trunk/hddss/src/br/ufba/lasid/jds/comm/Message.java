@@ -7,11 +7,12 @@ package br.ufba.lasid.jds.comm;
 
 import br.ufba.lasid.jds.util.Wrapper;
 import br.ufba.lasid.jds.Process;
+import java.util.Hashtable;
 /**
  *
  * @author aliriosa
  */
-public class Message<T> implements Wrapper{
+public class Message<T> extends Hashtable<String, Object> implements Wrapper{
     private int type;
     private Object content;
     private Process<T> source;
