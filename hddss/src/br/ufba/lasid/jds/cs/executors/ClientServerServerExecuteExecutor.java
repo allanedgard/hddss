@@ -27,6 +27,10 @@ public class ClientServerServerExecuteExecutor extends Executor{
     public void setServer(Server server){
         this.server = server;
     }
+
+    public Server getServer(){
+        return this.server;
+    }
     
     @Override
     public synchronized void execute(Action act) {

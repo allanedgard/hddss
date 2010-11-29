@@ -34,13 +34,18 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
         
     }
     /*
-     *  If the local process is the primary replica then it has to assign a
-        sequence number for the request and create a preprepare message.
+     *  [TODO]If the local process is the primary replica then it has to assign 
+        a sequence number for the request and create a preprepare message.
      */
     public PBFTMessage createPrePrepare(PBFTMessage request){
         request.setType(PBFTMessage.TYPE.PREPREPARE);
         return request;
     }
+    /**
+     * [TODO] develop this method.
+     * @param p
+     * @return
+     */
     public boolean isPrimary(Process p){
         return true;
     }
