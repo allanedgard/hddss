@@ -13,6 +13,11 @@ import br.ufba.lasid.jds.cs.comm.ClientServerMessage;
  * @author aliriosa
  */
 public class PBFTMessage<T> extends ClientServerMessage<T>{
+
+    public static String VIEWFIELD = "__VIEW";
+    public static String REQUESTFIELD = "__REQUEST";
+    public static String DIGESTFIELD = "__DIGESTFIELD";
+    public static String REPLICAIDFIELD = "__REPLICAIDFIELD";
     
     public enum TYPE{
 

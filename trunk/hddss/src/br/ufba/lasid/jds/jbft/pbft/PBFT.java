@@ -22,6 +22,8 @@ public class PBFT extends ClientServerProtocol{
     public static String LATEPRIMARYTIMEOUT = "__LATEPRIMAYTIMEOUT";
     public static String CLIENTMSGAUTHENTICATOR = "CLIENTMSGAUTHENTICATOR";
     public static String CURRENTVIEW = "__CURRENTVIEW";
+    public static String ALLOWABLENUMBEROFFAULTREPLICAS = "__ALLOWABLENUMBEROFFAULTREPLICAS";
+    
     
     @Override
     public void doAction(Wrapper w){
