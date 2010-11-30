@@ -5,10 +5,10 @@
 
 package br.ufba.lasid.jds.prototyping.hddss;
 
-import br.ufba.lasid.jds.Agenda;
-import br.ufba.lasid.jds.Scheduler;
-import br.ufba.lasid.jds.Task;
-import br.ufba.lasid.jds.TaskList;
+import br.ufba.lasid.jds.util.Agenda;
+import br.ufba.lasid.jds.util.Scheduler;
+import br.ufba.lasid.jds.util.Task;
+import br.ufba.lasid.jds.util.TaskList;
 
 /**
  *
@@ -49,6 +49,11 @@ public class SimulatedScheduler extends Agent implements Scheduler{
         
     }
 
+    public void cancel(Task task){
+        /**
+         * [TODO]
+         */
+    }
 
 
 }

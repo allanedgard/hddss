@@ -5,23 +5,24 @@
 
 package br.ufba.lasid.jds.jbft.pbft.executors;
 
+import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.Protocol;
-import br.ufba.lasid.jds.util.Task;
 
 /**
  *
  * @author aliriosa
  */
-public class PBFTChangeViewExecutor extends Executor implements Task{
+public class PBFTClientRetransmissionExecutor extends Executor{
 
-    public PBFTChangeViewExecutor(Protocol protocol) {
+    public PBFTClientRetransmissionExecutor(Protocol protocol) {
         super(protocol);
     }
 
-    public void runMe() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    @Override
+    public synchronized void execute(Action act) {
+        super.execute(act);
     }
-
     
+
 }

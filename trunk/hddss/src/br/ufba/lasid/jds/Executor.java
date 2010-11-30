@@ -5,11 +5,13 @@
 
 package br.ufba.lasid.jds;
 
+import br.ufba.lasid.jds.util.Task;
+
 /**
  *
  * @author aliriosa
  */
-public class Executor {
+public class Executor implements Task{
     protected Protocol protocol;
 
     public Executor(Protocol protocol){
@@ -24,6 +26,9 @@ public class Executor {
         return protocol;
     }
 
-    
+
+    public void runMe() {
+        
+    }
 
 }
