@@ -6,6 +6,7 @@
 package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.jds.Action;
+import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.Protocol;
 import br.ufba.lasid.jds.util.Scheduler;
 import br.ufba.lasid.jds.util.Task;
@@ -14,6 +15,9 @@ import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.actions.RetransmissionAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
+import br.ufba.lasid.jds.util.Clock;
+import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.ExecutorCollection;
 
 /**
  *
@@ -33,18 +37,31 @@ public class PBFTSendRequestExecutor extends ClientServerSendRequestExecutor{
         Group g = (Group) m.get(PBFTMessage.DESTINATIONFIELD);
 
         m = PBFTMessage.translateTo(m, PBFTMessage.TYPE.RECEIVEREQUEST);
-        
-        getProtocol().getCommunicator().multicast(m, g);
-        
-        Long timeout = (Long)getProtocol().getContext().get(PBFT.CLIENTRETRANSMISSIONTIMOUT);
-        
-        Scheduler scheduler = (Scheduler)getProtocol().getContext().get(PBFT.SCHEDULER);
 
-        scheduler.schedule(
-            (Task)getProtocol().getExecutors().get(RetransmissionAction.class),
-            timeout
-        );
+        long timestamp = ((Clock)getProtocol().getContext().get(PBFT.CLOCKSYSTEM)).value();
+
+        m.put(PBFTMessage.TIMESTAMPFIELD, timestamp);
+        m.put(PBFTMessage.CLIENTFIELD, getProtocol().getLocalProcess().getID());
+
+        Long timeout = (Long)getProtocol().getContext().get(PBFT.CLIENTRETRANSMISSIONTIMEOUT);
+
+        m.put(PBFT.CLIENTRETRANSMISSIONTIMEOUT, timestamp + timeout.longValue());
+
+        Debugger debugger = (Debugger) getProtocol().getContext().get(PBFT.DEBUGGER);
+        
+        debugger.debug("[PBFTSendRequestExecutor] PBFTSendRequestExecutor.execute sending of (" + m + ") at time " + timestamp);
+        
+        getProtocol().getCommunicator().multicast(m, g);                        
+        
+        Scheduler scheduler = (Scheduler)(getProtocol().getContext().get(PBFT.SCHEDULER));
+
+        ExecutorCollection execs = getProtocol().getExecutors().get(RetransmissionAction.class);
+        
+        for(Executor e : execs){
+            scheduler.schedule((Task)e, timeout);
+        }
         
     }
     
 }
+

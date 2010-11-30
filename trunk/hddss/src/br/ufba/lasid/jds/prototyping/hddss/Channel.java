@@ -30,7 +30,7 @@ public abstract class Channel {
     public final void deliverMsg(Message m, double a) {
         if ( this.status() ) {
             int at = (int) (delay()+a);
-            int nextDelivery =(int)p_j.infra.clock.value()+at;
+            int nextDelivery =(int)(p_j.infra.clock.value())+at;
             
             if (!contention) {
 
@@ -42,10 +42,10 @@ public abstract class Channel {
             else {
              /*  Contenção
              */ 
-                    nextDelivery = max(lastDelivery,(int)p_j.infra.clock.value())+at;
+                    nextDelivery = max(lastDelivery,(int)(p_j.infra.clock.value()))+at;
             };
 
-            p_j.infra.debug("p"+p_j.id+" entrega = "+nextDelivery);
+            p_j.infra.debug("process p" + p_j.id + " delivers at time " + nextDelivery);
             p_j.infra.nic_in.add(nextDelivery, m);
             lastDelivery=nextDelivery;
         }

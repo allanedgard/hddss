@@ -1,8 +1,6 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
 
-import br.ufba.lasid.jds.prototyping.hddss.Simulator;
-import java.lang.reflect.Method;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 
 /*
@@ -143,7 +141,7 @@ public abstract class Network extends Thread{
     public void loopback(Message msg){
         int address = msg.sender;
         Agent p = conteiner.p[address];
-        p.infra.nic_in.add((int)p.infra.clock.value() + 1, msg);
+        p.infra.nic_in.add((int)(p.infra.clock.value()) + 1, msg);
     }
 
     public boolean isLoopback(Message msg){

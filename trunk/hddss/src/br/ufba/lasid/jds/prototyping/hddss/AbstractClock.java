@@ -1,5 +1,7 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
+import br.ufba.lasid.jds.util.Clock;
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -9,7 +11,7 @@ package br.ufba.lasid.jds.prototyping.hddss;
  *
  * @author aliriosa
  */
-public abstract class Clock {
+public abstract class AbstractClock implements Clock {
 
     public static final String TAG = "clock";
     

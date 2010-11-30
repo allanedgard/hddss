@@ -28,6 +28,8 @@ public class CalcPBFTClient extends Agent_ClientPBFT{
         m.put(Calculator.OPCODE, opcode);
         m.put(Calculator.OP1, op1);
         m.put(Calculator.OP2, op2);
+        m.put(PBFTMessage.SOURCEFIELD, this);
+        m.put(PBFTMessage.DESTINATIONFIELD, getGroup());
 
         getProtocol().doAction(m);
         

@@ -48,7 +48,7 @@ public class Agent extends Thread {
     }
     
    public void send(Message m){
-       infra.nic_out.add((int)infra.clock.value(), m);
+       infra.nic_out.add((int)(infra.clock.value()), m);
 
    }
     public void startup(){

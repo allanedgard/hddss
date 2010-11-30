@@ -9,7 +9,7 @@ package br.ufba.lasid.jds.prototyping.hddss;
  *
  * @author aliriosa
  */
-public class Clock_Virtual extends Clock{
+public class Clock_Virtual extends AbstractClock{
     private long clock = 0;
     private long tick = 0;
     long nticks = 0;

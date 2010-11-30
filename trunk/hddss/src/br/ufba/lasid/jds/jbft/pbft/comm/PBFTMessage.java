@@ -19,6 +19,8 @@ public class PBFTMessage extends ClientServerMessage{
     public static String DIGESTFIELD = "__DIGESTFIELD";
     public static String REPLICAIDFIELD = "__REPLICAIDFIELD";
     public static String SEQUENCENUMBERFIELD = "__SEQUENCENUMBERFIELD";
+    public static String TIMESTAMPFIELD = "__TIMESTAMPFIELD";
+    public static String CLIENTFIELD = "__CLIENTFIELD";
     
     public enum TYPE{
 
