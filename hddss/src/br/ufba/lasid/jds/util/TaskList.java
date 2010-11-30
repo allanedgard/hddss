@@ -3,14 +3,14 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds;
+package br.ufba.lasid.jds.util;
+
+import java.util.ArrayList;
 
 /**
  *
  * @author aliriosa
  */
-public interface Scheduler {
+public class TaskList extends ArrayList<Task>{
 
-    public void schedule(Task task, long time);
-      
 }

@@ -3,14 +3,12 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds;
-
-import java.util.Hashtable;
+package br.ufba.lasid.jds.util;
 
 /**
  *
  * @author aliriosa
  */
-public class Agenda extends Hashtable<Long, TaskList>{
-
+public interface Task {
+    public void runMe();
 }
