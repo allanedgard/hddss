@@ -25,9 +25,14 @@ public class ClientServerSendRequestExecutor extends Executor{
         //System.out.println("[Protocol] call ClientServerSendRequestExecutor.execute");
         ClientServerMessage m = ((ClientServerMessage) act.getMessage());
 
-        m.setType(ClientServerMessage.TYPE.RECEIVEREQUEST);
+        //m.setType(ClientServerMessage.TYPE.RECEIVEREQUEST);
+        m.put(ClientServerMessage.TYPEFIELD, ClientServerMessage.TYPE.RECEIVEREQUEST);
 
-        protocol.getCommunicator().unicast((ClientServerMessage) act.getMessage(), m.getDestination());
+        getProtocol().getCommunicator().unicast(
+             (ClientServerMessage) act.getMessage(),
+             (br.ufba.lasid.jds.Process)m.get(ClientServerMessage.DESTINATIONFIELD)
+        );
+
     }
 
 }

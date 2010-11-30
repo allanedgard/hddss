@@ -39,14 +39,15 @@ public class ClientServerServerExecuteExecutor extends Executor{
 
         m.setContent(server.doService(m.getContent()));
         
-        m.setType(ClientServerMessage.TYPE.SENDREPLY);
+        //m.setType(ClientServerMessage.TYPE.SENDREPLY);
+        m.put(ClientServerMessage.TYPEFIELD, ClientServerMessage.TYPE.SENDREPLY);
 
-        Process client =  m.getSource();
+        Process client =  (Process)m.get(ClientServerMessage.SOURCEFIELD);
         
-        m.setDestination(client);
-        m.setSource(server);
+        m.put(ClientServerMessage.DESTINATIONFIELD, client);
+        m.put(ClientServerMessage.SOURCEFIELD, server);
 
-        protocol.doAction(m);
+        getProtocol().doAction(m);
         
     }
 

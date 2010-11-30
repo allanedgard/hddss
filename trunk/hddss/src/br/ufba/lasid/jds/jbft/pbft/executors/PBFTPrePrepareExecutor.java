@@ -86,10 +86,10 @@ public class PBFTPrePrepareExecutor extends Executor{
                     PBFT.CLIENTMSGAUTHENTICATOR
                  );
         
-        PBFTMessage p = new PBFTMessage(PBFTMessage.TYPE.PREPARE);
-
+        PBFTMessage p = new PBFTMessage();
+        p.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.PREPARE);
         p.put(PBFTMessage.VIEWFIELD, pp.get(PBFTMessage.VIEWFIELD));
-        p.setSequenceNumber(pp.getSequenceNumber());
+        p.put(PBFTMessage.SEQUENCENUMBERFIELD, pp.get(PBFTMessage.SEQUENCENUMBERFIELD));
         p.put(PBFTMessage.DIGESTFIELD, pp.get(PBFTMessage.DIGESTFIELD));
         p.put(PBFTMessage.REPLICAIDFIELD, getProtocol().getLocalProcess().getID());
 

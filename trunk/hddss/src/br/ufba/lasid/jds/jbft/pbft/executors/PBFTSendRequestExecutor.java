@@ -30,9 +30,9 @@ public class PBFTSendRequestExecutor extends ClientServerSendRequestExecutor{
         
         PBFTMessage m = (PBFTMessage) act.getMessage();
         
-        Group g = (Group) m.getDestination();
+        Group g = (Group) m.get(PBFTMessage.DESTINATIONFIELD);
 
-        m.setType(PBFTMessage.TYPE.RECEIVEREQUEST);
+        m.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.RECEIVEREQUEST);
 
         getProtocol().getCommunicator().multicast(m, g);
 

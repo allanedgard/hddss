@@ -9,6 +9,8 @@ import br.ufba.lasid.jds.prototyping.hddss.Agent;
 import br.ufba.lasid.jds.comm.Communicator;
 import br.ufba.lasid.jds.comm.Message;
 import br.ufba.lasid.jds.Process;
+import br.ufba.lasid.jds.cs.comm.ClientServerMessage;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 
 /**
  *
@@ -44,10 +46,11 @@ public class SimulatedClientServerCommunicator implements Communicator{
         int source = agent.id;
         int destin = dest.getID().intValue();
         int now   = (int) agent.infra.clock.value();
-
+        int type  = ((ClientServerMessage.TYPE)m.get(PBFTMessage.TYPEFIELD)).getValue();
+        
         agent.send(
          new br.ufba.lasid.jds.prototyping.hddss.Message(
-            source, destin, m.getType(), 0, now, m
+            source, destin, type, 0, now, m
          )
         );
 
