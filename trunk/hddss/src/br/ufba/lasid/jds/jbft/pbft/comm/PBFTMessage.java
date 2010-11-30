@@ -49,7 +49,15 @@ public class PBFTMessage extends ClientServerMessage{
     public static long newSequenceNumber(){
         return ++SEQ;
     }
-//    public long getSequenceNumber(){
-//        return mySEQ;
-//    }
+
+    public static PBFTMessage newRequest(){
+        PBFTMessage m = new PBFTMessage();
+        m.put(TYPEFIELD, TYPE.SENDREQUEST);
+        return m;
+    }
+
+    public static PBFTMessage translateTo(PBFTMessage m, TYPE type){
+        m.put(TYPEFIELD, type);
+        return m;
+    }
 }

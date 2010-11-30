@@ -32,10 +32,10 @@ public class PBFTSendRequestExecutor extends ClientServerSendRequestExecutor{
         
         Group g = (Group) m.get(PBFTMessage.DESTINATIONFIELD);
 
-        m.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.RECEIVEREQUEST);
-
+        m = PBFTMessage.translateTo(m, PBFTMessage.TYPE.RECEIVEREQUEST);
+        
         getProtocol().getCommunicator().multicast(m, g);
-
+        
         Long timeout = (Long)getProtocol().getContext().get(PBFT.CLIENTRETRANSMISSIONTIMOUT);
         
         Scheduler scheduler = (Scheduler)getProtocol().getContext().get(PBFT.SCHEDULER);

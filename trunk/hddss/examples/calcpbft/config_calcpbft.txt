@@ -1,0 +1,3 @@
+WorkDir = ./examples/calcpbft/
+
+cenarios = calcpbft.txt

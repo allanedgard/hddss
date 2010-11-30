@@ -9,6 +9,8 @@ import br.ufba.lasid.jds.util.Agenda;
 import br.ufba.lasid.jds.util.Scheduler;
 import br.ufba.lasid.jds.util.Task;
 import br.ufba.lasid.jds.util.TaskList;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  *
@@ -22,7 +24,7 @@ public class SimulatedScheduler extends Agent implements Scheduler{
 
     public void schedule(Task task, long time) {
 
-        Long _time = new Long(time);
+        Long _time = new Long(infra.clock.value() + time);
         
         TaskList tasks = agenda.get(_time);
         if(tasks == null){
@@ -50,10 +52,19 @@ public class SimulatedScheduler extends Agent implements Scheduler{
     }
 
     public void cancel(Task task){
-        /**
-         * [TODO]
-         */
+         Set<Entry<Long, TaskList>> set =  agenda.entrySet();
+
+         for(Entry<Long, TaskList> e : set){
+
+            if(e.getValue().equals(task)){
+
+                agenda.remove(e.getKey());
+
+                return;
+            }
+            
+         }
+
     }
-
-
+    
 }
