@@ -1,5 +1,5 @@
 FinalTime = 1000
-NumberOfAgents = 2
+NumberOfAgents = 5
 MaximumDeviation = 4
 Mode = clock
 Debug = false
@@ -8,11 +8,12 @@ clock = br.ufba.lasid.jds.prototyping.hddss.Clock_Virtual
 clock.Mode = s
 
 
-agent[0] = br.ufba.lasid.jds.prototyping.hddss.examples.helloworldcs.HelloWorldServer
-agent[0].ClientAddress = 1
+agent[0] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
+agent[0].ServerGroupAddress = 4
 
-agent[1] = br.ufba.lasid.jds.prototyping.hddss.examples.helloworldcs.HelloWorldClient
-agent[1].ServerAddress= 0
+agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
+agent.ServerGroupAddress = 4
+
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal
 channel.Mean = 1
