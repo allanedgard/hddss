@@ -52,7 +52,7 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
             
         }else{
 
-            Scheduler scheduler = (Scheduler)getProtocol().getContext().get(PBFT.SCHEDULER);
+            Scheduler scheduler = (Scheduler)getProtocol().getContext().get(PBFT.CLIENTSCHEDULER);
 
             scheduler.schedule(
                (Task)getProtocol().getExecutors().get(ChangeViewAction.class),

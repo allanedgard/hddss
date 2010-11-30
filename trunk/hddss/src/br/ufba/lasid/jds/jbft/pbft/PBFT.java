@@ -18,7 +18,7 @@ public class PBFT extends ClientServerProtocol{
     public static String DEBUGGER = "__DEBUGGER";
     public static String LOCALGROUP = "__LOCALGROUP";
     public static String GROUPLEADER = "__GROUPLEADER";
-    public static String SCHEDULER  = "__SCHEDULER";
+    public static String CLIENTSCHEDULER  = "__SCHEDULER";
     public static String PREPREPARETIMEOUT = "__PREPREPARETIMEOUT";
     public static String LATEPRIMARYTIMEOUT = "__LATEPRIMAYTIMEOUT";
     public static String CLIENTRETRANSMISSIONTIMEOUT = "__CLIENTRETRANSMISSIONTIMEOUT";
@@ -26,6 +26,7 @@ public class PBFT extends ClientServerProtocol{
     public static String CURRENTVIEW = "__CURRENTVIEW";
     public static String ALLOWABLENUMBEROFFAULTREPLICAS = "__ALLOWABLENUMBEROFFAULTREPLICAS";
     public static String CLOCKSYSTEM = "__CLOCKSYSTEM";
+    public static String REQUESTBUFFER = "__REQUESTBUFFER";
     
     
     @Override

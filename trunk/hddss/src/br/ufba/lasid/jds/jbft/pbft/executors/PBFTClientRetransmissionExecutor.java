@@ -24,14 +24,6 @@ public class PBFTClientRetransmissionExecutor extends Executor{
     @Override
     public synchronized void execute(Action act) {
         Debugger debugger = (Debugger)getProtocol().getContext().get(PBFT.DEBUGGER);
-        debugger.debug("\n\n[PBFTClientRetransmissionExecutor]PBFTClientRetransmissionExecutor.execute\n\n");
+        debugger.debug("[PBFTClientRetransmissionExecutor.execute] executing");
     }
-
-    @Override
-    public void runMe() {
-        execute(null);
-    }
-
-
-
 }

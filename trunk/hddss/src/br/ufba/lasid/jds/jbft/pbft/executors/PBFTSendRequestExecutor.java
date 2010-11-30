@@ -6,18 +6,14 @@
 package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.jds.Action;
-import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.Protocol;
-import br.ufba.lasid.jds.util.Scheduler;
-import br.ufba.lasid.jds.util.Task;
 import br.ufba.lasid.jds.cs.executors.ClientServerSendRequestExecutor;
 import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
-import br.ufba.lasid.jds.jbft.pbft.actions.RetransmissionAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestRetransmistionScheduler;
 import br.ufba.lasid.jds.util.Clock;
 import br.ufba.lasid.jds.util.Debugger;
-import br.ufba.lasid.jds.util.ExecutorCollection;
 
 /**
  *
@@ -32,36 +28,55 @@ public class PBFTSendRequestExecutor extends ClientServerSendRequestExecutor{
     @Override
     public synchronized void execute(Action act) {
         
-        PBFTMessage m = (PBFTMessage) act.getMessage();
+        PBFTMessage m = makeRequest((PBFTMessage) act.getMessage());
+        
+        scheduleRetransmission(m);
+    }
+
+    public PBFTMessage makeRequest(PBFTMessage m){
         
         Group g = (Group) m.get(PBFTMessage.DESTINATIONFIELD);
 
         m = PBFTMessage.translateTo(m, PBFTMessage.TYPE.RECEIVEREQUEST);
 
-        long timestamp = ((Clock)getProtocol().getContext().get(PBFT.CLOCKSYSTEM)).value();
-
+        Long timestamp =  getTimestamp();
+        
         m.put(PBFTMessage.TIMESTAMPFIELD, timestamp);
-        m.put(PBFTMessage.CLIENTFIELD, getProtocol().getLocalProcess().getID());
+        m.put(PBFTMessage.CLIENTFIELD, getProtocol().getLocalProcess());
+       
+        getDebugger().debug("[PBFTSendRequestExecutor.execute] sending of (" + m + ") at time " + timestamp);
 
-        Long timeout = (Long)getProtocol().getContext().get(PBFT.CLIENTRETRANSMISSIONTIMEOUT);
+        getProtocol().getCommunicator().multicast(m, g);
 
-        m.put(PBFT.CLIENTRETRANSMISSIONTIMEOUT, timestamp + timeout.longValue());
-
-        Debugger debugger = (Debugger) getProtocol().getContext().get(PBFT.DEBUGGER);
-        
-        debugger.debug("[PBFTSendRequestExecutor] PBFTSendRequestExecutor.execute sending of (" + m + ") at time " + timestamp);
-        
-        getProtocol().getCommunicator().multicast(m, g);                        
-        
-        Scheduler scheduler = (Scheduler)(getProtocol().getContext().get(PBFT.SCHEDULER));
-
-        ExecutorCollection execs = getProtocol().getExecutors().get(RetransmissionAction.class);
-        
-        for(Executor e : execs){
-            scheduler.schedule((Task)e, timeout);
-        }
+        return m;
         
     }
-    
+
+    public void scheduleRetransmission(PBFTMessage m){
+                
+        Long timeout = getRetransmissionTimeout();
+        Long timestamp = getTimestamp();
+        Long rttime = new Long(timestamp.intValue() + timeout.longValue());
+        m.put(PBFT.CLIENTRETRANSMISSIONTIMEOUT, rttime);
+
+        PBFTRequestRetransmistionScheduler scheduler = (PBFTRequestRetransmistionScheduler)(getProtocol().getContext().get(PBFT.CLIENTSCHEDULER));
+
+        scheduler.schedule(m);
+
+        getDebugger().debug("[PBFTSendRequestExecutor.scheduleRetransmission] scheduling of (" + m + ") for time " + rttime);
+        
+    }
+
+    public Long getRetransmissionTimeout(){
+        return (Long)getProtocol().getContext().get(PBFT.CLIENTRETRANSMISSIONTIMEOUT);
+    }
+
+    public Long getTimestamp(){
+        return new Long(((Clock)getProtocol().getContext().get(PBFT.CLOCKSYSTEM)).value());
+    }
+
+    public Debugger getDebugger(){
+        return (Debugger) getProtocol().getContext().get(PBFT.DEBUGGER);
+    }
 }
 
