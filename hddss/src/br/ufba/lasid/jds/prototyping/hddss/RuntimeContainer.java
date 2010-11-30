@@ -1,5 +1,6 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
+import br.ufba.lasid.jds.util.Debugger;
 import java.util.ArrayList;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 
@@ -8,9 +9,9 @@ import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
  * It allows to hide details about the execution infra of the agent.
  * @author aliriosa
  */
-public class RuntimeContainer extends Thread implements RuntimeSupport{
-    public Clock clock;
-    RuntimeSupport context;
+public class RuntimeContainer extends Thread implements RuntimeSupport, Debugger{
+    public AbstractClock clock;
+    public RuntimeSupport context;
     
     Buffer nic_out; //send buffer
     Buffer nic_in;  //receive buffer

@@ -61,7 +61,7 @@ public class Simulator  extends Thread implements RuntimeSupport
         int finalTime = get(Variable.FinalTime).<Integer>value();
 
         try {
-            out.println("modo emulação de relógio");
+            out.println("[*** Clock emulation mode ***]");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -308,8 +308,8 @@ public class Simulator  extends Thread implements RuntimeSupport
         a.infra.register(a);
         a.infra.nprocess = n;
         
-        Clock _clock = (Clock) Factory.create(Clock.TAG, Clock.class.getName());
-        Factory.setup(_clock, Clock.TAG);
+        AbstractClock _clock = (AbstractClock) Factory.create(AbstractClock.TAG, AbstractClock.class.getName());
+        Factory.setup(_clock, AbstractClock.TAG);
 
         a.infra.clock = _clock;
         if(a.infra.clock instanceof Clock_Virtual){

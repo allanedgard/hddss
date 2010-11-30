@@ -15,6 +15,7 @@ import br.ufba.lasid.jds.factories.PBFTActionFactory;
  */
 public class PBFT extends ClientServerProtocol{
 
+    public static String DEBUGGER = "__DEBUGGER";
     public static String LOCALGROUP = "__LOCALGROUP";
     public static String GROUPLEADER = "__GROUPLEADER";
     public static String SCHEDULER  = "__SCHEDULER";
@@ -24,7 +25,7 @@ public class PBFT extends ClientServerProtocol{
     public static String CLIENTMSGAUTHENTICATOR = "CLIENTMSGAUTHENTICATOR";
     public static String CURRENTVIEW = "__CURRENTVIEW";
     public static String ALLOWABLENUMBEROFFAULTREPLICAS = "__ALLOWABLENUMBEROFFAULTREPLICAS";
-    public static String CLIENTRETRANSMISSIONTIMOUT = "__CLIENTRETRANSMISSIONTIMOUT";
+    public static String CLOCKSYSTEM = "__CLOCKSYSTEM";
     
     
     @Override

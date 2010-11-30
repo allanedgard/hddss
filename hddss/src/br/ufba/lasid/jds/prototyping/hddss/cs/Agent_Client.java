@@ -32,15 +32,15 @@ public class Agent_Client extends Agent_ServiceComponent implements Client<Integ
     public void setup() {
         super.setup();
 
-        getProtocol().addExecutor(SendRequestAction.class, newClientServerSendRequestExecutor());
-        getProtocol().addExecutor(ReceiveReplyAction.class, newClientServerReceiveReplyExecutor());
+        getProtocol().addExecutor(SendRequestAction.class, newSendRequestExecutor());
+        getProtocol().addExecutor(ReceiveReplyAction.class, newReceiveReplyExecutor());
     }
 
-    public Executor newClientServerSendRequestExecutor(){
+    public Executor newSendRequestExecutor(){
         return new ClientServerSendRequestExecutor(getProtocol());
     }
 
-    public Executor newClientServerReceiveReplyExecutor(){
+    public Executor newReceiveReplyExecutor(){
         return new ClientServerReceiveReplyExecutor(getProtocol());
     }
 

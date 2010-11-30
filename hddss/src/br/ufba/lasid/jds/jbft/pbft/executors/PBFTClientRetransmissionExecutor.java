@@ -8,6 +8,8 @@ package br.ufba.lasid.jds.jbft.pbft.executors;
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.Protocol;
+import br.ufba.lasid.jds.jbft.pbft.PBFT;
+import br.ufba.lasid.jds.util.Debugger;
 
 /**
  *
@@ -21,8 +23,15 @@ public class PBFTClientRetransmissionExecutor extends Executor{
 
     @Override
     public synchronized void execute(Action act) {
-        super.execute(act);
+        Debugger debugger = (Debugger)getProtocol().getContext().get(PBFT.DEBUGGER);
+        debugger.debug("\n\n[PBFTClientRetransmissionExecutor]PBFTClientRetransmissionExecutor.execute\n\n");
     }
-    
+
+    @Override
+    public void runMe() {
+        execute(null);
+    }
+
+
 
 }

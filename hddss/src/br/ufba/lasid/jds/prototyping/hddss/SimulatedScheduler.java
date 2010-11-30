@@ -45,8 +45,10 @@ public class SimulatedScheduler extends Agent implements Scheduler{
 
         TaskList tasks = agenda.get(_time);
 
-        for(Task task : tasks){
-            task.runMe();
+        if(tasks != null){
+            for(Task task : tasks){
+                task.runMe();
+            }
         }
         
     }

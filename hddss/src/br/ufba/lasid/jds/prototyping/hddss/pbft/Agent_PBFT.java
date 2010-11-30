@@ -10,6 +10,8 @@ import br.ufba.lasid.jds.Process;
 import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.group.SingleGroup;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
+import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport;
+import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport.Variable;
 import br.ufba.lasid.jds.prototyping.hddss.cs.Agent_ServiceComponent;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.comm.SimulatedPBFTCommunicator;
 
@@ -22,7 +24,7 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
     Group group = new SingleGroup();
 
     public void setServerGroupAddress(String addr){
-        this.setGroupID(new Integer(id));
+        this.setGroupID(new Integer(addr));
     }
 
 
@@ -40,8 +42,12 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         super.setup();
         setProtocol(new PBFT());
         getProtocol().getContext().put(PBFT.LOCALGROUP, getGroup());
+        getProtocol().getContext().put(PBFT.CLOCKSYSTEM, infra.clock);
+        getProtocol().getContext().put(PBFT.DEBUGGER, infra);
+        getProtocol().getContext().put(PBFT.SCHEDULER, infra.context.get(RuntimeSupport.Variable.Scheduler).value());
         getProtocol().setCommunicator(new SimulatedPBFTCommunicator(this));
         getProtocol().setLocalProcess(this);
+        
 
     }
 

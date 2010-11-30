@@ -14,7 +14,7 @@ import br.ufba.lasid.jds.Executor;
 public interface Client<T> extends br.ufba.lasid.jds.Process<T> {
     public void receiveReply(Object content);
 
-    public Executor newClientServerSendRequestExecutor();
-    public Executor newClientServerReceiveReplyExecutor();
+    public Executor newSendRequestExecutor();
+    public Executor newReceiveReplyExecutor();
 
 }
