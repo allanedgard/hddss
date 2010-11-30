@@ -8,6 +8,9 @@ package br.ufba.lasid.jds.jbft.pbft;
 import br.ufba.lasid.jds.cs.ClientServerProtocol;
 import br.ufba.lasid.jds.util.Wrapper;
 import br.ufba.lasid.jds.factories.PBFTActionFactory;
+import br.ufba.lasid.jds.util.Clock;
+import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.Scheduler;
 
 /**
  * Pratical Byzantine Fault Tolerant Protocol (Castro and Liskov, 1999)
@@ -35,5 +38,20 @@ public class PBFT extends ClientServerProtocol{
        perform(PBFTActionFactory.create(w));
     }
 
+    public Long getRetransmissionTimeout(){
+        return (Long)getContext().get(PBFT.CLIENTRETRANSMISSIONTIMEOUT);
+    }
+
+    public Long getTimestamp(){
+        return new Long(((Clock)getContext().get(PBFT.CLOCKSYSTEM)).value());
+    }
+
+    public Debugger getDebugger(){
+        return (Debugger) getContext().get(PBFT.DEBUGGER);
+    }
+
+    public Scheduler getClientScheduler(){
+        return (Scheduler)(getContext().get(PBFT.CLIENTSCHEDULER));
+    }
 
 }

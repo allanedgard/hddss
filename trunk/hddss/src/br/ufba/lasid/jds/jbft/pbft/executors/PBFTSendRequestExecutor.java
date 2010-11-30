@@ -12,8 +12,6 @@ import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestRetransmistionScheduler;
-import br.ufba.lasid.jds.util.Clock;
-import br.ufba.lasid.jds.util.Debugger;
 
 /**
  *
@@ -39,12 +37,12 @@ public class PBFTSendRequestExecutor extends ClientServerSendRequestExecutor{
 
         m = PBFTMessage.translateTo(m, PBFTMessage.TYPE.RECEIVEREQUEST);
 
-        Long timestamp =  getTimestamp();
+        Long timestamp =  ((PBFT)getProtocol()).getTimestamp();
         
         m.put(PBFTMessage.TIMESTAMPFIELD, timestamp);
         m.put(PBFTMessage.CLIENTFIELD, getProtocol().getLocalProcess());
        
-        getDebugger().debug("[PBFTSendRequestExecutor.execute] sending of (" + m + ") at time " + timestamp);
+        ((PBFT)getProtocol()).getDebugger().debug("[PBFTSendRequestExecutor.execute] sending of (" + m + ") at time " + timestamp);
 
         getProtocol().getCommunicator().multicast(m, g);
 
@@ -53,30 +51,20 @@ public class PBFTSendRequestExecutor extends ClientServerSendRequestExecutor{
     }
 
     public void scheduleRetransmission(PBFTMessage m){
-                
-        Long timeout = getRetransmissionTimeout();
-        Long timestamp = getTimestamp();
+        
+        Long timeout   = ((PBFT)getProtocol()).getRetransmissionTimeout();
+        Long timestamp =((PBFT)getProtocol()).getTimestamp();
         Long rttime = new Long(timestamp.intValue() + timeout.longValue());
         m.put(PBFT.CLIENTRETRANSMISSIONTIMEOUT, rttime);
 
-        PBFTRequestRetransmistionScheduler scheduler = (PBFTRequestRetransmistionScheduler)(getProtocol().getContext().get(PBFT.CLIENTSCHEDULER));
+        PBFTRequestRetransmistionScheduler scheduler =
+                (PBFTRequestRetransmistionScheduler)(((PBFT)getProtocol()).getClientScheduler());
 
         scheduler.schedule(m);
 
-        getDebugger().debug("[PBFTSendRequestExecutor.scheduleRetransmission] scheduling of (" + m + ") for time " + rttime);
+        ((PBFT)getProtocol()).getDebugger().debug("["+ getClass().getSimpleName()+ ".scheduleRetransmission] scheduling of (" + m + ") for time " + rttime);
         
     }
 
-    public Long getRetransmissionTimeout(){
-        return (Long)getProtocol().getContext().get(PBFT.CLIENTRETRANSMISSIONTIMEOUT);
-    }
-
-    public Long getTimestamp(){
-        return new Long(((Clock)getProtocol().getContext().get(PBFT.CLOCKSYSTEM)).value());
-    }
-
-    public Debugger getDebugger(){
-        return (Debugger) getProtocol().getContext().get(PBFT.DEBUGGER);
-    }
 }
 

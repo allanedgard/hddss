@@ -58,7 +58,7 @@ public class PBFTRequestRetransmistionScheduler implements Scheduler, Task{
         getRequestBuffer().add(request);
     }
 
-    public Buffer getRequestBuffer(){
+    public synchronized Buffer getRequestBuffer(){
         return ((Buffer)(getProtocol().getContext().get(PBFT.REQUESTBUFFER)));
     }
     public String getRequestID(PBFTMessage request){
@@ -84,10 +84,11 @@ public class PBFTRequestRetransmistionScheduler implements Scheduler, Task{
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void runMe() {
+    public synchronized void runMe() {
 
-        Buffer buffer = getRequestBuffer();
-
+        Buffer buffer = new Buffer();
+        buffer.addAll(getRequestBuffer());
+        
         for(Object item : buffer){
 
             PBFTMessage request = (PBFTMessage)item;
@@ -98,7 +99,6 @@ public class PBFTRequestRetransmistionScheduler implements Scheduler, Task{
                 ((PBFT)getProtocol()).perform(new RetransmissionAction((Wrapper)request));
             }
         }
-
     }
 
     public long getCurrentTime(){
