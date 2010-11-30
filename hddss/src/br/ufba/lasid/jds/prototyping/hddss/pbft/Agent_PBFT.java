@@ -21,6 +21,11 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
 
     Group group = new SingleGroup();
 
+    public void setServerGroupAddress(String addr){
+        this.setGroupID(new Integer(id));
+    }
+
+
     public Group getGroup() {
         return group;
     }

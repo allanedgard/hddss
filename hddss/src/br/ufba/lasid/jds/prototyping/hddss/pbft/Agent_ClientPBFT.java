@@ -17,10 +17,6 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTSendRequestExecutor;
  */
 public class Agent_ClientPBFT extends Agent_PBFT implements PBFTClient<Integer>{
     
-    public void setServerGroupAddress(String addr){
-        this.setGroupID(new Integer(id));
-    }
-
     @Override
     public void setup() {
         super.setup();
