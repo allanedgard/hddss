@@ -12,13 +12,14 @@ import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.security.Authenticator;
+import br.ufba.lasid.jds.util.Buffer;
 
 /**
  *
  * @author aliriosa
  */
 public class PBFTPrePrepareExecutor extends Executor{
-    
+    Buffer buffer = null;
     public PBFTPrePrepareExecutor(Protocol protocol) {
         super(protocol);
     }
@@ -64,7 +65,10 @@ public class PBFTPrePrepareExecutor extends Executor{
        int f  = ((Integer)getProtocol().getContext().get(PBFT.ALLOWABLENUMBEROFFAULTREPLICAS)).intValue();
        int quorum = 3 * f + 1;
 
-        throw new UnsupportedOperationException("Not yet implemented");
+       /**
+        * [FIX] it doesn't work to parallel prepepare
+        */
+       return (buffer.size() >= quorum); //it's surely wrong      
     }
 
     private void addToBuffer(PBFTMessage m) {
