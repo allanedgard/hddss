@@ -15,9 +15,11 @@ import br.ufba.lasid.jds.util.Wrapper;
 public class RetransmissionAction extends Action{
 
     public RetransmissionAction(Wrapper w) {
+        super(w);
     }
 
     public RetransmissionAction() {
+        super();
     }
 
 }
