@@ -16,13 +16,14 @@ import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.security.Authenticator;
+import br.ufba.lasid.jds.util.Buffer;
 
 /**
  *
  * @author aliriosa
  */
 public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecutor{
-
+    Buffer buffer = null;
     public PBFTReceiveRequestExecutor(Protocol protocol) {
         super(protocol);
     }
