@@ -16,15 +16,13 @@ public class HelloWorldClient extends Agent_Client{
         
     @Override
     public void execute() {
-        ClientServerMessage m =
-                new ClientServerMessage(
-                    ClientServerMessage.TYPE.SENDREQUEST,
-                    "Hi Server!", 
-                    this,
-                    getServerProcessAddressRef()
-                );
-
+        ClientServerMessage m = new ClientServerMessage();
+        m.put(ClientServerMessage.TYPEFIELD, ClientServerMessage.TYPE.SENDREQUEST);
+        m.put(ClientServerMessage.PAYLOADFIELD, "Hi Server");
+        m.put(ClientServerMessage.SOURCEFIELD, this);
+        m.put(ClientServerMessage.DESTINATIONFIELD, getServerProcessAddressRef());
         getProtocol().doAction(m);
+        
     }
 
     @Override

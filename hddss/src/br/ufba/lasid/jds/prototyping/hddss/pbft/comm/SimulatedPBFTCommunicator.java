@@ -7,6 +7,7 @@ package br.ufba.lasid.jds.prototyping.hddss.pbft.comm;
 
 import br.ufba.lasid.jds.Process;
 import br.ufba.lasid.jds.comm.Message;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.prototyping.hddss.Agent;
 import br.ufba.lasid.jds.prototyping.hddss.cs.comm.SimulatedClientServerCommunicator;
 
@@ -27,10 +28,10 @@ public class SimulatedPBFTCommunicator extends SimulatedClientServerCommunicator
         int source = ((Process<Integer>)agent).getID().intValue();
         int destin = dest.getID().intValue();
         int now   = (int) agent.infra.clock.value();
-
+        int type  = ((PBFTMessage.TYPE)m.get(PBFTMessage.TYPEFIELD)).getValue();
         agent.send(
          new br.ufba.lasid.jds.prototyping.hddss.Message(
-            source, destin, m.getType(), 0, now, m
+            source, destin, type, 0, now, m
          )
         );
         

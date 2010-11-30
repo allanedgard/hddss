@@ -27,35 +27,38 @@ public class PBFTActionFactory extends ActionFactory{
     public static Action create(Wrapper wapper) {
         Message m = (Message) wapper;
 
-        if(m.getType() == PBFTMessage.TYPE.SENDREQUEST.getValue()){
+        PBFTMessage.TYPE type =
+                (PBFTMessage.TYPE)m.get(PBFTMessage.TYPEFIELD);
+
+        if(type.equals(PBFTMessage.TYPE.SENDREQUEST)){
             return new SendRequestAction(m);
         }
 
-        if(m.getType() == PBFTMessage.TYPE.RECEIVEREQUEST.getValue()){
+        if(type.equals(PBFTMessage.TYPE.RECEIVEREQUEST)){
             return new ReceiveRequestAction(m);
         }
 
-        if(m.getType() == PBFTMessage.TYPE.PREPREPARE.getValue()){
+        if(type.equals(PBFTMessage.TYPE.PREPREPARE)){
             return new PrePrepareAction(m);
         }
 
-        if(m.getType() == PBFTMessage.TYPE.PREPARE.getValue()){
+        if(type.equals(PBFTMessage.TYPE.PREPARE)){
             return new PrepareAction(m);
         }
 
-        if(m.getType() == PBFTMessage.TYPE.COMMIT.getValue()){
+        if(type.equals(PBFTMessage.TYPE.COMMIT)){
             return new CommitAction(m);
         }
 
-        if(m.getType() == PBFTMessage.TYPE.EXECUTE.getValue()){
+        if(type.equals(PBFTMessage.TYPE.EXECUTE)){
             return new ExecuteAction(m);
         }
 
-        if(m.getType() == PBFTMessage.TYPE.SENDREPLY.getValue()){
+        if(type.equals(PBFTMessage.TYPE.SENDREPLY)){
             return new SendReplyAction(m);
         }
 
-        if(m.getType() == PBFTMessage.TYPE.RECEIVEREPLY.getValue()){
+        if(type.equals(PBFTMessage.TYPE.RECEIVEREPLY)){
             return new ReceiveReplyAction(m);
         }
 

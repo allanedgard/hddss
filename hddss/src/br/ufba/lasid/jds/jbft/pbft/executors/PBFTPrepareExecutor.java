@@ -26,7 +26,8 @@ public class PBFTPrepareExecutor extends Executor{
     public synchronized void execute(Action act) {
         PBFTMessage m = (PBFTMessage) act.getMessage();
         if(checkPrepare(m)){
-            m.setType(PBFTMessage.TYPE.COMMIT);
+            //m.setType(PBFTMessage.TYPE.COMMIT);
+            m.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.COMMIT);
             getProtocol().getCommunicator().multicast(
                m, (Group)getProtocol().getContext().get(PBFT.LOCALGROUP)
             );

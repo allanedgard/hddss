@@ -25,10 +25,13 @@ public class ClientServerSendReplyExecutor extends Executor{
 
         //System.out.println("[Protocol] call ClientServerSendReplyExecutor.execute");
         ClientServerMessage m = ((ClientServerMessage) act.getMessage());
+        m.put(ClientServerMessage.TYPEFIELD, ClientServerMessage.TYPE.RECEIVEREPLY);
+//        m.setType(ClientServerMessage.TYPE.RECEIVEREPLY);
 
-        m.setType(ClientServerMessage.TYPE.RECEIVEREPLY);
-
-        protocol.getCommunicator().unicast((ClientServerMessage) act.getMessage(), m.getDestination());
+        getProtocol().getCommunicator().unicast(
+             (ClientServerMessage) act.getMessage(), 
+             (br.ufba.lasid.jds.Process)m.get(ClientServerMessage.DESTINATIONFIELD)
+        );
     }
 
 

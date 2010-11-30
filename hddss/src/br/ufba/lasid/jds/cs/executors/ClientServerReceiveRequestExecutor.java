@@ -24,7 +24,7 @@ public class ClientServerReceiveRequestExecutor extends Executor{
     public synchronized void execute(Action act) {
         //System.out.println("[Protocol] call ClientServerReceiveRequestExecutor.execute");
         ClientServerMessage m = (ClientServerMessage) act.getMessage();
-        m.setType(ClientServerMessage.TYPE.EXECUTE);
+        m.put(ClientServerMessage.TYPEFIELD, ClientServerMessage.TYPE.EXECUTE);
         protocol.doAction(m);
     }
 

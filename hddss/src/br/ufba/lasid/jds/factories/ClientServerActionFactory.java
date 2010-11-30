@@ -6,7 +6,6 @@
 package br.ufba.lasid.jds.factories;
 
 import br.ufba.lasid.jds.Action;
-import br.ufba.lasid.jds.comm.Message;
 import br.ufba.lasid.jds.cs.actions.ExecuteAction;
 import br.ufba.lasid.jds.cs.actions.ReceiveReplyAction;
 import br.ufba.lasid.jds.cs.actions.ReceiveRequestAction;
@@ -22,25 +21,28 @@ import br.ufba.lasid.jds.util.Wrapper;
 public class ClientServerActionFactory extends ActionFactory{
     
     public static Action create(Wrapper wapper) {
-        Message m = (Message) wapper;
-
-        if(m.getType() == ClientServerMessage.TYPE.SENDREQUEST.getValue()){
+        ClientServerMessage m = (ClientServerMessage) wapper;
+        
+        ClientServerMessage.TYPE type =
+                (ClientServerMessage.TYPE)m.get(ClientServerMessage.TYPEFIELD);
+        
+        if(type.equals(ClientServerMessage.TYPE.SENDREQUEST)){
             return new SendRequestAction(m);
         }
 
-        if(m.getType() == ClientServerMessage.TYPE.RECEIVEREQUEST.getValue()){
+        if(type.equals(ClientServerMessage.TYPE.RECEIVEREQUEST)){
             return new ReceiveRequestAction(m);
         }
 
-        if(m.getType() == ClientServerMessage.TYPE.EXECUTE.getValue()){
+        if(type.equals(ClientServerMessage.TYPE.EXECUTE)){
             return new ExecuteAction(m);
         }
 
-        if(m.getType() == ClientServerMessage.TYPE.SENDREPLY.getValue()){
+        if(type.equals(ClientServerMessage.TYPE.SENDREPLY)){
             return new SendReplyAction(m);
         }
 
-        if(m.getType() == ClientServerMessage.TYPE.RECEIVEREPLY.getValue()){
+        if(type.equals(ClientServerMessage.TYPE.RECEIVEREPLY)){
             return new ReceiveReplyAction(m);
         }
 

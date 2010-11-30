@@ -24,12 +24,13 @@ public class PBFTSendReplyExecutor extends ClientServerSendReplyExecutor{
     @Override
     public synchronized void execute(Action act) {
         PBFTMessage m = (PBFTMessage) act.getMessage();
-        m.setType(PBFTMessage.TYPE.RECEIVEREPLY);
+        
+        m.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.RECEIVEREPLY);
 
-        Process destin = m.getSource();
+        Process destin = (Process)m.get(PBFTMessage.SOURCEFIELD);
 
-        m.setDestination(destin);
-        m.setSource(getProtocol().getLocalProcess());
+        m.put(PBFTMessage.DESTINATIONFIELD, destin);
+        m.put(PBFTMessage.SOURCEFIELD, getProtocol().getLocalProcess());
         getProtocol().getCommunicator().unicast(m, destin);
         
     }

@@ -12,23 +12,24 @@ import br.ufba.lasid.jds.cs.comm.ClientServerMessage;
  *
  * @author aliriosa
  */
-public class PBFTMessage<T> extends ClientServerMessage<T>{
+public class PBFTMessage extends ClientServerMessage{
 
     public static String VIEWFIELD = "__VIEW";
     public static String REQUESTFIELD = "__REQUEST";
     public static String DIGESTFIELD = "__DIGESTFIELD";
     public static String REPLICAIDFIELD = "__REPLICAIDFIELD";
+    public static String SEQUENCENUMBERFIELD = "__SEQUENCENUMBERFIELD";
     
     public enum TYPE{
 
-        SENDREQUEST(ClientServerMessage.TYPE.SENDREQUEST.getValue()),
-        RECEIVEREQUEST(ClientServerMessage.TYPE.RECEIVEREQUEST.getValue()),
-        EXECUTE(ClientServerMessage.TYPE.EXECUTE.getValue()),
-        SENDREPLY(ClientServerMessage.TYPE.SENDREPLY.getValue()),
-        RECEIVEREPLY(ClientServerMessage.TYPE.RECEIVEREQUEST.getValue()),
-        PREPREPARE(ClientServerMessage.TYPE.values().length),
-        PREPARE(ClientServerMessage.TYPE.values().length + 1),
-        COMMIT(ClientServerMessage.TYPE.values().length + 2);
+        SENDREQUEST(0),
+        RECEIVEREQUEST(1),
+        EXECUTE(2),
+        SENDREPLY(3),
+        RECEIVEREPLY(4),
+        PREPREPARE(5),
+        PREPARE(6),
+        COMMIT(7);
       
         private final int value;
 
@@ -40,9 +41,6 @@ public class PBFTMessage<T> extends ClientServerMessage<T>{
             return value;
         }
 
-        public ClientServerMessage.TYPE castToSuperType(){
-            return ClientServerMessage.TYPE.valueOf(this.name());
-        }
     }
 
     protected static long SEQ = 0;
@@ -51,29 +49,7 @@ public class PBFTMessage<T> extends ClientServerMessage<T>{
     public static long newSequenceNumber(){
         return ++SEQ;
     }
-    public long getSequenceNumber(){
-        return mySEQ;
-    }
-
-    public void setSequenceNumber(long newSEQ){
-        mySEQ = newSEQ;
-    }
-
-    
-    public PBFTMessage(TYPE type, Object content, Process<T> source, Process<T> destination) {
-      super(type.castToSuperType(), content, source, destination);
-    }
-
-    public PBFTMessage(TYPE type, Object content) {
-        super(type.castToSuperType(), content);
-    }
-
-    public PBFTMessage(TYPE type) {
-        super(type.castToSuperType());
-    }
-
-    public void setType(TYPE type){
-        setType(type.getValue());
-    }
-
+//    public long getSequenceNumber(){
+//        return mySEQ;
+//    }
 }

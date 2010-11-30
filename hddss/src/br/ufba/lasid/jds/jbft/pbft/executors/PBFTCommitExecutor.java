@@ -25,7 +25,8 @@ public class PBFTCommitExecutor extends Executor{
        PBFTMessage m = (PBFTMessage) act.getMessage();
 
        if(checkCommit(m)){
-           m.setType(PBFTMessage.TYPE.EXECUTE);
+           m.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.EXECUTE);
+           //m.setType(PBFTMessage.TYPE.EXECUTE);
            getProtocol().doAction(m);
        }
     }

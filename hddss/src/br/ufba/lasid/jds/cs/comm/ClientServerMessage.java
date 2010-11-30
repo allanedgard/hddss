@@ -6,12 +6,11 @@
 package br.ufba.lasid.jds.cs.comm;
 
 import br.ufba.lasid.jds.comm.Message;
-import br.ufba.lasid.jds.Process;
 /**
  *
  * @author aliriosa
  */
-public class ClientServerMessage<T> extends Message<T>{
+public class ClientServerMessage extends Message{
     public enum TYPE{
         /*don't change this order ... you may get throuble!*/
         SENDREQUEST(0),
@@ -31,7 +30,7 @@ public class ClientServerMessage<T> extends Message<T>{
         }
         
     }
-
+/*
     public ClientServerMessage(TYPE type){
         setType(type);
     }
@@ -50,5 +49,5 @@ public class ClientServerMessage<T> extends Message<T>{
     public void setType(TYPE type){
         setType(type.getValue());
     }
-
+*/
 }

@@ -72,11 +72,12 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
                     PBFT.CLIENTMSGAUTHENTICATOR
                  );
 
-        PBFTMessage pp = new PBFTMessage(PBFTMessage.TYPE.PREPREPARE);
+        PBFTMessage pp = new PBFTMessage();
 
+        pp.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.PREPREPARE);
         pp.put(PBFTMessage.REQUESTFIELD, request);
         pp.put(PBFTMessage.VIEWFIELD, getProtocol().getContext().get(PBFT.CURRENTVIEW));
-        pp.setSequenceNumber(PBFTMessage.newSequenceNumber());
+        pp.put(PBFTMessage.SEQUENCENUMBERFIELD, PBFTMessage.newSequenceNumber());        
         pp.put(PBFTMessage.DIGESTFIELD, auth.digest(request));
         
         return pp;

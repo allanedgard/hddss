@@ -6,14 +6,27 @@
 package br.ufba.lasid.jds.comm;
 
 import br.ufba.lasid.jds.util.Wrapper;
-import br.ufba.lasid.jds.Process;
 import java.util.Hashtable;
 /**
  *
  * @author aliriosa
  */
-public class Message<T> extends Hashtable<String, Object> implements Wrapper{
-    private int type;
+public class Message extends Hashtable<String, Object> implements Wrapper{
+    public static String TYPEFIELD = "__TYPEFIELD";
+    public static String PAYLOADFIELD = "__PAYLOADFIELD";
+    public static String SOURCEFIELD = "__SOURCEFIELD";
+    public static String DESTINATIONFIELD = "__DESTINATIONFIELD";
+
+    public Object getContent() {
+        return get(PAYLOADFIELD);
+    }
+
+    public void setContent(Object content) {
+        put(PAYLOADFIELD, content);
+        //throw new UnsupportedOperationException("Not supported yet.");
+    }
+    
+/*    private int type;
     private Object content;
     private Process<T> source;
     private Process<T> destination;
@@ -51,5 +64,5 @@ public class Message<T> extends Hashtable<String, Object> implements Wrapper{
     public void setContent(Object content) {
         this.content = content;
     }
-
+*/
 }

@@ -27,7 +27,7 @@ public class PBFTServerExecuteExecutor extends ClientServerServerExecuteExecutor
 
         m.setContent(getServer().doService(m.getContent()));
 
-        m.setType(PBFTMessage.TYPE.SENDREPLY);
+        m.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.SENDREPLY);
 
         getProtocol().doAction(m);
     }
