@@ -59,8 +59,9 @@ public class PBFTRequestRetransmistionScheduler implements Scheduler, Task{
     }
 
     public synchronized Buffer getRequestBuffer(){
-        return ((Buffer)(getProtocol().getContext().get(PBFT.REQUESTBUFFER)));
+        return ((PBFT)getProtocol()).getRequestBuffer();
     }
+    
     public String getRequestID(PBFTMessage request){
 
         String cid = getRequestClientID(request);

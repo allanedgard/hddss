@@ -58,7 +58,8 @@ public class PBFTPrePrepareExecutor extends Executor{
      * @return
      */
     private boolean isValidPrepare(PBFTMessage m) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        //Authenticator auth = ((PBFT)getProtocol()).getClientAuthenticator();
+        return true;
     }
 
     private boolean hasQuorum() {

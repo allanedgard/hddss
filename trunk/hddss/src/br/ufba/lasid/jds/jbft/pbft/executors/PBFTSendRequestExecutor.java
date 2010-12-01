@@ -12,6 +12,7 @@ import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestRetransmistionScheduler;
+import br.ufba.lasid.jds.security.Authenticator;
 
 /**
  *
@@ -41,8 +42,17 @@ public class PBFTSendRequestExecutor extends ClientServerSendRequestExecutor{
         
         m.put(PBFTMessage.TIMESTAMPFIELD, timestamp);
         m.put(PBFTMessage.CLIENTFIELD, getProtocol().getLocalProcess());
-       
-        ((PBFT)getProtocol()).getDebugger().debug("[PBFTSendRequestExecutor.execute] sending of (" + m + ") at time " + timestamp);
+
+        Authenticator authenticator =
+            ((PBFT)getProtocol()).getClientMessageAuthenticator();
+
+        m = (PBFTMessage)authenticator.encrypt(m);
+        
+        ((PBFT)getProtocol()).getDebugger().debug(
+            "[PBFTSendRequestExecutor.execute] sending of "
+          + "(" + m + ") at time " + timestamp
+         );
+
 
         getProtocol().getCommunicator().multicast(m, g);
 
@@ -62,7 +72,10 @@ public class PBFTSendRequestExecutor extends ClientServerSendRequestExecutor{
 
         scheduler.schedule(m);
 
-        ((PBFT)getProtocol()).getDebugger().debug("["+ getClass().getSimpleName()+ ".scheduleRetransmission] scheduling of (" + m + ") for time " + rttime);
+        ((PBFT)getProtocol()).getDebugger().debug(
+            "["+ getClass().getSimpleName()+ ".scheduleRetransmission] "
+          + "scheduling of (" + m + ") for time " + rttime
+         );
         
     }
 

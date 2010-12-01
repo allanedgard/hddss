@@ -8,6 +8,8 @@ package br.ufba.lasid.jds.jbft.pbft;
 import br.ufba.lasid.jds.cs.ClientServerProtocol;
 import br.ufba.lasid.jds.util.Wrapper;
 import br.ufba.lasid.jds.factories.PBFTActionFactory;
+import br.ufba.lasid.jds.security.Authenticator;
+import br.ufba.lasid.jds.util.Buffer;
 import br.ufba.lasid.jds.util.Clock;
 import br.ufba.lasid.jds.util.Debugger;
 import br.ufba.lasid.jds.util.Scheduler;
@@ -30,7 +32,8 @@ public class PBFT extends ClientServerProtocol{
     public static String ALLOWABLENUMBEROFFAULTREPLICAS = "__ALLOWABLENUMBEROFFAULTREPLICAS";
     public static String CLOCKSYSTEM = "__CLOCKSYSTEM";
     public static String REQUESTBUFFER = "__REQUESTBUFFER";
-    
+    public static String CLIENTAUTHENTICATOR = "__CLIENTAUTHENTICATOR";
+    public static String SERVERAUTHENTICATOR = "__SERVERAUTHENTICATOR";
     
     @Override
     public void doAction(Wrapper w){
@@ -52,6 +55,25 @@ public class PBFT extends ClientServerProtocol{
 
     public Scheduler getClientScheduler(){
         return (Scheduler)(getContext().get(PBFT.CLIENTSCHEDULER));
+    }
+
+    public Authenticator getServerAuthenticator(){
+        return (Authenticator)(getContext().get(PBFT.SERVERAUTHENTICATOR));
+    }
+
+    public Authenticator getClientMessageAuthenticator(){
+        return (Authenticator)(getContext().get(PBFT.CLIENTMSGAUTHENTICATOR));
+    }
+
+    public synchronized Buffer getRequestBuffer(){
+        return ((Buffer)(getContext().get(PBFT.REQUESTBUFFER)));
+    }
+
+    public boolean isPrimary(){
+        return isPrimary(getLocalProcess());
+    }
+    public boolean isPrimary(br.ufba.lasid.jds.Process p){
+        return (getContext().get(PBFT.GROUPLEADER)).equals(p.getID());
     }
 
 }
