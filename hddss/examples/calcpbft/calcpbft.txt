@@ -17,6 +17,7 @@ agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
 agent.ServerGroupAddress = 5
 agent.CurrentPrimary  = 1
 agent.CurrentView = 0
+agent.PrimaryFaultTimeout = 100
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal
 channel.Mean = 1

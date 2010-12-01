@@ -24,7 +24,8 @@ public class PBFT extends ClientServerProtocol{
     public static String DEBUGGER = "__DEBUGGER";
     public static String LOCALGROUP = "__LOCALGROUP";
     public static String GROUPLEADER = "__GROUPLEADER";
-    public static String CLIENTSCHEDULER  = "__SCHEDULER";
+    public static String CLIENTSCHEDULER  = "__CLIENTSCHEDULER";
+    public static String PRIMARYFDSCHEDULER = "__PRIMARYFDSCHEDULER";
     public static String PREPREPARETIMEOUT = "__PREPREPARETIMEOUT";
     public static String LATEPRIMARYTIMEOUT = "__LATEPRIMAYTIMEOUT";
     public static String CLIENTRETRANSMISSIONTIMEOUT = "__CLIENTRETRANSMISSIONTIMEOUT";
@@ -35,6 +36,7 @@ public class PBFT extends ClientServerProtocol{
     public static String REQUESTBUFFER = "__REQUESTBUFFER";
     public static String CLIENTAUTHENTICATOR = "__CLIENTAUTHENTICATOR";
     public static String SERVERAUTHENTICATOR = "__SERVERAUTHENTICATOR";
+    public static String PRIMARYFAULTTIMEOUT = "__PRIMARYFAULTYTIMEOUT";
     
     @Override
     public void doAction(Wrapper w){
@@ -46,6 +48,13 @@ public class PBFT extends ClientServerProtocol{
         return (Long)getContext().get(PBFT.CLIENTRETRANSMISSIONTIMEOUT);
     }
 
+    public Long getPrimaryFaultyTimeout(){
+        return (Long)getContext().get(PBFT.PRIMARYFAULTTIMEOUT);
+    }
+
+    public void setPrimaryFaultTimeout(Long timeout){
+        getContext().put(PBFT.PRIMARYFAULTTIMEOUT, timeout);
+    }
     public Long getTimestamp(){
         return new Long(((Clock)getContext().get(PBFT.CLOCKSYSTEM)).value());
     }
@@ -56,6 +65,10 @@ public class PBFT extends ClientServerProtocol{
 
     public Scheduler getClientScheduler(){
         return (Scheduler)(getContext().get(PBFT.CLIENTSCHEDULER));
+    }
+
+    public Scheduler getPrimaryFDScheduler(){
+        return (Scheduler)(getContext().get(PBFT.PRIMARYFDSCHEDULER));
     }
 
     public Authenticator getServerAuthenticator(){
