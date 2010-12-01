@@ -21,6 +21,7 @@ public class PBFTMessage extends ClientServerMessage{
     public static String SEQUENCENUMBERFIELD = "__SEQUENCENUMBERFIELD";
     public static String TIMESTAMPFIELD = "__TIMESTAMPFIELD";
     public static String CLIENTFIELD = "__CLIENTFIELD";
+    public static String BATCHSIZEFIELD = "__BATCHSIZEFIELD";
     
     public enum TYPE{
 
@@ -33,7 +34,8 @@ public class PBFTMessage extends ClientServerMessage{
         PREPARE(6),
         COMMIT(7),
         REQUESTRETRANSMITION(8),
-        CHANGEVIEW(9);
+        CHANGEVIEW(9),
+        BATCHING(10);
       
         private final int value;
 

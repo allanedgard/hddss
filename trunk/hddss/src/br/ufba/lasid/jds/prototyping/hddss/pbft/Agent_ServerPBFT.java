@@ -12,6 +12,7 @@ import br.ufba.lasid.jds.cs.actions.SendReplyAction;
 import br.ufba.lasid.jds.cs.executors.ClientServerSendReplyExecutor;
 import br.ufba.lasid.jds.cs.executors.ClientServerServerExecuteExecutor;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.actions.BatchTimeoutAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrePrepareAction;
@@ -35,7 +36,9 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
     @Override
     public void setup() {
         super.setup();
-        getProtocol().addExecutor(ReceiveRequestAction.class, newPBFTReceiveRequestExecutor());
+        Executor rre = newPBFTReceiveRequestExecutor();
+        getProtocol().addExecutor(ReceiveRequestAction.class, rre);
+        getProtocol().addExecutor(BatchTimeoutAction.class, rre);
         getProtocol().addExecutor(PrePrepareAction.class, newPBFTPrePrepareExecutor());
         getProtocol().addExecutor(PrepareAction.class, newPBFTPrepareExecutor());
         getProtocol().addExecutor(CommitAction.class, newPBFTCommitExecutor());

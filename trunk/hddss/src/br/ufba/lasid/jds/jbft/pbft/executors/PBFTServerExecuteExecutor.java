@@ -28,20 +28,29 @@ public class PBFTServerExecuteExecutor extends ClientServerServerExecuteExecutor
         
         if(!(m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.EXECUTE)))
             return;
+        
+        int batchSize = ((Integer)m.get(PBFTMessage.BATCHSIZEFIELD)).intValue();
 
-        m.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.SENDREPLY);        
-        m.setContent(getServer().doService(m.getContent()));
+        for(int i = 0; i < batchSize; i++){
+            String requestField = ((PBFT)getProtocol()).getRequestField(i);
+            PBFTMessage req = (PBFTMessage)m.get(requestField);
+            makeSendReply(req);
+        }
+    }
+
+    public void makeSendReply(PBFTMessage req){
+        req.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.SENDREPLY);
+        req.setContent(getServer().doService(req.getContent()));
 
 
         ((PBFT)getProtocol()).getDebugger().debug(
             "[PBFTServerExecuteExecutor.execute] call server.reply() for "
-          + "execution of request " + m + " with result " + m.getContent()
-          + " by server(p" + getProtocol().getLocalProcess().getID() + ") " 
+          + "execution of request " + req + " with result " + req.getContent()
+          + " by server(p" + getProtocol().getLocalProcess().getID() + ") "
           + " at time " + ((PBFT)getProtocol()).getTimestamp()
          );
 
-        getProtocol().doAction(m);
+        getProtocol().doAction(req);
+        
     }
-
-    
 }
