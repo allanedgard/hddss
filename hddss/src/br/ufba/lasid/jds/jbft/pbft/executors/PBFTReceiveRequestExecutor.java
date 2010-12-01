@@ -9,7 +9,9 @@ import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.Protocol;
 import br.ufba.lasid.jds.cs.executors.ClientServerReceiveRequestExecutor;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
+import br.ufba.lasid.jds.jbft.pbft.actions.BatchTimeoutAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTBatchingTimeoutScheduler;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTPrimaryFDScheduler;
 import br.ufba.lasid.jds.security.Authenticator;
 import br.ufba.lasid.jds.util.Buffer;
@@ -20,12 +22,23 @@ import br.ufba.lasid.jds.util.Buffer;
  */
 public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecutor{
 
+    PBFTMessage batch = null;
+    
     public PBFTReceiveRequestExecutor(Protocol protocol) {
         super(protocol);
     }
 
+    public boolean isABatchTimeoutAction(Action act){
+        return BatchTimeoutAction.class.equals(act.getClass());
+    }
     @Override
     public synchronized void execute(Action act) {
+
+        if(isABatchTimeoutAction(act)){
+            makePrePrepare(batch);
+            return;
+        }
+        
         PBFTMessage m = (PBFTMessage)act.getMessage();
         
         Authenticator authenticator =
@@ -47,15 +60,21 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
                  );
 
                 if(((PBFT)getProtocol()).isPrimary()){
-                    makePrePrepare(m);
+
+                    if(((PBFT)getProtocol()).batchIsNotComplete()){
+
+                        makeBatching(m);
+                        
+                    }else{
+
+                        makePrePrepare(batch);
+
+                    }
+
                     return;
                 }
 
                 scheduleChangeView(m);
-            }else{
-                if(m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.SENDREQUEST)){
-                    System.out.println("*********");
-                }
             }
         }
     }
@@ -68,7 +87,9 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
      *  [REVIEW]
      */
     public PBFTMessage makePrePrepare(PBFTMessage request){
-                
+        if(request == null)
+            return null;
+        
         Authenticator authenticator =
                 ((PBFT)getProtocol()).getServerAuthenticator();
 
@@ -82,17 +103,20 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
 
         pp = (PBFTMessage)authenticator.makeDisgest(pp);
         pp = (PBFTMessage)authenticator.encrypt(pp);
-        
+
         getProtocol().getCommunicator().multicast(
             pp, ((PBFT)getProtocol()).getLocalGroup()
         );
-        
+
         ((PBFT)getProtocol()).getDebugger().debug(
             "[PBFTReceiveRequestExecutor.execute] preprepare " + pp
           + " was sending by server(p" + getProtocol().getLocalProcess().getID() + ") "
-          + " at time " + ((PBFT)getProtocol()).getTimestamp() 
+          + " at time " + ((PBFT)getProtocol()).getTimestamp()
          );
-        
+
+        batch = null;
+        ((PBFT)getProtocol()).initBatching();
+
         return pp;
         
     }
@@ -145,7 +169,32 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
           + "scheduling of (" + m + ") for time " + rttime + " "
           + "at server(" + getProtocol().getLocalProcess().getID() + ")"
          );
+    }
 
+    public PBFTMessage makeBatching(PBFTMessage request){
+        
+        if(batch == null){
+
+            batch = new PBFTMessage();
+            batch.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.RECEIVEREQUEST);
+            batch.put(PBFTMessage.TIMESTAMPFIELD, ((PBFT)getProtocol()).getTimestamp());
+            batch.put(PBFTMessage.CLIENTFIELD, getProtocol().getLocalProcess());
+            batch.put(PBFT.BATCHINGTIMEOUT, ((PBFT)getProtocol()).getBatchingTimeout());
+
+            PBFTBatchingTimeoutScheduler scheduler =
+                (PBFTBatchingTimeoutScheduler)((PBFT)getProtocol()).getBatchingScheduler();
+            
+            scheduler.schedule(batch);
+            
+        }
+
+        batch.put(((PBFT)getProtocol()).getRequestField(), request);
+
+        ((PBFT)getProtocol()).increaseBatch();
+
+        batch.put(PBFTMessage.BATCHSIZEFIELD, ((PBFT)getProtocol()).getBatchingCount());
+        
+        return batch;
     }
 
 

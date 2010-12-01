@@ -36,16 +36,49 @@ public class PBFT extends ClientServerProtocol{
     public static String CLOCKSYSTEM = "__CLOCKSYSTEM";
     public static String REQUESTBUFFER = "__REQUESTBUFFER";
     public static String PREPREPAREBUFFER = "__PREPREPAREBUFFER";
-   public static String  PREPAREBUFFER = "__PREPAREBUFFER";
-   public static String  COMMITBUFFER = "__COMMITBUFFER";
+    public static String  PREPAREBUFFER = "__PREPAREBUFFER";
+    public static String  COMMITBUFFER = "__COMMITBUFFER";
     public static String CLIENTAUTHENTICATOR = "__CLIENTAUTHENTICATOR";
     public static String SERVERAUTHENTICATOR = "__SERVERAUTHENTICATOR";
     public static String PRIMARYFAULTTIMEOUT = "__PRIMARYFAULTYTIMEOUT";
+    public static String BATCHINGSIZE        = "__BATCHINGSIZE";
+    public static String BATCHINGTIMEOUT = "__BATCHINGTIMEOUT";
+    public static String BATCHSCHEDULER = "__BATCHSCHEDULER";
+    public int BATCHINGCOUNT = 0;
     
+
+    public String getRequestField(){
+        return getRequestField(BATCHINGCOUNT);
+    }
+
+    public String getRequestField(int i){
+        return (PBFTMessage.REQUESTFIELD +  i);
+    }
+
+    public int getBatchingCount(){
+        return BATCHINGCOUNT;
+    }
+
+    public void increaseBatch() {
+        BATCHINGCOUNT++;
+    }
+
+    public boolean batchIsNotComplete(){
+        return (
+         (getBatchingCount() < ((Integer)getContext().get(PBFT.BATCHINGSIZE)).intValue()));
+    }
+
+    public void initBatching(){
+        BATCHINGCOUNT = 0;
+    }
     @Override
     public void doAction(Wrapper w){
        //System.out.println("[Protocol] call Protocol.perform");
        perform(PBFTActionFactory.create(w));
+    }
+
+    public Long getBatchingTimeout(){
+        return (Long)getContext().get(PBFT.BATCHINGTIMEOUT);
     }
 
     public Long getRetransmissionTimeout(){
@@ -69,6 +102,10 @@ public class PBFT extends ClientServerProtocol{
 
     public Scheduler getClientScheduler(){
         return (Scheduler)(getContext().get(PBFT.CLIENTSCHEDULER));
+    }
+
+    public Scheduler getBatchingScheduler(){
+        return (Scheduler)(getContext().get(PBFT.BATCHSCHEDULER));
     }
 
     public Scheduler getPrimaryFDScheduler(){
@@ -272,5 +309,6 @@ public class PBFT extends ClientServerProtocol{
     public boolean isReceivedReply(PBFTMessage m){
         return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVEREPLY);
     }
+
 
 }

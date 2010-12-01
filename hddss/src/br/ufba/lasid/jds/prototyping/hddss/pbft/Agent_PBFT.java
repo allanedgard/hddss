@@ -11,6 +11,7 @@ import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.group.SingleGroup;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTBatchingTimeoutScheduler;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTPrimaryFDScheduler;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestRetransmistionScheduler;
 import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport;
@@ -28,6 +29,14 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
 
     Group group = new SingleGroup();
 
+    public void setBatchingSize(String size){
+        getProtocol().getContext().put(PBFT.BATCHINGSIZE, new Integer(size));
+    }
+
+    public void setBatchingTimeout(String timeout){
+        getProtocol().getContext().put(PBFT.BATCHINGTIMEOUT, new Long(timeout));
+    }
+    
     public void setGroupSize(String size){
         setGroupSize(Integer.parseInt(size));
     }
@@ -93,6 +102,14 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         getProtocol().getContext().put(
             PBFT.PRIMARYFDSCHEDULER,
             new PBFTPrimaryFDScheduler(
+                (PBFT)getProtocol(),
+                (Scheduler)infra.context.get(RuntimeSupport.Variable.Scheduler).value()
+            )
+        );
+
+        getProtocol().getContext().put(
+            PBFT.BATCHSCHEDULER,
+            new PBFTBatchingTimeoutScheduler(
                 (PBFT)getProtocol(),
                 (Scheduler)infra.context.get(RuntimeSupport.Variable.Scheduler).value()
             )

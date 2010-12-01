@@ -6,7 +6,6 @@
 package br.ufba.lasid.jds.jbft.pbft.util;
 
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
-import br.ufba.lasid.jds.jbft.pbft.actions.RetransmissionAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.util.Buffer;
 import br.ufba.lasid.jds.util.Clock;

@@ -31,6 +31,7 @@ public class PBFTSendReplyExecutor extends ClientServerSendReplyExecutor{
     }
 
     private PBFTMessage makeReply(PBFTMessage m){
+        
         m.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.RECEIVEREPLY);
 
         Process destin = (Process)m.get(PBFTMessage.SOURCEFIELD);
