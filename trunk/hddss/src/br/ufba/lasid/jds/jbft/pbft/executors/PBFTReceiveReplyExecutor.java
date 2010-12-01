@@ -11,6 +11,7 @@ import br.ufba.lasid.jds.cs.Client;
 import br.ufba.lasid.jds.cs.executors.ClientServerReceiveReplyExecutor;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestRetransmistionScheduler;
 import br.ufba.lasid.jds.security.Authenticator;
 import br.ufba.lasid.jds.util.Buffer;
 
@@ -32,6 +33,11 @@ public class PBFTReceiveReplyExecutor extends ClientServerReceiveReplyExecutor{
         if(ckeckReply(m)){
             Client client = (Client)getProtocol().getLocalProcess();
             client.receiveReply(m.getContent());
+            PBFTRequestRetransmistionScheduler scheduler =
+                    (PBFTRequestRetransmistionScheduler)((PBFT)getProtocol()).getClientScheduler();
+            
+            scheduler.cancel(m);
+
             RemoveFromBuffer(m);
         }
 
@@ -43,6 +49,7 @@ public class PBFTReceiveReplyExecutor extends ClientServerReceiveReplyExecutor{
         }
         return true;
     }
+    
     public synchronized void RemoveFromBuffer(PBFTMessage m){
         Buffer buffer = ((PBFT)getProtocol()).getRequestBuffer();
         m.put(PBFTMessage.TIMESTAMPFIELD, new Long(-1));
