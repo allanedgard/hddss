@@ -34,5 +34,9 @@ public class PBFTRequestRetransmistionScheduler extends PBFTRequestScheduler{
     public void makePerform(Wrapper w){
         ((PBFT)getProtocol()).perform(new RetransmissionAction(w));
     }
+
+    public void cancel(PBFTMessage m) {
+        m.put(REQUESTID, new Long(-1));
+    }
    
 }
