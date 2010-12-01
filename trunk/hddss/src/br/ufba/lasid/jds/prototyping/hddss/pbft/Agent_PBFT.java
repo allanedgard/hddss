@@ -26,7 +26,6 @@ import br.ufba.lasid.jds.util.Scheduler;
 public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>{
 
     Group group = new SingleGroup();
-    Integer currentPrimary = null;
 
     public void setServerGroupAddress(String addr){
         this.setGroupID(new Integer(addr));
@@ -38,6 +37,10 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
 
     public void setCurrentPrimary(Integer addr){
         getProtocol().getContext().put(PBFT.GROUPLEADER, addr);
+    }
+
+    public void setCurrentView(String v){
+        ((PBFT)getProtocol()).setCurrentView(new Integer(v));
     }
 
     public Group getGroup() {
@@ -56,11 +59,7 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         getProtocol().getContext().put(PBFT.LOCALGROUP, getGroup());
         getProtocol().getContext().put(PBFT.CLOCKSYSTEM, infra.clock);
         getProtocol().getContext().put(PBFT.DEBUGGER, infra);
-        getProtocol().getContext().put(PBFT.REQUESTBUFFER, new Buffer());
-        
-        if(currentPrimary != null)
-            getProtocol().getContext().put(PBFT.GROUPLEADER, currentPrimary);
-
+        getProtocol().getContext().put(PBFT.REQUESTBUFFER, new Buffer());        
         getProtocol().getContext().put(
             PBFT.CLIENTMSGAUTHENTICATOR,
             new PBFTSimulatedAuthenticator(PBFT.CLIENTMSGAUTHENTICATOR)

@@ -52,12 +52,18 @@ public class PBFTSimulatedAuthenticator implements Authenticator<PBFTMessage>{
         return ((Boolean)(data.get(AUTHENTICATORFIELD)));
     }
 
-    public Digest digest(PBFTMessage data) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public PBFTMessage digest(PBFTMessage data) {
+        data.put(PBFTMessage.DIGESTFIELD, generateDisgest());
+        return data;
+
     }
 
     public boolean generateAuthentication(){
         return true;
+    }
+
+    public String generateDisgest(){
+        return "AAAAAAAAAAAA";
     }
 
 }
