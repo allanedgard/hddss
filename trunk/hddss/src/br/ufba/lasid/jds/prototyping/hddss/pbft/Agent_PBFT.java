@@ -11,6 +11,7 @@ import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.group.SingleGroup;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTPrimaryFDScheduler;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestRetransmistionScheduler;
 import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport;
 import br.ufba.lasid.jds.prototyping.hddss.cs.Agent_ServiceComponent;
@@ -37,6 +38,10 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
 
     public void setCurrentPrimary(Integer addr){
         getProtocol().getContext().put(PBFT.GROUPLEADER, addr);
+    }
+
+    public void setPrimaryFaultTimeout(String t){
+        ((PBFT)getProtocol()).setPrimaryFaultTimeout(new Long(t));
     }
 
     public void setCurrentView(String v){
@@ -77,6 +82,15 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
                 (Scheduler)infra.context.get(RuntimeSupport.Variable.Scheduler).value()
             )
         );
+
+        getProtocol().getContext().put(
+            PBFT.PRIMARYFDSCHEDULER,
+            new PBFTPrimaryFDScheduler(
+                (PBFT)getProtocol(),
+                (Scheduler)infra.context.get(RuntimeSupport.Variable.Scheduler).value()
+            )
+        );
+
 
         getProtocol().setCommunicator(new SimulatedPBFTCommunicator(this));
         getProtocol().setLocalProcess(this);

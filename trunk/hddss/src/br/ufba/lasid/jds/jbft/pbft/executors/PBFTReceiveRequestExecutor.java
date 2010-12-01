@@ -15,6 +15,7 @@ import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTPrimaryFDScheduler;
 import br.ufba.lasid.jds.security.Authenticator;
 import br.ufba.lasid.jds.util.Buffer;
 
@@ -55,27 +56,7 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
                 return;
             }
             
-
-            
-/*
-            if(isPrimary(getProtocol().getLocalProcess())){
-                
-                addRequestToBuffer(m);
-                PBFTMessage pp = makePrePrepare(m);
-                getProtocol().getCommunicator().multicast(
-                    pp, (Group)getProtocol().getContext().get(PBFT.LOCALGROUP)
-                );
-
-            }else{
-/*
-                Scheduler scheduler = (Scheduler)getProtocol().getContext().get(PBFT.CLIENTSCHEDULER);
-                scheduler.schedule(
-                   (Task)getProtocol().getExecutors().get(ChangeViewAction.class),
-                   (Long)getProtocol().getContext().get(PBFT.LATEPRIMARYTIMEOUT)
-                );
-  
-            }
-  */
+            scheduleChangeView(m);
         }
     }
 
@@ -133,6 +114,30 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
             "[PBFTReceiveRequestExecutor.execute] client request " + request
           + " was buffered in server(p" + getProtocol().getLocalProcess().getID() + ") "
           + " at time " + ((PBFT)getProtocol()).getTimestamp()
+         );
+
+    }
+
+    public void scheduleChangeView(PBFTMessage m){
+
+        Long timeout   = ((PBFT)getProtocol()).getPrimaryFaultyTimeout();
+        Long timestamp =((PBFT)getProtocol()).getTimestamp();
+        
+        Long rttime = new Long(timestamp.intValue() + timeout.longValue());
+        m.put(
+          PBFT.PRIMARYFAULTTIMEOUT,
+          ((PBFT)getProtocol()).getPrimaryFaultyTimeout()
+        );
+
+        PBFTPrimaryFDScheduler scheduler =
+                (PBFTPrimaryFDScheduler)(((PBFT)getProtocol()).getPrimaryFDScheduler());
+
+        scheduler.schedule(m);
+
+        ((PBFT)getProtocol()).getDebugger().debug(
+            "["+ getClass().getSimpleName()+ ".scheduleChangeView] "
+          + "scheduling of (" + m + ") for time " + rttime + " "
+          + "at server(" + getProtocol().getLocalProcess().getID() + ")"
          );
 
     }
