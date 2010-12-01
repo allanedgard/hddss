@@ -8,12 +8,7 @@ package br.ufba.lasid.jds.jbft.pbft.executors;
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.Protocol;
 import br.ufba.lasid.jds.cs.executors.ClientServerReceiveRequestExecutor;
-import br.ufba.lasid.jds.Process;
-import br.ufba.lasid.jds.util.Scheduler;
-import br.ufba.lasid.jds.util.Task;
-import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
-import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTPrimaryFDScheduler;
 import br.ufba.lasid.jds.security.Authenticator;
@@ -78,8 +73,10 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
         pp.put(PBFTMessage.REQUESTFIELD, request);
         pp.put(PBFTMessage.VIEWFIELD, ((PBFT)getProtocol()).getCurrentView());
         pp.put(PBFTMessage.SEQUENCENUMBERFIELD, PBFTMessage.newSequenceNumber());
+        pp.put(PBFTMessage.SOURCEFIELD, getProtocol().getLocalProcess());
 
-        pp = (PBFTMessage)authenticator.digest(pp);
+        pp = (PBFTMessage)authenticator.makeDisgest(pp);
+        pp = (PBFTMessage)authenticator.encrypt(pp);
         
         getProtocol().getCommunicator().multicast(
             pp, ((PBFT)getProtocol()).getLocalGroup()

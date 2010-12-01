@@ -24,6 +24,11 @@ public class PBFTPrepareExecutor extends Executor{
 
     @Override
     public synchronized void execute(Action act) {
+        ((PBFT)getProtocol()).getDebugger().debug(
+            "[PBFTPrepareExecutor.execute] " 
+         );
+        
+        /*
         PBFTMessage m = (PBFTMessage) act.getMessage();
         if(checkPrepare(m)){
             //m.setType(PBFTMessage.TYPE.COMMIT);
@@ -32,6 +37,8 @@ public class PBFTPrepareExecutor extends Executor{
                m, (Group)getProtocol().getContext().get(PBFT.LOCALGROUP)
             );
         }
+         * 
+         */
     }
 
 

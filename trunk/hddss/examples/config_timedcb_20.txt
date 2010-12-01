@@ -1,2 +1,0 @@
-WorkDir = ./
-cenarios = timedcb_5_20.txt
