@@ -65,10 +65,11 @@ public class PBFTSendRequestExecutor extends ClientServerSendRequestExecutor{
         Long timeout   = ((PBFT)getProtocol()).getRetransmissionTimeout();
         Long timestamp =((PBFT)getProtocol()).getTimestamp();
         Long rttime = new Long(timestamp.intValue() + timeout.longValue());
-        m.put(PBFT.CLIENTRETRANSMISSIONTIMEOUT, rttime);
 
         PBFTRequestRetransmistionScheduler scheduler =
                 (PBFTRequestRetransmistionScheduler)(((PBFT)getProtocol()).getClientScheduler());
+
+        m.put(scheduler.getTAG(), rttime);
 
         scheduler.schedule(m);
 

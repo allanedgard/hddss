@@ -124,13 +124,15 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
         Long timestamp =((PBFT)getProtocol()).getTimestamp();
         
         Long rttime = new Long(timestamp.intValue() + timeout.longValue());
-        m.put(
-          PBFT.PRIMARYFAULTTIMEOUT,
-          ((PBFT)getProtocol()).getPrimaryFaultyTimeout()
-        );
 
         PBFTPrimaryFDScheduler scheduler =
                 (PBFTPrimaryFDScheduler)(((PBFT)getProtocol()).getPrimaryFDScheduler());
+
+        m.put(
+          scheduler.getTAG(),
+          ((PBFT)getProtocol()).getPrimaryFaultyTimeout()
+        );
+
 
         scheduler.schedule(m);
 
