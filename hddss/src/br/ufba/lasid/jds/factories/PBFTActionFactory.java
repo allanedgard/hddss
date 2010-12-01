@@ -13,6 +13,7 @@ import br.ufba.lasid.jds.cs.actions.ReceiveReplyAction;
 import br.ufba.lasid.jds.comm.Message;
 import br.ufba.lasid.jds.util.Wrapper;
 import br.ufba.lasid.jds.Action;
+import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrepareAction;
@@ -65,6 +66,10 @@ public class PBFTActionFactory extends ActionFactory{
 
         if(type.equals(PBFTMessage.TYPE.REQUESTRETRANSMITION)){
             return new RetransmissionAction(m);
+        }
+
+        if(type.equals(PBFTMessage.TYPE.CHANGEVIEW)){
+            return new ChangeViewAction(m);
         }
 
         return null;

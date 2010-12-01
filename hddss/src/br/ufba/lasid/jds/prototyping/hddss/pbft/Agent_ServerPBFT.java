@@ -12,9 +12,11 @@ import br.ufba.lasid.jds.cs.actions.SendReplyAction;
 import br.ufba.lasid.jds.cs.executors.ClientServerSendReplyExecutor;
 import br.ufba.lasid.jds.cs.executors.ClientServerServerExecuteExecutor;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrepareAction;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTChangeViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCommitExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrepareExecutor;
@@ -39,6 +41,8 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         getProtocol().addExecutor(CommitAction.class, newPBFTCommitExecutor());
         getProtocol().addExecutor(ExecuteAction.class, newPBFTServerExecuteExecutor());
         getProtocol().addExecutor(SendReplyAction.class, newPBFTSendReplyExecutor());
+        getProtocol().addExecutor(ChangeViewAction.class, newPBFTChangeViewExecutor());
+
     }
 
     public Executor newPBFTReceiveRequestExecutor(){
@@ -58,6 +62,10 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
     }
     public Executor newPBFTSendReplyExecutor(){
         return new PBFTSendReplyExecutor(getProtocol());
+    }
+
+    public Executor newPBFTChangeViewExecutor(){
+        return new PBFTChangeViewExecutor(getProtocol());
     }
     public Object doService(Object arg) {
         throw new UnsupportedOperationException("Not supported yet.");

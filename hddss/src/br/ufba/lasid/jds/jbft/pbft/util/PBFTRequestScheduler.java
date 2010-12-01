@@ -103,7 +103,7 @@ public abstract class PBFTRequestScheduler implements Scheduler, Task{
             long timeout = getRequestTimeout(request);
 
             if(timeout >=0 && timeout < getCurrentTime()){
-                ((PBFT)getProtocol()).perform(new RetransmissionAction((Wrapper)request));
+                makePerform((Wrapper)request);
             }
         }
     }
