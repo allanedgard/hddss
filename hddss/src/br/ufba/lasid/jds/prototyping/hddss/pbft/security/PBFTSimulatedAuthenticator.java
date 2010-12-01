@@ -7,7 +7,6 @@ package br.ufba.lasid.jds.prototyping.hddss.pbft.security;
 
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.security.Authenticator;
-import br.ufba.lasid.jds.security.Digest;
 import br.ufba.lasid.jds.security.SecurityKey;
 
 /**
@@ -32,7 +31,7 @@ public class PBFTSimulatedAuthenticator implements Authenticator<PBFTMessage>{
     }
 
     public PBFTMessage encrypt(PBFTMessage data) {
-        data.put(AUTHENTICATORFIELD, generateAuthentication());
+        data.put(AUTHENTICATORFIELD, generateAuthentication(data));
         return data;
     }
 
@@ -52,18 +51,23 @@ public class PBFTSimulatedAuthenticator implements Authenticator<PBFTMessage>{
         return ((Boolean)(data.get(AUTHENTICATORFIELD)));
     }
 
-    public PBFTMessage digest(PBFTMessage data) {
-        data.put(PBFTMessage.DIGESTFIELD, generateDisgest());
+    public PBFTMessage makeDisgest(PBFTMessage data) {
+        data.put(PBFTMessage.DIGESTFIELD, generateDisgest(data));
         return data;
 
     }
 
-    public boolean generateAuthentication(){
+    public boolean generateAuthentication(PBFTMessage m){
         return true;
     }
 
-    public String generateDisgest(){
+    public String generateDisgest(PBFTMessage m){
         return "AAAAAAAAAAAA";
+    }
+
+    public boolean chechDisgest(PBFTMessage data) {
+        String digest = generateDisgest(data);
+        return digest.equals(data.get(PBFTMessage.DIGESTFIELD));
     }
 
 }

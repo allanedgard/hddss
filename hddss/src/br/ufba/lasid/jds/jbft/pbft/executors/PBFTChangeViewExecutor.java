@@ -20,6 +20,10 @@ public class PBFTChangeViewExecutor extends Executor{
         super(protocol);
     }
 
+    /**
+     * [TODO]
+     * @param act
+     */
     @Override
     public synchronized void execute(Action act) {
             ((PBFT)getProtocol()).getDebugger().debug(

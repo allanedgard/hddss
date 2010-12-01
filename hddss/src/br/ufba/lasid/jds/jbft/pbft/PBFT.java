@@ -34,6 +34,7 @@ public class PBFT extends ClientServerProtocol{
     public static String ALLOWABLENUMBEROFFAULTREPLICAS = "__ALLOWABLENUMBEROFFAULTREPLICAS";
     public static String CLOCKSYSTEM = "__CLOCKSYSTEM";
     public static String REQUESTBUFFER = "__REQUESTBUFFER";
+    public static String PREPREPAREBUFFER = "__PREPREPAREBUFFER";
     public static String CLIENTAUTHENTICATOR = "__CLIENTAUTHENTICATOR";
     public static String SERVERAUTHENTICATOR = "__SERVERAUTHENTICATOR";
     public static String PRIMARYFAULTTIMEOUT = "__PRIMARYFAULTYTIMEOUT";
@@ -100,5 +101,9 @@ public class PBFT extends ClientServerProtocol{
 
     public Group getLocalGroup(){
         return (Group)getContext().get(PBFT.LOCALGROUP);
+    }
+
+    public Buffer getPreprepareBuffer() {
+        return (Buffer)getContext().get(PBFT.PREPREPAREBUFFER);
     }
 }

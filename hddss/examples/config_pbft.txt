@@ -1,3 +1,0 @@
-WorkDir = D:/development/hdsss/hddss/examples/
-
-cenarios = pbft.txt

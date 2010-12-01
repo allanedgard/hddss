@@ -64,7 +64,8 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         getProtocol().getContext().put(PBFT.LOCALGROUP, getGroup());
         getProtocol().getContext().put(PBFT.CLOCKSYSTEM, infra.clock);
         getProtocol().getContext().put(PBFT.DEBUGGER, infra);
-        getProtocol().getContext().put(PBFT.REQUESTBUFFER, new Buffer());        
+        getProtocol().getContext().put(PBFT.REQUESTBUFFER, new Buffer());
+        getProtocol().getContext().put(PBFT.PREPREPAREBUFFER, new Buffer());
         getProtocol().getContext().put(
             PBFT.CLIENTMSGAUTHENTICATOR,
             new PBFTSimulatedAuthenticator(PBFT.CLIENTMSGAUTHENTICATOR)

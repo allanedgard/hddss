@@ -8,7 +8,6 @@ package br.ufba.lasid.jds.jbft.pbft.executors;
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.Protocol;
-import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.security.Authenticator;
@@ -19,22 +18,19 @@ import br.ufba.lasid.jds.util.Buffer;
  * @author aliriosa
  */
 public class PBFTPrePrepareExecutor extends Executor{
-    Buffer buffer = null;
+    Object[] Quorum;
     public PBFTPrePrepareExecutor(Protocol protocol) {
         super(protocol);
     }
 
     @Override
     public synchronized void execute(Action act) {
-/*        PBFTMessage m = (PBFTMessage) act.getMessage();
+        PBFTMessage m = (PBFTMessage) act.getMessage();
 
         if(checkPrePrepare(m)){
-            PBFTMessage p = createPrepare(m);
-            getProtocol().getCommunicator().multicast(
-                m, (Group)getProtocol().getContext().get(PBFT.LOCALGROUP)
-            );
+         
+           makePrepare(m);
         }
-  */
     }
 
     /**
@@ -45,10 +41,9 @@ public class PBFTPrePrepareExecutor extends Executor{
      */
 
     private boolean checkPrePrepare(PBFTMessage m) {
-
-        if(isValidPrepare(m)){
+        if(isValidPrePrepare(m)){
             addToBuffer(m);
-            return hasQuorum();
+            return true;
         }
         return false;
     }
@@ -57,45 +52,68 @@ public class PBFTPrePrepareExecutor extends Executor{
      * @param m
      * @return
      */
-    private boolean isValidPrepare(PBFTMessage m) {
-        //Authenticator auth = ((PBFT)getProtocol()).getClientAuthenticator();
-        return true;
-    }
+    private boolean isValidPrePrepare(PBFTMessage m) {
+        Authenticator authenticator =
+        ((PBFT)getProtocol()).getServerAuthenticator();
+        if(!authenticator.check(m)){
+            return false;
+        }
+        
+        return authenticator.chechDisgest(m);
 
-    private boolean hasQuorum() {
-       int f  = ((Integer)getProtocol().getContext().get(PBFT.ALLOWABLENUMBEROFFAULTREPLICAS)).intValue();
-       int quorum = 3 * f + 1;
-
-       /**
-        * [FIX] it doesn't work to parallel prepepare
-        */
-       return (buffer.size() >= quorum); //it's surely wrong      
     }
 
     private void addToBuffer(PBFTMessage m) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        Buffer buffer = ((PBFT)getProtocol()).getPreprepareBuffer();
+        if(buffer.contains(m)){
+            ((PBFT)getProtocol()).getDebugger().debug(
+                "[PBFTPrePrepareExecutor.execute] preperare " + m
+              + " was rejected in server(p" + getProtocol().getLocalProcess().getID() + ") "
+              + " at time " + ((PBFT)getProtocol()).getTimestamp() + " "
+              + "because it's already in received."
+             );
+
+            return;            
+        }
+
+        buffer.add(m);
+
+        ((PBFT)getProtocol()).getDebugger().debug(
+            "[PBFTPrePrepareExecutor.execute] prepepare " + m
+          + " was buffered in server(p" + getProtocol().getLocalProcess().getID() + ") "
+          + " at time " + ((PBFT)getProtocol()).getTimestamp()
+         );
     }
 
     /**
-     * [TODO]
+     * 
      * @param m
      * @return
      */
-    private PBFTMessage createPrepare(PBFTMessage pp) {
-        Authenticator<PBFTMessage> auth =
-                (Authenticator<PBFTMessage>) getProtocol().getContext().get(
-                    PBFT.CLIENTMSGAUTHENTICATOR
-                 );
-        
+    private PBFTMessage makePrepare(PBFTMessage pp) {
+        Authenticator authenticator =
+            ((PBFT)getProtocol()).getServerAuthenticator();
+
         PBFTMessage p = new PBFTMessage();
+        
         p.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.PREPARE);
         p.put(PBFTMessage.VIEWFIELD, pp.get(PBFTMessage.VIEWFIELD));
         p.put(PBFTMessage.SEQUENCENUMBERFIELD, pp.get(PBFTMessage.SEQUENCENUMBERFIELD));
         p.put(PBFTMessage.DIGESTFIELD, pp.get(PBFTMessage.DIGESTFIELD));
         p.put(PBFTMessage.REPLICAIDFIELD, getProtocol().getLocalProcess().getID());
 
-        p = auth.encrypt(p);
+        p = (PBFTMessage)authenticator.encrypt(p);
         
+       getProtocol().getCommunicator().multicast(
+            p, ((PBFT)getProtocol()).getLocalGroup()
+        );
+
+        ((PBFT)getProtocol()).getDebugger().debug(
+            "[PBFTPrePrepareExecutor.execute] prepare " + p
+          + " was sending by server(p" + getProtocol().getLocalProcess().getID() + ") "
+          + " at time " + ((PBFT)getProtocol()).getTimestamp()
+         );
+
         return p;
     }
 

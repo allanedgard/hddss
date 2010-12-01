@@ -20,6 +20,8 @@ public interface Authenticator<T> {
 
     public boolean check(T data);
 
-    public T digest(T data);
+    public T makeDisgest(T data);
+
+    public boolean chechDisgest(T data);
 
 }
