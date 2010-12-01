@@ -16,46 +16,48 @@ public class CalcPBFTServer extends Agent_ServerPBFT{
 
     @Override
     public Object doService(Object arg) {
-        Object[] args = (Object[])arg;
+        CalculatorApplicationPayload args = (CalculatorApplicationPayload)arg;
+        CalculatorApplicationPayload result = new CalculatorApplicationPayload();
+        
         if(args == null){
-            System.out.println("nothing to do!");
-            return null;
+            result.put(Calculator.RESULT, "NOP");
+            return result;
         }
-        if(args.length < 3){
-            System.out.println("wrong number of parameters");
-        }
-
-        int opcode = Integer.parseInt((String)args[0]);
-        double op1 = Double.parseDouble((String)args[1]);
-        double op2 = Double.parseDouble((String)args[2]);
-        Double result = null;
-
-        if(opcode == Calculator.OPERATION.DIV.ordinal()){
-            result = new Double(calculator.div(op1, op2));
+        
+        if(args.size() < 3){
+            result.put(Calculator.RESULT, "[ERROR]INVALID OPERATION");
+            return result;
         }
 
-        if(opcode == Calculator.OPERATION.MINUS.ordinal()){
-            result = new Double(calculator.minus(op1, op2));
+        Calculator.OPERATION opcode = (Calculator.OPERATION)args.get(Calculator.OPCODE);
+        double op1 = ((Double)args.get(Calculator.OP1)).doubleValue();
+        double op2 = ((Double)args.get(Calculator.OP2)).doubleValue();
+        
+        
+
+        if(opcode.equals(Calculator.OPERATION.DIV)){
+            result.put(Calculator.RESULT, new Double(calculator.div(op1, op2)));
         }
 
-        if(opcode == Calculator.OPERATION.PLUS.ordinal()){
-            result = new Double(calculator.plus(op1, op2));
+        if(opcode.equals(Calculator.OPERATION.MINUS)){
+            result.put(Calculator.RESULT, new Double(calculator.minus(op1, op2)));
         }
 
-        if(opcode == Calculator.OPERATION.POW.ordinal()){
-            result = new Double(calculator.pow(op1, op2));
+        if(opcode.equals(Calculator.OPERATION.PLUS)){
+            result.put(Calculator.RESULT, new Double(calculator.plus(op1, op2)));
         }
 
-        if(opcode == Calculator.OPERATION.SQR.ordinal()){
-            result = new Double(calculator.sqr(op1, op2));
+        if(opcode.equals(Calculator.OPERATION.POW)){
+            result.put(Calculator.RESULT, new Double(calculator.pow(op1, op2)));
         }
 
-        if(opcode == Calculator.OPERATION.TIMES.ordinal()){
-            result = new Double(calculator.times(op1, op2));
+        if(opcode.equals(Calculator.OPERATION.SQR)){
+            result.put(Calculator.RESULT, new Double(calculator.sqr(op1, op2)));
         }
 
-
-
+        if(opcode.equals(Calculator.OPERATION.TIMES)){
+            result.put(Calculator.RESULT, new Double(calculator.times(op1, op2)));
+        }
 
         return result;
     }    

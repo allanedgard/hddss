@@ -38,20 +38,25 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
               + " was authenticated at time " + ((PBFT)getProtocol()).getTimestamp()
              );
             
-            addRequestToBuffer(m);
+            if(addRequestToBuffer(m)){
 
-            ((PBFT)getProtocol()).getDebugger().debug(
-                "[PBFTReceiveRequestExecutor.execute] client request " + m
-              + " was buffered in server(p" + getProtocol().getLocalProcess().getID() + ") "
-              + " at time " + ((PBFT)getProtocol()).getTimestamp()
-             );
+                ((PBFT)getProtocol()).getDebugger().debug(
+                    "[PBFTReceiveRequestExecutor.execute] client request " + m
+                  + " was buffered in server(p" + getProtocol().getLocalProcess().getID() + ") "
+                  + " at time " + ((PBFT)getProtocol()).getTimestamp()
+                 );
 
-            if(((PBFT)getProtocol()).isPrimary()){
-                makePrePrepare(m);
-                return;
+                if(((PBFT)getProtocol()).isPrimary()){
+                    makePrePrepare(m);
+                    return;
+                }
+
+                scheduleChangeView(m);
+            }else{
+                if(m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.SENDREQUEST)){
+                    System.out.println("*********");
+                }
             }
-            
-            scheduleChangeView(m);
         }
     }
 
@@ -92,7 +97,7 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
         
     }
 
-    private void addRequestToBuffer(PBFTMessage request) {
+    private boolean addRequestToBuffer(PBFTMessage request) {
         
         if(getRequestBuffer().contains(request)){
             ((PBFT)getProtocol()).getDebugger().debug(
@@ -102,7 +107,7 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
               + "because it's already in buffer."
              );
 
-            return;
+            return false;
         }
         
         getRequestBuffer().add(request);
@@ -113,6 +118,8 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
           + " at time " + ((PBFT)getProtocol()).getTimestamp()
          );
 
+        return true;
+        
     }
 
     public void scheduleChangeView(PBFTMessage m){

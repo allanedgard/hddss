@@ -58,7 +58,9 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         return new PBFTCommitExecutor(getProtocol());
     }
     public Executor newPBFTServerExecuteExecutor(){
-        return new PBFTServerExecuteExecutor(getProtocol());
+        PBFTServerExecuteExecutor exec =  new PBFTServerExecuteExecutor(getProtocol());
+        exec.setServer(this);
+        return exec;
     }
     public Executor newPBFTSendReplyExecutor(){
         return new PBFTSendReplyExecutor(getProtocol());

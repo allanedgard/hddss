@@ -37,6 +37,7 @@ public class PBFT extends ClientServerProtocol{
     public static String REQUESTBUFFER = "__REQUESTBUFFER";
     public static String PREPREPAREBUFFER = "__PREPREPAREBUFFER";
    public static String  PREPAREBUFFER = "__PREPAREBUFFER";
+   public static String  COMMITBUFFER = "__COMMITBUFFER";
     public static String CLIENTAUTHENTICATOR = "__CLIENTAUTHENTICATOR";
     public static String SERVERAUTHENTICATOR = "__SERVERAUTHENTICATOR";
     public static String PRIMARYFAULTTIMEOUT = "__PRIMARYFAULTYTIMEOUT";
@@ -113,30 +114,58 @@ public class PBFT extends ClientServerProtocol{
         return (Buffer)getContext().get(PBFT.PREPAREBUFFER);
     }
 
+    public Buffer getCommitBuffer() {
+        return (Buffer)getContext().get(PBFT.COMMITBUFFER);
+    }
+
     public boolean belongsToCurrentView(PBFTMessage m) {
         return getCurrentView().equals(m.get(PBFTMessage.VIEWFIELD));
     }
 
-    public boolean existsPrePrepare(PBFTMessage m) {
-        
-        Buffer buffer = getPreprepareBuffer();
-        
-        for(Object item : buffer){
-            PBFTMessage pp = (PBFTMessage) item;
+    public boolean exists(PBFTMessage m, Buffer buffer){
 
-            boolean viewCheck   = pp.get(PBFTMessage.VIEWFIELD).equals(m.get(PBFTMessage.VIEWFIELD));
-            boolean digestCheck = pp.get(PBFTMessage.DIGESTFIELD).equals(m.get(PBFTMessage.DIGESTFIELD));
-            boolean sequenceCheck = pp.get(PBFTMessage.SEQUENCENUMBERFIELD).equals(m.get(PBFTMessage.SEQUENCENUMBERFIELD));
+        for(Object item : buffer){
+            PBFTMessage m1 = (PBFTMessage) item;
+
+            boolean viewCheck   = m1.get(PBFTMessage.VIEWFIELD).equals(m.get(PBFTMessage.VIEWFIELD));
+            boolean digestCheck = m1.get(PBFTMessage.DIGESTFIELD).equals(m.get(PBFTMessage.DIGESTFIELD));
+            boolean sequenceCheck = m1.get(PBFTMessage.SEQUENCENUMBERFIELD).equals(m.get(PBFTMessage.SEQUENCENUMBERFIELD));
 
             if(viewCheck && digestCheck && sequenceCheck){
                 return true;
             }
-            
+
         }
-        
+
         return false;
+
+    }
+    public boolean existsPrePrepare(PBFTMessage m) {
+        return exists(m, getPreprepareBuffer());
     }
 
+    public boolean existsPrepare(PBFTMessage m) {
+        return exists(m, getPrepareBuffer());
+    }
+
+    public boolean existsRequest(PBFTMessage m){
+        Buffer buffer = getRequestBuffer();
+        
+        for(Object item : buffer){
+            PBFTMessage m1 = (PBFTMessage) item;
+
+            boolean clientCheck   = m1.get(PBFTMessage.CLIENTFIELD).equals(m.get(PBFTMessage.CLIENTFIELD));            
+            boolean timestamptCheck   = m1.get(PBFTMessage.TIMESTAMPFIELD).equals(m.get(PBFTMessage.TIMESTAMPFIELD));
+
+            if(clientCheck && timestamptCheck){
+                return true;
+            }
+
+        }
+
+        return false;
+        
+    }
     public int getServiceBFTResilience(){
         return (int)(Math.floor(getLocalGroup().getGroupSize()/3));
     }
@@ -146,16 +175,22 @@ public class PBFT extends ClientServerProtocol{
             return gotPrepareQuorum(m);
         }
 
+        if(isCommit(m)){
+            return gotCommitQuorum(m);
+        }
+
+        if(isReceivedReply(m)){
+            return gotReceiveReplyQuorum(m);
+        }
+
         return false;
     }
 
-    public boolean gotPrepareQuorum(PBFTMessage m){
+    public boolean gotQuorum(PBFTMessage m, Buffer buffer, int minQuorum, boolean includeItsOwn){
 
-        Buffer buffer = getPrepareBuffer();
-        
         int quorum = 0;
         int f      = getServiceBFTResilience();
-        
+
         for(Object item : buffer){
 
             PBFTMessage p = (PBFTMessage) item;
@@ -164,17 +199,78 @@ public class PBFT extends ClientServerProtocol{
             boolean sequenceCheck = p.get(PBFTMessage.SEQUENCENUMBERFIELD).equals(m.get(PBFTMessage.SEQUENCENUMBERFIELD));
             boolean replicaCheck = p.get(PBFTMessage.REPLICAIDFIELD).equals(m.get(PBFTMessage.REPLICAIDFIELD));
 
-            if(viewCheck && digestCheck && sequenceCheck && !replicaCheck){
-                quorum++;
+            if(!includeItsOwn){
+
+                if(viewCheck && digestCheck && sequenceCheck && !replicaCheck){
+                    quorum++;
+                }
+
+            }else{
+
+                if(viewCheck && digestCheck && sequenceCheck){
+                    quorum++;
+                }
+                
             }
-            
+
         }
 
-        return (quorum >= 2 * f);
+        return (quorum >= minQuorum);
+    }
+
+    public boolean gotReceiveReplyQuorum(PBFTMessage m){
+
+        int f      = getServiceBFTResilience();
+
+        int quorum = 0;        
+
+        Buffer buffer = getRequestBuffer();
+        Buffer replicas = new Buffer();
+        
+        for(Object item : buffer){
+
+            PBFTMessage p = (PBFTMessage) item;
+            boolean clientCheck   = p.get(PBFTMessage.CLIENTFIELD).equals(m.get(PBFTMessage.CLIENTFIELD));
+            boolean digestCheck = p.get(PBFTMessage.DIGESTFIELD).equals(m.get(PBFTMessage.DIGESTFIELD));
+            
+            Object i  = p.get(PBFTMessage.REPLICAIDFIELD);
+            
+            if(!replicas.contains(i) && clientCheck && digestCheck){
+                quorum ++;
+                replicas.add(i);
+            }
+
+        }
+
+        return (quorum >= f + 1);
+    }
+
+    public boolean gotPrepareQuorum(PBFTMessage m){
+
+        int f      = getServiceBFTResilience();
+
+        return gotQuorum(m, getPrepareBuffer(), 2 * f, false);
+        
+    }
+
+    public boolean gotCommitQuorum(PBFTMessage m){
+        
+        int f      = getServiceBFTResilience();
+
+        return gotQuorum(m, getCommitBuffer(), 2 * f + 1, true);
+
     }
 
     public boolean isPrepare(PBFTMessage m){
         return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.PREPARE);
+    }
+
+    public boolean isCommit(PBFTMessage m){
+        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.COMMIT);
+    }
+
+    public boolean isReceivedReply(PBFTMessage m){
+        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVEREPLY);
     }
 
 }

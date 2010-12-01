@@ -30,24 +30,4 @@ public class ClientServerMessage extends Message{
         }
         
     }
-/*
-    public ClientServerMessage(TYPE type){
-        setType(type);
-    }
-
-    public ClientServerMessage(TYPE type, Object content){
-        this(type);
-        setContent(content);
-    }
-
-    public ClientServerMessage(TYPE type, Object content, Process<T> source, Process<T> destination){
-        this(type, content);
-        setSource(source);
-        setDestination(destination);
-    }
-
-    public void setType(TYPE type){
-        setType(type.getValue());
-    }
-*/
 }

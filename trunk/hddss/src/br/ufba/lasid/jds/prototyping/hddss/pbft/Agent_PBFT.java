@@ -71,6 +71,7 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         getProtocol().getContext().put(PBFT.REQUESTBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.PREPREPAREBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.PREPAREBUFFER, new Buffer());
+        getProtocol().getContext().put(PBFT.COMMITBUFFER, new Buffer());
         getProtocol().getContext().put(
             PBFT.CLIENTMSGAUTHENTICATOR,
             new PBFTSimulatedAuthenticator(PBFT.CLIENTMSGAUTHENTICATOR)
@@ -119,7 +120,7 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
 
     @Override
     public void receive(br.ufba.lasid.jds.prototyping.hddss.Message msg) {
-        PBFTMessage m = (PBFTMessage)msg.getContent();
+        PBFTMessage m = (PBFTMessage)(msg.getContent());
         getProtocol().doAction(m);        
     }
 
