@@ -8,6 +8,7 @@ package br.ufba.lasid.jds.jbft.pbft.executors;
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.Protocol;
+import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 
 /**
@@ -22,13 +23,19 @@ public class PBFTCommitExecutor extends Executor{
 
     @Override
     public synchronized void execute(Action act) {
-       PBFTMessage m = (PBFTMessage) act.getMessage();
+//       PBFTMessage m = (PBFTMessage) act.getMessage();
+        ((PBFT)getProtocol()).getDebugger().debug(
+            "[PBFTCommitExecutor.execute]" 
+         );
 
-       if(checkCommit(m)){
+/*
+        if(checkCommit(m)){
            m.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.EXECUTE);
            //m.setType(PBFTMessage.TYPE.EXECUTE);
            getProtocol().doAction(m);
        }
+ * 
+ */
     }
     /**
      * [TODO] this method must check the encriptation of the message and do the

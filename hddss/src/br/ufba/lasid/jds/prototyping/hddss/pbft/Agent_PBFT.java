@@ -28,6 +28,10 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
 
     Group group = new SingleGroup();
 
+    public void setGroupSize(String size){
+        setGroupSize(Integer.parseInt(size));
+    }
+
     public void setServerGroupAddress(String addr){
         this.setGroupID(new Integer(addr));
     }
@@ -66,6 +70,7 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         getProtocol().getContext().put(PBFT.DEBUGGER, infra);
         getProtocol().getContext().put(PBFT.REQUESTBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.PREPREPAREBUFFER, new Buffer());
+        getProtocol().getContext().put(PBFT.PREPAREBUFFER, new Buffer());
         getProtocol().getContext().put(
             PBFT.CLIENTMSGAUTHENTICATOR,
             new PBFTSimulatedAuthenticator(PBFT.CLIENTMSGAUTHENTICATOR)
@@ -116,6 +121,14 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
     public void receive(br.ufba.lasid.jds.prototyping.hddss.Message msg) {
         PBFTMessage m = (PBFTMessage)msg.getContent();
         getProtocol().doAction(m);        
+    }
+
+    public int getGroupSize() {
+        return group.getGroupSize();
+    }
+
+    public void setGroupSize(int size) {
+        group.setGroupSize(size);
     }
 
 

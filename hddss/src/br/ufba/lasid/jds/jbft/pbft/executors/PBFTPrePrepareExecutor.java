@@ -59,9 +59,14 @@ public class PBFTPrePrepareExecutor extends Executor{
             return false;
         }
         
-        return authenticator.chechDisgest(m);
+        return authenticator.chechDisgest(m) && belongsToCurrentView(m);
 
     }
+
+    private boolean belongsToCurrentView(PBFTMessage m) {
+        return ((PBFT)getProtocol()).belongsToCurrentView(m);
+    }
+
 
     private void addToBuffer(PBFTMessage m) {
         Buffer buffer = ((PBFT)getProtocol()).getPreprepareBuffer();

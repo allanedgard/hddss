@@ -14,4 +14,7 @@ public interface Group<T> extends Process<T>{
     public void setGroupID(T id);
     public T getGroupID();
 
+    public int getGroupSize();
+    public void setGroupSize(int size);
+
 }

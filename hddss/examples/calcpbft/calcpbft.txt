@@ -10,11 +10,13 @@ clock.Mode = s
 
 agent[0] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
 agent[0].ServerGroupAddress = 5
+agent[0].GroupSize = 4
 agent[0].ClientRetransmissionTimeout = 100
 agent[0].RequestGenerationProbability = 0.1
 
 agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
 agent.ServerGroupAddress = 5
+agent.GroupSize = 4
 agent.CurrentPrimary  = 1
 agent.CurrentView = 0
 agent.PrimaryFaultTimeout = 100
@@ -26,5 +28,3 @@ hannel.Std = 0
 
 network = br.ufba.lasid.jds.prototyping.hddss.NetworkDeterministic
 network.ProcessingTime = 0.001
-
-protocol.factory = 
