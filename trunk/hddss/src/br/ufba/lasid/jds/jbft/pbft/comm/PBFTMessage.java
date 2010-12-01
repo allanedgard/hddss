@@ -32,7 +32,8 @@ public class PBFTMessage extends ClientServerMessage{
         PREPREPARE(5),
         PREPARE(6),
         COMMIT(7),
-        REQUESTRETRANSMITION(8);
+        REQUESTRETRANSMITION(8),
+        CHANGEVIEW(9);
       
         private final int value;
 
