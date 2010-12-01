@@ -13,6 +13,7 @@ public class Calculator {
     public static String OPCODE = "__OPCODE";
     public static String OP1 = "__OP1";
     public static String OP2 = "__OP2";
+    public static String RESULT = "__RESULT";
 
     public enum OPERATION{
         PLUS, MINUS, TIMES, DIV, POW, SQR;

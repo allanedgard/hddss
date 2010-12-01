@@ -8,7 +8,6 @@ package br.ufba.lasid.jds.jbft.pbft.executors;
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.Protocol;
-import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.security.Authenticator;
@@ -51,7 +50,8 @@ public class PBFTPrepareExecutor extends Executor{
         c.put(PBFTMessage.SEQUENCENUMBERFIELD, m.get(PBFTMessage.SEQUENCENUMBERFIELD));
         c.put(PBFTMessage.DIGESTFIELD, m.get(PBFTMessage.DIGESTFIELD));
         c.put(PBFTMessage.REPLICAIDFIELD, getProtocol().getLocalProcess().getID());
-
+        c.put(PBFTMessage.REQUESTFIELD, m.get(PBFTMessage.REQUESTFIELD));
+        
         c = (PBFTMessage)authenticator.encrypt(c);
 
        getProtocol().getCommunicator().multicast(
@@ -106,7 +106,7 @@ public class PBFTPrepareExecutor extends Executor{
 
 
     /**
-     * [TODO] this method must check the encriptation of the message and do the
+     * this method must check the encriptation of the message and do the
      * procedures specified in Castro and Liskov (1999).
      * @param m
      * @return
@@ -128,9 +128,7 @@ public class PBFTPrepareExecutor extends Executor{
     private boolean belongsToCurrentView(PBFTMessage m) {
         return ((PBFT)getProtocol()).belongsToCurrentView(m);
     }
-    /**
-     * [TODO] this method verifies if there is at least 2F+1 Prepare Messages
-     */
+
     private boolean gotQuorum(PBFTMessage m) {
         return ((PBFT)getProtocol()).gotQuorum(m);
     }

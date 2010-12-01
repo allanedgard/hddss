@@ -46,6 +46,11 @@ public class SimulatedPBFTCommunicator extends SimulatedClientServerCommunicator
         
     }
 
+    @Override
+    protected int getTypeValue(Message m) {
+        return ((PBFTMessage.TYPE)m.get(PBFTMessage.TYPEFIELD)).getValue();
+    }
+
 
 
 }

@@ -106,6 +106,7 @@ public class PBFTPrePrepareExecutor extends Executor{
         p.put(PBFTMessage.SEQUENCENUMBERFIELD, pp.get(PBFTMessage.SEQUENCENUMBERFIELD));
         p.put(PBFTMessage.DIGESTFIELD, pp.get(PBFTMessage.DIGESTFIELD));
         p.put(PBFTMessage.REPLICAIDFIELD, getProtocol().getLocalProcess().getID());
+        p.put(PBFTMessage.REQUESTFIELD, pp.get(PBFTMessage.REQUESTFIELD));
 
         p = (PBFTMessage)authenticator.encrypt(p);
         
