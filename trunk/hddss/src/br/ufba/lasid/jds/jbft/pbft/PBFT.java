@@ -9,6 +9,7 @@ import br.ufba.lasid.jds.cs.ClientServerProtocol;
 import br.ufba.lasid.jds.util.Wrapper;
 import br.ufba.lasid.jds.factories.PBFTActionFactory;
 import br.ufba.lasid.jds.group.Group;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.security.Authenticator;
 import br.ufba.lasid.jds.util.Buffer;
 import br.ufba.lasid.jds.util.Clock;
@@ -35,6 +36,7 @@ public class PBFT extends ClientServerProtocol{
     public static String CLOCKSYSTEM = "__CLOCKSYSTEM";
     public static String REQUESTBUFFER = "__REQUESTBUFFER";
     public static String PREPREPAREBUFFER = "__PREPREPAREBUFFER";
+   public static String  PREPAREBUFFER = "__PREPAREBUFFER";
     public static String CLIENTAUTHENTICATOR = "__CLIENTAUTHENTICATOR";
     public static String SERVERAUTHENTICATOR = "__SERVERAUTHENTICATOR";
     public static String PRIMARYFAULTTIMEOUT = "__PRIMARYFAULTYTIMEOUT";
@@ -106,4 +108,73 @@ public class PBFT extends ClientServerProtocol{
     public Buffer getPreprepareBuffer() {
         return (Buffer)getContext().get(PBFT.PREPREPAREBUFFER);
     }
+
+    public Buffer getPrepareBuffer() {
+        return (Buffer)getContext().get(PBFT.PREPAREBUFFER);
+    }
+
+    public boolean belongsToCurrentView(PBFTMessage m) {
+        return getCurrentView().equals(m.get(PBFTMessage.VIEWFIELD));
+    }
+
+    public boolean existsPrePrepare(PBFTMessage m) {
+        
+        Buffer buffer = getPreprepareBuffer();
+        
+        for(Object item : buffer){
+            PBFTMessage pp = (PBFTMessage) item;
+
+            boolean viewCheck   = pp.get(PBFTMessage.VIEWFIELD).equals(m.get(PBFTMessage.VIEWFIELD));
+            boolean digestCheck = pp.get(PBFTMessage.DIGESTFIELD).equals(m.get(PBFTMessage.DIGESTFIELD));
+            boolean sequenceCheck = pp.get(PBFTMessage.SEQUENCENUMBERFIELD).equals(m.get(PBFTMessage.SEQUENCENUMBERFIELD));
+
+            if(viewCheck && digestCheck && sequenceCheck){
+                return true;
+            }
+            
+        }
+        
+        return false;
+    }
+
+    public int getServiceBFTResilience(){
+        return (int)(Math.floor(getLocalGroup().getGroupSize()/3));
+    }
+    public boolean gotQuorum(PBFTMessage m){
+
+        if(isPrepare(m)){
+            return gotPrepareQuorum(m);
+        }
+
+        return false;
+    }
+
+    public boolean gotPrepareQuorum(PBFTMessage m){
+
+        Buffer buffer = getPrepareBuffer();
+        
+        int quorum = 0;
+        int f      = getServiceBFTResilience();
+        
+        for(Object item : buffer){
+
+            PBFTMessage p = (PBFTMessage) item;
+            boolean viewCheck   = p.get(PBFTMessage.VIEWFIELD).equals(m.get(PBFTMessage.VIEWFIELD));
+            boolean digestCheck = p.get(PBFTMessage.DIGESTFIELD).equals(m.get(PBFTMessage.DIGESTFIELD));
+            boolean sequenceCheck = p.get(PBFTMessage.SEQUENCENUMBERFIELD).equals(m.get(PBFTMessage.SEQUENCENUMBERFIELD));
+            boolean replicaCheck = p.get(PBFTMessage.REPLICAIDFIELD).equals(m.get(PBFTMessage.REPLICAIDFIELD));
+
+            if(viewCheck && digestCheck && sequenceCheck && !replicaCheck){
+                quorum++;
+            }
+            
+        }
+
+        return (quorum >= 2 * f);
+    }
+
+    public boolean isPrepare(PBFTMessage m){
+        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.PREPARE);
+    }
+
 }

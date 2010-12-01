@@ -11,6 +11,8 @@ import br.ufba.lasid.jds.Protocol;
 import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
+import br.ufba.lasid.jds.security.Authenticator;
+import br.ufba.lasid.jds.util.Buffer;
 
 /**
  *
@@ -23,22 +25,83 @@ public class PBFTPrepareExecutor extends Executor{
     }
 
     @Override
-    public synchronized void execute(Action act) {
+    public synchronized void execute(Action act) {        
+        
+        PBFTMessage m = (PBFTMessage) act.getMessage();
+        
+        if(checkPrepare(m)){
+            makeCommit(m);
+        }
+        
+    }
+
+    /**
+     *
+     * @param m
+     * @return
+     */
+    private PBFTMessage makeCommit(PBFTMessage m) {
+        Authenticator authenticator =
+            ((PBFT)getProtocol()).getServerAuthenticator();
+
+        PBFTMessage c = new PBFTMessage();
+
+        c.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.COMMIT);
+        c.put(PBFTMessage.VIEWFIELD, m.get(PBFTMessage.VIEWFIELD));
+        c.put(PBFTMessage.SEQUENCENUMBERFIELD, m.get(PBFTMessage.SEQUENCENUMBERFIELD));
+        c.put(PBFTMessage.DIGESTFIELD, m.get(PBFTMessage.DIGESTFIELD));
+        c.put(PBFTMessage.REPLICAIDFIELD, getProtocol().getLocalProcess().getID());
+
+        c = (PBFTMessage)authenticator.encrypt(c);
+
+       getProtocol().getCommunicator().multicast(
+            c, ((PBFT)getProtocol()).getLocalGroup()
+        );
+
         ((PBFT)getProtocol()).getDebugger().debug(
-            "[PBFTPrepareExecutor.execute] " 
+            "[PBFTPrepareExecutor.execute] commit " + c
+          + " was sending by server(p" + getProtocol().getLocalProcess().getID() + ") "
+          + " at time " + ((PBFT)getProtocol()).getTimestamp()
+         );
+
+        return c;
+    }
+
+    public boolean isValidPrepare(PBFTMessage m){
+        Authenticator authenticator =
+        ((PBFT)getProtocol()).getServerAuthenticator();
+        
+        if(!authenticator.check(m)){
+            return false;
+        }
+
+        return (authenticator.chechDisgest(m) && belongsToCurrentView(m) && existsPrePrepare(m));
+        
+    }
+
+    private void addToBuffer(PBFTMessage m) {
+
+        Buffer buffer = ((PBFT)getProtocol()).getPrepareBuffer();
+        
+        if(buffer.contains(m)){
+            ((PBFT)getProtocol()).getDebugger().debug(
+                "[PBFTPrepareExecutor.execute] prepare " + m
+              + " was rejected in server(p" + getProtocol().getLocalProcess().getID() + ") "
+              + " at time " + ((PBFT)getProtocol()).getTimestamp() + " "
+              + "because it's already in received."
+             );
+
+            return;
+        }
+
+        buffer.add(m);
+
+        ((PBFT)getProtocol()).getDebugger().debug(
+            "[PBFTPrepareExecutor.execute] prepare " + m
+          + " was buffered in server(p" + getProtocol().getLocalProcess().getID() + ") "
+          + " at time " + ((PBFT)getProtocol()).getTimestamp()
          );
         
-        /*
-        PBFTMessage m = (PBFTMessage) act.getMessage();
-        if(checkPrepare(m)){
-            //m.setType(PBFTMessage.TYPE.COMMIT);
-            m.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.COMMIT);
-            getProtocol().getCommunicator().multicast(
-               m, (Group)getProtocol().getContext().get(PBFT.LOCALGROUP)
-            );
-        }
-         * 
-         */
     }
 
 
@@ -49,43 +112,27 @@ public class PBFTPrepareExecutor extends Executor{
      * @return
      */
     private boolean checkPrepare(PBFTMessage m) {
-        getProtocol().getContext().put(null, m);
-        if ( belongsToCurrentView(m) )
-           if ( existsPrePrepare(m) )
-                if ( gotQuorum(m) )
-                    return true;
+        
+        if (isValidPrepare(m)){
+            addToBuffer(m);
+            return gotQuorum(m);
+        }
+        
         return false;
     }
 
-        /**
-         * [TODO] this method verifies if there was a PrePrepare previously
-         * to this message
-         */
     private boolean existsPrePrepare(PBFTMessage m) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return ((PBFT)getProtocol()).existsPrePrepare(m);
     }
 
-        /**
-         * [TODO] this method verifies if there was a PrePrepare previously
-         * to this message
-         */
     private boolean belongsToCurrentView(PBFTMessage m) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return ((PBFT)getProtocol()).belongsToCurrentView(m);
     }
-
-
-        /**
-         * [TODO] this method verifies if there is at least 2F+1 Prepare Messages
-         */
+    /**
+     * [TODO] this method verifies if there is at least 2F+1 Prepare Messages
+     */
     private boolean gotQuorum(PBFTMessage m) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-        /**
-         * [TODO] this method verifies if the Prepare Messages were processed
-         */
-    private boolean processedPrepare(PBFTMessage m) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return ((PBFT)getProtocol()).gotQuorum(m);
     }
 
 
