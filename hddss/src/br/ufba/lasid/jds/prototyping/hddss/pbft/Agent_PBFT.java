@@ -10,10 +10,12 @@ import br.ufba.lasid.jds.Process;
 import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.group.SingleGroup;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestRetransmistionScheduler;
 import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport;
 import br.ufba.lasid.jds.prototyping.hddss.cs.Agent_ServiceComponent;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.comm.SimulatedPBFTCommunicator;
+import br.ufba.lasid.jds.prototyping.hddss.pbft.security.PBFTSimulatedAuthenticator;
 import br.ufba.lasid.jds.util.Buffer;
 import br.ufba.lasid.jds.util.Scheduler;
 
@@ -24,11 +26,19 @@ import br.ufba.lasid.jds.util.Scheduler;
 public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>{
 
     Group group = new SingleGroup();
+    Integer currentPrimary = null;
 
     public void setServerGroupAddress(String addr){
         this.setGroupID(new Integer(addr));
     }
 
+    public void setCurrentPrimary(String addr){
+        getProtocol().getContext().put(PBFT.GROUPLEADER, new Integer(addr));
+    }
+
+    public void setCurrentPrimary(Integer addr){
+        getProtocol().getContext().put(PBFT.GROUPLEADER, addr);
+    }
 
     public Group getGroup() {
         return group;
@@ -47,6 +57,19 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         getProtocol().getContext().put(PBFT.CLOCKSYSTEM, infra.clock);
         getProtocol().getContext().put(PBFT.DEBUGGER, infra);
         getProtocol().getContext().put(PBFT.REQUESTBUFFER, new Buffer());
+        
+        if(currentPrimary != null)
+            getProtocol().getContext().put(PBFT.GROUPLEADER, currentPrimary);
+
+        getProtocol().getContext().put(
+            PBFT.CLIENTMSGAUTHENTICATOR,
+            new PBFTSimulatedAuthenticator(PBFT.CLIENTMSGAUTHENTICATOR)
+        );
+
+        getProtocol().getContext().put(
+            PBFT.SERVERAUTHENTICATOR,
+            new PBFTSimulatedAuthenticator(PBFT.SERVERAUTHENTICATOR)
+        );
 
         getProtocol().getContext().put(
             PBFT.CLIENTSCHEDULER,
@@ -74,5 +97,13 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
     public Integer getGroupID() {
         return (Integer)group.getGroupID();
     }
+
+    @Override
+    public void receive(br.ufba.lasid.jds.prototyping.hddss.Message msg) {
+        PBFTMessage m = (PBFTMessage)msg.getContent();
+        getProtocol().doAction(m);        
+    }
+
+
 
 }

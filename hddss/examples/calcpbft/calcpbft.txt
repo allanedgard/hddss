@@ -15,7 +15,7 @@ agent[0].RequestGenerationProbability = 0.1
 
 agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
 agent.ServerGroupAddress = 5
-
+agent.CurrentPrimary  = 1
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal
 channel.Mean = 1

@@ -23,7 +23,7 @@ import br.ufba.lasid.jds.util.Buffer;
  * @author aliriosa
  */
 public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecutor{
-    Buffer buffer = null;
+
     public PBFTReceiveRequestExecutor(Protocol protocol) {
         super(protocol);
     }
@@ -32,36 +32,55 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
     public synchronized void execute(Action act) {
         PBFTMessage m = (PBFTMessage)act.getMessage();
         
-        Authenticator<PBFTMessage> auth =
-                (Authenticator<PBFTMessage>) getProtocol().getContext().get(
-                    PBFT.CLIENTMSGAUTHENTICATOR
-                 );
+        Authenticator authenticator =
+                ((PBFT)getProtocol()).getClientMessageAuthenticator();
 
+        if(authenticator.check(m)){
 
-        if(!auth.check(m)){
-            /*is a malicious client ... do nothing*/
-            return;
-        }
-
-        if(isPrimary(getProtocol().getLocalProcess())){
-            addRequestToBuffer(m);
-            PBFTMessage pp = createPrePrepare(m);
-            getProtocol().getCommunicator().multicast(
-                pp, (Group)getProtocol().getContext().get(PBFT.LOCALGROUP)
-            );
+            ((PBFT)getProtocol()).getDebugger().debug(
+                "[PBFTReceiveRequestExecutor.execute] client request " + m
+              + " was authenticated at time " + ((PBFT)getProtocol()).getTimestamp()
+             );
             
-        }else{
+            getRequestBuffer().add(m);
 
-            Scheduler scheduler = (Scheduler)getProtocol().getContext().get(PBFT.CLIENTSCHEDULER);
+            ((PBFT)getProtocol()).getDebugger().debug(
+                "[PBFTReceiveRequestExecutor.execute] client request " + m
+              + " was buffered in server(p" + getProtocol().getLocalProcess().getID() + ") "
+              + " at time " + ((PBFT)getProtocol()).getTimestamp()
+             );
 
-            scheduler.schedule(
-               (Task)getProtocol().getExecutors().get(ChangeViewAction.class),
-               (Long)getProtocol().getContext().get(PBFT.LATEPRIMARYTIMEOUT)
-            );
+            if(((PBFT)getProtocol()).isPrimary()){
+                return;
+            }
+
             
+/*
+            if(isPrimary(getProtocol().getLocalProcess())){
+                
+                addRequestToBuffer(m);
+                PBFTMessage pp = createPrePrepare(m);
+                getProtocol().getCommunicator().multicast(
+                    pp, (Group)getProtocol().getContext().get(PBFT.LOCALGROUP)
+                );
+
+            }else{
+/*
+                Scheduler scheduler = (Scheduler)getProtocol().getContext().get(PBFT.CLIENTSCHEDULER);
+                scheduler.schedule(
+                   (Task)getProtocol().getExecutors().get(ChangeViewAction.class),
+                   (Long)getProtocol().getContext().get(PBFT.LATEPRIMARYTIMEOUT)
+                );
+  
+            }
+  */
         }
-        
     }
+
+    public Buffer getRequestBuffer(){
+        return ((PBFT)getProtocol()).getRequestBuffer();
+    }
+    
     /*
      *  [REVIEW]
      */
@@ -83,12 +102,7 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
         return pp;
         
     }
-    /**
-        [REVIEW]
-     */
-    public boolean isPrimary(Process p){
-        return ((Process)getProtocol().getContext().get(PBFT.GROUPLEADER)).equals(p);
-    }
+
     /**
      * [TODO]
      * @param m
