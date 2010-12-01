@@ -26,7 +26,7 @@ public class PBFTPrePrepareExecutor extends Executor{
 
     @Override
     public synchronized void execute(Action act) {
-        PBFTMessage m = (PBFTMessage) act.getMessage();
+/*        PBFTMessage m = (PBFTMessage) act.getMessage();
 
         if(checkPrePrepare(m)){
             PBFTMessage p = createPrepare(m);
@@ -34,7 +34,7 @@ public class PBFTPrePrepareExecutor extends Executor{
                 m, (Group)getProtocol().getContext().get(PBFT.LOCALGROUP)
             );
         }
-        
+  */
     }
 
     /**

@@ -8,6 +8,7 @@ package br.ufba.lasid.jds.jbft.pbft;
 import br.ufba.lasid.jds.cs.ClientServerProtocol;
 import br.ufba.lasid.jds.util.Wrapper;
 import br.ufba.lasid.jds.factories.PBFTActionFactory;
+import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.security.Authenticator;
 import br.ufba.lasid.jds.util.Buffer;
 import br.ufba.lasid.jds.util.Clock;
@@ -76,4 +77,15 @@ public class PBFT extends ClientServerProtocol{
         return (getContext().get(PBFT.GROUPLEADER)).equals(p.getID());
     }
 
+    public Integer getCurrentView(){
+        return (Integer)getContext().get(PBFT.CURRENTVIEW);
+    }
+
+    public void setCurrentView(Integer v){
+        getContext().put(PBFT.CURRENTVIEW, v);
+    }
+
+    public Group getLocalGroup(){
+        return (Group)getContext().get(PBFT.LOCALGROUP);
+    }
 }

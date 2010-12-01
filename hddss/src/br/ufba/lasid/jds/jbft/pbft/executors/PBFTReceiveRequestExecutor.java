@@ -42,7 +42,7 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
               + " was authenticated at time " + ((PBFT)getProtocol()).getTimestamp()
              );
             
-            getRequestBuffer().add(m);
+            addRequestToBuffer(m);
 
             ((PBFT)getProtocol()).getDebugger().debug(
                 "[PBFTReceiveRequestExecutor.execute] client request " + m
@@ -51,15 +51,17 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
              );
 
             if(((PBFT)getProtocol()).isPrimary()){
+                makePrePrepare(m);
                 return;
             }
+            
 
             
 /*
             if(isPrimary(getProtocol().getLocalProcess())){
                 
                 addRequestToBuffer(m);
-                PBFTMessage pp = createPrePrepare(m);
+                PBFTMessage pp = makePrePrepare(m);
                 getProtocol().getCommunicator().multicast(
                     pp, (Group)getProtocol().getContext().get(PBFT.LOCALGROUP)
                 );
@@ -84,31 +86,55 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
     /*
      *  [REVIEW]
      */
-    public PBFTMessage createPrePrepare(PBFTMessage request){
+    public PBFTMessage makePrePrepare(PBFTMessage request){
                 
-        Authenticator<PBFTMessage> auth =
-                (Authenticator<PBFTMessage>) getProtocol().getContext().get(
-                    PBFT.CLIENTMSGAUTHENTICATOR
-                 );
+        Authenticator authenticator =
+                ((PBFT)getProtocol()).getServerAuthenticator();
 
         PBFTMessage pp = new PBFTMessage();
 
         pp.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.PREPREPARE);
         pp.put(PBFTMessage.REQUESTFIELD, request);
-        pp.put(PBFTMessage.VIEWFIELD, getProtocol().getContext().get(PBFT.CURRENTVIEW));
-        pp.put(PBFTMessage.SEQUENCENUMBERFIELD, PBFTMessage.newSequenceNumber());        
-        pp.put(PBFTMessage.DIGESTFIELD, auth.digest(request));
+        pp.put(PBFTMessage.VIEWFIELD, ((PBFT)getProtocol()).getCurrentView());
+        pp.put(PBFTMessage.SEQUENCENUMBERFIELD, PBFTMessage.newSequenceNumber());
+
+        pp = (PBFTMessage)authenticator.digest(pp);
+        
+        getProtocol().getCommunicator().multicast(
+            pp, ((PBFT)getProtocol()).getLocalGroup()
+        );
+        
+        ((PBFT)getProtocol()).getDebugger().debug(
+            "[PBFTReceiveRequestExecutor.execute] preprepare " + pp
+          + " was sending by server(p" + getProtocol().getLocalProcess().getID() + ") "
+          + " at time " + ((PBFT)getProtocol()).getTimestamp() 
+         );
         
         return pp;
         
     }
 
-    /**
-     * [TODO]
-     * @param m
-     */
     private void addRequestToBuffer(PBFTMessage request) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        
+        if(getRequestBuffer().contains(request)){
+            ((PBFT)getProtocol()).getDebugger().debug(
+                "[PBFTReceiveRequestExecutor.execute] client request " + request
+              + " was rejected in server(p" + getProtocol().getLocalProcess().getID() + ") "
+              + " at time " + ((PBFT)getProtocol()).getTimestamp() + " "
+              + "because it's already in buffer."
+             );
+
+            return;
+        }
+        
+        getRequestBuffer().add(request);
+
+        ((PBFT)getProtocol()).getDebugger().debug(
+            "[PBFTReceiveRequestExecutor.execute] client request " + request
+          + " was buffered in server(p" + getProtocol().getLocalProcess().getID() + ") "
+          + " at time " + ((PBFT)getProtocol()).getTimestamp()
+         );
+
     }
 
 
