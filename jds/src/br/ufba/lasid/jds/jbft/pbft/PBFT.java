@@ -46,12 +46,19 @@ public class PBFT extends ClientServerProtocol{
     public static String BATCHSCHEDULER = "__BATCHSCHEDULER";
     public static String CHECKPOINTPERIOD = "__CHECKPOINTPERIOD";
     public int BATCHINGCOUNT = 0;
-    
+    public Integer lastCommitedSequenceNumber = new Integer(0);
 
     public String getRequestField(){
         return getRequestField(BATCHINGCOUNT);
     }
 
+    public void setLastCommitedSequenceNumber(Integer n){
+        lastCommitedSequenceNumber = n;
+    }
+
+    public Integer getLastCommitedSequenceNumber(){
+        return lastCommitedSequenceNumber;
+    }
     public String getRequestField(int i){
         return (PBFTMessage.REQUESTFIELD +  i);
     }

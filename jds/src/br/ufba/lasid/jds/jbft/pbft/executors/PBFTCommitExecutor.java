@@ -51,6 +51,10 @@ public class PBFTCommitExecutor extends Executor{
           + " at time " + ((PBFT)getProtocol()).getTimestamp()
          );
 
+        ((PBFT)getProtocol()).setLastCommitedSequenceNumber(
+            (Integer)req.get(PBFTMessage.SEQUENCENUMBERFIELD)
+         );
+
         getProtocol().doAction(req);
         
         return req;
