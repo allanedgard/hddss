@@ -17,7 +17,7 @@ import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCheckPointAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.FecthStateAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrepareAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckPointRequestAction;
+//import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckPointRequestAction;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTChangeViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCommitExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCheckPointExecutor;
@@ -41,6 +41,7 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
     public void setup() {
         super.setup();
         Executor rre = newPBFTReceiveRequestExecutor();
+        
         getProtocol().addExecutor(ReceiveRequestAction.class, rre);
         getProtocol().addExecutor(BatchTimeoutAction.class, rre);
         getProtocol().addExecutor(PrePrepareAction.class, newPBFTPrePrepareExecutor());
@@ -50,7 +51,7 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         getProtocol().addExecutor(SendReplyAction.class, newPBFTSendReplyExecutor());
         getProtocol().addExecutor(ChangeViewAction.class, newPBFTChangeViewExecutor());
         //getProtocol().addExecutor(SendCheckPointRequestAction.class, newPBFTSendCheckPointRequestExecutor());
-        getProtocol().addExecutor(ReceiveRequestAction.class, newPBFTSendCheckPointRequestExecutor());
+        getProtocol().addExecutor(PrePrepareAction.class, newPBFTSendCheckPointRequestExecutor());
         getProtocol().addExecutor(FecthStateAction.class, newPBFTFecthStateExecutor());
         getProtocol().addExecutor(ExecuteCheckPointAction.class, newPBFTExecuteCheckPointExecutor());
 

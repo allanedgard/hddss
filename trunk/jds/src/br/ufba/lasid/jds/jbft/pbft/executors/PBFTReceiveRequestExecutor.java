@@ -98,7 +98,7 @@ public class PBFTReceiveRequestExecutor extends ClientServerReceiveRequestExecut
         pp.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.PREPREPARE);
         pp.put(PBFTMessage.REQUESTFIELD, request);
         pp.put(PBFTMessage.VIEWFIELD, ((PBFT)getProtocol()).getCurrentView());
-        pp.put(PBFTMessage.SEQUENCENUMBERFIELD, PBFTMessage.newSequenceNumber());
+        pp.put(PBFTMessage.SEQUENCENUMBERFIELD, PBFT.newSequenceNumber());
         pp.put(PBFTMessage.SOURCEFIELD, getProtocol().getLocalProcess());
 
         pp = (PBFTMessage)authenticator.makeDisgest(pp);

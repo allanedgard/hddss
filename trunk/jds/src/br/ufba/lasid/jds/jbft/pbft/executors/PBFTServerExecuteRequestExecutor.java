@@ -36,6 +36,12 @@ public class PBFTServerExecuteRequestExecutor extends ClientServerServerExecuteR
             PBFTMessage req = (PBFTMessage)m.get(requestField);
             makeSendReply(req);
         }
+
+        System.out.println(m.get(PBFTMessage.SEQUENCENUMBERFIELD));
+        ((PBFT)getProtocol()).setLastCommitedSequenceNumber(
+            (Long)m.get(PBFTMessage.SEQUENCENUMBERFIELD)
+         );
+
     }
 
     public void makeSendReply(PBFTMessage req){

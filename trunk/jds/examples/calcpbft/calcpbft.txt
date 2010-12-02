@@ -1,4 +1,4 @@
-FinalTime = 10000
+FinalTime = 100000
 NumberOfAgents = 5
 MaximumDeviation = 4
 Mode = clock

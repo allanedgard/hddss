@@ -140,6 +140,7 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
 
     @Override
     public void receive(br.ufba.lasid.jds.prototyping.hddss.Message msg) {
+        super.receive(msg);
         PBFTMessage m = (PBFTMessage)(msg.getContent());
         getProtocol().doAction(m);        
     }
