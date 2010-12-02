@@ -29,6 +29,9 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
 
     Group group = new SingleGroup();
 
+    public void setCheckPointPeriod(String period){
+        ((PBFT)getProtocol()).setCheckPointPeriod(new Integer(period));
+    }
     public void setBatchingSize(String size){
         getProtocol().getContext().put(PBFT.BATCHINGSIZE, new Integer(size));
     }

@@ -44,6 +44,7 @@ public class PBFT extends ClientServerProtocol{
     public static String BATCHINGSIZE        = "__BATCHINGSIZE";
     public static String BATCHINGTIMEOUT = "__BATCHINGTIMEOUT";
     public static String BATCHSCHEDULER = "__BATCHSCHEDULER";
+    public static String CHECKPOINTPERIOD = "__CHECKPOINTPERIOD";
     public int BATCHINGCOUNT = 0;
     
 
@@ -308,6 +309,14 @@ public class PBFT extends ClientServerProtocol{
 
     public boolean isReceivedReply(PBFTMessage m){
         return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVEREPLY);
+    }
+
+    public Integer getCheckPointPeriod() {
+        return ((Integer)getContext().get(PBFT.CHECKPOINTPERIOD));
+    }
+    
+    public void setCheckPointPeriod(Integer period) {
+        getContext().put(PBFT.CHECKPOINTPERIOD, period);
     }
 
 

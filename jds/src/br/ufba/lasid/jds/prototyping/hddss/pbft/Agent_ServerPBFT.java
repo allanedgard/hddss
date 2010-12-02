@@ -49,7 +49,8 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         getProtocol().addExecutor(ExecuteRequestAction.class, newPBFTServerExecuteExecutor());
         getProtocol().addExecutor(SendReplyAction.class, newPBFTSendReplyExecutor());
         getProtocol().addExecutor(ChangeViewAction.class, newPBFTChangeViewExecutor());
-        getProtocol().addExecutor(SendCheckPointRequestAction.class, newPBFTSendCheckPointRequestExecutor());
+        //getProtocol().addExecutor(SendCheckPointRequestAction.class, newPBFTSendCheckPointRequestExecutor());
+        getProtocol().addExecutor(ReceiveRequestAction.class, newPBFTSendCheckPointRequestExecutor());
         getProtocol().addExecutor(FecthStateAction.class, newPBFTFecthStateExecutor());
         getProtocol().addExecutor(ExecuteCheckPointAction.class, newPBFTExecuteCheckPointExecutor());
 
