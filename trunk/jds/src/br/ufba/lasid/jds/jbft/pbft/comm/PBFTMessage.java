@@ -21,7 +21,12 @@ public class PBFTMessage extends ClientServerMessage{
     public static String TIMESTAMPFIELD = "__TIMESTAMPFIELD";
     public static String CLIENTFIELD = "__CLIENTFIELD";
     public static String BATCHSIZEFIELD = "__BATCHSIZEFIELD";
-    
+    public static String CHECKPOINTNUMBER = "__CHECKPOINTNUMBER";
+    public static String CHECKPOINTMSGS = "__CHECKPOINTMSGS";
+    public static String NSREQUESTS = "__NSREQUESTS";
+
+
+
     public enum TYPE{
 
         SENDREQUEST(0),
