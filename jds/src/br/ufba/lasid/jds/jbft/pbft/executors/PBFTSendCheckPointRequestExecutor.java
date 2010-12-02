@@ -26,9 +26,11 @@ public class PBFTSendCheckPointRequestExecutor extends Executor{
 
         count++;
 
-        if(count % checkpointPeriod == 0){
+        if((count % checkpointPeriod) == 0){
             ((PBFT)getProtocol()).getDebugger().debug(
-                "[PBFTSendCheckPointRequestExecutor.execute]" 
+                "[PBFTSendCheckPointRequestExecutor.execute] the last sequence "
+                + "number commited in process (p"+getProtocol().getLocalProcess().getID()+") "
+                + "is " + ((PBFT)getProtocol()).getLastCommitedSequenceNumber()
              );
         }
 

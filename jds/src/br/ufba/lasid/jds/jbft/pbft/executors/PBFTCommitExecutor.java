@@ -44,15 +44,12 @@ public class PBFTCommitExecutor extends Executor{
             return req;
 
         req.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.EXECUTE);
+        req.put(PBFTMessage.SEQUENCENUMBERFIELD, m.get(PBFTMessage.SEQUENCENUMBERFIELD));
 
         ((PBFT)getProtocol()).getDebugger().debug(
             "[PBFTCommitExecutor.execute] call server.execute for request " + req
           + " by server(p" + getProtocol().getLocalProcess().getID() + ") "
           + " at time " + ((PBFT)getProtocol()).getTimestamp()
-         );
-
-        ((PBFT)getProtocol()).setLastCommitedSequenceNumber(
-            (Integer)req.get(PBFTMessage.SEQUENCENUMBERFIELD)
          );
 
         getProtocol().doAction(req);

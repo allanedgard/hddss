@@ -5,7 +5,6 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
-import br.ufba.lasid.jds.Process;
 import br.ufba.lasid.jds.cs.comm.ClientServerMessage;
 
 /**
@@ -52,13 +51,8 @@ public class PBFTMessage extends ClientServerMessage{
 
     }
 
-    protected static long SEQ = 0;
     protected long mySEQ = 0;
-
-    public static long newSequenceNumber(){
-        return ++SEQ;
-    }
-
+    
     public static PBFTMessage newRequest(){
         PBFTMessage m = new PBFTMessage();
         m.put(TYPEFIELD, TYPE.SENDREQUEST);
