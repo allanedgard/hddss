@@ -16,11 +16,11 @@ import br.ufba.lasid.jds.Process;
  *
  * @author aliriosa
  */
-public class ClientServerServerExecuteExecutor extends Executor{
+public class ClientServerServerExecuteRequestExecutor extends Executor{
 
     Server server;
 
-    public ClientServerServerExecuteExecutor(Protocol protocol) {
+    public ClientServerServerExecuteRequestExecutor(Protocol protocol) {
         super(protocol);
     }
 
@@ -34,7 +34,7 @@ public class ClientServerServerExecuteExecutor extends Executor{
     
     @Override
     public synchronized void execute(Action act) {
-        //System.out.println("[Protocol] call ClientServerServerExecuteExecutor.execute");
+        //System.out.println("[Protocol] call ClientServerServerExecuteRequestExecutor.execute");
         ClientServerMessage m = (ClientServerMessage)act.getMessage();
 
         m.setContent(server.doService(m.getContent()));

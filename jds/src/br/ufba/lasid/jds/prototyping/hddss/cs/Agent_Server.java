@@ -8,13 +8,13 @@ package br.ufba.lasid.jds.prototyping.hddss.cs;
 import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.SingleProcess;
 import br.ufba.lasid.jds.cs.Server;
-import br.ufba.lasid.jds.cs.actions.ExecuteAction;
+import br.ufba.lasid.jds.cs.actions.ExecuteRequestAction;
 import br.ufba.lasid.jds.cs.actions.ReceiveRequestAction;
 import br.ufba.lasid.jds.cs.actions.SendReplyAction;
 import br.ufba.lasid.jds.cs.comm.ClientServerMessage;
 import br.ufba.lasid.jds.cs.executors.ClientServerReceiveRequestExecutor;
 import br.ufba.lasid.jds.cs.executors.ClientServerSendReplyExecutor;
-import br.ufba.lasid.jds.cs.executors.ClientServerServerExecuteExecutor;
+import br.ufba.lasid.jds.cs.executors.ClientServerServerExecuteRequestExecutor;
 import br.ufba.lasid.jds.prototyping.hddss.Message;
 
 /**
@@ -38,7 +38,7 @@ public class Agent_Server extends Agent_ServiceComponent implements Server<Integ
     public void setup() {
         super.setup();
         getProtocol().addExecutor(ReceiveRequestAction.class, newClientServerReceiveRequestExecutor());
-        getProtocol().addExecutor(ExecuteAction.class, newClientServerServerExecuteExecutor());
+        getProtocol().addExecutor(ExecuteRequestAction.class, newClientServerServerExecuteExecutor());
         getProtocol().addExecutor(SendReplyAction.class, newClientServerSendReplyExecutor());
     }
 
@@ -47,7 +47,7 @@ public class Agent_Server extends Agent_ServiceComponent implements Server<Integ
     }
 
     public Executor newClientServerServerExecuteExecutor(){
-        ClientServerServerExecuteExecutor exec = new ClientServerServerExecuteExecutor(getProtocol());
+        ClientServerServerExecuteRequestExecutor exec = new ClientServerServerExecuteRequestExecutor(getProtocol());
         exec.setServer(this);
         return exec;
     }
