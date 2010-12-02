@@ -45,6 +45,8 @@ public class PBFT extends ClientServerProtocol{
     public static String BATCHINGTIMEOUT = "__BATCHINGTIMEOUT";
     public static String BATCHSCHEDULER = "__BATCHSCHEDULER";
     public static String CHECKPOINTPERIOD = "__CHECKPOINTPERIOD";
+    public static String CHECKPOINTNUMBER = "__CHECKPOINTNUMBER";
+
     public int BATCHINGCOUNT = 0;
     public Long lastCommitedSequenceNumber = new Long(0);
 

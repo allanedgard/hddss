@@ -18,12 +18,14 @@ import br.ufba.lasid.jds.jbft.pbft.actions.FecthStateAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrepareAction;
 //import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckPointRequestAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTChangeViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCommitExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCheckPointExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTFecthStateExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrepareExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveChangeViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveRequestExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTSendCheckPointRequestExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTSendReplyExecutor;
@@ -54,7 +56,12 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         getProtocol().addExecutor(PrePrepareAction.class, newPBFTSendCheckPointRequestExecutor());
         getProtocol().addExecutor(FecthStateAction.class, newPBFTFecthStateExecutor());
         getProtocol().addExecutor(ExecuteCheckPointAction.class, newPBFTExecuteCheckPointExecutor());
+        getProtocol().addExecutor(ReceiveChangeViewAction.class, newPBFTReceiveChangeViewExecutor());
 
+    }
+
+    public Executor newPBFTReceiveChangeViewExecutor(){
+        return new PBFTReceiveChangeViewExecutor(getProtocol());
     }
 
     public Executor newPBFTExecuteCheckPointExecutor(){
