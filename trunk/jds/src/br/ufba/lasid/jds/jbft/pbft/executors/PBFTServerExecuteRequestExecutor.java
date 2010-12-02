@@ -7,7 +7,7 @@ package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.Protocol;
-import br.ufba.lasid.jds.cs.executors.ClientServerServerExecuteExecutor;
+import br.ufba.lasid.jds.cs.executors.ClientServerServerExecuteRequestExecutor;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 
@@ -15,9 +15,9 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
  *
  * @author aliriosa
  */
-public class PBFTServerExecuteExecutor extends ClientServerServerExecuteExecutor{
+public class PBFTServerExecuteRequestExecutor extends ClientServerServerExecuteRequestExecutor{
 
-    public PBFTServerExecuteExecutor(Protocol protocol) {
+    public PBFTServerExecuteRequestExecutor(Protocol protocol) {
         super(protocol);
     }
 

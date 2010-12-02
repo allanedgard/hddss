@@ -7,7 +7,7 @@ package br.ufba.lasid.jds.factories;
 
 import br.ufba.lasid.jds.cs.actions.SendRequestAction;
 import br.ufba.lasid.jds.cs.actions.SendReplyAction;
-import br.ufba.lasid.jds.cs.actions.ExecuteAction;
+import br.ufba.lasid.jds.cs.actions.ExecuteRequestAction;
 import br.ufba.lasid.jds.cs.actions.ReceiveRequestAction;
 import br.ufba.lasid.jds.cs.actions.ReceiveReplyAction;
 import br.ufba.lasid.jds.comm.Message;
@@ -16,9 +16,12 @@ import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.jbft.pbft.actions.BatchTimeoutAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CommitAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCheckPointAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.FecthStateAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.RetransmissionAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckPointRequestAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 
 /**
@@ -54,7 +57,7 @@ public class PBFTActionFactory extends ActionFactory{
         }
 
         if(type.equals(PBFTMessage.TYPE.EXECUTE)){
-            return new ExecuteAction(m);
+            return new ExecuteRequestAction(m);
         }
 
         if(type.equals(PBFTMessage.TYPE.SENDREPLY)){
@@ -75,6 +78,16 @@ public class PBFTActionFactory extends ActionFactory{
 
         if(type.equals(PBFTMessage.TYPE.BATCHING)){
             return new BatchTimeoutAction(m);
+        }
+
+        if(type.equals(PBFTMessage.TYPE.SENDCHECKPOINTREQUEST)){
+            return new SendCheckPointRequestAction(m);
+        }
+        if(type.equals(PBFTMessage.TYPE.FETCHSTATE)){
+            return new FecthStateAction(m);
+        }
+        if(type.equals(PBFTMessage.TYPE.EXECUTECHECKPOINT)){
+            return new ExecuteCheckPointAction(m);
         }
 
         return null;

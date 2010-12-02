@@ -35,7 +35,10 @@ public class PBFTMessage extends ClientServerMessage{
         COMMIT(7),
         REQUESTRETRANSMITION(8),
         CHANGEVIEW(9),
-        BATCHING(10);
+        BATCHING(10),
+        SENDCHECKPOINTREQUEST(11),
+        FETCHSTATE(12),
+        EXECUTECHECKPOINT(13);
       
         private final int value;
 

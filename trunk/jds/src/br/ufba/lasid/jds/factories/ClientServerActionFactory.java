@@ -6,7 +6,7 @@
 package br.ufba.lasid.jds.factories;
 
 import br.ufba.lasid.jds.Action;
-import br.ufba.lasid.jds.cs.actions.ExecuteAction;
+import br.ufba.lasid.jds.cs.actions.ExecuteRequestAction;
 import br.ufba.lasid.jds.cs.actions.ReceiveReplyAction;
 import br.ufba.lasid.jds.cs.actions.ReceiveRequestAction;
 import br.ufba.lasid.jds.cs.actions.SendReplyAction;
@@ -35,7 +35,7 @@ public class ClientServerActionFactory extends ActionFactory{
         }
 
         if(type.equals(ClientServerMessage.TYPE.EXECUTE)){
-            return new ExecuteAction(m);
+            return new ExecuteRequestAction(m);
         }
 
         if(type.equals(ClientServerMessage.TYPE.SENDREPLY)){

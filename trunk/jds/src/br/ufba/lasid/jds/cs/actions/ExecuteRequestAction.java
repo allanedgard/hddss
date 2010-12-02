@@ -12,12 +12,12 @@ import br.ufba.lasid.jds.comm.Message;
  *
  * @author aliriosa
  */
-public class ExecuteAction extends Action{
+public class ExecuteRequestAction extends Action{
 
-    public ExecuteAction() {
+    public ExecuteRequestAction() {
     }
 
-    public ExecuteAction(Message m) {
+    public ExecuteRequestAction(Message m) {
         super(m);
     }
 
