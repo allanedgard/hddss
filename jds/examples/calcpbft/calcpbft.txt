@@ -20,7 +20,7 @@ agent.GroupSize = 4
 agent.CurrentPrimary  = 1
 agent.CurrentView = 0
 agent.PrimaryFaultTimeout = 500
-agent.BatchingSize = 5
+agent.BatchingSize = 10
 agent.BatchingTimeout = 50
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal
