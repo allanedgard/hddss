@@ -88,6 +88,7 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
     public Executor newPBFTChangeViewExecutor(){
         return new PBFTChangeViewExecutor(getProtocol());
     }
+    
     public Object doService(Object arg) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
