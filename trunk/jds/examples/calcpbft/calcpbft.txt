@@ -22,6 +22,7 @@ agent.CurrentView = 0
 agent.PrimaryFaultTimeout = 500
 agent.BatchingSize = 10
 agent.BatchingTimeout = 50
+agent.CheckPointPeriod = 200
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal
 channel.Mean = 1
