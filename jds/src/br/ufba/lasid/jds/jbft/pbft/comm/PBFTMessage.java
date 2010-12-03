@@ -24,6 +24,9 @@ public class PBFTMessage extends ClientServerMessage{
     public static String CHECKPOINTNUMBER = "__CHECKPOINTNUMBER";
     public static String CHECKPOINTMSGS = "__CHECKPOINTMSGS";
     public static String NSREQUESTS = "__NSREQUESTS";
+    public static String SETPREPREPAREMSGS = "__SETPREPREPAREMSGS";
+    public static String VIEWCHANGEMSGS = "__VIEWCHANGEMSGS";
+
 
 
 
@@ -42,7 +45,8 @@ public class PBFTMessage extends ClientServerMessage{
         BATCHING(10),
         SENDCHECKPOINTREQUEST(11),
         FETCHSTATE(12),
-        EXECUTECHECKPOINT(13);
+        EXECUTECHECKPOINT(13),
+        NEWVIEW(14);
       
         private final int value;
 

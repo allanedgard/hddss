@@ -36,8 +36,9 @@ public class PBFT extends ClientServerProtocol{
     public static String CLOCKSYSTEM = "__CLOCKSYSTEM";
     public static String REQUESTBUFFER = "__REQUESTBUFFER";
     public static String PREPREPAREBUFFER = "__PREPREPAREBUFFER";
-    public static String  PREPAREBUFFER = "__PREPAREBUFFER";
-    public static String  COMMITBUFFER = "__COMMITBUFFER";
+    public static String PREPAREBUFFER = "__PREPAREBUFFER";
+    public static String COMMITBUFFER = "__COMMITBUFFER";
+    public static String CHANGEVIEWBUFFER = "__CHANGEVIEWBUFFER";
     public static String CLIENTAUTHENTICATOR = "__CLIENTAUTHENTICATOR";
     public static String SERVERAUTHENTICATOR = "__SERVERAUTHENTICATOR";
     public static String PRIMARYFAULTTIMEOUT = "__PRIMARYFAULTYTIMEOUT";
@@ -171,6 +172,10 @@ public class PBFT extends ClientServerProtocol{
         return (Buffer)getContext().get(PBFT.COMMITBUFFER);
     }
 
+    public Buffer getChangeViewBuffer() {
+        return (Buffer)getContext().get(PBFT.CHANGEVIEWBUFFER);
+    }
+
     public boolean belongsToCurrentView(PBFTMessage m) {
         return getCurrentView().equals(m.get(PBFTMessage.VIEWFIELD));
     }
@@ -235,6 +240,11 @@ public class PBFT extends ClientServerProtocol{
         if(isReceivedReply(m)){
             return gotReceiveReplyQuorum(m);
         }
+
+        if(isChangeView(m)){
+            return gotChangeViewQuorum(m);
+        }
+
 
         return false;
     }
@@ -314,6 +324,14 @@ public class PBFT extends ClientServerProtocol{
 
     }
 
+    public boolean gotChangeViewQuorum(PBFTMessage m){
+
+        int f      = getServiceBFTResilience();
+
+        return gotQuorum(m, getChangeViewBuffer(), f + 1, true);
+
+    }
+
     public boolean isPrepare(PBFTMessage m){
         return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.PREPARE);
     }
@@ -321,6 +339,11 @@ public class PBFT extends ClientServerProtocol{
     public boolean isCommit(PBFTMessage m){
         return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.COMMIT);
     }
+
+    public boolean isChangeView(PBFTMessage m){
+        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.CHANGEVIEW);
+    }
+
 
     public boolean isReceivedReply(PBFTMessage m){
         return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVEREPLY);

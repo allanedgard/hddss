@@ -5,6 +5,11 @@
 
 package br.ufba.lasid.jds.jbft.pbft.executors;
 
+/**
+ *
+ * @author allan
+ */
+
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.Protocol;
@@ -19,17 +24,13 @@ import br.ufba.lasid.jds.security.Authenticator;
  *
  * @author aliriosa
  */
-public class PBFTChangeViewExecutor extends Executor{
+public class PBFTNewViewExecutor extends Executor{
 
-    public PBFTChangeViewExecutor(Protocol protocol) {
+    public PBFTNewViewExecutor(Protocol protocol) {
         super(protocol);
     }
 
-    /**
-     * [TODO]
-     * @param act
-     */
-    @Override
+   @Override
     public synchronized void execute(Action act) {
             ((PBFT)getProtocol()).getDebugger().debug(
                 "[PBFTChangeViewExecutor.execute]"
@@ -44,19 +45,12 @@ public class PBFTChangeViewExecutor extends Executor{
 
         Group g = (Group) m.get(PBFTMessage.DESTINATIONFIELD);
 
-        m = PBFTMessage.translateTo(m, PBFTMessage.TYPE.CHANGEVIEW);
+        m = PBFTMessage.translateTo(m, PBFTMessage.TYPE.NEWVIEW);
 
         Long timestamp =  ((PBFT)getProtocol()).getTimestamp();
-
-        m.put(PBFTMessage.TIMESTAMPFIELD, timestamp);
-        m.put(PBFTMessage.CLIENTFIELD, getProtocol().getLocalProcess());
-        int newView = ((Integer) getProtocol().getContext().get(PBFTMessage.VIEWFIELD))+1;
-        m.put(PBFTMessage.VIEWFIELD, newView);
-        int n = ( (Integer) ((PBFT)getProtocol()).getContext().get(PBFT.CHECKPOINTNUMBER));
-        m.put(PBFTMessage.CHECKPOINTNUMBER, n);
         try {
-        m.put(PBFTMessage.CHECKPOINTMSGS, getCheckPointMessages());
-        m.put(PBFTMessage.NSREQUESTS, getNotStableRequests());
+        m.put(PBFTMessage.SETPREPREPAREMSGS, getPrePrepareMessages());
+        m.put(PBFTMessage.VIEWCHANGEMSGS, getViewChangeMessages());
         }
         catch(Exception e) { };
         Authenticator authenticator =
@@ -78,11 +72,11 @@ public class PBFTChangeViewExecutor extends Executor{
 
     }
 
-    public Object getCheckPointMessages() throws Exception {
+    public Object getPrePrepareMessages() throws Exception {
          throw new Exception("not yet implemented");
     }
 
-    public Object getNotStableRequests() throws Exception {
+    public Object getViewChangeMessages() throws Exception {
          throw new Exception("not yet implemented");
     }
 
@@ -105,5 +99,5 @@ public class PBFTChangeViewExecutor extends Executor{
          );
 
     }
-    
+
 }

@@ -15,17 +15,21 @@ import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCheckPointAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.FecthStateAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.NewViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrepareAction;
 //import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckPointRequestAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveChangeViewAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveNewViewAction;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTChangeViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCommitExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCheckPointExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTFecthStateExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTNewViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveChangeViewExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveNewViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveRequestExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTSendCheckPointRequestExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTSendReplyExecutor;
@@ -57,7 +61,16 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         getProtocol().addExecutor(FecthStateAction.class, newPBFTFecthStateExecutor());
         getProtocol().addExecutor(ExecuteCheckPointAction.class, newPBFTExecuteCheckPointExecutor());
         getProtocol().addExecutor(ReceiveChangeViewAction.class, newPBFTReceiveChangeViewExecutor());
+        getProtocol().addExecutor(NewViewAction.class, newPBFTNewViewExecutor());
+        getProtocol().addExecutor(ReceiveNewViewAction.class, newPBFTReceiveNewViewExecutor());
+    }
 
+    public Executor newPBFTReceiveNewViewExecutor(){
+        return new PBFTReceiveNewViewExecutor(getProtocol());
+    }
+
+    public Executor newPBFTNewViewExecutor(){
+        return new PBFTNewViewExecutor(getProtocol());
     }
 
     public Executor newPBFTReceiveChangeViewExecutor(){

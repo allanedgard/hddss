@@ -20,9 +20,9 @@ import br.ufba.lasid.jds.util.Buffer;
  *
  * @author aliriosa
  */
-public class PBFTReceiveChangeViewExecutor extends Executor{
+public class PBFTReceiveNewViewExecutor extends Executor{
 
-    public PBFTReceiveChangeViewExecutor(Protocol protocol) {
+    public PBFTReceiveNewViewExecutor(Protocol protocol) {
         super(protocol);
     }
 
@@ -37,18 +37,19 @@ public class PBFTReceiveChangeViewExecutor extends Executor{
              );
         PBFTMessage m = (PBFTMessage) act.getMessage();
         if ( ((PBFT)getProtocol()).isPrimary() ) {
-           if (checkReceiveChangeView(m)) {
-               
+           if (checkReceiveNewView(m)) {
+               enviaPrepares(m);
+               ((PBFT) getProtocol()).setCurrentView((Integer)m.get(PBFTMessage.VIEWFIELD));
            }
 
         }
 
     }
 
-    boolean checkReceiveChangeView(PBFTMessage m) {
+    boolean checkReceiveNewView(PBFTMessage m) {
          if (isValidChangeView(m)){
-            addToBuffer(m);
-            return gotQuorum(m);
+
+            return true;
         }
 
         return false;
@@ -62,8 +63,15 @@ public class PBFTReceiveChangeViewExecutor extends Executor{
             return false;
         }
 
-        return (authenticator.chechDisgest(m) );
+        /*
+         * Verifica se é a visão valida
+         *
+         */
+        if ( (Integer)m.get(PBFTMessage.VIEWFIELD)-1 == ((PBFT) getProtocol()).getCurrentView() ) {
 
+             return   (authenticator.chechDisgest(m)) && checkSetPrePrepareMsgs(m);
+        }
+        return false;
     }
 
     boolean makeChangeView(PBFTMessage m) {
@@ -71,33 +79,21 @@ public class PBFTReceiveChangeViewExecutor extends Executor{
     }
 
 
-        private void addToBuffer(PBFTMessage m) {
-
-        Buffer buffer = ((PBFT)getProtocol()).getChangeViewBuffer();
-
-        if(buffer.contains(m)){
-            ((PBFT)getProtocol()).getDebugger().debug(
-                "[PBFTReceiveChangeView.execute] receive " + m
-              + " was rejected in server(p" + getProtocol().getLocalProcess().getID() + ") "
-              + " at time " + ((PBFT)getProtocol()).getTimestamp() + " "
-              + "because it's already in received."
-             );
-
-            return;
-        }
-
-        buffer.add(m);
-
-        ((PBFT)getProtocol()).getDebugger().debug(
-            "[PBFTPrepareExecutor.execute] prepare " + m
-          + " was buffered in server(p" + getProtocol().getLocalProcess().getID() + ") "
-          + " at time " + ((PBFT)getProtocol()).getTimestamp()
-         );
-
-    }
 
     private boolean gotQuorum(PBFTMessage m) {
         return ((PBFT)getProtocol()).gotQuorum(m);
+    }
+
+    private boolean checkSetPrePrepareMsgs(PBFTMessage m) {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    private void enviaPrepares(PBFTMessage m) {
+        /*
+         * Para cada requisicao encapsulada na mensagem envia um Prepare!
+         *
+         */
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
 
