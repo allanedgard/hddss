@@ -6,7 +6,7 @@
 package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.jds.Executor;
-import br.ufba.lasid.jds.Protocol;
+import br.ufba.lasid.jds.DistributedProtocol;
 
 /**
  *
@@ -14,7 +14,7 @@ import br.ufba.lasid.jds.Protocol;
  */
 public class PBFTExecuteCheckPointExecutor extends Executor{
 
-    public PBFTExecuteCheckPointExecutor(Protocol protocol) {
+    public PBFTExecuteCheckPointExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 

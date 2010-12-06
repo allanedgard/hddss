@@ -46,6 +46,7 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
 
     public void setServerGroupAddress(String addr){
         this.setGroupID(new Integer(addr));
+        getProtocol().setRemoteProcess(this.getGroup());
     }
 
     public void setCurrentPrimary(String addr){
@@ -84,6 +85,7 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         getProtocol().getContext().put(PBFT.PREPREPAREBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.PREPAREBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.COMMITBUFFER, new Buffer());
+        getProtocol().getContext().put(PBFT.COMMITTEDBUFFER, new Buffer());
         getProtocol().getContext().put(
             PBFT.CLIENTMSGAUTHENTICATOR,
             new PBFTSimulatedAuthenticator(PBFT.CLIENTMSGAUTHENTICATOR)

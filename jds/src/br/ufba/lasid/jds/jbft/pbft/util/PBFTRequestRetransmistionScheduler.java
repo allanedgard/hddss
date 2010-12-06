@@ -6,7 +6,7 @@
 package br.ufba.lasid.jds.jbft.pbft.util;
 
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
-import br.ufba.lasid.jds.jbft.pbft.actions.RetransmissionAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.RetransmiteRequestAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.util.Scheduler;
 import br.ufba.lasid.jds.util.Wrapper;
@@ -32,7 +32,7 @@ public class PBFTRequestRetransmistionScheduler extends PBFTRequestScheduler{
     }
 
     public void makePerform(Wrapper w){
-        ((PBFT)getProtocol()).perform(new RetransmissionAction(w));
+        ((PBFT)getProtocol()).perform(new RetransmiteRequestAction(w));
     }
 
     public void cancel(PBFTMessage m) {

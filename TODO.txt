@@ -1,0 +1,5 @@
+* Inserir checagem de visão corrente e authenticação 
+* Inserir Change View
+* Inserir Checkpoint
+* Inserir Código Para Checagem de Sequence Number
+* Inserir Recovery

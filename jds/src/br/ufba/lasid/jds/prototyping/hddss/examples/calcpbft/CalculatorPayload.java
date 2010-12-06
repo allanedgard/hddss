@@ -5,12 +5,13 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft;
 
-import java.util.Hashtable;
+import br.ufba.lasid.jds.cs.ClientServerApplicationPayload;
 
 /**
  *
  * @author aliriosa
  */
-public class CalculatorApplicationPayload extends Hashtable<String, Object>{
-
+public class CalculatorPayload extends ClientServerApplicationPayload{
+    private static String TYPEFIELD = "__TYPEFIELD";
+    
 }

@@ -6,7 +6,7 @@
 package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.jds.Executor;
-import br.ufba.lasid.jds.Protocol;
+import br.ufba.lasid.jds.DistributedProtocol;
 
 /**
  *
@@ -14,7 +14,7 @@ import br.ufba.lasid.jds.Protocol;
  */
 public class PBFTFecthStateExecutor extends Executor{
 
-    public PBFTFecthStateExecutor(Protocol protocol) {
+    public PBFTFecthStateExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 

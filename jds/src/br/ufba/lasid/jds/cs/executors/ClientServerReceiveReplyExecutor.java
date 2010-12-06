@@ -7,7 +7,7 @@ package br.ufba.lasid.jds.cs.executors;
 
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.Executor;
-import br.ufba.lasid.jds.Protocol;
+import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.cs.Client;
 import br.ufba.lasid.jds.cs.comm.ClientServerMessage;
 
@@ -17,14 +17,14 @@ import br.ufba.lasid.jds.cs.comm.ClientServerMessage;
  */
 public class ClientServerReceiveReplyExecutor extends Executor{
 
-    public ClientServerReceiveReplyExecutor(Protocol protocol) {
+    public ClientServerReceiveReplyExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 
     @Override
     public synchronized void execute(Action act) {
-        //System.out.println("[Protocol] call ClientServerReceiveReplyExecutor.execute");
-        ClientServerMessage m = ((ClientServerMessage) act.getMessage());      
+        //System.out.println("[DistributedProtocol] call ClientServerReceiveReplyExecutor.execute");
+        ClientServerMessage m = ((ClientServerMessage) act.getWrapper());
         Client client = (Client)protocol.getLocalProcess();
         client.receiveReply(m.getContent());
     }

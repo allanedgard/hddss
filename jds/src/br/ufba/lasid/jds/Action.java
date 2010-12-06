@@ -23,7 +23,7 @@ public class Action {
         wrapper = w;
     }
     
-    public Wrapper getMessage(){
+    public Wrapper getWrapper(){
         return wrapper;
     }
 

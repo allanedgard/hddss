@@ -9,7 +9,9 @@ package br.ufba.lasid.jds.util;
  *
  * @author aliriosa
  */
-public interface Wrapper {
+public interface Wrapper<K, V> {
     public Object getContent();
     public void setContent(Object content);
+    public V get(K value);
+
 }

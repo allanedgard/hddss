@@ -13,6 +13,7 @@ import br.ufba.lasid.jds.comm.Message;
 public class ClientServerMessage extends Message{
     public enum TYPE{
         /*don't change this order ... you may get throuble!*/
+        CREATEREQUEST(-1),
         SENDREQUEST(0),
         RECEIVEREQUEST(1),
         EXECUTE(2),

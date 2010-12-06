@@ -48,7 +48,10 @@ public class PBFTSimulatedAuthenticator implements Authenticator<PBFTMessage>{
     }
 
     public boolean check(PBFTMessage data) {
-        return ((Boolean)(data.get(AUTHENTICATORFIELD)));
+        Object auth = data.get(AUTHENTICATORFIELD);
+        if(auth == null)
+            return false;
+        return ((Boolean)auth);
     }
 
     public PBFTMessage makeDisgest(PBFTMessage data) {

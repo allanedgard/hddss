@@ -11,7 +11,7 @@ import br.ufba.lasid.jds.cs.comm.ClientServerMessage;
  *
  * @author aliriosa
  */
-public class PBFTMessage extends ClientServerMessage{
+public abstract class PBFTMessage extends ClientServerMessage{
 
     public static String VIEWFIELD = "__VIEW";
     public static String REQUESTFIELD = "__REQUEST";
@@ -26,6 +26,9 @@ public class PBFTMessage extends ClientServerMessage{
     public static String NSREQUESTS = "__NSREQUESTS";
     public static String SETPREPREPAREMSGS = "__SETPREPREPAREMSGS";
     public static String VIEWCHANGEMSGS = "__VIEWCHANGEMSGS";
+    public static String REQUESTDONEFIELD = "__REQUESTDONEFIELD";
+    public static String BATCHSTATEFIELD = "__BATCHSTATEFIELD";
+    public static String EXECUTEDFIELD = "__EXECUTEDFIELD";
 
 
 
@@ -37,16 +40,18 @@ public class PBFTMessage extends ClientServerMessage{
         EXECUTE(2),
         SENDREPLY(3),
         RECEIVEREPLY(4),
-        PREPREPARE(5),
-        PREPARE(6),
-        COMMIT(7),
-        REQUESTRETRANSMITION(8),
-        CHANGEVIEW(9),
-        BATCHING(10),
-        SENDCHECKPOINTREQUEST(11),
-        FETCHSTATE(12),
-        EXECUTECHECKPOINT(13),
-        NEWVIEW(14);
+        SENDPREPREPARE(5),
+        RECEIVEPREPREPARE(6),
+        SENDPREPARE(7),
+        RECEIVEPREPARE(8),
+        SENDCOMMIT(9),
+        RECEIVECOMMIT(10),
+        REQUESTRETRANSMITION(11),
+        CHANGEVIEW(12),
+        BATCHING(13),
+        SENDCHECKPOINTREQUEST(14),
+        FETCHSTATE(15),
+        EXECUTECHECKPOINT(16);
       
         private final int value;
 
@@ -63,7 +68,7 @@ public class PBFTMessage extends ClientServerMessage{
     protected long mySEQ = 0;
     
     public static PBFTMessage newRequest(){
-        PBFTMessage m = new PBFTMessage();
+        PBFTMessage m = new PBFTRequestMessage();
         m.put(TYPEFIELD, TYPE.SENDREQUEST);
         return m;
     }
@@ -72,4 +77,6 @@ public class PBFTMessage extends ClientServerMessage{
         m.put(TYPEFIELD, type);
         return m;
     }
+
+    public abstract String getID();
 }
