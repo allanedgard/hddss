@@ -39,6 +39,7 @@ import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteStartNewRoundPhaseOneAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteStartNewRoundPhaseThreeAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteStartNewRoundPhaseTwoAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.FecthStateAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.GarbageCollectionAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.NewViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.PrepareAction;
@@ -61,8 +62,9 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferPrePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferPrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferReceivedRequestExecutor;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveNewViewAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckpointAction;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTChangeViewExecutor;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCommitExecutor;
+//import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCommitExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreateCommitExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreatePrePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreatePrepareExecutor;
@@ -75,9 +77,10 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteStartNewRoundPhaseOneExe
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteStartNewRoundPhaseThreeExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteStartNewRoundPhaseTwoExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTFecthStateExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTGarbageCollectionExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTNewViewExecutor;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrePrepareExecutor;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrepareExecutor;
+//import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrePrepareExecutor;
+//import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveChangeViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveCommitExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceivePrePrepareExecutor;
@@ -87,7 +90,7 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveRequestExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTRetransmiteReplayExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTScheduleBacthEndExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTScheduleNewViewExecutor;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTSendCheckPointRequestExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTSendCheckpointExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTSendCommitExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTSendPrePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTSendPrepareExecutor;
@@ -101,61 +104,75 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTServerExecuteRequestExecutor;
  */
 public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
 
-
     @Override
     public void setup() {
         super.setup();
-        Executor rre = newPBFTReceiveRequestExecutor();
         
-        getProtocol().addExecutor(ReceiveRequestAction.class, rre);
-        getProtocol().addExecutor(BatchTimeoutAction.class, rre);
+        /**
+         * This setup can be executed using a configuration file, it could be
+         * a better form to make the setup easier.
+         */
 
-//        getProtocol().addExecutor(PrepareAction.class, newPBFTPrepareExecutor());
-//        getProtocol().addExecutor(CommitAction.class, newPBFTCommitExecutor());
-        getProtocol().addExecutor(ExecuteRequestAction.class, newPBFTServerExecuteExecutor());
-        getProtocol().addExecutor(SendReplyAction.class, newPBFTSendReplyExecutor());
+        /* change view related actions*/
         getProtocol().addExecutor(ChangeViewAction.class, newPBFTChangeViewExecutor());
-        //getProtocol().addExecutor(SendCheckPointRequestAction.class, newPBFTSendCheckPointRequestExecutor());
-        //getProtocol().addExecutor(PrePrepareAction.class, newPBFTSendCheckPointRequestExecutor());
-        //getProtocol().addExecutor(FecthStateAction.class, newPBFTFecthStateExecutor());
-        getProtocol().addExecutor(ExecuteCheckPointAction.class, newPBFTExecuteCheckPointExecutor());
-        getProtocol().addExecutor(ReceiveChangeViewAction.class, newPBFTReceiveChangeViewExecutor());
-        getProtocol().addExecutor(BufferReceivedRequestAction.class, newBufferReceivedRequestExecutor());
-        getProtocol().addExecutor(RetransmiteReplyAction.class, newRetransmiteReplayExecutor());
-        getProtocol().addExecutor(HandleBatchAction.class, newPBFTHandleBatchExecutor());
-        getProtocol().addExecutor(BatchRequestAction.class, newPBFTBatchRequestExecutor());
+        getProtocol().addExecutor(NewViewAction.class, newPBFTNewViewExecutor());
+        getProtocol().addExecutor(ReceiveNewViewAction.class, newPBFTReceiveNewViewExecutor());
         getProtocol().addExecutor(ScheduleNewViewAction.class, newPBFTScheduleNewViewExecutor());
+        getProtocol().addExecutor(ReceiveChangeViewAction.class, newPBFTReceiveChangeViewExecutor());
         
+        /* request reception related actions */
         getProtocol().addExecutor(ExecuteStartNewRoundPhaseOneAction.class, newPBFTExecuteStartNewRoundPhaseOneExecutor());
         getProtocol().addExecutor(ExecuteStartNewRoundPhaseTwoAction.class, newPBFTExecuteStartNewRoundPhaseTwoExecutor());
         getProtocol().addExecutor(ExecuteStartNewRoundPhaseThreeAction.class, newPBFTExecuteStartNewRoundPhaseThreeExecutor());
         getProtocol().addExecutor(ScheduleBacthEndAction.class, newPBFTScheduleBacthEndExecutor());
-        
+        getProtocol().addExecutor(BufferReceivedRequestAction.class, newBufferReceivedRequestExecutor());
+        getProtocol().addExecutor(RetransmiteReplyAction.class, newRetransmiteReplayExecutor());
+        getProtocol().addExecutor(HandleBatchAction.class, newPBFTHandleBatchExecutor());
+        getProtocol().addExecutor(BatchRequestAction.class, newPBFTBatchRequestExecutor());
+
+        Executor rrExecutor = newPBFTReceiveRequestExecutor();
+
+        getProtocol().addExecutor(ReceiveRequestAction.class, rrExecutor);
+        getProtocol().addExecutor(BatchTimeoutAction.class, rrExecutor);
+
+        /* preprepare related actions */
         getProtocol().addExecutor(ExecuteCurrentRoundPhaseOneAction.class, newPBFTExecuteCurrentRoundPhaseOneExecutor());
         getProtocol().addExecutor(CreatePrePrepareAction.class, newPBFTCreatePrePrepareExecutor());
         getProtocol().addExecutor(BufferPrePrepareAction.class, newPBFTBufferPrePrepareExecutor());
         getProtocol().addExecutor(SendPrePrepareAction.class, newPBFTSendPrePrepareExecutor());
         getProtocol().addExecutor(ReceivePrePrepareAction.class, newPBFTReceivePrePrepareExecutor());
-        getProtocol().addExecutor(NewViewAction.class, newPBFTNewViewExecutor());
-        getProtocol().addExecutor(ReceiveNewViewAction.class, newPBFTReceiveNewViewExecutor());
-    
 
+        /* prepare related actions */
         getProtocol().addExecutor(ExecuteCurrentRoundPhaseTwoAction.class, newPBFTExecuteCurrentRoundPhaseTwoExecutor());
         getProtocol().addExecutor(CreatePrepareAction.class, newPBFTCreatePrepareExecutor());
         getProtocol().addExecutor(BufferPrepareAction.class, newPBFTBufferPrepareExecutor());
         getProtocol().addExecutor(SendPrepareAction.class, newPBFTSendPrepareExecutor());
         getProtocol().addExecutor(ReceivePrepareAction.class, newPBFTReceivePrepareExecutor());
 
+        /* Commit related actions */
         getProtocol().addExecutor(ExecuteCurrentRoundPhaseThreeAction.class, newPBFTExecuteCurrentRoundPhaseThreeExecutor());
         getProtocol().addExecutor(CreateCommitAction.class, newPBFTCreateCommitExecutor());
         getProtocol().addExecutor(BufferCommitAction.class, newPBFTBufferCommitExecutor());
         getProtocol().addExecutor(SendCommitAction.class, newPBFTSendCommitExecutor());
         getProtocol().addExecutor(ReceiveCommitAction.class, newPBFTReceiveCommitExecutor());
 
+        /* Reply Related Actions */
         getProtocol().addExecutor(ExecuteReplyPhaseAction.class, newPBFTExecuteReplyPhaseExecutor());
         getProtocol().addExecutor(BufferCommittedRequestAction.class, newPBFTBufferCommittedRequestExecutor());
+        getProtocol().addExecutor(ExecuteRequestAction.class, newPBFTServerExecuteExecutor());
+        getProtocol().addExecutor(SendReplyAction.class, newPBFTSendReplyExecutor());
+
+        /* Garbage Collector Action */
+        Executor gcExecutor = newPBFTGarbageCollectionExecutor();
+        getProtocol().addExecutor(GarbageCollectionAction.class, gcExecutor);
+        getProtocol().addExecutor(SendReplyAction.class, gcExecutor);
+        getProtocol().addExecutor(SendCheckpointAction.class, newPBFTSendCheckPointRequestExecutor());
     }
 
+    public Executor newPBFTGarbageCollectionExecutor(){
+        return new PBFTGarbageCollectionExecutor(getProtocol());
+    }
+    
     public Executor newPBFTReceiveNewViewExecutor(){
         return new PBFTReceiveNewViewExecutor(getProtocol());
     }
@@ -261,7 +278,7 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         return new PBFTFecthStateExecutor(getProtocol());
     }
     public Executor newPBFTSendCheckPointRequestExecutor(){
-        return new PBFTSendCheckPointRequestExecutor(getProtocol());
+        return new PBFTSendCheckpointExecutor(getProtocol());
     }
     public Executor newPBFTReceiveRequestExecutor(){
         return new PBFTReceiveRequestExecutor(getProtocol());
@@ -279,15 +296,21 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
 
     }
 
-    public Executor newPBFTPrePrepareExecutor(){
+/*    public Executor newPBFTPrePrepareExecutor(){
         return new PBFTPrePrepareExecutor(getProtocol());
     }
-    public Executor newPBFTPrepareExecutor(){
+ * 
+ */
+/*
+ public Executor newPBFTPrepareExecutor(){
         return new PBFTPrepareExecutor(getProtocol());
     }
+/*
     public Executor newPBFTCommitExecutor(){
         return new PBFTCommitExecutor(getProtocol());
     }
+ * 
+ */
     public Executor newPBFTServerExecuteExecutor(){
         PBFTServerExecuteRequestExecutor exec =  new PBFTServerExecuteRequestExecutor(getProtocol());
         exec.setServer(this);

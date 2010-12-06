@@ -33,7 +33,7 @@ public class CalcPBFTClient extends Agent_ClientPBFT{
     public void receiveReply(Object content) {
        System.out.println(
             "client[p" + getProtocol().getLocalProcess().getID()+"] "
-          + "received result " +content + " at time " + ((PBFT)getProtocol()).getTimestamp()
+          + "collected result " +content + " at time " + ((PBFT)getProtocol()).getTimestamp()
        );
 
 /*        ((PBFT)getProtocol()).getDebugger().debug(

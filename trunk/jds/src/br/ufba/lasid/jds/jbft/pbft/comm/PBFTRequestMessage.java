@@ -18,7 +18,7 @@ public class PBFTRequestMessage extends PBFTMessage {
 
         String timestamp = ((Long)get(PBFTMessage.TIMESTAMPFIELD)).toString();
 
-        String digest   = ""; //get(PBFTMessage.D).toString();
+        String digest   = get(PBFTMessage.DIGESTFIELD).toString();
 
         return client + "." + timestamp + "." + digest;
 

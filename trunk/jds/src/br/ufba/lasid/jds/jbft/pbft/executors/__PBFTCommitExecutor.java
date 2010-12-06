@@ -17,9 +17,9 @@ import br.ufba.lasid.jds.util.Buffer;
  *
  * @author aliriosa
  */
-public class PBFTCommitExecutor extends Executor{
+public class __PBFTCommitExecutor extends Executor{
 
-    public PBFTCommitExecutor(DistributedProtocol protocol) {
+    public __PBFTCommitExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 

@@ -53,6 +53,7 @@ public class PBFTCreatePrepareExecutor extends PBFTServerExecutor{
         p.put(PBFTMessage.REQUESTFIELD, pp.get(PBFTMessage.REQUESTFIELD));
 
         p = (PBFTMessage)encrypt(p);
+        p = (PBFTMessage) makeDisgest(p);
 
         return p;
 

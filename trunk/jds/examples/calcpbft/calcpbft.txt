@@ -12,7 +12,7 @@ agent[0] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
 agent[0].ServerGroupAddress = 5
 agent[0].GroupSize = 4
 agent[0].ClientRetransmissionTimeout = 500
-agent[0].RequestGenerationProbability = 0.1
+agent[0].RequestGenerationProbability = 0.2
 
 agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
 agent.ServerGroupAddress = 5
@@ -20,9 +20,9 @@ agent.GroupSize = 4
 agent.CurrentPrimary  = 1
 agent.CurrentView = 0
 agent.PrimaryFaultTimeout = 500
-agent.BatchingSize = 10
-agent.BatchingTimeout = 150
-agent.CheckPointPeriod = 100
+agent.BatchingSize = 16
+agent.BatchingTimeout = 160
+agent.CheckpointPeriod = 256
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal
 channel.Mean = 1

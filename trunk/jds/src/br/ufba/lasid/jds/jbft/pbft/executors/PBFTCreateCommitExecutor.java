@@ -53,6 +53,7 @@ public class PBFTCreateCommitExecutor extends PBFTServerExecutor{
         c.put(PBFTMessage.REQUESTFIELD, p.get(PBFTMessage.REQUESTFIELD));
 
         c = (PBFTMessage)encrypt(c);
+        c = p = (PBFTMessage) makeDisgest(c);
 
         return c;
 

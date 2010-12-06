@@ -29,8 +29,8 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
 
     Group group = new SingleGroup();
 
-    public void setCheckPointPeriod(String period){
-        ((PBFT)getProtocol()).setCheckPointPeriod(new Integer(period));
+    public void setCheckpointPeriod(String period){
+        ((PBFT)getProtocol()).setCheckPointPeriod(new Long(period));
     }
     public void setBatchingSize(String size){
         getProtocol().getContext().put(PBFT.BATCHINGSIZE, new Integer(size));
@@ -86,6 +86,7 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         getProtocol().getContext().put(PBFT.PREPAREBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.COMMITBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.COMMITTEDBUFFER, new Buffer());
+        getProtocol().getContext().put(PBFT.REPLYBUFFER, new Buffer());
         getProtocol().getContext().put(
             PBFT.CLIENTMSGAUTHENTICATOR,
             new PBFTSimulatedAuthenticator(PBFT.CLIENTMSGAUTHENTICATOR)
@@ -124,7 +125,6 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         getProtocol().setCommunicator(new SimulatedPBFTCommunicator(this));
         getProtocol().setLocalProcess(this);
         
-
     }
 
     @Override
@@ -144,6 +144,14 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
     public void receive(br.ufba.lasid.jds.prototyping.hddss.Message msg) {
         super.receive(msg);
         PBFTMessage m = (PBFTMessage)(msg.getContent());
+        /**
+         * [FIX] We must guarantee that only RECEIVEREQUEST, RECEIVEREPLY,
+         * RECEIVEPREPREPARE, RECEIVEPREPEPARE, RECEIVECOMMIT, NEWVIEW,
+         * CHANGEVIEW, CHECKPOINT and FETCHSTATE can be executed.
+         * In addition, some of these messages must be accepted by members of
+         * the group.
+         * 
+         */
         getProtocol().doAction(m);        
     }
 

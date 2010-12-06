@@ -39,7 +39,8 @@ public class PBFT extends ClientServerProtocol{
     public static String PREPAREBUFFER = "__PREPAREBUFFER";
     public static String COMMITBUFFER = "__COMMITBUFFER";
     public static String CHANGEVIEWBUFFER = "__CHANGEVIEWBUFFER";
-    public static String  COMMITTEDBUFFER = "__COMMITTEDBUFFER";
+    public static String COMMITTEDBUFFER = "__COMMITTEDBUFFER";
+    public static String REPLYBUFFER = "__REPLYBUFFER";
     public static String CLIENTAUTHENTICATOR = "__CLIENTAUTHENTICATOR";
     public static String SERVERAUTHENTICATOR = "__SERVERAUTHENTICATOR";
     public static String PRIMARYFAULTTIMEOUT = "__PRIMARYFAULTYTIMEOUT";
@@ -58,6 +59,10 @@ public class PBFT extends ClientServerProtocol{
 
     public Buffer getCommittedBuffer() {
         return (Buffer)getContext().get(PBFT.COMMITTEDBUFFER);
+    }
+
+    public Buffer getReplyBuffer() {
+        return (Buffer)getContext().get(PBFT.REPLYBUFFER);
     }
 
     public enum BATCHSTATE{
@@ -306,7 +311,7 @@ public class PBFT extends ClientServerProtocol{
 
         int quorum = 0;        
 
-        Buffer buffer = getRequestBuffer();
+        Buffer buffer = getReplyBuffer();
         Buffer replicas = new Buffer();
         
         for(Object item : buffer){
@@ -368,11 +373,11 @@ public class PBFT extends ClientServerProtocol{
         return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVEREPLY);
     }
 
-    public Integer getCheckPointPeriod() {
-        return ((Integer)getContext().get(PBFT.CHECKPOINTPERIOD));
+    public Long getCheckPointPeriod() {
+        return ((Long)getContext().get(PBFT.CHECKPOINTPERIOD));
     }
     
-    public void setCheckPointPeriod(Integer period) {
+    public void setCheckPointPeriod(Long period) {
         getContext().put(PBFT.CHECKPOINTPERIOD, period);
     }
 
