@@ -26,7 +26,7 @@ public class PBFTRetransmiteReplayExecutor extends PBFTServerExecutor{
     public synchronized void execute(Action act) {
         
         PBFTMessage request = (PBFTMessage) act.getWrapper();
-        Buffer buffer = ((PBFT)getProtocol()).getRequestBuffer();
+        Buffer buffer = ((PBFT)getProtocol()).getReplyBuffer();
         
         if(PBFT.hasBeenAlreadyServed(buffer, request)){
             
@@ -34,6 +34,8 @@ public class PBFTRetransmiteReplayExecutor extends PBFTServerExecutor{
                 System.out.println(getDefaultSecurityExceptionMessage(request, "retransmite replay to"));
                 return;
             }
+
+            request = PBFT.getBufferedMessage(buffer, request);
 
             getProtocol().perform(new SendReplyAction(request));
             return;

@@ -14,15 +14,15 @@ import br.ufba.lasid.jds.jbft.pbft.PBFT;
  *
  * @author aliriosa
  */
-public class PBFTSendCheckPointRequestExecutor extends Executor{
-    int count = 0;
-    public PBFTSendCheckPointRequestExecutor(DistributedProtocol protocol) {
+public class PBFTSendCheckpointExecutor extends Executor{
+    public PBFTSendCheckpointExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 
     @Override
     public synchronized void execute(Action act) {
-        int checkpointPeriod = ((PBFT)getProtocol()).getCheckPointPeriod().intValue();
+
+/*        int checkpointPeriod = ((PBFT)getProtocol()).getCheckPointPeriod().intValue();
 
         count++;
 
@@ -33,7 +33,7 @@ public class PBFTSendCheckPointRequestExecutor extends Executor{
                 + "is " + ((PBFT)getProtocol()).getLastCommitedSequenceNumber()
              );
         }
-
+*/
     }
 
 

@@ -24,7 +24,7 @@ import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveCommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceivePrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceivePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.RetransmiteRequestAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckPointRequestAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckpointAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.SendCommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.SendPrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.SendPrepareAction;
@@ -103,7 +103,7 @@ public class PBFTActionFactory extends ActionFactory{
         }
 
         if(type.equals(PBFTMessage.TYPE.SENDCHECKPOINTREQUEST)){
-            return new SendCheckPointRequestAction(wapper);
+            return new SendCheckpointAction(wapper);
         }
         if(type.equals(PBFTMessage.TYPE.FETCHSTATE)){
             return new FecthStateAction(wapper);

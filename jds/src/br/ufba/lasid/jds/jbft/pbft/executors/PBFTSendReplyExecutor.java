@@ -11,6 +11,8 @@ import br.ufba.lasid.jds.cs.executors.ClientServerSendReplyExecutor;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.Process;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReplyMessage;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequestMessage;
 
 /**
  *
@@ -25,8 +27,11 @@ public class PBFTSendReplyExecutor extends ClientServerSendReplyExecutor{
     @Override
     public synchronized void execute(Action act) {
         PBFTMessage m = (PBFTMessage) act.getWrapper();
+        PBFTMessage replay = new PBFTReplyMessage();
+
+        replay.putAll(m);
         
-        makeReply(m);
+        makeReply(replay);
 
        System.out.println(
             "server [p" + getProtocol().getLocalProcess().getID()+"] "

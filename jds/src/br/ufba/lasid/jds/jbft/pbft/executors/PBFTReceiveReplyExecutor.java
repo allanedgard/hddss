@@ -30,6 +30,15 @@ public class PBFTReceiveReplyExecutor extends ClientServerReceiveReplyExecutor{
         
         PBFTMessage m = ((PBFTMessage) act.getWrapper());
 
+        ((PBFT)getProtocol()).getReplyBuffer().add(m);
+
+       System.out.println(
+            "client[p" + getProtocol().getLocalProcess().getID()+"] "
+          + "received reply from " +m.get(PBFTMessage.REPLICAIDFIELD)
+          + " at time " + ((PBFT)getProtocol()).getTimestamp()
+       );
+
+
         if(ckeckReply(m)){
             Client client = (Client)getProtocol().getLocalProcess();
             client.receiveReply(m.getContent());
@@ -47,18 +56,24 @@ public class PBFTReceiveReplyExecutor extends ClientServerReceiveReplyExecutor{
         if(isValidReply(m)){            
             return gotQuorum(m);
         }
-        return true;
+        return false;
     }
     
     public synchronized void RemoveFromBuffer(PBFTMessage m){
-        Buffer buffer = ((PBFT)getProtocol()).getRequestBuffer();
+        Buffer reqBuffer = ((PBFT)getProtocol()).getRequestBuffer();
+        Buffer repBuffer =((PBFT)getProtocol()).getReplyBuffer();
         
-        if(PBFT.isABufferedMessage(buffer, m)){
-            PBFTMessage req = PBFT.getBufferedMessage(buffer, m);
-            buffer.remove(req);
+        if(PBFT.isABufferedMessage(reqBuffer, m)){
+            PBFTMessage req = PBFT.getBufferedMessage(reqBuffer, m);
+            reqBuffer.remove(req);
             req.put(PBFTMessage.TIMESTAMPFIELD, new Long(-1));
-//            System.gc();
-        }        
+        }
+
+        while(PBFT.isABufferedMessage(repBuffer, m)){
+            PBFTMessage rep = PBFT.getBufferedMessage(repBuffer, m);
+            repBuffer.remove(rep);
+        }
+        
     }
     public boolean isValidReply(PBFTMessage m){
         Authenticator authenticator =

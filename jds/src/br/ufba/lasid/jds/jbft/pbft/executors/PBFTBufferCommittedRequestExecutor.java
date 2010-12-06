@@ -37,7 +37,7 @@ public class PBFTBufferCommittedRequestExecutor extends PBFTServerExecutor{
         if(PBFT.isABufferedMessage(buffer, m)){
             System.out.println(
                 "server [p" + getProtocol().getLocalProcess().getID()+"] "
-              + "has already bufferred the committed request (" + m.get(PBFTMessage.PAYLOADFIELD) + ")"
+              + "has already bufferred the committed request."
             );
 
             return;

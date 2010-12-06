@@ -12,13 +12,13 @@ import br.ufba.lasid.jds.util.Wrapper;
  *
  * @author aliriosa
  */
-public class SendCheckPointRequestAction extends Action{
+public class SendCheckpointAction extends Action{
 
-    public SendCheckPointRequestAction(Wrapper w) {
+    public SendCheckpointAction(Wrapper w) {
         super(w);
     }
 
-    public SendCheckPointRequestAction() {
+    public SendCheckpointAction() {
     }
 
     
