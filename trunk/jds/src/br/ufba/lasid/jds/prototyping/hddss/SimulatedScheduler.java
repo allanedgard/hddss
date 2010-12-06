@@ -24,7 +24,7 @@ public class SimulatedScheduler extends Agent implements Scheduler{
 
     public void schedule(Task task, long time) {
 
-        Long _time = new Long(infra.clock.value() + time);
+        Long _time = new Long(time);
         
         TaskList tasks = agenda.get(_time);
         if(tasks == null){

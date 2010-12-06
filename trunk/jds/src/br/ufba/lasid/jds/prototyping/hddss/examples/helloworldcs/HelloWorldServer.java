@@ -15,9 +15,13 @@ public class HelloWorldServer extends Agent_Server{
 
     @Override
     public Object doService(Object arg) {
+        HelloWorldPayload hello = (HelloWorldPayload) arg;
 
-        System.out.println("HelloWorldServer received " + arg);
-        return "Hello World";
+        System.out.println("HelloWorldServer received: " + hello.get(HelloWorldPayload.OPERATION));
+
+        hello.put(HelloWorldPayload.OPERATION, "Hello Client!");
+
+        return hello;
         
     }
 

@@ -8,7 +8,6 @@ package br.ufba.lasid.jds.jbft.pbft.util;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.util.Buffer;
-import br.ufba.lasid.jds.util.Clock;
 import br.ufba.lasid.jds.util.Scheduler;
 import br.ufba.lasid.jds.util.Task;
 import br.ufba.lasid.jds.util.Wrapper;
@@ -37,18 +36,13 @@ public abstract class PBFTRequestScheduler implements Scheduler, Task{
         this.protocol = protocol;
     }
 
-    public void schedule(PBFTMessage request){
-
+    public void schedule(PBFTMessage request, long time){
+        request.put(getTAG(), time);
         request.put(REQUESTID, getRequestID(request));
 
         addToRequestBuffer(request);
 
-        schedule();
-
-    }
-
-    public void schedule(){
-        schedule(this, getCurrentDefinedTimeout());
+        schedule(this, time);
     }
 
     public long getCurrentDefinedTimeout(){
@@ -59,6 +53,7 @@ public abstract class PBFTRequestScheduler implements Scheduler, Task{
     public long getRequestTimeout(PBFTMessage request){
         return ((Long)(request.get(getTAG()))).longValue();
     }
+
     public void addToRequestBuffer(PBFTMessage request){
         getRequestBuffer().add(request);
     }
@@ -101,14 +96,14 @@ public abstract class PBFTRequestScheduler implements Scheduler, Task{
 
             long timeout = getRequestTimeout(request);
 
-            if(timeout >=0 && timeout < getCurrentTime()){
+            if(/* timeout >=0 && */ timeout == getCurrentTime()){
                 makePerform((Wrapper)request);
             }
         }
     }
 
     public long getCurrentTime(){
-        return ((Clock)getProtocol().getContext().get(PBFT.CLOCKSYSTEM)).value();
+        return ((PBFT)getProtocol()).getTimestamp();
     }
 
     public abstract void makePerform(Wrapper w);

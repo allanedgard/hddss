@@ -12,14 +12,15 @@ import br.ufba.lasid.jds.util.Wrapper;
  *
  * @author aliriosa
  */
-public class RetransmissionAction extends Action{
+public class SendPrepareAction extends Action{
 
-    public RetransmissionAction(Wrapper w) {
+    public SendPrepareAction(Wrapper w) {
         super(w);
     }
 
-    public RetransmissionAction() {
-        super();
+    public SendPrepareAction() {
     }
+
+
 
 }

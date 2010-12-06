@@ -7,6 +7,7 @@ package br.ufba.lasid.jds.cs.actions;
 
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.comm.Message;
+import br.ufba.lasid.jds.util.Wrapper;
 
 /**
  *
@@ -19,6 +20,10 @@ public class ExecuteRequestAction extends Action{
 
     public ExecuteRequestAction(Message m) {
         super(m);
+    }
+
+    public ExecuteRequestAction(Wrapper wapper) {
+        super(wapper);
     }
 
 }

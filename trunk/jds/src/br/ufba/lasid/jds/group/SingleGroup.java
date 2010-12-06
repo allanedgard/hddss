@@ -5,6 +5,9 @@
 
 package br.ufba.lasid.jds.group;
 
+import br.ufba.lasid.jds.Process;
+import java.util.ArrayList;
+
 /**
  *
  * @author aliriosa
@@ -12,6 +15,7 @@ package br.ufba.lasid.jds.group;
 public class SingleGroup<T> implements Group<T>{
     T id;
     int size = 0;
+    ArrayList<Process<T>> members = new ArrayList<Process<T>>();
     public void setGroupID(T id) {
         this.id = id;
     }

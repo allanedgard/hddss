@@ -12,9 +12,9 @@ import br.ufba.lasid.jds.util.Task;
  * @author aliriosa
  */
 public class Executor implements Task{
-    protected Protocol protocol;
+    protected DistributedProtocol protocol;
 
-    public Executor(Protocol protocol){
+    public Executor(DistributedProtocol protocol){
         this.protocol = protocol;
     }
     
@@ -22,7 +22,7 @@ public class Executor implements Task{
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public Protocol getProtocol() {
+    public DistributedProtocol getProtocol() {
         return protocol;
     }
 

@@ -25,6 +25,10 @@ public class Message extends Hashtable<String, Object> implements Wrapper{
         put(PAYLOADFIELD, content);
         //throw new UnsupportedOperationException("Not supported yet.");
     }
+
+    public Object getType() {
+        return get(TYPEFIELD);
+    }
     
 /*    private int type;
     private Object content;

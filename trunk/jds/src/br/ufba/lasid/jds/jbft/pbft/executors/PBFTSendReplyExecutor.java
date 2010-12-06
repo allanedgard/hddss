@@ -6,7 +6,7 @@
 package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.jds.Action;
-import br.ufba.lasid.jds.Protocol;
+import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.cs.executors.ClientServerSendReplyExecutor;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.Process;
@@ -18,15 +18,22 @@ import br.ufba.lasid.jds.jbft.pbft.PBFT;
  */
 public class PBFTSendReplyExecutor extends ClientServerSendReplyExecutor{
 
-    public PBFTSendReplyExecutor(Protocol protocol) {
+    public PBFTSendReplyExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 
     @Override
     public synchronized void execute(Action act) {
-        PBFTMessage m = (PBFTMessage) act.getMessage();
+        PBFTMessage m = (PBFTMessage) act.getWrapper();
         
         makeReply(m);
+
+       System.out.println(
+            "server [p" + getProtocol().getLocalProcess().getID()+"] "
+          + "sent a reply to client at time "
+          + ((PBFT)getProtocol()).getTimestamp()
+       );
+
         
     }
 

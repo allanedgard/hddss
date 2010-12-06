@@ -6,7 +6,6 @@
 package br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft;
 
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.prototyping.hddss.Randomize;
 import br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.Calculator.OPERATION;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.Agent_ClientPBFT;
@@ -24,33 +23,34 @@ public class CalcPBFTClient extends Agent_ClientPBFT{
 
         if(hasRequest()){
 
-            Object content = newContent();
-            PBFTMessage m = PBFTMessage.newRequest();
-
-            m.setContent(content);
-            m.put(PBFTMessage.SOURCEFIELD, this);
-            m.put(PBFTMessage.DESTINATIONFIELD, getGroup());
-
-            getProtocol().doAction(m);
+            CalculatorPayload operation = newContent();
+            getProtocol().doAction(operation);
             
         }
     }
 
     @Override
     public void receiveReply(Object content) {
-        ((PBFT)getProtocol()).getDebugger().debug(
+       System.out.println(
+            "client[p" + getProtocol().getLocalProcess().getID()+"] "
+          + "received result " +content + " at time " + ((PBFT)getProtocol()).getTimestamp()
+       );
+
+/*        ((PBFT)getProtocol()).getDebugger().debug(
             "[CalcPBFTClient.receiveReply] result (" + content + ") "
           + " by client(p" + getProtocol().getLocalProcess().getID() + ") "
           + " at time " + ((PBFT)getProtocol()).getTimestamp()
          );
+ * 
+ */
         
     }
 
 
 
-    private CalculatorApplicationPayload newContent(){
+    private CalculatorPayload newContent(){
 
-        CalculatorApplicationPayload content = new CalculatorApplicationPayload();
+        CalculatorPayload content = new CalculatorPayload();
             
             Calculator.OPERATION opcode = selectOperation();
 
@@ -65,15 +65,18 @@ public class CalcPBFTClient extends Agent_ClientPBFT{
         
     }
     private OPERATION selectOperation() {
-        return Calculator.OPERATION.PLUS;
+        int range = Calculator.OPERATION.values().length;
+        int opindex = (int) (Math.random()* range);
+
+        return Calculator.OPERATION.values()[opindex];
     }
 
     private double selectOperator1(){
-        return 1.0;
+        return Math.round(Math.random() * 100)/10.0;
     }
 
     private double selectOperator2(){
-        return 2.0;
+        return Math.round(Math.random() * 100)/10.0;
     }
 
     public void setRequestGenerationProbability(String prob){

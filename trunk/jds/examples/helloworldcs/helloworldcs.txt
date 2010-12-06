@@ -2,7 +2,7 @@ FinalTime = 1000
 NumberOfAgents = 2
 MaximumDeviation = 4
 Mode = clock
-Debug = false
+Debug = true
 
 clock = br.ufba.lasid.jds.prototyping.hddss.Clock_Virtual
 clock.Mode = s

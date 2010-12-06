@@ -7,8 +7,9 @@ package br.ufba.lasid.jds.cs.executors;
 
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.Executor;
-import br.ufba.lasid.jds.Protocol;
+import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.cs.comm.ClientServerMessage;
+import br.ufba.lasid.jds.util.Wrapper;
 
 /**
  *
@@ -16,21 +17,22 @@ import br.ufba.lasid.jds.cs.comm.ClientServerMessage;
  */
 public class ClientServerSendRequestExecutor extends Executor{
 
-    public ClientServerSendRequestExecutor(Protocol protocol) {
+    public ClientServerSendRequestExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 
     @Override
     public synchronized void execute(Action act) {
-        //System.out.println("[Protocol] call ClientServerSendRequestExecutor.execute");
-        ClientServerMessage m = ((ClientServerMessage) act.getMessage());
+        //System.out.println("[DistributedProtocol] call ClientServerSendRequestExecutor.execute");
+        Wrapper wrapper = act.getWrapper();
 
+        ClientServerMessage m = (ClientServerMessage) wrapper;
 
         m.put(ClientServerMessage.TYPEFIELD, ClientServerMessage.TYPE.RECEIVEREQUEST);
+//        m.put(ClientServerMessage.PAYLOADFIELD, wrapper);
         
         getProtocol().getCommunicator().unicast(
-             (ClientServerMessage) act.getMessage(),
-             (br.ufba.lasid.jds.Process)m.get(ClientServerMessage.DESTINATIONFIELD)
+            m, getProtocol().getRemoteProcess()
         );
 
     }

@@ -6,7 +6,7 @@
 package br.ufba.lasid.jds.jbft.pbft.util;
 
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
-import br.ufba.lasid.jds.jbft.pbft.actions.BatchTimeoutAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.BatchRequestAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.util.Buffer;
 import br.ufba.lasid.jds.util.Scheduler;
@@ -46,8 +46,12 @@ public class PBFTBatchingTimeoutScheduler extends PBFTRequestScheduler{
         m.put(getTAG(), new Long(-1));
 
         getRequestBuffer().clear();
+        System.out.println(
+              "server [p" + getProtocol().getLocalProcess().getID()+"] expires "
+            + "batch timeout at time " + ((PBFT)getProtocol()).getTimestamp()
+        );
 
-        ((PBFT)getProtocol()).perform(new BatchTimeoutAction(m));
+        ((PBFT)getProtocol()).perform(new BatchRequestAction());
 
     }
 

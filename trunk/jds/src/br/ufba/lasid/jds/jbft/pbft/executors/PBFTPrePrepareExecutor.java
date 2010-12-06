@@ -7,7 +7,7 @@ package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.Executor;
-import br.ufba.lasid.jds.Protocol;
+import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.security.Authenticator;
@@ -19,17 +19,17 @@ import br.ufba.lasid.jds.util.Buffer;
  */
 public class PBFTPrePrepareExecutor extends Executor{
     Object[] Quorum;
-    public PBFTPrePrepareExecutor(Protocol protocol) {
+    public PBFTPrePrepareExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 
     @Override
     public synchronized void execute(Action act) {
-        PBFTMessage m = (PBFTMessage) act.getMessage();
+        PBFTMessage m = (PBFTMessage) act.getWrapper();
 
         if(checkPrePrepare(m)){
          
-           makePrepare(m);
+           //makePrepare(m);
         }
     }
 
@@ -95,13 +95,13 @@ public class PBFTPrePrepareExecutor extends Executor{
      * @param m
      * @return
      */
-    private PBFTMessage makePrepare(PBFTMessage pp) {
+/*    private PBFTMessage makePrepare(PBFTMessage pp) {
         Authenticator authenticator =
             ((PBFT)getProtocol()).getServerAuthenticator();
 
         PBFTMessage p = new PBFTMessage();
         
-        p.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.PREPARE);
+        p.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.RECEIVEPREPARE);
         p.put(PBFTMessage.VIEWFIELD, pp.get(PBFTMessage.VIEWFIELD));
         p.put(PBFTMessage.SEQUENCENUMBERFIELD, pp.get(PBFTMessage.SEQUENCENUMBERFIELD));
         p.put(PBFTMessage.DIGESTFIELD, pp.get(PBFTMessage.DIGESTFIELD));
@@ -123,6 +123,6 @@ public class PBFTPrePrepareExecutor extends Executor{
         return p;
     }
 
-
+*/
 
 }

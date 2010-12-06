@@ -39,6 +39,7 @@ public class PBFT extends ClientServerProtocol{
     public static String PREPAREBUFFER = "__PREPAREBUFFER";
     public static String COMMITBUFFER = "__COMMITBUFFER";
     public static String CHANGEVIEWBUFFER = "__CHANGEVIEWBUFFER";
+    public static String  COMMITTEDBUFFER = "__COMMITTEDBUFFER";
     public static String CLIENTAUTHENTICATOR = "__CLIENTAUTHENTICATOR";
     public static String SERVERAUTHENTICATOR = "__SERVERAUTHENTICATOR";
     public static String PRIMARYFAULTTIMEOUT = "__PRIMARYFAULTYTIMEOUT";
@@ -47,6 +48,22 @@ public class PBFT extends ClientServerProtocol{
     public static String BATCHSCHEDULER = "__BATCHSCHEDULER";
     public static String CHECKPOINTPERIOD = "__CHECKPOINTPERIOD";
     public static String CHECKPOINTNUMBER = "__CHECKPOINTNUMBER";
+
+    /*
+        [TODO] verify if sequence number of the message achieves the criteries.
+     */
+    public static boolean isValidSequenceNumber(PBFTMessage m) {
+        return true;
+    }
+
+    public Buffer getCommittedBuffer() {
+        return (Buffer)getContext().get(PBFT.COMMITTEDBUFFER);
+    }
+
+    public enum BATCHSTATE{
+        NOBATCH, INBATCH, BATCHED
+    }
+
 
     public int BATCHINGCOUNT = 0;
     public Long lastCommitedSequenceNumber = new Long(0);
@@ -80,9 +97,11 @@ public class PBFT extends ClientServerProtocol{
         BATCHINGCOUNT++;
     }
 
+    public int getMaxBatchSize(){
+        return (((Integer)getContext().get(PBFT.BATCHINGSIZE)).intValue());
+    }
     public boolean batchIsNotComplete(){
-        return (
-         (getBatchingCount() < ((Integer)getContext().get(PBFT.BATCHINGSIZE)).intValue()));
+        return (getBatchingCount() < getMaxBatchSize());
     }
 
     public void initBatching(){
@@ -333,11 +352,11 @@ public class PBFT extends ClientServerProtocol{
     }
 
     public boolean isPrepare(PBFTMessage m){
-        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.PREPARE);
+        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVEPREPARE);
     }
 
     public boolean isCommit(PBFTMessage m){
-        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.COMMIT);
+        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVECOMMIT);
     }
 
     public boolean isChangeView(PBFTMessage m){
@@ -357,5 +376,59 @@ public class PBFT extends ClientServerProtocol{
         getContext().put(PBFT.CHECKPOINTPERIOD, period);
     }
 
+    public static String __getRequestID(PBFTMessage m){
+        
+        String client =                
+            ((br.ufba.lasid.jds.Process)m.get(PBFTMessage.CLIENTFIELD)).getID().toString();
+
+        String timestamp = ((Long)m.get(PBFTMessage.TIMESTAMPFIELD)).toString();
+
+        String payload   = m.get(PBFTMessage.PAYLOADFIELD).toString();
+
+        return client + "." + timestamp + "." + payload;
+        
+    }
+
+    public static boolean isABufferedMessage(Buffer buffer, PBFTMessage m){
+        /* check if request exists in the buffer */
+        PBFTMessage bm = getBufferedMessage(buffer, m);
+
+        if(bm == null)
+            return false;
+
+        return bm.getID().equals(m.getID());//getRequestID(bRequest).equals(getRequestID((PBFTMessage)request));
+        
+    }
+
+    public static PBFTMessage getBufferedMessage(Buffer buffer, PBFTMessage m){
+        
+        for(Object item : buffer){
+
+            PBFTMessage bm = (PBFTMessage)item;
+
+            if(bm.getID().equals(m.getID())){//getRequestID(bRequest).equals(getRequestID((PBFTMessage)request))){
+
+                return bm;
+
+            }
+        }
+    
+        return null;
+        
+    }
+    public static boolean hasBeenAlreadyServed(Buffer buffer, PBFTMessage request) {
+        PBFTMessage bRequest = getBufferedMessage(buffer, request);
+
+        if(bRequest == null)
+            return false;
+
+        Object done = bRequest.get(PBFTMessage.REQUESTDONEFIELD);
+        
+        if(done == null)
+            return false;
+
+        return (Boolean) done;
+
+    }
 
 }
