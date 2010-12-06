@@ -125,6 +125,7 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         getProtocol().addExecutor(HandleBatchAction.class, newPBFTHandleBatchExecutor());
         getProtocol().addExecutor(BatchRequestAction.class, newPBFTBatchRequestExecutor());
         getProtocol().addExecutor(ScheduleNewViewAction.class, newPBFTScheduleNewViewExecutor());
+        
         getProtocol().addExecutor(ExecuteStartNewRoundPhaseOneAction.class, newPBFTExecuteStartNewRoundPhaseOneExecutor());
         getProtocol().addExecutor(ExecuteStartNewRoundPhaseTwoAction.class, newPBFTExecuteStartNewRoundPhaseTwoExecutor());
         getProtocol().addExecutor(ExecuteStartNewRoundPhaseThreeAction.class, newPBFTExecuteStartNewRoundPhaseThreeExecutor());
@@ -137,7 +138,7 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         getProtocol().addExecutor(ReceivePrePrepareAction.class, newPBFTReceivePrePrepareExecutor());
         getProtocol().addExecutor(NewViewAction.class, newPBFTNewViewExecutor());
         getProtocol().addExecutor(ReceiveNewViewAction.class, newPBFTReceiveNewViewExecutor());
-    }
+    
 
         getProtocol().addExecutor(ExecuteCurrentRoundPhaseTwoAction.class, newPBFTExecuteCurrentRoundPhaseTwoExecutor());
         getProtocol().addExecutor(CreatePrepareAction.class, newPBFTCreatePrepareExecutor());
@@ -153,6 +154,7 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
 
         getProtocol().addExecutor(ExecuteReplyPhaseAction.class, newPBFTExecuteReplyPhaseExecutor());
         getProtocol().addExecutor(BufferCommittedRequestAction.class, newPBFTBufferCommittedRequestExecutor());
+    }
 
     public Executor newPBFTReceiveNewViewExecutor(){
         return new PBFTReceiveNewViewExecutor(getProtocol());

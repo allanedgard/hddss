@@ -6,6 +6,7 @@
 package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.jds.Action;
+import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.Protocol;
 import br.ufba.lasid.jds.comm.Message;
@@ -20,9 +21,9 @@ import br.ufba.lasid.jds.util.Buffer;
  *
  * @author aliriosa
  */
-public class PBFTReceiveNewViewExecutor extends Executor{
+public class PBFTReceiveNewViewExecutor extends PBFTServerExecutor{
 
-    public PBFTReceiveNewViewExecutor(Protocol protocol) {
+    public PBFTReceiveNewViewExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 
@@ -35,7 +36,7 @@ public class PBFTReceiveNewViewExecutor extends Executor{
             ((PBFT)getProtocol()).getDebugger().debug(
                 "[PBFTChangeViewExecutor.execute]"
              );
-        PBFTMessage m = (PBFTMessage) act.getMessage();
+        PBFTMessage m = (PBFTMessage) act.getWrapper();
         if ( ((PBFT)getProtocol()).isPrimary() ) {
            if (checkReceiveNewView(m)) {
                enviaPrepares(m);

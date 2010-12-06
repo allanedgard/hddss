@@ -11,6 +11,7 @@ package br.ufba.lasid.jds.jbft.pbft.executors;
  */
 
 import br.ufba.lasid.jds.Action;
+import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.Protocol;
 import br.ufba.lasid.jds.comm.Message;
@@ -24,9 +25,9 @@ import br.ufba.lasid.jds.security.Authenticator;
  *
  * @author aliriosa
  */
-public class PBFTNewViewExecutor extends Executor{
+public class PBFTNewViewExecutor extends PBFTServerExecutor{
 
-    public PBFTNewViewExecutor(Protocol protocol) {
+    public PBFTNewViewExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 
@@ -36,7 +37,7 @@ public class PBFTNewViewExecutor extends Executor{
                 "[PBFTChangeViewExecutor.execute]"
              );
 
-       PBFTMessage m = makeChangeViewRequest((PBFTMessage) act.getMessage());
+       PBFTMessage m = makeChangeViewRequest((PBFTMessage) act.getWrapper());
        scheduleRetransmission(m);
 
     }
@@ -91,7 +92,7 @@ public class PBFTNewViewExecutor extends Executor{
 
         m.put(scheduler.getTAG(), rttime);
 
-        scheduler.schedule(m);
+        scheduler.schedule(m, rttime);
 
         ((PBFT)getProtocol()).getDebugger().debug(
             "["+ getClass().getSimpleName()+ ".scheduleRetransmission] "

@@ -51,7 +51,8 @@ public abstract class PBFTMessage extends ClientServerMessage{
         BATCHING(13),
         SENDCHECKPOINTREQUEST(14),
         FETCHSTATE(15),
-        EXECUTECHECKPOINT(16);
+        EXECUTECHECKPOINT(16),
+        NEWVIEW(17);
       
         private final int value;
 
