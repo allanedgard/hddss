@@ -40,6 +40,7 @@ public class PBFTCreateRequestExecutor extends ClientServerCreateRequestExecutor
         m.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.SENDREQUEST);
         m.put(PBFTMessage.TIMESTAMPFIELD, timestamp);
         m.put(PBFTMessage.CLIENTFIELD, getProtocol().getLocalProcess());
+//        m.put(PBFTMessage.DIGESTFIELD, act)
 
 
         m = (PBFTMessage)authenticator.encrypt(m);

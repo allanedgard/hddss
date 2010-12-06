@@ -52,19 +52,13 @@ public class PBFTReceiveReplyExecutor extends ClientServerReceiveReplyExecutor{
     
     public synchronized void RemoveFromBuffer(PBFTMessage m){
         Buffer buffer = ((PBFT)getProtocol()).getRequestBuffer();
-        PBFTMessage bReq = m;
-
-        for(Object item : buffer){
-            bReq = (PBFTMessage) item;
-            boolean client = bReq.get(PBFTMessage.CLIENTFIELD).equals(m.get(PBFTMessage.CLIENTFIELD));
-            boolean timestamp = bReq.get(PBFTMessage.TIMESTAMPFIELD).equals(m.get(PBFTMessage.TIMESTAMPFIELD));
-            if(client && timestamp)
-                break;
-        }
-
-        bReq.put(PBFTMessage.TIMESTAMPFIELD, new Long(-1));
-        buffer.remove(bReq);
         
+        if(PBFT.isABufferedMessage(buffer, m)){
+            PBFTMessage req = PBFT.getBufferedMessage(buffer, m);
+            buffer.remove(req);
+            req.put(PBFTMessage.TIMESTAMPFIELD, new Long(-1));
+//            System.gc();
+        }        
     }
     public boolean isValidReply(PBFTMessage m){
         Authenticator authenticator =
