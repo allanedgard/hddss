@@ -24,6 +24,7 @@ import br.ufba.lasid.jds.jbft.pbft.actions.CheckStateAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CreateCommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CreatePrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CreatePrepareAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCheckPointAction;
 
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCurrentRoundPhaseOneAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCurrentRoundPhaseThreeAction;
@@ -62,7 +63,7 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCheckStateExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreateCommitExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreatePrePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreatePrepareExecutor;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCheckpointExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCheckPointExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCurrentRoundPhaseOneExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCurrentRoundPhaseThreeExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCurrentRoundPhaseTwoExecutor;
@@ -165,6 +166,7 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         getProtocol().addExecutor(ReceiveCheckpointAction.class, newPBFTReceiveCheckpointExecutor());
         getProtocol().addExecutor(BufferCheckpointAction.class, newPBFTBufferCheckpointExecutor());
         getProtocol().addExecutor(CheckStateAction.class, newPBFTCheckStateExecutor());
+        getProtocol().addExecutor(ExecuteCheckPointAction.class, newPBFTExecuteCheckpointExecutor());
 
     }
 
@@ -280,7 +282,7 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
     }
 
     public Executor newPBFTExecuteCheckpointExecutor(){
-        return new PBFTExecuteCheckpointExecutor(getProtocol());
+        return new PBFTExecuteCheckPointExecutor(getProtocol());
     }
     public Executor newPBFTFecthStateExecutor(){
         return new PBFTFecthStateExecutor(getProtocol());

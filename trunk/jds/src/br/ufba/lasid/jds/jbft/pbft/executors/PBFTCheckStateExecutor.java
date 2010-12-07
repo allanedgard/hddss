@@ -8,6 +8,7 @@ package br.ufba.lasid.jds.jbft.pbft.executors;
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
+import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCheckPointAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.util.PBFTMessageSequenceComparator;
 import br.ufba.lasid.jds.util.Buffer;
@@ -42,6 +43,7 @@ public class PBFTCheckStateExecutor extends PBFTServerExecutor{
                   + checkpoint.get(PBFTMessage.SEQUENCENUMBERFIELD)
                  );
                 
+                getProtocol().perform(new ExecuteCheckPointAction(checkpoint));
 
             }
         }
