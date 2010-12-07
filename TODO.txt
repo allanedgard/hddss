@@ -1,6 +1,6 @@
 * Inserir checagem de visão corrente e authenticação 
 * Inserir Change View
-* Inserir Código Para Checagem de Sequence Number
+* Inserir Código Para Checagem de Sequence Number [DONE]
 * Inserir Recovery
 * O código atualmente não trata mensagens fora de ordem e as mensagens de prepare, commit são enviadas independente de ter sequencenumber em ordem.
 * Avaliar se o metodo isValidSequenceNumber é realmente de classe ou de instancia.
