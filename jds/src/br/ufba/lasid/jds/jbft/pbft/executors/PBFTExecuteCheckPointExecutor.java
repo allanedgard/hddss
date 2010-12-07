@@ -29,27 +29,27 @@ public class PBFTExecuteCheckPointExecutor extends PBFTServerExecutor{
         Long checkStateSeq = (Long)checkpoint.get(PBFTMessage.SEQUENCENUMBERFIELD);
         Long lastStableSeq = ((PBFT)getProtocol()).getLastStableStateSequenceNumber();
 
-        Buffer cmdBuffer = new Buffer(); 
-        cmdBuffer.addAll(((PBFT)getProtocol()).getCommittedBuffer());
+        System.out.println(
+            "before checkpoint, server [p" + getProtocol().getLocalProcess().getID() + "] "
+          + "has request buffer size " +  ((PBFT)getProtocol()).getRequestBuffer().size() + " "
+          + "preprepare buffer size " + ((PBFT)getProtocol()).getPreprepareBuffer().size() + " "
+          + "prepare buffer size " + ((PBFT)getProtocol()).getPrepareBuffer().size() + " "
+          + "commit buffer size " + ((PBFT)getProtocol()).getCommitBuffer().size() + " "
+          + "committed buffer size " + ((PBFT)getProtocol()).getCommittedBuffer().size() + " "
+          + "reply buffer size " + ((PBFT)getProtocol()).getReplyBuffer().size() + " "
+        );
 
-        Buffer cmtBuffer = new Buffer();
-        cmtBuffer.addAll(((PBFT)getProtocol()).getCommitBuffer());
+        ((PBFT)getProtocol()).garbage(checkStateSeq);
 
-        Buffer pBuffer = new Buffer();
-        pBuffer.addAll(((PBFT)getProtocol()).getPrepareBuffer());
-
-        Buffer ppBuffer = new Buffer();
-        ppBuffer.addAll(((PBFT)getProtocol()).getPreprepareBuffer());
-
-        Buffer reqBuffer = new Buffer();
-        reqBuffer.addAll(((PBFT)getProtocol()).getRequestBuffer());
-
-        for(Object item: cmdBuffer){
-            PBFTMessage m = (PBFTMessage) item;
-
-        }
-
-
+        System.out.println(
+            "after checkpoint, server [p" + getProtocol().getLocalProcess().getID() + "] "
+          + "has request buffer size " +  ((PBFT)getProtocol()).getRequestBuffer().size() + " "
+          + "preprepare buffer size " + ((PBFT)getProtocol()).getPreprepareBuffer().size() + " "
+          + "prepare buffer size " + ((PBFT)getProtocol()).getPrepareBuffer().size() + " "
+          + "commit buffer size " + ((PBFT)getProtocol()).getCommitBuffer().size() + " "
+          + "committed buffer size " + ((PBFT)getProtocol()).getCommittedBuffer().size() + " "
+          + "reply buffer size " + ((PBFT)getProtocol()).getReplyBuffer().size() + " "
+        );
 
     }
 

@@ -289,6 +289,74 @@ public class PBFT extends ClientServerProtocol{
         return false;
     }
 
+    public synchronized void garbage(long seq){
+        Buffer buffer = getCommittedBuffer();
+        int size = buffer.size();
+        
+        for(int i = size-1; i >= 0; i--){
+
+            PBFTMessage batch = (PBFTMessage) buffer.get(i);
+            
+            long SEQ = (Long)batch.get(PBFTMessage.SEQUENCENUMBERFIELD);
+
+            if(SEQ <= seq){
+
+                int batchSize =  (Integer)batch.get(PBFTMessage.BATCHSIZEFIELD);
+
+                for(int j = 0; j < batchSize; j++){
+
+                    String reqField = getRequestField(j);
+
+                    PBFTMessage req = (PBFTMessage)batch.get(reqField);
+                    PBFTMessage rep = req;
+
+                    req = getBufferedMessage(getRequestBuffer(), req);
+                    rep = getBufferedMessage(getReplyBuffer(), rep);
+
+                    getRequestBuffer().remove(req);
+                    getReplyBuffer().remove(rep);
+                }
+                
+                buffer.remove(batch);
+                
+            }
+
+            System.gc();
+            
+        }
+
+        int size2 = getPreprepareBuffer().size();
+
+        for(int j = size2-1; j >=0; j --){
+            PBFTMessage pp = (PBFTMessage)getPreprepareBuffer().get(j);
+            long SEQ2 = (Long)pp.get(PBFTMessage.SEQUENCENUMBERFIELD);
+            if(SEQ2 <= seq){
+                getPreprepareBuffer().remove(pp);
+            }
+        }
+
+        size2 = getPrepareBuffer().size();
+
+        for(int j = size2-1; j >=0; j --){
+            PBFTMessage pp = (PBFTMessage)getPrepareBuffer().get(j);
+            long SEQ2 = (Long)pp.get(PBFTMessage.SEQUENCENUMBERFIELD);
+            if(SEQ2 <= seq){
+                getPrepareBuffer().remove(pp);
+            }
+        }
+
+        size2 = getCommitBuffer().size();
+
+        for(int j = size2-1; j >=0; j --){
+            PBFTMessage pp = (PBFTMessage)getCommitBuffer().get(j);
+            long SEQ2 = (Long)pp.get(PBFTMessage.SEQUENCENUMBERFIELD);
+            if(SEQ2 <= seq){
+                getCommitBuffer().remove(pp);
+            }
+        }
+
+    }
+    
     public boolean gotQuorum(PBFTMessage m, Buffer buffer, int minQuorum, boolean includeItsOwn){
 
         int quorum = 0;
