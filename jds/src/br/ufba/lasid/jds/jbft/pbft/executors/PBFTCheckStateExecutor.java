@@ -10,11 +10,7 @@ import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCheckPointAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
-import br.ufba.lasid.jds.jbft.pbft.comm.util.PBFTMessageSequenceComparator;
 import br.ufba.lasid.jds.util.Buffer;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Hashtable;
 
 /**
  *
@@ -34,7 +30,7 @@ public class PBFTCheckStateExecutor extends PBFTServerExecutor{
         Buffer cmBuffer = ((PBFT)getProtocol()).getCommittedBuffer();
         Buffer cpBuffer = ((PBFT)getProtocol()).getCheckpointBuffer();
 
-        if(PBFT.isValidSequenceNumber(checkpoint)){
+        if(((PBFT)getProtocol()).isValidSequenceNumber(checkpoint)){
             if(((PBFT)getProtocol()).gotQuorum(checkpoint)){
 
                 System.out.println(

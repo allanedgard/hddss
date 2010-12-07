@@ -36,7 +36,7 @@ public class PBFTReceivePrePrepareExecutor extends PBFTServerExecutor{
                 + "at time "  + ((PBFT)getProtocol()).getTimestamp()
             );
 
-            if(PBFT.isValidSequenceNumber(m) && isValidPrePrepare(m)){
+            if(((PBFT)getProtocol()).isValidSequenceNumber(m) && isValidPrePrepare(m)){
                 getProtocol().perform(new BufferPrePrepareAction(m));
                 getProtocol().perform(new ExecuteCurrentRoundPhaseTwoAction(m));
                 return;

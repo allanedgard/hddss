@@ -50,12 +50,37 @@ public class PBFT extends ClientServerProtocol{
     public static String BATCHSCHEDULER = "__BATCHSCHEDULER";
     public static String CHECKPOINTPERIOD = "__CHECKPOINTPERIOD";
     public static String CHECKPOINTNUMBER = "__CHECKPOINTNUMBER";
+    public static String LASTCHECKPOINT  = "__LASTCHECKPOINT";
+
+    public void setLastCheckpoint(PBFTMessage checkpoint){
+        getContext().put(LASTCHECKPOINT, checkpoint);
+    }
+
+    public PBFTMessage getLastCheckpoint(){
+        return (PBFTMessage)(getContext().get(LASTCHECKPOINT));
+    }
+
 
     /*
         [TODO] verify if sequence number of the message achieves the criteries.
-     */
-    public static boolean isValidSequenceNumber(PBFTMessage m) {
-        return true;
+     */    
+    public  boolean isValidSequenceNumber(PBFTMessage m) {
+        long factor  = 20;
+        long low  = 0;
+        long high = low + factor * getCheckPointPeriod();;
+
+        long SEQMessage = (Long)m.get(PBFTMessage.SEQUENCENUMBERFIELD);
+
+        PBFTMessage checkpoint = getLastCheckpoint();
+
+        if(checkpoint != null){
+            long SEQCheckpoint = (Long)checkpoint.get(PBFTMessage.SEQUENCENUMBERFIELD);
+            low = SEQCheckpoint;
+            high = SEQCheckpoint + factor * getCheckPointPeriod();
+        }
+        
+        return ((SEQMessage >= low) && (SEQMessage <= high));
+
     }
 
     public Buffer getCheckpointBuffer() {
@@ -352,6 +377,16 @@ public class PBFT extends ClientServerProtocol{
             long SEQ2 = (Long)pp.get(PBFTMessage.SEQUENCENUMBERFIELD);
             if(SEQ2 <= seq){
                 getCommitBuffer().remove(pp);
+            }
+        }
+
+        size2 = getCheckpointBuffer().size();
+        
+        for(int j = size2-1; j >=0; j --){
+            PBFTMessage pp = (PBFTMessage)getCheckpointBuffer().get(j);
+            long SEQ2 = (Long)pp.get(PBFTMessage.SEQUENCENUMBERFIELD);
+            if(SEQ2 < seq){
+                getCheckpointBuffer().remove(pp);
             }
         }
 

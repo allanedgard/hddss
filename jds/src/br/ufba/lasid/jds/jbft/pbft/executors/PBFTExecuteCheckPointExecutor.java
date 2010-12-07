@@ -6,11 +6,9 @@
 package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.jds.Action;
-import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
-import br.ufba.lasid.jds.util.Buffer;
 
 /**
  *
@@ -24,10 +22,10 @@ public class PBFTExecuteCheckPointExecutor extends PBFTServerExecutor{
 
     @Override
     public synchronized void execute(Action act) {
+        
         PBFTMessage checkpoint = (PBFTMessage) act.getWrapper();
 
         Long checkStateSeq = (Long)checkpoint.get(PBFTMessage.SEQUENCENUMBERFIELD);
-        Long lastStableSeq = ((PBFT)getProtocol()).getLastStableStateSequenceNumber();
 
         System.out.println(
             "before checkpoint, server [p" + getProtocol().getLocalProcess().getID() + "] "
@@ -40,6 +38,7 @@ public class PBFTExecuteCheckPointExecutor extends PBFTServerExecutor{
         );
 
         ((PBFT)getProtocol()).garbage(checkStateSeq);
+        ((PBFT)getProtocol()).setLastCheckpoint(checkpoint);
 
         System.out.println(
             "after checkpoint, server [p" + getProtocol().getLocalProcess().getID() + "] "

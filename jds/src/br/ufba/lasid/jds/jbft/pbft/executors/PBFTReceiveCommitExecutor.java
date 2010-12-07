@@ -34,7 +34,7 @@ public class PBFTReceiveCommitExecutor extends PBFTServerExecutor{
             + "at time "  + ((PBFT)getProtocol()).getTimestamp()
         );
 
-        if(PBFT.isValidSequenceNumber(m)){
+        if(((PBFT)getProtocol()).isValidSequenceNumber(m)){
 
             getProtocol().perform(new BufferCommitAction(m));
 
