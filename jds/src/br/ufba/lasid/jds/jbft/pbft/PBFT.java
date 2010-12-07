@@ -41,6 +41,7 @@ public class PBFT extends ClientServerProtocol{
     public static String CHANGEVIEWBUFFER = "__CHANGEVIEWBUFFER";
     public static String COMMITTEDBUFFER = "__COMMITTEDBUFFER";
     public static String REPLYBUFFER = "__REPLYBUFFER";
+    public static String CHECKPOINTBUFFER = "__CHECKPOINTBUFFER";
     public static String CLIENTAUTHENTICATOR = "__CLIENTAUTHENTICATOR";
     public static String SERVERAUTHENTICATOR = "__SERVERAUTHENTICATOR";
     public static String PRIMARYFAULTTIMEOUT = "__PRIMARYFAULTYTIMEOUT";
@@ -55,6 +56,10 @@ public class PBFT extends ClientServerProtocol{
      */
     public static boolean isValidSequenceNumber(PBFTMessage m) {
         return true;
+    }
+
+    public Buffer getCheckpointBuffer() {
+        return (Buffer)getContext().get(PBFT.CHECKPOINTBUFFER);
     }
 
     public Buffer getCommittedBuffer() {
@@ -83,12 +88,19 @@ public class PBFT extends ClientServerProtocol{
         return getRequestField(BATCHINGCOUNT);
     }
 
-    public void setLastCommitedSequenceNumber(Long n){
-        lastCommitedSequenceNumber = n;
-    }
+    public long getLastStableStateSequenceNumber(){
+        Buffer buffer = getCommittedBuffer();
+        
+        if(buffer.isEmpty()){
 
-    public Long getLastCommitedSequenceNumber(){
-        return lastCommitedSequenceNumber;
+            return -1;
+
+        }
+
+
+        PBFTMessage m = (PBFTMessage) buffer.get(buffer.size()-1);
+        return (Long)m.get(PBFTMessage.SEQUENCENUMBERFIELD);
+        
     }
     public String getRequestField(int i){
         return (PBFTMessage.REQUESTFIELD +  i);
@@ -269,6 +281,10 @@ public class PBFT extends ClientServerProtocol{
             return gotChangeViewQuorum(m);
         }
 
+        if(isCheckpoint(m)){
+            return gotCheckpointQuorum(m);
+        }
+
 
         return false;
     }
@@ -340,6 +356,11 @@ public class PBFT extends ClientServerProtocol{
         
     }
 
+    public boolean gotCheckpointQuorum(PBFTMessage m){
+        int f      = getServiceBFTResilience();
+        return gotQuorum(m, getCheckpointBuffer(), 2 * f + 1, false);
+    }
+    
     public boolean gotCommitQuorum(PBFTMessage m){
         
         int f      = getServiceBFTResilience();
@@ -354,6 +375,10 @@ public class PBFT extends ClientServerProtocol{
 
         return gotQuorum(m, getChangeViewBuffer(), f + 1, true);
 
+    }
+
+    public boolean isCheckpoint(PBFTMessage m){
+        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVECHECKPOINT);
     }
 
     public boolean isPrepare(PBFTMessage m){

@@ -6,34 +6,57 @@
 package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.jds.Action;
-import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.DistributedProtocol;
+import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpointMessage;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 
 /**
  *
  * @author aliriosa
  */
-public class PBFTSendCheckpointExecutor extends Executor{
+public class PBFTSendCheckpointExecutor extends PBFTServerExecutor{
     public PBFTSendCheckpointExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 
     @Override
     public synchronized void execute(Action act) {
+        
+        Long lastStableSeq = ((PBFT)getProtocol()).getLastStableStateSequenceNumber();
+        Integer currentView   = ((PBFT)getProtocol()).getCurrentView();
 
-/*        int checkpointPeriod = ((PBFT)getProtocol()).getCheckPointPeriod().intValue();
+        System.out.println(
+            "server [p" + getProtocol().getLocalProcess().getID() + "] " 
+          + "has last stable sequence number equals to " + lastStableSeq + " "
+          + "at time " + ((PBFT)getProtocol()).getTimestamp()
+        );
 
-        count++;
+        PBFTMessage checkpoint = new PBFTCheckpointMessage();
+        
+        checkpoint.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.RECEIVECHECKPOINT);
+        checkpoint.put(PBFTMessage.SEQUENCENUMBERFIELD, lastStableSeq);
+        checkpoint.put(PBFTMessage.VIEWFIELD, currentView);
+        checkpoint.put(PBFTMessage.REPLICAIDFIELD, getProtocol().getLocalProcess().getID());
 
-        if((count % checkpointPeriod) == 0){
-            ((PBFT)getProtocol()).getDebugger().debug(
-                "[PBFTSendCheckPointRequestExecutor.execute] the last sequence "
-                + "number commited in process (p"+getProtocol().getLocalProcess().getID()+") "
-                + "is " + ((PBFT)getProtocol()).getLastCommitedSequenceNumber()
-             );
-        }
-*/
+        checkpoint = makeDisgest(checkpoint);
+        checkpoint = encrypt(checkpoint);
+
+        Group g = ((PBFT)getProtocol()).getLocalGroup();
+
+        getProtocol().getCommunicator().multicast(checkpoint, g);
+
+        System.out.println(
+            "server [p" + getProtocol().getLocalProcess().getID() + "] "
+          + "sent <checkpoint" + lastStableSeq + ", "
+          + checkpoint.get(PBFTMessage.DIGESTFIELD) + ", "
+          + checkpoint.get(PBFTMessage.REPLICAIDFIELD) + "> "
+          + "to group [" + g.getGroupID() + "] "
+          + "at time " + ((PBFT)getProtocol()).getTimestamp()
+        );
+
+
     }
 
 

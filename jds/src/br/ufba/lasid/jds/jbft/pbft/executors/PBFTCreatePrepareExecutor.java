@@ -44,7 +44,7 @@ public class PBFTCreatePrepareExecutor extends PBFTServerExecutor{
             return null;
 
         PBFTMessage p = new PBFTPrepareMessage();
-
+        
         p.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.RECEIVEPREPARE);
         p.put(PBFTMessage.VIEWFIELD, pp.get(PBFTMessage.VIEWFIELD));
         p.put(PBFTMessage.SEQUENCENUMBERFIELD, pp.get(PBFTMessage.SEQUENCENUMBERFIELD));

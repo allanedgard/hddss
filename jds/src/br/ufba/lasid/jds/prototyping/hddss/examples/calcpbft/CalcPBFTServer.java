@@ -17,7 +17,7 @@ public class CalcPBFTServer extends Agent_ServerPBFT{
     @Override
     public Object doService(Object arg) {
         CalculatorPayload args = (CalculatorPayload)arg;
-        CalculatorPayload result = new CalculatorPayload();
+        CalculatorPayload result = args;
         
         if(args == null){
             result.put(Calculator.RESULT, "NOP");

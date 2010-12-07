@@ -15,9 +15,9 @@ import br.ufba.lasid.jds.util.Buffer;
  *
  * @author aliriosa
  */
-public class PBFTBufferCommittedRequestExecutor extends PBFTServerExecutor{
+public class PBFTBufferCheckpointExecutor extends PBFTServerExecutor{
 
-    public PBFTBufferCommittedRequestExecutor(DistributedProtocol protocol) {
+    public PBFTBufferCheckpointExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 
@@ -25,33 +25,37 @@ public class PBFTBufferCommittedRequestExecutor extends PBFTServerExecutor{
     public synchronized void execute(Action act) {
 
         PBFTMessage m = (PBFTMessage) act.getWrapper();
-        Buffer buffer = ((PBFT)getProtocol()).getCommittedBuffer();
+        Buffer buffer = ((PBFT)getProtocol()).getCheckpointBuffer();
 
         if(!isServerAuthenticated(m)){
-            System.out.println(getDefaultSecurityExceptionMessage(m, "buffer committed request executor"));
+            System.out.println(getDefaultSecurityExceptionMessage(m, "buffer checkpoint executor"));
             return;
         }
 
-        /* check if commit exists in the buffer */
+        /* check if checkpoint exists in the buffer */
 
         if(PBFT.isABufferedMessage(buffer, m)){
             System.out.println(
                 "server [p" + getProtocol().getLocalProcess().getID()+"] "
-              + "has already bufferred the committed request."
+              + "has already bufferred the checkpoint (" + m.get(PBFTMessage.SEQUENCENUMBERFIELD) + ")"
             );
 
             return;
         }
 
-        /* add commit to commit buffer */
+        /* add checkpoint to commit buffer */
         buffer.add(m);
 
         System.out.println(
             "server [p" + getProtocol().getLocalProcess().getID()+"] "
-          + "bufferred committed request at time " + ((PBFT)getProtocol()).getTimestamp()
+          + "bufferred the checkpoint (" + m.get(PBFTMessage.SEQUENCENUMBERFIELD) + ") "
+          + "at time " + ((PBFT)getProtocol()).getTimestamp()
         );
 
+//        getProtocol().perform(new SendCommitAction(m));
+
     }
+
 
 
 

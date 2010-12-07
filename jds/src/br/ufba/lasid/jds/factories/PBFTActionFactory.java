@@ -15,11 +15,9 @@ import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.cs.actions.CreateRequestAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BatchTimeoutAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.CommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCheckPointAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.FecthStateAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.PrePrepareAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.PrepareAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveCheckpointAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveCommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceivePrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceivePrepareAction;
@@ -102,7 +100,7 @@ public class PBFTActionFactory extends ActionFactory{
             return new BatchTimeoutAction(wapper);
         }
 
-        if(type.equals(PBFTMessage.TYPE.SENDCHECKPOINTREQUEST)){
+        if(type.equals(PBFTMessage.TYPE.SENDCHECKPOINT)){
             return new SendCheckpointAction(wapper);
         }
         if(type.equals(PBFTMessage.TYPE.FETCHSTATE)){
@@ -111,6 +109,11 @@ public class PBFTActionFactory extends ActionFactory{
         if(type.equals(PBFTMessage.TYPE.EXECUTECHECKPOINT)){
             return new ExecuteCheckPointAction(wapper);
         }
+
+        if(type.equals(PBFTMessage.TYPE.RECEIVECHECKPOINT)){
+            return new ReceiveCheckpointAction(wapper);
+        }
+
 
         return null;
     }

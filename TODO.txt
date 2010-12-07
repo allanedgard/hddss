@@ -3,3 +3,5 @@
 * Inserir Checkpoint
 * Inserir Código Para Checagem de Sequence Number
 * Inserir Recovery
+* O código atualmente não trata mensagens fora de ordem e as mensagens de prepare, commit são enviadas independente de ter sequencenumber em ordem.
+* Avaliar se o metodo isValidSequenceNumber é realmente de classe ou de instancia.

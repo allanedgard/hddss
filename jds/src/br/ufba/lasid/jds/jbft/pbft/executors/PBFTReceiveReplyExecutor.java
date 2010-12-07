@@ -33,7 +33,7 @@ public class PBFTReceiveReplyExecutor extends ClientServerReceiveReplyExecutor{
         ((PBFT)getProtocol()).getReplyBuffer().add(m);
 
        System.out.println(
-            "client[p" + getProtocol().getLocalProcess().getID()+"] "
+            "client [p" + getProtocol().getLocalProcess().getID()+"] "
           + "received reply from " +m.get(PBFTMessage.REPLICAIDFIELD)
           + " at time " + ((PBFT)getProtocol()).getTimestamp()
        );

@@ -26,6 +26,7 @@ public class PBFTExecuteReplyPhaseExecutor extends PBFTServerExecutor{
     public synchronized void execute(Action act) {
         PBFTMessage m = (PBFTMessage) act.getWrapper();
         PBFTMessage batch = (PBFTMessage) m.get(PBFTMessage.REQUESTFIELD);
+        batch.put(PBFTMessage.SEQUENCENUMBERFIELD, m.get(PBFTMessage.SEQUENCENUMBERFIELD));
        System.out.println(
             "server [p" + getProtocol().getLocalProcess().getID()+"] "
           + "started the reply phase of the protocol at time "
