@@ -81,6 +81,10 @@ public class Protocol {
 
     private void notify(Action action) {
         //System.out.println("[DistributedProtocol] call DistributedProtocol.notify");
+        if(action == null){
+            return;
+        }
+        
         Class type =  action.getClass();
         ExecutorCollection executorList = executors.get(type);
 

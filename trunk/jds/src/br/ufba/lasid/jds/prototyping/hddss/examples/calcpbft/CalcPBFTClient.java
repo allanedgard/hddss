@@ -31,10 +31,12 @@ public class CalcPBFTClient extends Agent_ClientPBFT{
 
     @Override
     public void receiveReply(Object content) {
-       System.out.println(
-            "client[p" + getProtocol().getLocalProcess().getID()+"] "
-          + "collected result " +content + " at time " + ((PBFT)getProtocol()).getTimestamp()
-       );
+        CalculatorPayload calc = (CalculatorPayload) content;
+        System.out.println(
+            "client [p" + getProtocol().getLocalProcess().getID()+"] "
+          + calc.get(Calculator.OPCODE) + "(" + calc.get(Calculator.OP1)
+          + ", " + calc.get(Calculator.OP2) + ") = " + calc.get(Calculator.RESULT)
+        );
 
 /*        ((PBFT)getProtocol()).getDebugger().debug(
             "[CalcPBFTClient.receiveReply] result (" + content + ") "

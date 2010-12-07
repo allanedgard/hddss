@@ -12,9 +12,9 @@ import br.ufba.lasid.jds.DistributedProtocol;
  *
  * @author aliriosa
  */
-public class PBFTExecuteCheckPointExecutor extends Executor{
+public class PBFTExecuteCheckpointExecutor extends Executor{
 
-    public PBFTExecuteCheckPointExecutor(DistributedProtocol protocol) {
+    public PBFTExecuteCheckpointExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 

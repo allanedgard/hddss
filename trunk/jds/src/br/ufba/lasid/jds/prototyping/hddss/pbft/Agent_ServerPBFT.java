@@ -13,24 +13,18 @@ import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.actions.HandleBatchAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BatchRequestAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BatchTimeoutAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.BufferCheckpointAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BufferCommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BufferCommittedRequestAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BufferPrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BufferPrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BufferReceivedRequestAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.CommitAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.CheckStateAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CreateCommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CreatePrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CreatePrepareAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCheckPointAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.FecthStateAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.PrePrepareAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.PrepareAction;
 
-import br.ufba.lasid.jds.jbft.pbft.actions.FecthStateAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.PrePrepareAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.PrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCurrentRoundPhaseOneAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCurrentRoundPhaseThreeAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCurrentRoundPhaseTwoAction;
@@ -38,13 +32,11 @@ import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteReplyPhaseAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteStartNewRoundPhaseOneAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteStartNewRoundPhaseThreeAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteStartNewRoundPhaseTwoAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.FecthStateAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.GarbageCollectionAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.NewViewAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.PrePrepareAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.PrepareAction;
 //import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckPointRequestAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveChangeViewAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveCheckpointAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveCommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceivePrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceivePrepareAction;
@@ -63,12 +55,14 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferPrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferReceivedRequestExecutor;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveNewViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckpointAction;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferCheckpointExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTChangeViewExecutor;
 //import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCommitExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCheckStateExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreateCommitExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreatePrePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreatePrepareExecutor;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCheckPointExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCheckpointExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCurrentRoundPhaseOneExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCurrentRoundPhaseThreeExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCurrentRoundPhaseTwoExecutor;
@@ -82,6 +76,7 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTNewViewExecutor;
 //import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrePrepareExecutor;
 //import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveChangeViewExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveCheckpointExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveCommitExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceivePrePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceivePrepareExecutor;
@@ -166,9 +161,22 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         Executor gcExecutor = newPBFTGarbageCollectionExecutor();
         getProtocol().addExecutor(GarbageCollectionAction.class, gcExecutor);
         getProtocol().addExecutor(SendReplyAction.class, gcExecutor);
-        getProtocol().addExecutor(SendCheckpointAction.class, newPBFTSendCheckPointRequestExecutor());
+        getProtocol().addExecutor(SendCheckpointAction.class, newPBFTSendCheckpointRequestExecutor());
+        getProtocol().addExecutor(ReceiveCheckpointAction.class, newPBFTReceiveCheckpointExecutor());
+        getProtocol().addExecutor(BufferCheckpointAction.class, newPBFTBufferCheckpointExecutor());
+        getProtocol().addExecutor(CheckStateAction.class, newPBFTCheckStateExecutor());
+
     }
 
+    public Executor newPBFTBufferCheckpointExecutor(){
+        return new PBFTBufferCheckpointExecutor(getProtocol());
+    }
+    public Executor newPBFTCheckStateExecutor(){
+        return new PBFTCheckStateExecutor(getProtocol());
+    }
+    public Executor newPBFTReceiveCheckpointExecutor(){
+        return new PBFTReceiveCheckpointExecutor(getProtocol());
+    }
     public Executor newPBFTGarbageCollectionExecutor(){
         return new PBFTGarbageCollectionExecutor(getProtocol());
     }
@@ -271,13 +279,13 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         return new PBFTReceiveChangeViewExecutor(getProtocol());
     }
 
-    public Executor newPBFTExecuteCheckPointExecutor(){
-        return new PBFTExecuteCheckPointExecutor(getProtocol());
+    public Executor newPBFTExecuteCheckpointExecutor(){
+        return new PBFTExecuteCheckpointExecutor(getProtocol());
     }
     public Executor newPBFTFecthStateExecutor(){
         return new PBFTFecthStateExecutor(getProtocol());
     }
-    public Executor newPBFTSendCheckPointRequestExecutor(){
+    public Executor newPBFTSendCheckpointRequestExecutor(){
         return new PBFTSendCheckpointExecutor(getProtocol());
     }
     public Executor newPBFTReceiveRequestExecutor(){

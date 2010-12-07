@@ -32,6 +32,7 @@ public class PBFTSendCommitExecutor extends PBFTServerExecutor{
         }
 
         c.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.RECEIVECOMMIT);
+        
 
 
         getProtocol().getCommunicator().multicast(

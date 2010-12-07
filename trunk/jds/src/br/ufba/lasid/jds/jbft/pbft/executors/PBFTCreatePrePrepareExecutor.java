@@ -51,6 +51,8 @@ public class PBFTCreatePrePrepareExecutor extends PBFTServerExecutor{
         pp.put(PBFTMessage.SOURCEFIELD, getProtocol().getLocalProcess());
         pp.put(PBFTMessage.REPLICAIDFIELD, getProtocol().getLocalProcess().getID());
 
+        request.put(PBFTMessage.SEQUENCENUMBERFIELD, pp.SEQUENCENUMBERFIELD);
+        
         pp = (PBFTMessage)encrypt(pp);
         pp = (PBFTMessage)makeDisgest(pp);
 

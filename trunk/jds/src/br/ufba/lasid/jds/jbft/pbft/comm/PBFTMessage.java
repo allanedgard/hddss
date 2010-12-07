@@ -49,10 +49,11 @@ public abstract class PBFTMessage extends ClientServerMessage{
         REQUESTRETRANSMITION(11),
         CHANGEVIEW(12),
         BATCHING(13),
-        SENDCHECKPOINTREQUEST(14),
+        SENDCHECKPOINT(14),
         FETCHSTATE(15),
         EXECUTECHECKPOINT(16),
-        NEWVIEW(17);
+        NEWVIEW(17),
+        RECEIVECHECKPOINT(18);
       
         private final int value;
 
