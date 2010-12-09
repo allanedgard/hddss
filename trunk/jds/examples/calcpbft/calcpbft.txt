@@ -16,7 +16,7 @@ agent[0].RequestGenerationProbability = 0.01
 
 agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
 agent.ServerGroupAddress = 5
-agent.GroupSize = 4
+agent.GroupList = 1,2,3,4
 agent.CurrentPrimary  = 1
 agent.CurrentView = 0
 agent.PrimaryFaultTimeout = 500
