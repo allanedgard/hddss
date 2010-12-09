@@ -55,6 +55,7 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferPrePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferPrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferReceivedRequestExecutor;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveNewViewAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.RejuvenationAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckpointAction;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferCheckpointExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTChangeViewExecutor;
@@ -83,6 +84,7 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceivePrePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceivePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveNewViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveRequestExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTRejuvenationExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTRetransmiteReplayExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTScheduleBacthEndExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTScheduleNewViewExecutor;
@@ -167,7 +169,11 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         getProtocol().addExecutor(BufferCheckpointAction.class, newPBFTBufferCheckpointExecutor());
         getProtocol().addExecutor(CheckStateAction.class, newPBFTCheckStateExecutor());
         getProtocol().addExecutor(ExecuteCheckPointAction.class, newPBFTExecuteCheckpointExecutor());
+        getProtocol().addExecutor(RejuvenationAction.class, newPBFTRejuvenationExecutor());
+    }
 
+    public Executor newPBFTRejuvenationExecutor(){
+        return new PBFTRejuvenationExecutor(getProtocol());
     }
 
     public Executor newPBFTBufferCheckpointExecutor(){

@@ -48,9 +48,11 @@ public class PBFT extends ClientServerProtocol{
     public static String BATCHINGSIZE        = "__BATCHINGSIZE";
     public static String BATCHINGTIMEOUT = "__BATCHINGTIMEOUT";
     public static String BATCHSCHEDULER = "__BATCHSCHEDULER";
+    public static String REJUVENATIONSCHEDULER = "__REJUVENATIONSCHEDULER";
     public static String CHECKPOINTPERIOD = "__CHECKPOINTPERIOD";
     public static String CHECKPOINTNUMBER = "__CHECKPOINTNUMBER";
     public static String LASTCHECKPOINT  = "__LASTCHECKPOINT";
+    public static String REJUVENATIONWINDOW  = "__REJUVENATIONWINDOW";
 
     public void setLastCheckpoint(PBFTMessage checkpoint){
         getContext().put(LASTCHECKPOINT, checkpoint);
@@ -184,6 +186,10 @@ public class PBFT extends ClientServerProtocol{
 
     public Scheduler getBatchingScheduler(){
         return (Scheduler)(getContext().get(PBFT.BATCHSCHEDULER));
+    }
+
+    public Scheduler getRejuvenationScheduler(){
+        return (Scheduler)(getContext().get(PBFT.REJUVENATIONSCHEDULER));
     }
 
     public Scheduler getPrimaryFDScheduler(){
