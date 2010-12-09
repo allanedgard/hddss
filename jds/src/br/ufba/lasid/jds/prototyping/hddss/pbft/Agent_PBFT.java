@@ -36,6 +36,14 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         getProtocol().getContext().put(PBFT.BATCHINGSIZE, new Integer(size));
     }
 
+    public void setRejuvenationWindow(String size){
+        getProtocol().getContext().put(PBFT.REJUVENATIONWINDOW, new Integer(size));
+    }
+
+    public int getRejuvenationWindow(){
+        return (Integer) getProtocol().getContext().get(PBFT.REJUVENATIONWINDOW);
+    }
+
     public void setBatchingTimeout(String timeout){
         getProtocol().getContext().put(PBFT.BATCHINGTIMEOUT, new Long(timeout));
     }
@@ -88,6 +96,8 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         getProtocol().getContext().put(PBFT.COMMITTEDBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.REPLYBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.CHECKPOINTBUFFER, new Buffer());
+        getProtocol().getContext().put(PBFT.REJUVENATIONWINDOW, new Buffer());
+
         getProtocol().getContext().put(
             PBFT.CLIENTMSGAUTHENTICATOR,
             new PBFTSimulatedAuthenticator(PBFT.CLIENTMSGAUTHENTICATOR)
