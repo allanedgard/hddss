@@ -19,10 +19,10 @@ agent.ServerGroupAddress = 5
 agent.GroupList = 1,2,3,4
 agent.CurrentPrimary  = 1
 agent.CurrentView = 0
-agent.PrimaryFaultTimeout = 500
-agent.BatchingSize = 5
-agent.BatchingTimeout = 50
-agent.CheckpointPeriod = 25
+agent.PrimaryFaultTimeout = 5
+agent.BatchingSize = 100
+agent.BatchingTimeout = 500
+agent.CheckpointPeriod = 1000
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal
 channel.Mean = 1

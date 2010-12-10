@@ -54,6 +54,95 @@ public class PBFT extends ClientServerProtocol{
     public static String LASTCHECKPOINT  = "__LASTCHECKPOINT";
     public static String REJUVENATIONWINDOW  = "__REJUVENATIONWINDOW";
 
+    public PBFTTuple getPrepareStateInformation(){
+        return (PBFTTuple)getContext().get(PREPARESTATEINFORMATION);
+    }
+
+    public PBFTTuple getPrePrepareStateInformation(){
+        return (PBFTTuple)getContext().get(PREPREPARESTATEINFORMATION);
+    }
+
+    public void setPrepareStateInformation(PBFTTuple tuple){
+        getContext().put(PREPARESTATEINFORMATION, tuple);
+    }
+
+    public void setPrePrepareStateInformation(PBFTTuple tuple){
+        getContext().put(PREPREPARESTATEINFORMATION, tuple);
+    }
+
+    public void initPrePrepareStateInformation(){
+        PBFTTuple tuple = getPrePrepareStateInformation();
+        if(tuple == null){
+            tuple = new PBFTTuple();
+        }
+
+        tuple.clear();
+
+        setPrePrepareStateInformation(tuple);
+    }
+
+    public void initPrepareStateInformation(){
+        PBFTTuple tuple = getPrepareStateInformation();
+        if(tuple == null){
+            tuple = new PBFTTuple();
+        }
+
+        tuple.clear();
+
+        setPrepareStateInformation(tuple);
+    }
+
+    public PBFTTuple updateStateInformation(PBFTTuple state, PBFTMessage m, Integer view, Long seqn){
+
+        if(state == null){
+
+            state = new PBFTTuple();
+
+        }
+
+        PBFTMessage batch = (PBFTMessage) m.get(PBFTMessage.REQUESTFIELD);
+
+        int batchSize = ((Integer)batch.get(PBFTMessage.BATCHSIZEFIELD)).intValue();
+
+        for(int r = 0; r < batchSize; r ++){
+
+            String reqField = getRequestField(r);
+
+            PBFTMessage request  = (PBFTMessage) batch.get(reqField);
+
+            PBFTTuple _tuple = new PBFTTuple();
+
+            _tuple.put(PBFTMessage.SEQUENCENUMBERFIELD, seqn);
+            _tuple.put(PBFTMessage.VIEWFIELD, view);
+
+            state.put(request.getID(), _tuple);
+
+        }
+
+        return state;
+    }
+    
+    public void updatePrepareStateInformation(PBFTMessage prepare, Integer view, Long seqn){
+        
+        setPrepareStateInformation(
+            updateStateInformation(
+              getPrepareStateInformation(), prepare, view, seqn
+            )
+        );
+        
+    }
+
+    public void updatePrePrepareStateInformation(PBFTMessage preprepare, Integer view, Long seqn){
+        setPrepareStateInformation(
+            updateStateInformation(
+              getPrepareStateInformation(), preprepare, view, seqn
+            )
+        );
+
+
+
+    }
+
     public void setLastCheckpoint(PBFTMessage checkpoint){
         getContext().put(LASTCHECKPOINT, checkpoint);
     }
@@ -62,25 +151,41 @@ public class PBFT extends ClientServerProtocol{
         return (PBFTMessage)(getContext().get(LASTCHECKPOINT));
     }
 
+    public Long getLastCheckpointSequenceNumber(){
+        PBFTMessage checkpoint = getLastCheckpoint();
+        if(checkpoint == null)
+            return new Long(-1);
 
-    /*
-        [TODO] verify if sequence number of the message achieves the criteries.
-     */    
-    public  boolean isValidSequenceNumber(PBFTMessage m) {
-        long factor  = 20;
-        long low  = 0;
-        long high = low + factor * getCheckPointPeriod();;
+        return (Long)checkpoint.get(PBFTMessage.SEQUENCENUMBERFIELD);
+    }
 
-        long SEQMessage = (Long)m.get(PBFTMessage.SEQUENCENUMBERFIELD);
-
+    public Long getCheckpointLowWaterMark(){
+        long low = 0;
         PBFTMessage checkpoint = getLastCheckpoint();
 
         if(checkpoint != null){
             long SEQCheckpoint = (Long)checkpoint.get(PBFTMessage.SEQUENCENUMBERFIELD);
             low = SEQCheckpoint;
-            high = SEQCheckpoint + factor * getCheckPointPeriod();
         }
-        
+
+        return new Long(low);
+
+    }
+
+    public Long getCheckpointHighWaterMark(){
+        long factor  = 20;
+        long low  = getCheckpointLowWaterMark().longValue();
+        return new Long(low + factor * getCheckPointPeriod());
+    }
+    /*
+        [TODO] verify if sequence number of the message achieves the criteries.
+     */    
+    public  boolean isValidSequenceNumber(PBFTMessage m) {
+        long low  = getCheckpointLowWaterMark().longValue();
+        long high = getCheckpointHighWaterMark().longValue();
+
+        long SEQMessage = (Long)m.get(PBFTMessage.SEQUENCENUMBERFIELD);
+
         return ((SEQMessage >= low) && (SEQMessage <= high));
 
     }
@@ -95,6 +200,35 @@ public class PBFT extends ClientServerProtocol{
 
     public Buffer getReplyBuffer() {
         return (Buffer)getContext().get(PBFT.REPLYBUFFER);
+    }
+
+    public boolean existsPrePrepareForRequest(PBFTMessage m) {
+        Buffer buffer = getPrePrepareBuffer();
+
+        for(Object item : buffer){
+
+            PBFTMessage preprepare = (PBFTMessage) item;
+
+            PBFTMessage batch =
+                (PBFTMessage) preprepare.get(PBFTMessage.REQUESTFIELD);
+
+            int batchSize = (Integer)batch.get(PBFTMessage.BATCHSIZEFIELD);
+
+            for(int r = 0; r < batchSize; r++){
+
+                String requestField = getRequestField(r);
+                
+                PBFTMessage request = (PBFTMessage)batch.get(requestField);
+
+                if(request.getID().equals(m.getID())){
+
+                    return true;
+                    
+                }
+            }
+        }
+
+        return false;
     }
 
     public enum BATCHSTATE{
@@ -227,7 +361,7 @@ public class PBFT extends ClientServerProtocol{
         return (Group)getContext().get(PBFT.LOCALGROUP);
     }
 
-    public Buffer getPreprepareBuffer() {
+    public Buffer getPrePrepareBuffer() {
         return (Buffer)getContext().get(PBFT.PREPREPAREBUFFER);
     }
 
@@ -266,7 +400,7 @@ public class PBFT extends ClientServerProtocol{
 
     }
     public boolean existsPrePrepare(PBFTMessage m) {
-        return exists(m, getPreprepareBuffer());
+        return exists(m, getPrePrepareBuffer());
     }
 
     public boolean existsPrepare(PBFTMessage m) {
@@ -356,13 +490,13 @@ public class PBFT extends ClientServerProtocol{
             
         }
 
-        int size2 = getPreprepareBuffer().size();
+        int size2 = getPrePrepareBuffer().size();
 
         for(int j = size2-1; j >=0; j --){
-            PBFTMessage pp = (PBFTMessage)getPreprepareBuffer().get(j);
+            PBFTMessage pp = (PBFTMessage)getPrePrepareBuffer().get(j);
             long SEQ2 = (Long)pp.get(PBFTMessage.SEQUENCENUMBERFIELD);
             if(SEQ2 <= seq){
-                getPreprepareBuffer().remove(pp);
+                getPrePrepareBuffer().remove(pp);
             }
         }
 
@@ -499,7 +633,7 @@ public class PBFT extends ClientServerProtocol{
     }
 
     public boolean isChangeView(PBFTMessage m){
-        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.CHANGEVIEW);
+        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVECHANGEVIEW);
     }
 
 

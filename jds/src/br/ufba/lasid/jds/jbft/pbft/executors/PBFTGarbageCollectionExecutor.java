@@ -50,7 +50,8 @@ public class PBFTGarbageCollectionExecutor extends PBFTServerExecutor{
     
     @Override
     public synchronized void execute(Action act) {
-                
+
+
         if(isTimeToMakeCheckpoint(act)){
             
             System.out.println(
@@ -59,6 +60,10 @@ public class PBFTGarbageCollectionExecutor extends PBFTServerExecutor{
               + ((PBFT)getProtocol()).getTimestamp()
             );
 
+            /**
+             * [TODO] before sending a checkpoint message is a good ideia to
+             * check holes in the current state and fetch the missing messages.
+             */
             getProtocol().perform(new SendCheckpointAction());
             
         }

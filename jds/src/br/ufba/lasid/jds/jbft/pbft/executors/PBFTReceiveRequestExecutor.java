@@ -66,32 +66,4 @@ public class PBFTReceiveRequestExecutor extends PBFTServerExecutor{
         getProtocol().perform(new ExecuteStartNewRoundPhaseOneAction(request));
 
     }
-
-    /*
-    public void scheduleChangeView(PBFTMessage m){
-
-        Long timeout   = ((PBFT)getProtocol()).getPrimaryFaultyTimeout();
-        Long timestamp =((PBFT)getProtocol()).getTimestamp();
-        
-        Long rttime = new Long(timestamp.intValue() + timeout.longValue());
-
-        PBFTPrimaryFDScheduler scheduler =
-                (PBFTPrimaryFDScheduler)(((PBFT)getProtocol()).getPrimaryFDScheduler());
-
-        m.put(
-          scheduler.getTAG(),
-          ((PBFT)getProtocol()).getPrimaryFaultyTimeout()
-        );
-
-
-        scheduler.schedule(m);
-
-        ((PBFT)getProtocol()).getDebugger().debug(
-            "["+ getClass().getSimpleName()+ ".scheduleChangeView] "
-          + "scheduling of (" + m + ") for time " + rttime + " "
-          + "at server(" + getProtocol().getLocalProcess().getID() + ")"
-         );
-    }
-     * *
-     */
 }

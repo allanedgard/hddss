@@ -17,12 +17,16 @@ public abstract class PBFTMessage extends ClientServerMessage{
     public static String REQUESTFIELD = "__REQUEST";
     public static String DIGESTFIELD = "__DIGESTFIELD";
     public static String REPLICAIDFIELD = "__REPLICAIDFIELD";
+    public static String REPLICAIDSENDERFIELD = "__REPLICAIDSENDERFIELD";
+    public static String REPLICAIDRECEIVERFIELD = "__REPLICAIDRECEIVERFIELD";
     public static String SEQUENCENUMBERFIELD = "__SEQUENCENUMBERFIELD";
     public static String TIMESTAMPFIELD = "__TIMESTAMPFIELD";
     public static String CLIENTFIELD = "__CLIENTFIELD";
     public static String BATCHSIZEFIELD = "__BATCHSIZEFIELD";
-    public static String CHECKPOINTNUMBER = "__CHECKPOINTNUMBER";
+    public static String CHECKPOINTNUMBERFIELD = "__CHECKPOINTNUMBERFIELD";
     public static String CHECKPOINTMSGS = "__CHECKPOINTMSGS";
+    public static String SETPREPREPAREINFORMATIONFIELD = "__SETPREPREPAREINFORMATIONFIELD";
+    public static String SETPREPAREINFORMATIONFIELD = "__SETPREPAREINFORMATIONFIELD";
     public static String NSREQUESTS = "__NSREQUESTS";
     public static String SETPREPREPAREMSGS = "__SETPREPREPAREMSGS";
     public static String VIEWCHANGEMSGS = "__VIEWCHANGEMSGS";
@@ -53,7 +57,9 @@ public abstract class PBFTMessage extends ClientServerMessage{
         FETCHSTATE(15),
         EXECUTECHECKPOINT(16),
         NEWVIEW(17),
-        RECEIVECHECKPOINT(18);
+        RECEIVECHECKPOINT(18),
+        RECEIVECHANGEVIEW(19),
+        RECEIVECHANGEVIEWACK(20);
       
         private final int value;
 

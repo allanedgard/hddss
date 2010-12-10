@@ -8,13 +8,9 @@ package br.ufba.lasid.jds.jbft.pbft.executors;
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.DistributedProtocol;
-import br.ufba.lasid.jds.comm.Message;
-import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
+import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteChangeViewRoundTwoAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
-import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestRetransmistionScheduler;
-import br.ufba.lasid.jds.security.Authenticator;
-import br.ufba.lasid.jds.util.Buffer;
 
 /**
  *
@@ -32,18 +28,27 @@ public class PBFTReceiveChangeViewExecutor extends Executor{
      */
     @Override
     public synchronized void execute(Action act) {
-            ((PBFT)getProtocol()).getDebugger().debug(
-                "[PBFTChangeViewExecutor.execute]"
-             );
-        PBFTMessage m = (PBFTMessage) act.getWrapper();
-        if ( ((PBFT)getProtocol()).isPrimary() ) {
-           if (checkReceiveChangeView(m)) {
-               
-           }
+        PBFTMessage cv = (PBFTMessage) act.getWrapper();
+        System.out.println(
+            "server [p" + getProtocol().getLocalProcess().getID()+"] "
+          + "has received <CHANGE-VIEW,  view = "
+          + cv.get(PBFTMessage.VIEWFIELD) + ", digest = "
+          + cv.get(PBFTMessage.DIGESTFIELD) + ", CHKPOINTNUMBER = "
+          + cv.get(PBFTMessage.CHECKPOINTNUMBERFIELD) + ", P, Q, replica = "
+          + cv.get(PBFTMessage.REPLICAIDFIELD) + ">"
+        );
 
-        }
+        System.out.println(
+            "server [p" + getProtocol().getLocalProcess().getID()+"] "
+          + "is going to execute change view round two at time"
+          + ((PBFT)getProtocol()).getTimestamp()
+        );
+
+        getProtocol().perform(new ExecuteChangeViewRoundTwoAction(cv));
 
     }
+
+    /*
 
     boolean checkReceiveChangeView(PBFTMessage m) {
          if (isValidChangeView(m)){
@@ -102,5 +107,7 @@ public class PBFTReceiveChangeViewExecutor extends Executor{
 
 
 
+     * 
+     */
 }
 
