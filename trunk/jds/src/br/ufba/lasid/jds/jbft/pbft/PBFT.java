@@ -53,6 +53,8 @@ public class PBFT extends ClientServerProtocol{
     public static String CHECKPOINTNUMBER = "__CHECKPOINTNUMBER";
     public static String LASTCHECKPOINT  = "__LASTCHECKPOINT";
     public static String REJUVENATIONWINDOW  = "__REJUVENATIONWINDOW";
+    public static String PREPARESTATEINFORMATION = "__PREPARESTATEINFORMATION";
+    public static String PREPREPARESTATEINFORMATION = "__PREPREPARESTATEINFORMATION";
 
     public PBFTTuple getPrepareStateInformation(){
         return (PBFTTuple)getContext().get(PREPARESTATEINFORMATION);
