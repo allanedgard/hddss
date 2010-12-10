@@ -68,7 +68,7 @@ public class PBFTChangeViewExecutor extends PBFTServerExecutor{
         for(Object item : ppBuffer){
 
             PBFTMessage preprepare = (PBFTMessage) item;
-            Long view = (Long) preprepare.get(PBFTMessage.VIEWFIELD);
+            Integer view = (Integer) preprepare.get(PBFTMessage.VIEWFIELD);
             Long seqn = (Long) preprepare.get(PBFTMessage.SEQUENCENUMBERFIELD);
 
             ((PBFT)getProtocol()).updatePrePrepareStateInformation(preprepare, view, seqn);
@@ -78,7 +78,7 @@ public class PBFTChangeViewExecutor extends PBFTServerExecutor{
         for(Object item : pBuffer){
 
             PBFTMessage prepare = (PBFTMessage) item;
-            Long view = (Long) prepare.get(PBFTMessage.VIEWFIELD);
+            Integer view = (Integer) prepare.get(PBFTMessage.VIEWFIELD);
             Long seqn = (Long) prepare.get(PBFTMessage.SEQUENCENUMBERFIELD);
 
             ((PBFT)getProtocol()).updatePrepareStateInformation(prepare, view, seqn);

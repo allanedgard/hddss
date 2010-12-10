@@ -61,6 +61,8 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferPrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferReceivedRequestExecutor;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveNewViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.RejuvenationAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.SendChangeViewAckAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.SendChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckpointAction;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferChangeViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferCheckpointExecutor;
@@ -176,7 +178,6 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         getProtocol().addExecutor(CheckStateAction.class, newPBFTCheckStateExecutor());
         getProtocol().addExecutor(ExecuteCheckPointAction.class, newPBFTExecuteCheckpointExecutor());
         getProtocol().addExecutor(RejuvenationAction.class, newPBFTRejuvenationExecutor());
-    }
 
         /* change view related actions*/
         //getProtocol().addExecutor(ChangeViewAction.class, newPBFTChangeViewExecutor());
@@ -198,6 +199,7 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
  * 
  */
 
+    }
     public Executor newPBFTRejuvenationExecutor(){
         return new PBFTRejuvenationExecutor(getProtocol());
     }
