@@ -17,6 +17,8 @@ import br.ufba.lasid.jds.jbft.pbft.actions.BatchTimeoutAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCheckPointAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.FecthStateAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveChangeViewAckAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveCheckpointAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveCommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceivePrePrepareAction;
@@ -114,6 +116,13 @@ public class PBFTActionFactory extends ActionFactory{
             return new ReceiveCheckpointAction(wapper);
         }
 
+        if(type.equals(PBFTMessage.TYPE.RECEIVECHANGEVIEW)){
+            return new ReceiveChangeViewAction(wapper);
+        }
+
+        if(type.equals(PBFTMessage.TYPE.RECEIVECHANGEVIEWACK)){
+            return new ReceiveChangeViewAckAction(wapper);
+        }
 
         return null;
     }

@@ -2,6 +2,7 @@ package br.ufba.lasid.jds.prototyping.hddss;
 
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 
 /*
  * To change this template, choose Tools | Templates
@@ -32,7 +33,11 @@ public class Factory {
             if(isInstanceof(obj, Agent.class) && value.contains("FaultModel")){
                   ((Agent)obj).infra.setFaultModel(config.getString(value));
             }else{
-                setProperty(obj, value.substring(TAG.length() + 1), config.getString(value));
+                try{
+                    setProperty(obj, value.substring(TAG.length() + 1), config.getString(value));
+                }catch(Exception e){
+                    setProperty(obj, value.substring(TAG.length() + 1), config.getVector(value, new ArrayList()).toString());
+                }
             }
         }        
     }

@@ -30,7 +30,7 @@ public class PBFTExecuteCheckPointExecutor extends PBFTServerExecutor{
         System.out.println(
             "before checkpoint, server [p" + getProtocol().getLocalProcess().getID() + "] "
           + "has request buffer size " +  ((PBFT)getProtocol()).getRequestBuffer().size() + " "
-          + "preprepare buffer size " + ((PBFT)getProtocol()).getPreprepareBuffer().size() + " "
+          + "preprepare buffer size " + ((PBFT)getProtocol()).getPrePrepareBuffer().size() + " "
           + "prepare buffer size " + ((PBFT)getProtocol()).getPrepareBuffer().size() + " "
           + "commit buffer size " + ((PBFT)getProtocol()).getCommitBuffer().size() + " "
           + "committed buffer size " + ((PBFT)getProtocol()).getCommittedBuffer().size() + " "
@@ -43,7 +43,7 @@ public class PBFTExecuteCheckPointExecutor extends PBFTServerExecutor{
         System.out.println(
             "after checkpoint, server [p" + getProtocol().getLocalProcess().getID() + "] "
           + "has request buffer size " +  ((PBFT)getProtocol()).getRequestBuffer().size() + " "
-          + "preprepare buffer size " + ((PBFT)getProtocol()).getPreprepareBuffer().size() + " "
+          + "preprepare buffer size " + ((PBFT)getProtocol()).getPrePrepareBuffer().size() + " "
           + "prepare buffer size " + ((PBFT)getProtocol()).getPrepareBuffer().size() + " "
           + "commit buffer size " + ((PBFT)getProtocol()).getCommitBuffer().size() + " "
           + "committed buffer size " + ((PBFT)getProtocol()).getCommittedBuffer().size() + " "

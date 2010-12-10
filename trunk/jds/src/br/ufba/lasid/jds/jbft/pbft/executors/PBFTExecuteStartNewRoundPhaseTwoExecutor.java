@@ -46,7 +46,7 @@ public class PBFTExecuteStartNewRoundPhaseTwoExecutor extends PBFTServerExecutor
 
         }else{
             /* performs schedule of the change view*/
-            //getProtocol().perform(new ScheduleNewViewAction(m));
+            getProtocol().perform(new ScheduleNewViewAction(m));
         }
 
     }

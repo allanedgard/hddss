@@ -10,46 +10,30 @@ import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.PBFTTuple;
+import br.ufba.lasid.jds.jbft.pbft.actions.BufferChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeViewMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
-import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestRetransmistionScheduler;
 import br.ufba.lasid.jds.util.Buffer;
 
 /**
  *
  * @author aliriosa
  */
-public class PBFTChangeViewExecutor extends PBFTServerExecutor{
+public class PBFTCreateChangeViewExecutor extends PBFTServerExecutor {
 
-    public PBFTChangeViewExecutor(DistributedProtocol protocol) {
+    public PBFTCreateChangeViewExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 
-    /**
-     * [TODO]
-     * @param act
-     */
     @Override
     public synchronized void execute(Action act) {
-        System.out.println(
-            "server [p" + getProtocol().getLocalProcess().getID() + "] "
-          + "calls change view procedure at time "
-          + ((PBFT)getProtocol()).getTimestamp()
-        );
+        
+        PBFTMessage cv = makeChangeViewRequest();
 
-       makeChangeViewRequest((PBFTMessage) act.getWrapper());
-
-        System.out.println(
-            "server [p" + getProtocol().getLocalProcess().getID() + "] "
-          + "multicasts change view message at time "
-          + ((PBFT)getProtocol()).getTimestamp()          
-        );
-
-       //scheduleRetransmission(m);
-
+        getProtocol().perform(new BufferChangeViewAction(cv));
     }
 
-   public PBFTMessage makeChangeViewRequest(PBFTMessage m){
+   public PBFTMessage makeChangeViewRequest(){
 
        PBFTMessage cv = new PBFTChangeViewMessage();
 
@@ -61,14 +45,14 @@ public class PBFTChangeViewExecutor extends PBFTServerExecutor{
 
        long lowCheckpointWaterMark = ((PBFT)getProtocol()).getCheckpointLowWaterMark().longValue();
        long highCheckpointWaterMark = ((PBFT)getProtocol()).getCheckpointHighWaterMark().longValue();
-       
+
        Buffer pBuffer = getPreparedRequests(lowCheckpointWaterMark, highCheckpointWaterMark);
        Buffer ppBuffer = getPrePreparedRequests(lowCheckpointWaterMark, highCheckpointWaterMark);
 
         for(Object item : ppBuffer){
 
             PBFTMessage preprepare = (PBFTMessage) item;
-            Long view = (Long) preprepare.get(PBFTMessage.VIEWFIELD);
+            Integer view = (Integer) preprepare.get(PBFTMessage.VIEWFIELD);
             Long seqn = (Long) preprepare.get(PBFTMessage.SEQUENCENUMBERFIELD);
 
             ((PBFT)getProtocol()).updatePrePrepareStateInformation(preprepare, view, seqn);
@@ -78,7 +62,7 @@ public class PBFTChangeViewExecutor extends PBFTServerExecutor{
         for(Object item : pBuffer){
 
             PBFTMessage prepare = (PBFTMessage) item;
-            Long view = (Long) prepare.get(PBFTMessage.VIEWFIELD);
+            Integer view = (Integer) prepare.get(PBFTMessage.VIEWFIELD);
             Long seqn = (Long) prepare.get(PBFTMessage.SEQUENCENUMBERFIELD);
 
             ((PBFT)getProtocol()).updatePrepareStateInformation(prepare, view, seqn);
@@ -87,7 +71,7 @@ public class PBFTChangeViewExecutor extends PBFTServerExecutor{
 
        PBFTTuple Q = ((PBFT)getProtocol()).getPrePrepareStateInformation();
        PBFTTuple P = ((PBFT)getProtocol()).getPrepareStateInformation();
-       
+
        cv.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.RECEIVECHANGEVIEW);
        cv.put(PBFTMessage.TIMESTAMPFIELD, ((PBFT)getProtocol()).getTimestamp());
        cv.put(PBFTMessage.VIEWFIELD, newView);
@@ -97,7 +81,7 @@ public class PBFTChangeViewExecutor extends PBFTServerExecutor{
        if(P != null) cv.put(PBFTMessage.SETPREPAREINFORMATIONFIELD, P);
 
        cv.put(PBFTMessage.REPLICAIDFIELD, getProtocol().getLocalProcess().getID());
-       
+
        cv = makeDisgest(cv);
        cv = encrypt(cv);
 
@@ -126,7 +110,7 @@ public class PBFTChangeViewExecutor extends PBFTServerExecutor{
       }
 
       return set;
-       
+
    }
 
    public Buffer getPreparedRequests(long lowCheckpointWaterMark, long highCheckpointWaterMark){
@@ -137,7 +121,7 @@ public class PBFTChangeViewExecutor extends PBFTServerExecutor{
                highCheckpointWaterMark
        );
    }
-   
+
    public Buffer getPrePreparedRequests(long lowCheckpointWaterMark, long highCheckpointWaterMark){
 
        return getBufferedRequests(
@@ -145,27 +129,8 @@ public class PBFTChangeViewExecutor extends PBFTServerExecutor{
                lowCheckpointWaterMark,
                highCheckpointWaterMark
        );
-       
+
    }
-  
-    public void scheduleRetransmission(PBFTMessage m){
-
-        Long timeout   = ((PBFT)getProtocol()).getRetransmissionTimeout();
-        Long timestamp =((PBFT)getProtocol()).getTimestamp();
-        long rttime = timestamp.intValue() + timeout.longValue();
-
-        PBFTRequestRetransmistionScheduler scheduler =
-                (PBFTRequestRetransmistionScheduler)(((PBFT)getProtocol()).getClientScheduler());
-
-        m.put(scheduler.getTAG(), rttime);
-
-        scheduler.schedule(m, rttime);
-
-        ((PBFT)getProtocol()).getDebugger().debug(
-            "["+ getClass().getSimpleName()+ ".scheduleRetransmission] "
-          + "scheduling of (" + m + ") for time " + rttime
-         );
-
-    }
     
+
 }

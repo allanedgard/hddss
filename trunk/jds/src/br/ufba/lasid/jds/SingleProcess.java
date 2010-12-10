@@ -19,4 +19,19 @@ public class SingleProcess<T> implements Process<T>{
         this.id = id;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        Process<T> process = (Process<T>) obj;
+        return id.equals(process.getID());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 23 * hash + (this.id != null ? this.id.hashCode() : 0);
+        return hash;
+    }
+
+
+
 }

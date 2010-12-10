@@ -19,7 +19,10 @@ import br.ufba.lasid.jds.prototyping.hddss.cs.Agent_ServiceComponent;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.comm.SimulatedPBFTCommunicator;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.security.PBFTSimulatedAuthenticator;
 import br.ufba.lasid.jds.util.Buffer;
+import br.ufba.lasid.jds.util.ProcessList;
 import br.ufba.lasid.jds.util.Scheduler;
+import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 /**
  *
@@ -29,6 +32,22 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
 
     Group group = new SingleGroup();
 
+    public void setGroupList(String sList){
+        sList = sList.replaceAll("\\[", "");
+        sList = sList.replaceAll("\\]", "");
+        sList = sList.replaceAll(" ", "");
+        StringTokenizer tokenizer = new StringTokenizer(sList, ",", false);
+        ArrayList<Integer> aList = new ArrayList<Integer>();
+        while(tokenizer.hasMoreElements()){
+            aList.add(new Integer(tokenizer.nextToken()));
+        }
+
+        
+        Integer[] IDs = new Integer[aList.size()];
+        System.arraycopy(aList.toArray(), 0, IDs, 0, IDs.length);
+        makeGroupFromIDs(IDs);
+    }
+    
     public void setCheckpointPeriod(String period){
         ((PBFT)getProtocol()).setCheckPointPeriod(new Long(period));
     }
@@ -96,6 +115,7 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         getProtocol().getContext().put(PBFT.COMMITTEDBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.REPLYBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.CHECKPOINTBUFFER, new Buffer());
+        getProtocol().getContext().put(PBFT.CHANGEVIEWBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.REJUVENATIONWINDOW, new Buffer());
 
         getProtocol().getContext().put(
@@ -167,11 +187,32 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
     }
 
     public int getGroupSize() {
-        return group.getGroupSize();
+        return group.getMembers().size();
     }
 
     public void setGroupSize(int size) {
-        group.setGroupSize(size);
+        //do nothing
+        //group.setGroupSize(size);
+    }
+
+    public ProcessList<Integer> getMembers() {
+        return group.getMembers();
+    }
+
+    public void addMember(Process<Integer> process) {
+        group.addMember(process);
+    }
+
+    public boolean isMember(Process<Integer> process) {
+        return group.isMember(process);
+    }
+
+    public void removeMember(Process<Integer> process) {
+        group.removeMember(process);
+    }
+
+    public void makeGroupFromIDs(Integer[] IDs) {
+        group.makeGroupFromIDs(IDs);
     }
 
 

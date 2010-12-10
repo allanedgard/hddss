@@ -26,7 +26,7 @@ public class PBFTBufferPrePrepareExecutor extends PBFTServerExecutor{
     public synchronized void execute(Action act) {
 
         PBFTMessage m = (PBFTMessage) act.getWrapper();
-        Buffer buffer = ((PBFT)getProtocol()).getPreprepareBuffer();
+        Buffer buffer = ((PBFT)getProtocol()).getPrePrepareBuffer();
         
         if(!isServerAuthenticated(m)){
             System.out.println(getDefaultSecurityExceptionMessage(m, "buffer preprepare executor"));
