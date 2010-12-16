@@ -33,9 +33,9 @@ public class PBFTExecuteStartNewRoundPhaseTwoExecutor extends PBFTServerExecutor
             return;
         }
 
-        /*
-            if primary then perform a batching request else schedules a
-            new view action
+        /**
+         * if primary then perform a batching request else schedules a
+         * new view action.
          */
 
         if(((PBFT)getProtocol()).isPrimary()){
@@ -45,8 +45,10 @@ public class PBFTExecuteStartNewRoundPhaseTwoExecutor extends PBFTServerExecutor
             getProtocol().perform(new ScheduleBacthEndAction(m));
 
         }else{
+
             /* performs schedule of the change view*/
             getProtocol().perform(new ScheduleNewViewAction(m));
+            
         }
 
     }

@@ -9,16 +9,14 @@ package br.ufba.lasid.jds.jbft.pbft.comm;
  *
  * @author aliriosa
  */
-public class PBFTChangeViewMessage extends PBFTMessage{
+public class PBFTNewViewMessage extends PBFTMessage{
 
     @Override
     public String getID() {
         String view = get(PBFTMessage.VIEWFIELD).toString();
-        String rep  = get(PBFTMessage.REPLICAIDFIELD).toString();
-        String chkpn = get(PBFTMessage.CHECKPOINTLOWWATERMARK).toString();
 
-        return view + "." + rep + "." + chkpn;
 
+        return view;
     }
 
 }

@@ -13,6 +13,7 @@ import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.actions.HandleBatchAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BatchRequestAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BatchTimeoutAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.BufferChangeViewAckAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BufferChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BufferCheckpointAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BufferCommitAction;
@@ -20,14 +21,15 @@ import br.ufba.lasid.jds.jbft.pbft.actions.BufferCommittedRequestAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BufferPrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BufferPrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.BufferReceivedRequestAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CheckStateAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.CreateChangeViewAckAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CreateChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CreateCommitAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CreatePrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.CreatePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.DetectPrimaryFailureAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteChangeViewRoundOneAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteChangeViewRoundThreeAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteChangeViewRoundTwoAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteCheckPointAction;
 
@@ -39,11 +41,13 @@ import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteStartNewRoundPhaseOneAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteStartNewRoundPhaseThreeAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteStartNewRoundPhaseTwoAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.GarbageCollectionAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.NewViewAction;
 //import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckPointRequestAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.NewViewAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveChangeViewAckAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveCheckpointAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveCommitAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveNewViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceivePrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceivePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.RetransmiteReplyAction;
@@ -59,22 +63,25 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferCommittedRequestExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferPrePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferPrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferReceivedRequestExecutor;
-import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveNewViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.RejuvenationAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.RetransmiteChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.SendChangeViewAckAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.SendChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckpointAction;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferChangeViewAckExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferChangeViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTBufferCheckpointExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTChangeViewExecutor;
 //import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCommitExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCheckStateExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreateChangeViewAckExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreateChangeViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreateCommitExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreatePrePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCreatePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTDetectPrimaryFailureExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteChangeViewRoundOneExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteChangeViewRoundThreeExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteChangeViewRoundTwoExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCheckPointExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecuteCurrentRoundPhaseOneExecutor;
@@ -98,6 +105,7 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceivePrepareExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveNewViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReceiveRequestExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTRejuvenationExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTRetransmiteChangeViewExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTRetransmiteReplayExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTScheduleBacthEndExecutor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTScheduleNewViewExecutor;
@@ -188,17 +196,34 @@ public class Agent_ServerPBFT extends Agent_PBFT implements PBFTServer<Integer>{
         getProtocol().addExecutor(ReceiveChangeViewAction.class, newPBFTReceiveChangeViewExecutor());
         getProtocol().addExecutor(ExecuteChangeViewRoundTwoAction.class, newPBFTExecuteChangeViewRoundTwoExecutor());
         getProtocol().addExecutor(SendChangeViewAckAction.class, newPBFTSendChangeViewAckExecutor());
-        getProtocol().addExecutor(ReceiveChangeViewAction.class, newPBFTReceiveChangeViewAckExecutor());
+        getProtocol().addExecutor(ReceiveChangeViewAckAction.class, newPBFTReceiveChangeViewAckExecutor());
         getProtocol().addExecutor(ScheduleNewViewAction.class, newPBFTScheduleNewViewExecutor());
         getProtocol().addExecutor(DetectPrimaryFailureAction.class, newPBFTDetectPrimaryFailureExecutor());
-        
-/*      getProtocol().addExecutor(NewViewAction.class, newPBFTNewViewExecutor());
+        getProtocol().addExecutor(ExecuteChangeViewRoundThreeAction.class, newPBFTExecuteChangeViewRoundThreeExecutor());
+        getProtocol().addExecutor(CreateChangeViewAckAction.class, newPBFTCreateChangeViewAckExecutor());
+        getProtocol().addExecutor(BufferChangeViewAckAction.class, newPBFTBufferChangeViewAckExecutor());
+        getProtocol().addExecutor(NewViewAction.class, newPBFTNewViewExecutor());
         getProtocol().addExecutor(ReceiveNewViewAction.class, newPBFTReceiveNewViewExecutor());
-        
-        
- * 
- */
+        getProtocol().addExecutor(RetransmiteChangeViewAction.class, newPBFTRetransmiteChangeViewExecutor());
 
+    }
+
+    public Executor newPBFTRetransmiteChangeViewExecutor(){
+        return new PBFTRetransmiteChangeViewExecutor(getProtocol());
+    }
+    public Executor newPBFTCreateChangeViewAckExecutor(){
+        return new PBFTCreateChangeViewAckExecutor(getProtocol());
+    }
+    public Executor newPBFTBufferChangeViewAckExecutor(){
+
+        return new PBFTBufferChangeViewAckExecutor(getProtocol());
+        
+    }
+
+    public Executor newPBFTExecuteChangeViewRoundThreeExecutor(){
+
+        return new PBFTExecuteChangeViewRoundThreeExecutor(getProtocol());
+        
     }
     public Executor newPBFTRejuvenationExecutor(){
         return new PBFTRejuvenationExecutor(getProtocol());

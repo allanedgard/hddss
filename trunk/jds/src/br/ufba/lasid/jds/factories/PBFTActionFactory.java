@@ -21,6 +21,7 @@ import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveChangeViewAckAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveCheckpointAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveCommitAction;
+import br.ufba.lasid.jds.jbft.pbft.actions.ReceiveNewViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceivePrePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ReceivePrepareAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.RetransmiteRequestAction;
@@ -122,6 +123,10 @@ public class PBFTActionFactory extends ActionFactory{
 
         if(type.equals(PBFTMessage.TYPE.RECEIVECHANGEVIEWACK)){
             return new ReceiveChangeViewAckAction(wapper);
+        }
+
+        if(type.equals(PBFTMessage.TYPE.RECEIVENEWVIEW)){
+            return new ReceiveNewViewAction(wapper);
         }
 
         return null;

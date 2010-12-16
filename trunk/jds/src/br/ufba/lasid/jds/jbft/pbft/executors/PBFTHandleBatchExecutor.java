@@ -40,6 +40,7 @@ public class PBFTHandleBatchExecutor extends PBFTServerExecutor{
         m.put(PBFTMessage.BATCHSTATEFIELD, PBFT.BATCHSTATE.NOBATCH);
 
         count++;
+        
         int maxBatchSize = ((PBFT)getProtocol()).getMaxBatchSize();
 
         if(count >= maxBatchSize){

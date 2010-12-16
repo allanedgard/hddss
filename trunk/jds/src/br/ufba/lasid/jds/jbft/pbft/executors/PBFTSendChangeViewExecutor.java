@@ -10,7 +10,6 @@ import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
-import br.ufba.lasid.jds.util.Buffer;
 
 /**
  *
@@ -24,48 +23,21 @@ public class PBFTSendChangeViewExecutor extends PBFTServerExecutor{
 
     @Override
     public synchronized void execute(Action act) {
-        /* get change view buffer */
-        Buffer buffer = ((PBFT)getProtocol()).getChangeViewBuffer();
 
-        /* get the local process id */
-        Object rID = getProtocol().getLocalProcess().getID();
+        PBFTMessage m = (PBFTMessage) act.getWrapper();
+
+        m.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.RECEIVECHANGEVIEW);
         
-        PBFTMessage cv = null;
+        Group g = ((PBFT)getProtocol()).getLocalGroup();
 
-        /**
-         * look for the last change view of the local process which was added to
-         * buffer
-         */
-        for(int i = buffer.size()-1; i >= 0; i--){
+        getProtocol().getCommunicator().multicast(m, g);
 
-            cv = (PBFTMessage) buffer.get(i);
-
-            Object cvrID = cv.get(PBFTMessage.REPLICAIDFIELD);
-
-            if(cvrID.equals(rID)){
-
-                break;
-                
-            }
-                
-        }
-
-        /**
-         * send the change view message to group
-         */
-        if(cv != null){
-
-            Group g = ((PBFT)getProtocol()).getLocalGroup();
-
-            getProtocol().getCommunicator().multicast(cv, g);
-            
-            System.out.println(
-                "server [p" + getProtocol().getLocalProcess().getID() + "] "
-              + "multicasts change view message at time "
-              + ((PBFT)getProtocol()).getTimestamp()
-            );
-
-        }
+        System.out.println(
+            "server [p" + getProtocol().getLocalProcess().getID() + "] "
+          + "multicasts change view message at time "
+          + ((PBFT)getProtocol()).getTimestamp()
+        );
+        
     }
 
 

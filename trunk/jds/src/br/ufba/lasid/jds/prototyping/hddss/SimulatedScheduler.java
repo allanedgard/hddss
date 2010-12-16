@@ -68,5 +68,10 @@ public class SimulatedScheduler extends Agent implements Scheduler{
          }
 
     }
+
+    public void cancelAll() {
+        //throw new UnsupportedOperationException("Not supported yet.");
+        //do nothing
+    }
     
 }

@@ -27,11 +27,22 @@ public class PBFTReceivePrepareExecutor extends PBFTServerExecutor{
         PBFTMessage m = (PBFTMessage) act.getWrapper();
         PBFTMessage batch = (PBFTMessage)m.get(PBFTMessage.REQUESTFIELD);
 
+        /**
+         * If the protocol is blocked no action is executed.
+         */
+        if(((PBFT)getProtocol()).isLooked()){
+
+            return;
+
+        }
+
         System.out.println(
+
               "server [p" + getProtocol().getLocalProcess().getID()+"] "
             + "received prepare(" + m.get(PBFTMessage.SEQUENCENUMBERFIELD) + ") "
             + "with size " + batch.get(PBFTMessage.BATCHSIZEFIELD) + " "
             + "at time "  + ((PBFT)getProtocol()).getTimestamp()
+            
         );
 
         if(((PBFT)getProtocol()).isValidSequenceNumber(m)){

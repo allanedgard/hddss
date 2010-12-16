@@ -9,7 +9,6 @@ import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.actions.CreateChangeViewAction;
-import br.ufba.lasid.jds.jbft.pbft.actions.SendChangeViewAction;
 
 /**
  *
@@ -33,7 +32,7 @@ public class PBFTExecuteChangeViewRoundOneExecutor extends PBFTServerExecutor{
         getProtocol().perform(new CreateChangeViewAction());
 
         /* multicasts the last change view buffered to the group */
-        getProtocol().perform(new SendChangeViewAction());
+        //getProtocol().perform(new SendChangeViewAction());
     }
 
     

@@ -6,17 +6,19 @@
 package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.jds.Action;
-import br.ufba.lasid.jds.Executor;
 import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
+import br.ufba.lasid.jds.jbft.pbft.PBFTTuple;
+import br.ufba.lasid.jds.jbft.pbft.actions.BufferChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteChangeViewRoundTwoAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
+import br.ufba.lasid.jds.util.Buffer;
 
 /**
  *
  * @author aliriosa
  */
-public class PBFTReceiveChangeViewExecutor extends Executor{
+public class PBFTReceiveChangeViewExecutor extends PBFTServerExecutor{
 
     public PBFTReceiveChangeViewExecutor(DistributedProtocol protocol) {
         super(protocol);
@@ -28,86 +30,57 @@ public class PBFTReceiveChangeViewExecutor extends Executor{
      */
     @Override
     public synchronized void execute(Action act) {
-        PBFTMessage cv = (PBFTMessage) act.getWrapper();
+        PBFTMessage m = (PBFTMessage) act.getWrapper();
+        
+        Buffer Q = (Buffer) m.get(PBFTMessage.SETPREPREPAREINFORMATIONFIELD);
+        Buffer P = (Buffer) m.get(PBFTMessage.SETPREPAREINFORMATIONFIELD);
+        Buffer C = (Buffer) m.get(PBFTMessage.SETCHECKPOINTEDINFORMATIONFIELD);
+
         System.out.println(
             "server [p" + getProtocol().getLocalProcess().getID()+"] "
           + "has received <CHANGE-VIEW,  view = "
-          + cv.get(PBFTMessage.VIEWFIELD) + ", digest = "
-          + cv.get(PBFTMessage.DIGESTFIELD) + ", CHKPOINTNUMBER = "
-          + cv.get(PBFTMessage.CHECKPOINTNUMBERFIELD) + ", P, Q, replica = "
-          + cv.get(PBFTMessage.REPLICAIDFIELD) + ">"
+          + m.get(PBFTMessage.VIEWFIELD) + ", digest = "
+          + m.get(PBFTMessage.DIGESTFIELD) + ", checkpoint-low-water-mark = "
+          + m.get(PBFTMessage.CHECKPOINTLOWWATERMARK) + ", "
+          + "P (size = " + P.size() + "), Q (size = " + Q.size() + "), "
+          + "C (size = " + C.size() + ") replica = "
+          + m.get(PBFTMessage.REPLICAIDFIELD) + ">"
         );
 
-        System.out.println(
-            "server [p" + getProtocol().getLocalProcess().getID()+"] "
-          + "is going to execute change view round two at time"
-          + ((PBFT)getProtocol()).getTimestamp()
-        );
+        getProtocol().perform(new BufferChangeViewAction(m));
 
-        getProtocol().perform(new ExecuteChangeViewRoundTwoAction(cv));
+        if(checkChangeView(m)){
 
+            getProtocol().perform(new ExecuteChangeViewRoundTwoAction(m));
+            
+        }
+            
     }
+    private boolean checkChangeView(PBFTMessage cv) {
+        
+        if(checkDigest(cv)){
 
-    /*
+            Buffer P = (Buffer) cv.get(PBFTMessage.SETPREPAREINFORMATIONFIELD);
+            Buffer Q = (Buffer) cv.get(PBFTMessage.SETPREPREPAREINFORMATIONFIELD);
+            
+            return (
+               hasViewConsistentInformation(P) &&
+               hasViewConsistentInformation(Q) &&
+               gotQuorum(cv)
 
-    boolean checkReceiveChangeView(PBFTMessage m) {
-         if (isValidChangeView(m)){
-            addToBuffer(m);
-            return gotQuorum(m);
+            );
+
         }
 
         return false;
     }
 
-    public boolean isValidChangeView(PBFTMessage m){
-        Authenticator authenticator =
-        ((PBFT)getProtocol()).getServerAuthenticator();
-
-        if(!authenticator.check(m)){
-            return false;
-        }
-
-        return (authenticator.chechDisgest(m) );
-
+    private boolean gotQuorum(PBFTMessage cv) {
+        return ((PBFT)getProtocol()).gotQuorum(cv);
     }
 
-    boolean makeChangeView(PBFTMessage m) {
-        return false; // to implement
+    private boolean hasViewConsistentInformation(Buffer set) {
+        return ((PBFT)getProtocol()).hasViewConsistentInformation(set);
     }
-
-
-        private void addToBuffer(PBFTMessage m) {
-
-        Buffer buffer = ((PBFT)getProtocol()).getChangeViewBuffer();
-
-        if(buffer.contains(m)){
-            ((PBFT)getProtocol()).getDebugger().debug(
-                "[PBFTReceiveChangeView.execute] receive " + m
-              + " was rejected in server(p" + getProtocol().getLocalProcess().getID() + ") "
-              + " at time " + ((PBFT)getProtocol()).getTimestamp() + " "
-              + "because it's already in received."
-             );
-
-            return;
-        }
-
-        buffer.add(m);
-
-        ((PBFT)getProtocol()).getDebugger().debug(
-            "[PBFTPrepareExecutor.execute] prepare " + m
-          + " was buffered in server(p" + getProtocol().getLocalProcess().getID() + ") "
-          + " at time " + ((PBFT)getProtocol()).getTimestamp()
-         );
-
-    }
-
-    private boolean gotQuorum(PBFTMessage m) {
-        return ((PBFT)getProtocol()).gotQuorum(m);
-    }
-
-
-
-     * 
-     */
 }
 

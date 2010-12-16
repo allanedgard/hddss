@@ -8,7 +8,6 @@ package br.ufba.lasid.jds.jbft.pbft.executors;
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
-import br.ufba.lasid.jds.jbft.pbft.actions.BatchTimeoutAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteStartNewRoundPhaseOneAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequestMessage;
@@ -26,10 +25,6 @@ public class PBFTReceiveRequestExecutor extends PBFTServerExecutor{
         super(protocol);
     }
 
-    public boolean isABatchTimeoutAction(Action act){
-        return BatchTimeoutAction.class.equals(act.getClass());
-    }
-    
     @Override
     public synchronized void execute(Action act) {
 

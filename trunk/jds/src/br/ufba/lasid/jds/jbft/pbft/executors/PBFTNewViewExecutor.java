@@ -12,93 +12,101 @@ package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.DistributedProtocol;
-import br.ufba.lasid.jds.Executor;
-import br.ufba.lasid.jds.Protocol;
-import br.ufba.lasid.jds.comm.Message;
 import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
-import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestRetransmistionScheduler;
-import br.ufba.lasid.jds.security.Authenticator;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewViewMessage;
+import br.ufba.lasid.jds.util.Buffer;
 
 /**
  *
  * @author aliriosa
  */
 public class PBFTNewViewExecutor extends PBFTServerExecutor{
-
+    
     public PBFTNewViewExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 
    @Override
     public synchronized void execute(Action act) {
-            ((PBFT)getProtocol()).getDebugger().debug(
-                "[PBFTChangeViewExecutor.execute]"
-             );
+       
+        System.out.println(
+            "server [p" + getProtocol().getLocalProcess().getID()+"] "
+          + "is going to execute new view procedure at time "
+          + ((PBFT)getProtocol()).getTimestamp()
+        );
 
-       PBFTMessage m = makeChangeViewRequest((PBFTMessage) act.getWrapper());
-       scheduleRetransmission(m);
+        PBFTMessage m = makeNeWView();
 
-    }
-
-   public PBFTMessage makeChangeViewRequest(PBFTMessage m){
-
-        Group g = (Group) m.get(PBFTMessage.DESTINATIONFIELD);
-
-        m = PBFTMessage.translateTo(m, PBFTMessage.TYPE.NEWVIEW);
-
-        Long timestamp =  ((PBFT)getProtocol()).getTimestamp();
-        try {
-        m.put(PBFTMessage.SETPREPREPAREMSGS, getPrePrepareMessages());
-        m.put(PBFTMessage.VIEWCHANGEMSGS, getViewChangeMessages());
-        }
-        catch(Exception e) { };
-        Authenticator authenticator =
-            ((PBFT)getProtocol()).getClientMessageAuthenticator();
-
-        m = (PBFTMessage)authenticator.encrypt(m);
-
-
-
-        ((PBFT)getProtocol()).getDebugger().debug(
-            "[PBFTSendRequestExecutor.execute] sending of "
-          + "(" + m + ") at time " + timestamp
-         );
-
-
+        Group g = ((PBFT)getProtocol()).getLocalGroup();
+        
         getProtocol().getCommunicator().multicast(m, g);
 
-        return m;
 
     }
 
-    public Object getPrePrepareMessages() throws Exception {
-         throw new Exception("not yet implemented");
-    }
+   public PBFTMessage makeNeWView(){
 
-    public Object getViewChangeMessages() throws Exception {
-         throw new Exception("not yet implemented");
-    }
+       Buffer viewchanges = ((PBFT)getProtocol()).getChangeViewBuffer();
 
-    public void scheduleRetransmission(PBFTMessage m){
+       Buffer C = new Buffer();
+       Buffer Q = new Buffer();
+       Buffer P = new Buffer();
 
-        Long timeout   = ((PBFT)getProtocol()).getRetransmissionTimeout();
-        Long timestamp =((PBFT)getProtocol()).getTimestamp();
-        Long rttime = new Long(timestamp.intValue() + timeout.longValue());
+       long checkpointWaterMark = -1;
+       
+       int newView = Integer.MAX_VALUE;
+       
+       for(Object item : viewchanges){
 
-        PBFTRequestRetransmistionScheduler scheduler =
-                (PBFTRequestRetransmistionScheduler)(((PBFT)getProtocol()).getClientScheduler());
+           PBFTMessage m = (PBFTMessage) item;
 
-        m.put(scheduler.getTAG(), rttime);
+           Buffer C1  = (Buffer) m.get(PBFTMessage.SETCHECKPOINTEDINFORMATIONFIELD);
+           Buffer Q1  = (Buffer) m.get(PBFTMessage.SETPREPREPAREINFORMATIONFIELD);
+           Buffer P1  = (Buffer) m.get(PBFTMessage.SETPREPAREINFORMATIONFIELD);
 
-        scheduler.schedule(m, rttime);
+           long checkpointWaterMark1 = (Long) m.get(PBFTMessage.CHECKPOINTLOWWATERMARK);
 
-        ((PBFT)getProtocol()).getDebugger().debug(
-            "["+ getClass().getSimpleName()+ ".scheduleRetransmission] "
-          + "scheduling of (" + m + ") for time " + rttime
-         );
+           int view = (Integer) m.get(PBFTMessage.VIEWFIELD);
 
-    }
+           if(view < newView){
+
+               newView = view;
+               
+           }
+
+           if(checkpointWaterMark < checkpointWaterMark1){
+
+               checkpointWaterMark = checkpointWaterMark1;
+
+           }
+
+           C.addAll(C1);
+           Q.addAll(Q1);
+           P.addAll(P1);
+
+       }
+
+       if(newView == Integer.MAX_VALUE){
+           newView = ((PBFT)getProtocol()).getCurrentView() + 1;
+       }
+
+       PBFTMessage nv = new PBFTNewViewMessage();
+
+       nv.put(PBFTMessage.TYPEFIELD, PBFTMessage.TYPE.RECEIVENEWVIEW);
+       nv.put(PBFTMessage.SETPREPREPAREINFORMATIONFIELD, Q);
+       nv.put(PBFTMessage.SETPREPAREINFORMATIONFIELD, P);
+       nv.put(PBFTMessage.SETCHECKPOINTEDINFORMATIONFIELD, C);
+       nv.put(PBFTMessage.VIEWFIELD, newView);
+       nv.put(PBFTMessage.CHECKPOINTLOWWATERMARK, checkpointWaterMark);
+       nv.put(PBFTMessage.REPLICAIDFIELD, getProtocol().getLocalProcess().getID());
+
+       nv = encrypt(nv);
+       nv = makeDisgest(nv);       
+
+       return nv;
+       
+   }
 
 }

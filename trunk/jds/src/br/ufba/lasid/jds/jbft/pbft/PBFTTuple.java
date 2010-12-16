@@ -13,5 +13,26 @@ import br.ufba.lasid.jds.comm.Message;
  */
 public class PBFTTuple extends Message{
 
+    @Override
+    public synchronized boolean equals(Object o) {
+
+        Message m = (Message) o;
+        String himContent = "";
+        
+        for(Object item : m.values()){
+            himContent += item.toString();
+        }
+
+        String myContent = "";
+
+        for(Object item : this.values()){
+
+            myContent += item.toString();
+            
+        }
+
+        return himContent.equals(myContent);
+        
+    }
 
 }
