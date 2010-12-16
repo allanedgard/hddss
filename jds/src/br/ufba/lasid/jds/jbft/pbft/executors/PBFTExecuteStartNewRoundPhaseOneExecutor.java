@@ -29,8 +29,11 @@ public class PBFTExecuteStartNewRoundPhaseOneExecutor extends PBFTServerExecutor
         PBFTMessage m = (PBFTMessage) act.getWrapper();
 
         if(!isServerAuthenticated(m)){
+
             System.out.println(getDefaultSecurityExceptionMessage(m, "start new round phase one"));
-            return;            
+            
+            return;
+
         }
 
         System.out.println(
@@ -39,19 +42,36 @@ public class PBFTExecuteStartNewRoundPhaseOneExecutor extends PBFTServerExecutor
           + m.getContent() + " at time " + ((PBFT)getProtocol()).getTimestamp()
         );
 
+        /**
+         * If the replica is locked then it can buffer requests and response for
+         * replays that have been already served. However, it can't proceed with
+         * the normal phases of the protocol (this is, doing the pre-prepare, 
+         * prepare, commit phases). Therefore, checkpoint, view-change and
+         * new-view messages are allowed.
+         *
+         * When the protocol is unlocking, it has to execute the second phase of
+         * the start new round for each request that was buffered while the
+         * protocol had been locked.
+         *
+         * Alirio Sá (2010.12.16)
+         */
+
+        
         /* buffer the received request */
         getProtocol().perform(new BufferReceivedRequestAction(m));
 
         /* perform the retransmission if there is a related replay */
         getProtocol().perform(new RetransmiteReplyAction(m));
 
-        /* perform the phase two */
-        getProtocol().perform(new ExecuteStartNewRoundPhaseTwoAction(m));
+        if(((PBFT)getProtocol()).isUnlooked()){
 
-        
+            /* perform the phase two */
+            getProtocol().perform(new ExecuteStartNewRoundPhaseTwoAction(m));
+
+            return;
+
+        }
+
     }
-
-
-
 
 }

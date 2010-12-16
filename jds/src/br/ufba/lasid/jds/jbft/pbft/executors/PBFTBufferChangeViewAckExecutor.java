@@ -15,53 +15,53 @@ import br.ufba.lasid.jds.util.Buffer;
  *
  * @author aliriosa
  */
-public class PBFTBufferChangeViewExecutor extends PBFTServerExecutor{
+public class PBFTBufferChangeViewAckExecutor extends PBFTServerExecutor{
 
-    public PBFTBufferChangeViewExecutor(DistributedProtocol protocol) {
+    public PBFTBufferChangeViewAckExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
+
 
     @Override
     public synchronized void execute(Action act) {
 
         PBFTMessage m = (PBFTMessage) act.getWrapper();
-        Buffer buffer = ((PBFT)getProtocol()).getChangeViewBuffer();
+        Buffer buffer = ((PBFT)getProtocol()).getChangeViewAckBuffer();
 
         if(!isServerAuthenticated(m)){
-            System.out.println(getDefaultSecurityExceptionMessage(m, "buffer change view executor"));
+            System.out.println(getDefaultSecurityExceptionMessage(m, "buffer change view ack executor"));
             return;
         }
 
-        /* check if change view exists in the buffer */
+        /* check if change view ack exists in the buffer */
 
         if(PBFT.isABufferedMessage(buffer, m)){
             System.out.println(
                 "server [p" + getProtocol().getLocalProcess().getID()+"] "
-              + "has already bufferred the <CHANGE-VIEW,  view = "
-              + m.get(PBFTMessage.VIEWFIELD) + ", digest = " 
-              + m.get(PBFTMessage.DIGESTFIELD) + ", checkpoint-low-water-marker = "
-              + m.get(PBFTMessage.CHECKPOINTLOWWATERMARK) + ", P, Q, replica = "
-              + m.get(PBFTMessage.REPLICAIDFIELD) + ">"
+              + "has already bufferred the <CHANGE-VIEW-ACK,  view = "
+              + m.get(PBFTMessage.VIEWFIELD) + ", digest = "
+              + m.get(PBFTMessage.DIGESTFIELD) + ", SENDER = "
+              + m.get(PBFTMessage.REPLICAIDSENDERFIELD) + ", RECEIVER = "
+              + m.get(PBFTMessage.REPLICAIDRECEIVERFIELD) + ">"
             );
 
             return;
         }
 
-        /* add change to commit buffer */
+        /* add change to change view ack buffer */
         buffer.add(m);
 
         System.out.println(
             "server [p" + getProtocol().getLocalProcess().getID()+"] "
-          + "has bufferred the <CHANGE-VIEW,  view = "
+          + "has bufferred the <CHANGE-VIEW-ACK,  view = "
           + m.get(PBFTMessage.VIEWFIELD) + ", digest = "
-          + m.get(PBFTMessage.DIGESTFIELD) + ", checkpoint-low-water-marker = "
-              + m.get(PBFTMessage.CHECKPOINTLOWWATERMARK) + ", P, Q, replica = "
-          + m.get(PBFTMessage.REPLICAIDFIELD) + "> at time "
+          + m.get(PBFTMessage.DIGESTFIELD) + ", SENDER = "
+          + m.get(PBFTMessage.REPLICAIDSENDERFIELD) + ", RECEIVER = "
+          + m.get(PBFTMessage.REPLICAIDRECEIVERFIELD) + "> at time "
           + ((PBFT)getProtocol()).getTimestamp()
         );
 
     }
-
-
+    
 
 }

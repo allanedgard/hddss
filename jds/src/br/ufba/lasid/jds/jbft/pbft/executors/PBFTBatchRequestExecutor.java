@@ -71,7 +71,9 @@ public class PBFTBatchRequestExecutor extends PBFTServerExecutor{
             batch.put(PBFTMessage.BATCHSIZEFIELD, new Integer(batchSize));
             batch.put(PBFTMessage.TIMESTAMPFIELD, ((PBFT)getProtocol()).getTimestamp());
             batch.put(PBFTMessage.CLIENTFIELD, getProtocol().getLocalProcess());
+            batch.put(PBFTMessage.VIEWFIELD, ((PBFT)getProtocol()).getCurrentView());
 
+            batch = makeDisgest(batch);
             batch = encrypt(batch);
 
            System.out.println(

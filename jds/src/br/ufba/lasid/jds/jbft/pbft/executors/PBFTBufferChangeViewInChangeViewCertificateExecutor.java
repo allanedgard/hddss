@@ -15,9 +15,9 @@ import br.ufba.lasid.jds.util.Buffer;
  *
  * @author aliriosa
  */
-public class PBFTBufferChangeViewExecutor extends PBFTServerExecutor{
+public class PBFTBufferChangeViewInChangeViewCertificateExecutor extends PBFTServerExecutor{
 
-    public PBFTBufferChangeViewExecutor(DistributedProtocol protocol) {
+    public PBFTBufferChangeViewInChangeViewCertificateExecutor(DistributedProtocol protocol) {
         super(protocol);
     }
 
@@ -25,43 +25,39 @@ public class PBFTBufferChangeViewExecutor extends PBFTServerExecutor{
     public synchronized void execute(Action act) {
 
         PBFTMessage m = (PBFTMessage) act.getWrapper();
-        Buffer buffer = ((PBFT)getProtocol()).getChangeViewBuffer();
-
-        if(!isServerAuthenticated(m)){
-            System.out.println(getDefaultSecurityExceptionMessage(m, "buffer change view executor"));
-            return;
-        }
+        Buffer buffer = ((PBFT)getProtocol()).getChangeViewCertificate();
 
         /* check if change view exists in the buffer */
 
         if(PBFT.isABufferedMessage(buffer, m)){
             System.out.println(
                 "server [p" + getProtocol().getLocalProcess().getID()+"] "
-              + "has already bufferred the <CHANGE-VIEW,  view = "
-              + m.get(PBFTMessage.VIEWFIELD) + ", digest = " 
-              + m.get(PBFTMessage.DIGESTFIELD) + ", checkpoint-low-water-marker = "
-              + m.get(PBFTMessage.CHECKPOINTLOWWATERMARK) + ", P, Q, replica = "
+              + "has already bufferred in change view certificate S the change "
+              + "view <CHANGE-VIEW,  view = "
+              + m.get(PBFTMessage.VIEWFIELD) + ", digest = "
+              + m.get(PBFTMessage.DIGESTFIELD) + ", CHKPOINTNUMBER = "
+              + m.get(PBFTMessage.CHECKPOINTNUMBERFIELD) + ", P, Q, replica = "
               + m.get(PBFTMessage.REPLICAIDFIELD) + ">"
             );
 
             return;
         }
 
-        /* add change to commit buffer */
+        /* add change to change view certificate buffer */
         buffer.add(m);
 
         System.out.println(
             "server [p" + getProtocol().getLocalProcess().getID()+"] "
-          + "has bufferred the <CHANGE-VIEW,  view = "
+          + "has bufferred in change view certificate the <CHANGE-VIEW,  view = "
           + m.get(PBFTMessage.VIEWFIELD) + ", digest = "
-          + m.get(PBFTMessage.DIGESTFIELD) + ", checkpoint-low-water-marker = "
-              + m.get(PBFTMessage.CHECKPOINTLOWWATERMARK) + ", P, Q, replica = "
+          + m.get(PBFTMessage.DIGESTFIELD) + ", CHKPOINTNUMBER = "
+          + m.get(PBFTMessage.CHECKPOINTNUMBERFIELD) + ", P, Q, replica = "
           + m.get(PBFTMessage.REPLICAIDFIELD) + "> at time "
           + ((PBFT)getProtocol()).getTimestamp()
         );
 
     }
-
+    
 
 
 }

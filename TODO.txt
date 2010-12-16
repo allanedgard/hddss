@@ -1,7 +1,9 @@
 * Inserir checagem de visão corrente e authenticação 
-* Inserir Change View
+* Inserir Change View [done]
 * Inserir Código Para Checagem de Sequence Number [DONE]
 * Inserir Recovery
 * O código atualmente não trata mensagens fora de ordem e as mensagens de prepare, commit são enviadas independente de ter sequencenumber em ordem.
 * Avaliar se o metodo isValidSequenceNumber é realmente de classe ou de instancia.
 * Checkpoint doesn't execute FecthState
+
+* Adicionar FetchState ao código do ChangeView

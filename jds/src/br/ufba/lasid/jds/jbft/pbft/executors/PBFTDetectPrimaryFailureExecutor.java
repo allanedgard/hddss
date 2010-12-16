@@ -8,7 +8,6 @@ package br.ufba.lasid.jds.jbft.pbft.executors;
 import br.ufba.lasid.jds.Action;
 import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
-import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.ExecuteChangeViewRoundOneAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 
@@ -24,6 +23,7 @@ public class PBFTDetectPrimaryFailureExecutor extends PBFTServerExecutor{
 
     @Override
     public synchronized void execute(Action act) {
+        
         PBFTMessage m = (PBFTMessage) act.getWrapper();
 
         if(!((PBFT)getProtocol()).existsPrePrepareForRequest(m)){

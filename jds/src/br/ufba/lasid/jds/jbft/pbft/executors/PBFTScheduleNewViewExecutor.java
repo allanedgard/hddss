@@ -30,11 +30,11 @@ public class PBFTScheduleNewViewExecutor extends Executor{
         PBFTRequestScheduler scheduler =
                 (PBFTRequestScheduler) ((PBFT)getProtocol()).getPrimaryFDScheduler();
 
-        long fdTimeout = ((PBFT)getProtocol()).getPrimaryFaultyTimeout();
+        long timeout = ((PBFT)getProtocol()).getPrimaryFaultyTimeout();
         long timestamp = ((PBFT)getProtocol()).getTimestamp().longValue();
-        long time = fdTimeout + timestamp;
+        long time = timeout + timestamp;
 
-        m.put(scheduler.getTAG(), fdTimeout);
+        m.put(scheduler.getTAG(), timeout);
 
         scheduler.schedule(m, time);
         

@@ -6,7 +6,6 @@
 package br.ufba.lasid.jds.jbft.pbft.util;
 
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
-import br.ufba.lasid.jds.jbft.pbft.actions.ChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.actions.DetectPrimaryFailureAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.util.Scheduler;
@@ -35,6 +34,10 @@ public class PBFTPrimaryFDScheduler extends PBFTRequestScheduler{
     @Override
     public void makePerform(Wrapper w){
         ((PBFT)getProtocol()).perform(new DetectPrimaryFailureAction(w));
+    }
+
+    public void cancelAll() {
+        //throw new UnsupportedOperationException("Not supported yet.");
     }
 
     

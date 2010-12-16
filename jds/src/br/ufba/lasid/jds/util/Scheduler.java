@@ -13,5 +13,6 @@ public interface Scheduler {
 
     public void schedule(Task task, long time);
     public void cancel(Task task);
+    public void cancelAll();
       
 }

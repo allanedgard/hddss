@@ -49,9 +49,9 @@ public class PBFTSendCheckpointExecutor extends PBFTServerExecutor{
 
         System.out.println(
             "server [p" + getProtocol().getLocalProcess().getID() + "] "
-          + "sent <checkpoint" + lastStableSeq + ", "
-          + checkpoint.get(PBFTMessage.DIGESTFIELD) + ", "
-          + checkpoint.get(PBFTMessage.REPLICAIDFIELD) + "> "
+          + "sent <checkpoint, last-stable-seqn = " + lastStableSeq + ", "
+          + "digest = " + checkpoint.get(PBFTMessage.DIGESTFIELD) + ", "
+          + "replica = " + checkpoint.get(PBFTMessage.REPLICAIDFIELD) + "> "
           + "to group [" + g.getGroupID() + "] "
           + "at time " + ((PBFT)getProtocol()).getTimestamp()
         );

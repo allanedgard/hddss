@@ -53,8 +53,8 @@ public class PBFTSendChangeViewAckExecutor extends PBFTServerExecutor{
             "server [p" + getProtocol().getLocalProcess().getID()+"] "
           + "has sent the <CHANGE-VIEW-ACK,  view = "
           + ack.get(PBFTMessage.VIEWFIELD) + ", digest = "
-          + ack.get(PBFTMessage.DIGESTFIELD) + ", CHKPOINTNUMBER = "
-          + ack.get(PBFTMessage.REPLICAIDSENDERFIELD) + ", P, Q, replica = "
+          + ack.get(PBFTMessage.DIGESTFIELD) + ", SENDER = "
+          + ack.get(PBFTMessage.REPLICAIDSENDERFIELD) + ", RECEIVER = "
           + ack.get(PBFTMessage.REPLICAIDRECEIVERFIELD) + "> at time "
           + ((PBFT)getProtocol()).getTimestamp()
         );

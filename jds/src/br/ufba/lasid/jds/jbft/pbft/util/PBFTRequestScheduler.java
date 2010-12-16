@@ -51,7 +51,11 @@ public abstract class PBFTRequestScheduler implements Scheduler, Task{
     public abstract String getTAG();
     
     public long getRequestTimeout(PBFTMessage request){
-        return ((Long)(request.get(getTAG()))).longValue();
+        Long timeout = ((Long)(request.get(getTAG())));
+        if(timeout != null)
+            return timeout.longValue();
+
+        return -1L;
     }
 
     public void addToRequestBuffer(PBFTMessage request){
@@ -94,10 +98,12 @@ public abstract class PBFTRequestScheduler implements Scheduler, Task{
 
             PBFTMessage request = (PBFTMessage)item;
 
-            long timeout = getRequestTimeout(request);
+            if(request != null){
+                long timeout = getRequestTimeout(request);
 
-            if(/* timeout >=0 && */ timeout == getCurrentTime()){
-                makePerform((Wrapper)request);
+                if(/* timeout >=0 && */ timeout == getCurrentTime()){
+                    makePerform((Wrapper)request);
+                }
             }
         }
     }

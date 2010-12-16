@@ -23,16 +23,24 @@ public abstract class PBFTMessage extends ClientServerMessage{
     public static String TIMESTAMPFIELD = "__TIMESTAMPFIELD";
     public static String CLIENTFIELD = "__CLIENTFIELD";
     public static String BATCHSIZEFIELD = "__BATCHSIZEFIELD";
+
     public static String CHECKPOINTNUMBERFIELD = "__CHECKPOINTNUMBERFIELD";
     public static String CHECKPOINTMSGS = "__CHECKPOINTMSGS";
+
     public static String SETPREPREPAREINFORMATIONFIELD = "__SETPREPREPAREINFORMATIONFIELD";
     public static String SETPREPAREINFORMATIONFIELD = "__SETPREPAREINFORMATIONFIELD";
+    public static String SETCHECKPOINTEDINFORMATIONFIELD = "__SETCHECKPOINTEDINFORMATIONFIELD";
+
     public static String NSREQUESTS = "__NSREQUESTS";
     public static String SETPREPREPAREMSGS = "__SETPREPREPAREMSGS";
     public static String VIEWCHANGEMSGS = "__VIEWCHANGEMSGS";
     public static String REQUESTDONEFIELD = "__REQUESTDONEFIELD";
     public static String BATCHSTATEFIELD = "__BATCHSTATEFIELD";
     public static String EXECUTEDFIELD = "__EXECUTEDFIELD";
+    public static String CHECKPOINTLOWWATERMARK = "__CHECKPOINTLOWWATERMARK";
+    public static String SETCHEKPOINTS = "__SETCHEKPOINTS";
+    public static String SETREQUESTS = "__SETREQUESTS";
+    public static String CHANGEVIEWCERTIFICATE = "__CHANGEVIEWCERTIFICATE";
 
 
 
@@ -59,7 +67,8 @@ public abstract class PBFTMessage extends ClientServerMessage{
         NEWVIEW(17),
         RECEIVECHECKPOINT(18),
         RECEIVECHANGEVIEW(19),
-        RECEIVECHANGEVIEWACK(20);
+        RECEIVECHANGEVIEWACK(20),
+        RECEIVENEWVIEW(21);
       
         private final int value;
 

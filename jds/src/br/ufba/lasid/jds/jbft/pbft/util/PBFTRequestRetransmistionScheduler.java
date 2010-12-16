@@ -38,5 +38,9 @@ public class PBFTRequestRetransmistionScheduler extends PBFTRequestScheduler{
     public void cancel(PBFTMessage m) {
         m.put(REQUESTID, new Long(-1));
     }
+
+    public void cancelAll() {
+       // throw new UnsupportedOperationException("Not supported yet.");
+    }
    
 }

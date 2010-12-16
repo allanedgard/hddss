@@ -35,11 +35,11 @@ public class SingleGroup<T> implements Group<T>{
     }
 
     public int getGroupSize() {
-        return size;
+        return this.members.size();
     }
 
     public void setGroupSize(int size) {
-        this.size = size;
+        //this.size = size;
     }
 
     public ProcessList<T> getMembers() {
@@ -67,5 +67,7 @@ public class SingleGroup<T> implements Group<T>{
         }
 
     }
+
+
 
 }

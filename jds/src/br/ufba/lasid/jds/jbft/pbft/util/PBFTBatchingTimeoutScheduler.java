@@ -55,4 +55,8 @@ public class PBFTBatchingTimeoutScheduler extends PBFTRequestScheduler{
 
     }
 
+    public void cancelAll() {
+        //throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 }

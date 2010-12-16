@@ -29,10 +29,10 @@ public class PBFTReceiveCheckpointExecutor extends PBFTServerExecutor{
 
         System.out.println(
             "server [p" + getProtocol().getLocalProcess().getID() + "] "
-          + "received <checkpoint, "
+          + "received <checkpoint, seqn = "
           + checkpoint.get(PBFTMessage.SEQUENCENUMBERFIELD)
-          + ", " + checkpoint.get(PBFTMessage.DIGESTFIELD) + ", "
-          + checkpoint.get(PBFTMessage.REPLICAIDFIELD) + "> "
+          + ", digest = " + checkpoint.get(PBFTMessage.DIGESTFIELD) 
+          + ", replica = " + checkpoint.get(PBFTMessage.REPLICAIDFIELD) + "> "
           + "from server [" + checkpoint.get(PBFTMessage.REPLICAIDFIELD) + "] "
           + "at time " + ((PBFT)getProtocol()).getTimestamp()
         );

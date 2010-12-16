@@ -14,6 +14,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTBatchingTimeoutScheduler;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTPrimaryFDScheduler;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestRetransmistionScheduler;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTViewChangeRetransmittionScheduler;
 import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport;
 import br.ufba.lasid.jds.prototyping.hddss.cs.Agent_ServiceComponent;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.comm.SimulatedPBFTCommunicator;
@@ -66,6 +67,10 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
     public void setBatchingTimeout(String timeout){
         getProtocol().getContext().put(PBFT.BATCHINGTIMEOUT, new Long(timeout));
     }
+
+    public void setViewChangeRetransmittionTimeout(String timeout){
+        getProtocol().getContext().put(PBFT.VIEWCHANGERETRANSMITIONTIMEOUT, new Long(timeout));
+    }
     
     public void setGroupSize(String size){
         setGroupSize(Integer.parseInt(size));
@@ -116,7 +121,9 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
         getProtocol().getContext().put(PBFT.REPLYBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.CHECKPOINTBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.CHANGEVIEWBUFFER, new Buffer());
+        getProtocol().getContext().put(PBFT.CHANGEVIEWACKBUFFER, new Buffer());
         getProtocol().getContext().put(PBFT.REJUVENATIONWINDOW, new Buffer());
+        getProtocol().getContext().put(PBFT.CHANGEVIEWCERTIFICATEBUFFER, new Buffer());
 
         getProtocol().getContext().put(
             PBFT.CLIENTMSGAUTHENTICATOR,
@@ -152,6 +159,13 @@ public class Agent_PBFT extends Agent_ServiceComponent implements Group<Integer>
             )
         );
 
+        getProtocol().getContext().put(
+            PBFT.CHANGEVIEWRETRANSMITIONSCHEDULER,
+            new PBFTViewChangeRetransmittionScheduler(
+                (PBFT)getProtocol(),
+                (Scheduler)infra.context.get(RuntimeSupport.Variable.Scheduler).value()
+            )
+        );
 
         getProtocol().setCommunicator(new SimulatedPBFTCommunicator(this));
         getProtocol().setLocalProcess(this);

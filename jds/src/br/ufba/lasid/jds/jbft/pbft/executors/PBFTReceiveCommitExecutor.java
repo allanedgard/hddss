@@ -27,6 +27,16 @@ public class PBFTReceiveCommitExecutor extends PBFTServerExecutor{
         PBFTMessage m = (PBFTMessage) act.getWrapper();
         PBFTMessage batch = (PBFTMessage)m.get(PBFTMessage.REQUESTFIELD);
 
+        /**
+         * If the protocol is blocked no action is executed.
+         */
+
+        if(((PBFT)getProtocol()).isLooked()){
+
+            return;
+
+        }
+
         System.out.println(
               "server [p" + getProtocol().getLocalProcess().getID()+"] "
             + "received commit(" + m.get(PBFTMessage.SEQUENCENUMBERFIELD) + ") "

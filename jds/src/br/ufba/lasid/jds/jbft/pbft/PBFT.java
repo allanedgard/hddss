@@ -9,6 +9,7 @@ import br.ufba.lasid.jds.cs.ClientServerProtocol;
 import br.ufba.lasid.jds.util.Wrapper;
 import br.ufba.lasid.jds.factories.PBFTActionFactory;
 import br.ufba.lasid.jds.group.Group;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBatchMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.security.Authenticator;
 import br.ufba.lasid.jds.util.Buffer;
@@ -39,6 +40,7 @@ public class PBFT extends ClientServerProtocol{
     public static String PREPAREBUFFER = "__PREPAREBUFFER";
     public static String COMMITBUFFER = "__COMMITBUFFER";
     public static String CHANGEVIEWBUFFER = "__CHANGEVIEWBUFFER";
+    public static String CHANGEVIEWACKBUFFER = "__CHANGEVIEWACKBUFFER";
     public static String COMMITTEDBUFFER = "__COMMITTEDBUFFER";
     public static String REPLYBUFFER = "__REPLYBUFFER";
     public static String CHECKPOINTBUFFER = "__CHECKPOINTBUFFER";
@@ -55,6 +57,47 @@ public class PBFT extends ClientServerProtocol{
     public static String REJUVENATIONWINDOW  = "__REJUVENATIONWINDOW";
     public static String PREPARESTATEINFORMATION = "__PREPARESTATEINFORMATION";
     public static String PREPREPARESTATEINFORMATION = "__PREPREPARESTATEINFORMATION";
+    public static String CHANGEVIEWCERTIFICATEBUFFER = "__CHANGEVIEWCERTIFICATEBUFFER";
+    public static String CHECKPOINTSTATEINFORMATION = "__CHECKPOINTSTATEINFORMATION";
+    public static String CHANGEVIEWRETRANSMITIONSCHEDULER = "__CHANGEVIEWRETRANSMITIONSCHEDULER";
+
+    public static String VIEWCHANGERETRANSMITIONTIMEOUT = "__VIEWCHANGERETRANSMITIONTIMEOUT";
+    
+    protected boolean lock = false;
+    
+    protected int viewChangeAttemps = 0;
+
+    public void initViewChangeAttemps(){
+
+        this.viewChangeAttemps = 0;
+        
+    }
+
+    public int getViewChangeAttemps(){
+        return this.viewChangeAttemps;
+    }
+
+    public int incViewChangeAttemps(){
+        return ++ this.viewChangeAttemps ;
+    }
+
+
+
+    public void lock(){
+        this.lock = true;
+    }
+
+    public void unlock(){
+        this.lock = false;
+    }
+
+    public boolean isLooked(){
+        return this.lock;
+    }
+
+    public boolean isUnlooked(){
+        return (!isLooked());
+    }
 
     public PBFTTuple getPrepareStateInformation(){
         return (PBFTTuple)getContext().get(PREPARESTATEINFORMATION);
@@ -94,6 +137,45 @@ public class PBFT extends ClientServerProtocol{
         setPrepareStateInformation(tuple);
     }
 
+    public void initCheckpointStateInformation(){
+        PBFTTuple tuple = getCheckpointedStateInformation();
+        if(tuple == null){
+            tuple = new PBFTTuple();
+        }
+
+        tuple.clear();
+
+        setCheckpointStateInformation(tuple);
+    }
+
+    public boolean hasViewConsistentInformation(Buffer state){
+        
+        for(Object item : state){
+
+            String ID = (String) item;
+            
+            try{
+
+                String viewString = (ID.split(":"))[2];
+
+                Integer view = new Integer(viewString);
+
+                if(view.compareTo(getCurrentView()) > 0){
+
+                    return false;
+
+                }
+                
+            }catch(Exception e){
+
+                return false;
+                
+            }
+        }
+
+        return true;
+    }
+    
     public PBFTTuple updateStateInformation(PBFTTuple state, PBFTMessage m, Integer view, Long seqn){
 
         if(state == null){
@@ -101,8 +183,24 @@ public class PBFT extends ClientServerProtocol{
             state = new PBFTTuple();
 
         }
-
+        
         PBFTMessage batch = (PBFTMessage) m.get(PBFTMessage.REQUESTFIELD);
+
+        if(m instanceof PBFTBatchMessage){
+            batch = m;
+        }
+        
+        PBFTTuple tuple = new PBFTTuple();
+        
+        tuple.put(PBFTMessage.SEQUENCENUMBERFIELD, seqn);
+        tuple.put(PBFTMessage.VIEWFIELD, view);
+        tuple.put(PBFTMessage.DIGESTFIELD, batch.get(PBFTMessage.DIGESTFIELD));
+        
+        String tupleID = getLocalProcess().getID().toString() + ":" + batch.getID();
+
+        state.put(tupleID, tuple);
+
+        /*
 
         int batchSize = ((Integer)batch.get(PBFTMessage.BATCHSIZEFIELD)).intValue();
 
@@ -112,15 +210,18 @@ public class PBFT extends ClientServerProtocol{
 
             PBFTMessage request  = (PBFTMessage) batch.get(reqField);
 
-            PBFTTuple _tuple = new PBFTTuple();
+            PBFTTuple tuple = new PBFTTuple();
 
-            _tuple.put(PBFTMessage.SEQUENCENUMBERFIELD, seqn);
-            _tuple.put(PBFTMessage.VIEWFIELD, view);
+            tuple.put(PBFTMessage.SEQUENCENUMBERFIELD, seqn);
+            tuple.put(PBFTMessage.VIEWFIELD, view);
+            tuple.put(PBFTMessage.DIGESTFIELD, request.get(PBFTMessage.DIGESTFIELD));
 
-            state.put(request.getID(), _tuple);
+            String tupleID = getLocalProcess().getID().toString() + ":" + request.getID();
+            
+            state.put(tupleID, tuple);
 
         }
-
+        */
         return state;
     }
     
@@ -135,9 +236,9 @@ public class PBFT extends ClientServerProtocol{
     }
 
     public void updatePrePrepareStateInformation(PBFTMessage preprepare, Integer view, Long seqn){
-        setPrepareStateInformation(
+        setPrePrepareStateInformation(
             updateStateInformation(
-              getPrepareStateInformation(), preprepare, view, seqn
+              getPrePrepareStateInformation(), preprepare, view, seqn
             )
         );
 
@@ -154,11 +255,33 @@ public class PBFT extends ClientServerProtocol{
     }
 
     public Long getLastCheckpointSequenceNumber(){
-        PBFTMessage checkpoint = getLastCheckpoint();
-        if(checkpoint == null)
-            return new Long(-1);
+        Buffer buffer = getCommittedBuffer();
 
-        return (Long)checkpoint.get(PBFTMessage.SEQUENCENUMBERFIELD);
+        long chk = -1;
+
+        for(Object item : buffer){
+
+            PBFTMessage m = (PBFTMessage) item;
+
+            long seq = (Long)m.get(PBFTMessage.SEQUENCENUMBERFIELD);
+
+            if(seq > chk) chk = seq;
+
+        }
+
+        if(chk < 0){
+
+            PBFTMessage checkpoint = getLastCheckpoint();
+
+            if(checkpoint != null){
+
+                chk =  (Long)checkpoint.get(PBFTMessage.SEQUENCENUMBERFIELD);
+                
+            }
+
+        }
+
+        return new Long(chk);
     }
 
     public Long getCheckpointLowWaterMark(){
@@ -233,6 +356,65 @@ public class PBFT extends ClientServerProtocol{
         return false;
     }
 
+    public Buffer getChangeViewAckBuffer() {
+
+        return (Buffer)getContext().get(PBFT.CHANGEVIEWACKBUFFER);
+        
+    }
+
+    public PBFTMessage getChangeViewSentFromSelectedPrimary(PBFTMessage m) {
+
+        Buffer buffer = getChangeViewBuffer();
+        Integer theView  = (Integer)m.get(PBFTMessage.VIEWFIELD);
+
+        Integer ID = new Integer(Integer.MAX_VALUE);
+        
+        PBFTMessage result = null;
+
+        for(Object item : buffer){
+
+            PBFTMessage cv  = (PBFTMessage) item;
+            Integer myView = (Integer) cv.get(PBFTMessage.VIEWFIELD);
+
+            if(myView.equals(theView)){
+
+                if((((Integer)cv.get(PBFTMessage.REPLICAIDFIELD)).compareTo(ID)) < 0){
+
+                    result = cv;
+
+                    ID = ((Integer)cv.get(PBFTMessage.REPLICAIDFIELD));
+
+                }
+
+            }
+
+        }
+
+        return result;
+        
+    }
+
+    public PBFTTuple getCheckpointedStateInformation() {
+        return (PBFTTuple)getContext().get(CHECKPOINTSTATEINFORMATION);
+    }
+
+    public PBFTTuple selectHighestCheckpointTupleFromChangeView() {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public void updateCheckpointStateInformation(PBFTMessage checkpoint, Integer view, Long seqn) {
+        setCheckpointStateInformation(
+            updateStateInformation(
+                getCheckpointedStateInformation(), checkpoint, view, seqn
+            )
+        );
+
+    }
+
+    public void setCheckpointStateInformation(PBFTTuple tuple) {
+        getContext().put(CHECKPOINTSTATEINFORMATION, tuple);
+    }
+
     public enum BATCHSTATE{
         NOBATCH, INBATCH, BATCHED
     }
@@ -247,6 +429,14 @@ public class PBFT extends ClientServerProtocol{
         return ++SEQ;
     }
 
+    public static long getCurrentSequenceNumber(){
+        return SEQ;
+    }
+
+    public static void updateCurrentSequenceNumber(long sqn){
+        SEQ = sqn;
+    }
+    
     public String getRequestField(){
         return getRequestField(BATCHINGCOUNT);
     }
@@ -297,6 +487,11 @@ public class PBFT extends ClientServerProtocol{
         return (Long)getContext().get(PBFT.BATCHINGTIMEOUT);
     }
 
+    public Long getChangeViewRetransmissionTimeout(){
+        return (Long)getContext().get(PBFT.VIEWCHANGERETRANSMITIONTIMEOUT);
+    }
+
+
     public Long getRetransmissionTimeout(){
         return (Long)getContext().get(PBFT.CLIENTRETRANSMISSIONTIMEOUT);
     }
@@ -314,6 +509,10 @@ public class PBFT extends ClientServerProtocol{
 
     public Debugger getDebugger(){
         return (Debugger) getContext().get(PBFT.DEBUGGER);
+    }
+
+    public Scheduler getChangeViewRetransmittionScheduler(){
+        return (Scheduler)(getContext().get(PBFT.CHANGEVIEWRETRANSMITIONSCHEDULER));
     }
 
     public Scheduler getClientScheduler(){
@@ -349,6 +548,10 @@ public class PBFT extends ClientServerProtocol{
     }
     public boolean isPrimary(br.ufba.lasid.jds.Process p){
         return (getContext().get(PBFT.GROUPLEADER)).equals(p.getID());
+    }
+
+    public void setGroupLeader(Object ID){
+        getContext().put(PBFT.GROUPLEADER, ID);
     }
 
     public Integer getCurrentView(){
@@ -446,6 +649,10 @@ public class PBFT extends ClientServerProtocol{
 
         if(isChangeView(m)){
             return gotChangeViewQuorum(m);
+        }
+
+        if(isChangeViewAck(m)){
+            return gotChangeViewAckQuorum(m);
         }
 
         if(isCheckpoint(m)){
@@ -578,6 +785,7 @@ public class PBFT extends ClientServerProtocol{
         for(Object item : buffer){
 
             PBFTMessage p = (PBFTMessage) item;
+            
             boolean clientCheck   = p.get(PBFTMessage.CLIENTFIELD).equals(m.get(PBFTMessage.CLIENTFIELD));
             boolean digestCheck = p.get(PBFTMessage.DIGESTFIELD).equals(m.get(PBFTMessage.DIGESTFIELD));
             
@@ -617,8 +825,55 @@ public class PBFT extends ClientServerProtocol{
     public boolean gotChangeViewQuorum(PBFTMessage m){
 
         int f      = getServiceBFTResilience();
+        int minQuorum = 2 * f + 1;
+        int quorum = 0;
+        Buffer buffer = getChangeViewBuffer();
 
-        return gotQuorum(m, getChangeViewBuffer(), f + 1, true);
+        for(Object item : buffer){
+
+            PBFTMessage p = (PBFTMessage) item;
+            
+            boolean viewCheck   = p.get(PBFTMessage.VIEWFIELD).equals(m.get(PBFTMessage.VIEWFIELD));
+            //boolean digestCheck = p.get(PBFTMessage.DIGESTFIELD).equals(m.get(PBFTMessage.DIGESTFIELD));
+            //boolean chknumber = p.get(PBFTMessage.CHECKPOINTLOWWATERMARK).equals(m.get(PBFTMessage.CHECKPOINTLOWWATERMARK));
+
+            if(viewCheck){// && digestCheck && chknumber){
+                
+                quorum++;
+            }
+
+        }
+
+        return (quorum >= minQuorum);
+
+
+//        return gotQuorum(m, getChangeViewBuffer(), 2 * f - 1, false);
+
+    }
+
+    public boolean gotChangeViewAckQuorum(PBFTMessage m){
+
+        int f      = getServiceBFTResilience();
+        int minQuorum = 2 * f;
+        int quorum = 0;
+        Buffer buffer = getChangeViewAckBuffer();
+
+        for(Object item : buffer){
+
+            PBFTMessage p = (PBFTMessage) item;
+
+            boolean viewCheck   = p.get(PBFTMessage.VIEWFIELD).equals(m.get(PBFTMessage.VIEWFIELD));
+            //boolean digestCheck = p.get(PBFTMessage.DIGESTFIELD).equals(m.get(PBFTMessage.DIGESTFIELD));
+            boolean primary = p.get(PBFTMessage.REPLICAIDRECEIVERFIELD).equals(m.get(PBFTMessage.REPLICAIDRECEIVERFIELD));
+
+
+            if(viewCheck && /* digestCheck &&*/ primary){
+                quorum++;
+            }
+
+        }
+
+        return (quorum >= minQuorum);
 
     }
 
@@ -636,6 +891,10 @@ public class PBFT extends ClientServerProtocol{
 
     public boolean isChangeView(PBFTMessage m){
         return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVECHANGEVIEW);
+    }
+
+    public boolean isChangeViewAck(PBFTMessage m){
+        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVECHANGEVIEWACK);
     }
 
 
@@ -706,4 +965,11 @@ public class PBFT extends ClientServerProtocol{
 
     }
 
+    public Buffer getChangeViewCertificate(){
+        return (Buffer) getContext().get(PBFT.CHANGEVIEWCERTIFICATEBUFFER);
+    }
+
+    public void setChangeViewCertificate(Buffer buffer){
+        getContext().put(PBFT.CHANGEVIEWCERTIFICATEBUFFER, buffer);
+    }
 }

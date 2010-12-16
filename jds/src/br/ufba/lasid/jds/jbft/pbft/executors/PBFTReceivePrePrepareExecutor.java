@@ -27,6 +27,15 @@ public class PBFTReceivePrePrepareExecutor extends PBFTServerExecutor{
         PBFTMessage m = (PBFTMessage) act.getWrapper();
         PBFTMessage batch = (PBFTMessage)m.get(PBFTMessage.REQUESTFIELD);
 
+        /**
+         * If the protocol is blocked no action is executed.
+         */
+        if(((PBFT)getProtocol()).isLooked()){
+
+            return;
+            
+        }
+
         if(!(((PBFT)getProtocol()).isPrimary())){
         
             System.out.println(
@@ -37,8 +46,10 @@ public class PBFTReceivePrePrepareExecutor extends PBFTServerExecutor{
             );
 
             if(((PBFT)getProtocol()).isValidSequenceNumber(m) && isValidPrePrepare(m)){
+
                 getProtocol().perform(new BufferPrePrepareAction(m));
                 getProtocol().perform(new ExecuteCurrentRoundPhaseTwoAction(m));
+                
                 return;
             }
 
