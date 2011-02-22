@@ -11,9 +11,9 @@ import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrePrepareCollectorServant;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrepareCollectorServant;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTRequestCollectorServant;
-import trash.br.ufba.lasid.jds.jbft.pbft.executors.PBFTCommitBrokerServant;
-import trash.br.ufba.lasid.jds.jbft.pbft.executors.PBFTDoerExecutor;
-import trash.br.ufba.lasid.jds.jbft.pbft.executors.PBFTStatusActiveCollectorServant;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCommitBrokerServant;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTDoerExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTStatusActiveCollectorServant;
 
 /**
  *

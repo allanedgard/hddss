@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package trash.br.ufba.lasid.jds.jbft.pbft.executors;
+package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTRequestCollectorServant;
 import br.ufba.lasid.hdf.IConsumer;

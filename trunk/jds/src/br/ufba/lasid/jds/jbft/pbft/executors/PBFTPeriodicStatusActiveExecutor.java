@@ -15,7 +15,6 @@ import br.ufba.lasid.jds.util.ITask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
-import trash.br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecutor;
 import br.ufba.lasid.jds.util.Debugger;
 
 /**

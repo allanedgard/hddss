@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package trash.br.ufba.lasid.jds.jbft.pbft.executors;
+package br.ufba.lasid.jds.jbft.pbft.executors;
 
 import br.ufba.lasid.hdf.ISupplier;
 import org.apache.commons.collections.Buffer;

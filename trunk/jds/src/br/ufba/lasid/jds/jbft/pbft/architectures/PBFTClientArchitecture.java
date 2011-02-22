@@ -7,7 +7,7 @@ package br.ufba.lasid.jds.jbft.pbft.architectures;
 
 import br.ufba.lasid.jds.architectures.Architecture;
 import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
-import trash.br.ufba.lasid.jds.jbft.pbft.executors.PBFTReplyCollectorServant;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReplyCollectorServant;
 
 /**
  *

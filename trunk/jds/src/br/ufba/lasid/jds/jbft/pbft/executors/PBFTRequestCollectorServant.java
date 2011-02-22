@@ -19,7 +19,6 @@ import br.ufba.lasid.jds.util.ITask;
 import br.ufba.lasid.jds.util.StatedPBFTRequestMessage.RequestState;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import trash.br.ufba.lasid.jds.jbft.pbft.executors.PBFTCollectorServant;
 import br.ufba.lasid.jds.util.Debugger;
 import br.ufba.lasid.jds.util.StatedPBFTRequestMessage;
 
