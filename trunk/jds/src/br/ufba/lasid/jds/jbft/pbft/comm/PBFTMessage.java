@@ -5,95 +5,15 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
-import br.ufba.lasid.jds.cs.comm.ClientServerMessage;
+import br.ufba.lasid.jds.comm.IMessage;
 
 /**
  *
  * @author aliriosa
  */
-public abstract class PBFTMessage extends ClientServerMessage{
+public abstract class PBFTMessage implements IMessage{
 
-    public static String VIEWFIELD = "__VIEW";
-    public static String REQUESTFIELD = "__REQUEST";
-    public static String DIGESTFIELD = "__DIGESTFIELD";
-    public static String REPLICAIDFIELD = "__REPLICAIDFIELD";
-    public static String REPLICAIDSENDERFIELD = "__REPLICAIDSENDERFIELD";
-    public static String REPLICAIDRECEIVERFIELD = "__REPLICAIDRECEIVERFIELD";
-    public static String SEQUENCENUMBERFIELD = "__SEQUENCENUMBERFIELD";
-    public static String TIMESTAMPFIELD = "__TIMESTAMPFIELD";
-    public static String CLIENTFIELD = "__CLIENTFIELD";
-    public static String BATCHSIZEFIELD = "__BATCHSIZEFIELD";
-
-    public static String CHECKPOINTNUMBERFIELD = "__CHECKPOINTNUMBERFIELD";
-    public static String CHECKPOINTMSGS = "__CHECKPOINTMSGS";
-
-    public static String SETPREPREPAREINFORMATIONFIELD = "__SETPREPREPAREINFORMATIONFIELD";
-    public static String SETPREPAREINFORMATIONFIELD = "__SETPREPAREINFORMATIONFIELD";
-    public static String SETCHECKPOINTEDINFORMATIONFIELD = "__SETCHECKPOINTEDINFORMATIONFIELD";
-
-    public static String NSREQUESTS = "__NSREQUESTS";
-    public static String SETPREPREPAREMSGS = "__SETPREPREPAREMSGS";
-    public static String VIEWCHANGEMSGS = "__VIEWCHANGEMSGS";
-    public static String REQUESTDONEFIELD = "__REQUESTDONEFIELD";
-    public static String BATCHSTATEFIELD = "__BATCHSTATEFIELD";
-    public static String EXECUTEDFIELD = "__EXECUTEDFIELD";
-    public static String CHECKPOINTLOWWATERMARK = "__CHECKPOINTLOWWATERMARK";
-    public static String SETCHEKPOINTS = "__SETCHEKPOINTS";
-    public static String SETREQUESTS = "__SETREQUESTS";
-    public static String CHANGEVIEWCERTIFICATE = "__CHANGEVIEWCERTIFICATE";
-
-
-
-
-    public enum TYPE{
-
-        SENDREQUEST(0),
-        RECEIVEREQUEST(1),
-        EXECUTE(2),
-        SENDREPLY(3),
-        RECEIVEREPLY(4),
-        SENDPREPREPARE(5),
-        RECEIVEPREPREPARE(6),
-        SENDPREPARE(7),
-        RECEIVEPREPARE(8),
-        SENDCOMMIT(9),
-        RECEIVECOMMIT(10),
-        REQUESTRETRANSMITION(11),
-        CHANGEVIEW(12),
-        BATCHING(13),
-        SENDCHECKPOINT(14),
-        FETCHSTATE(15),
-        EXECUTECHECKPOINT(16),
-        NEWVIEW(17),
-        RECEIVECHECKPOINT(18),
-        RECEIVECHANGEVIEW(19),
-        RECEIVECHANGEVIEWACK(20),
-        RECEIVENEWVIEW(21);
-      
-        private final int value;
-
-        TYPE(int value){
-            this.value = value;
-        }
-
-        public int getValue(){
-            return value;
-        }
-
-    }
-
-    protected long mySEQ = 0;
+    @Override
+    public abstract String toString();
     
-    public static PBFTMessage newRequest(){
-        PBFTMessage m = new PBFTRequestMessage();
-        m.put(TYPEFIELD, TYPE.SENDREQUEST);
-        return m;
-    }
-
-    public static PBFTMessage translateTo(PBFTMessage m, TYPE type){
-        m.put(TYPEFIELD, type);
-        return m;
-    }
-
-    public abstract String getID();
 }

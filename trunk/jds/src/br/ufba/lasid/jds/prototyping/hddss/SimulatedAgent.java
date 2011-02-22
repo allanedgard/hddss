@@ -11,8 +11,8 @@ public class SimulatedAgent extends Agent{
      * createMessage builds a new message that will be sent by the simulator
      * infra-structure
      * @param realClock - physical (simulated) clock
-     * @param sender - id of the agent that sends the message
-     * @param destination - id of the agent that will receive the message
+     * @param sender - ID of the agent that sends the message
+     * @param destination - ID of the agent that will receive the message
      * @param type - a number that labels the class of the message
      * @param content - content of the message
      * @param logicalClock - logical clock, if used
@@ -29,8 +29,8 @@ public class SimulatedAgent extends Agent{
      * createMessage builds a new message that will be sent by the simulator
      * infra-structure
      * @param realClock - physical (simulated) clock
-     * @param sender - id of the agent that sends the message
-     * @param destination - id of the agent that will receive the message
+     * @param sender - ID of the agent that sends the message
+     * @param destination - ID of the agent that will receive the message
      * @param type - a number that labels the class of the message
      * @param content - content of the message
      * @param logicalClock - logical clock, if used
@@ -54,10 +54,10 @@ public class SimulatedAgent extends Agent{
      * using this agent
      * @param realClock - physical (simulated) clock
      * @param msg - the message itself
-     * @param to - id of the final destination agent
+     * @param to - ID of the final destination agent
      */
     public final void relayMessage(int realClock, Message msg, int to) {
-        msg.relayFrom = id;
+        msg.relayFrom = ID;
         msg.relayTo = to;
         if (infra.faultModel == null) {
             infra.nic_out.add(realClock, msg);

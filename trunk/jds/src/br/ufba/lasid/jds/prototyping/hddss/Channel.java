@@ -45,7 +45,7 @@ public abstract class Channel {
                     nextDelivery = max(lastDelivery,(int)(p_j.infra.clock.value()))+at;
             };
 
-            p_j.infra.debug("process p" + p_j.id + " delivers at time " + nextDelivery);
+            p_j.infra.debug("process p" + p_j.ID + " delivers at time " + nextDelivery);
             p_j.infra.nic_in.add(nextDelivery, m);
             lastDelivery=nextDelivery;
         }

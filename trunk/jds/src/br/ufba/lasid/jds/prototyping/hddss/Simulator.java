@@ -15,9 +15,9 @@ public class Simulator  extends Thread implements RuntimeSupport
         int m;
     //int n;
     //int tempofinal;
-    Agent p[];
+    public Agent p[];
     
-    SimulatedScheduler scheduler = new SimulatedScheduler();
+    //SimulatedScheduler scheduler = new SimulatedScheduler();
 
     Network network;
 //    DescriptiveStatistics receptionDelay;
@@ -70,7 +70,7 @@ public class Simulator  extends Thread implements RuntimeSupport
             p[i].startup();
         }
 
-        scheduler.startup();
+        //scheduler.startup();
 
         boolean done = false;
 
@@ -80,19 +80,19 @@ public class Simulator  extends Thread implements RuntimeSupport
 
             for(int i = 0; i < n; i++){
 
-                p[i].infra.increaseTick();
+                p[i].getInfra().increaseTick();
 
                 /* 
                   if simulation time isn't over and p is not crashed then 
                   it hasn't been done yet.
                  */
 
-                done = done && ((p[i].infra.clock.value() >= finalTime) || !p[i].status());
+                done = done && ((p[i].getInfra().clock.value() >= finalTime) || !p[i].status());
             }
 
             network.avancaTick();
 
-            scheduler.infra.increaseTick();
+            //scheduler.infra.increaseTick();
             
         }
 
@@ -111,7 +111,7 @@ public class Simulator  extends Thread implements RuntimeSupport
 
         network.start();
 
-        scheduler.start();
+        //scheduler.start();
         
         for(int i = 0; i < n; i++)
         {
@@ -126,10 +126,10 @@ public class Simulator  extends Thread implements RuntimeSupport
         int n = get(Variable.NumberOfAgents).<Integer>value();
         for(int i = 0; i < n; i++)
         {
-            p[i].stop();
+            p[i].shutdown();
         }
 
-        scheduler.stop();
+        //scheduler.shutdown();
         
         network.stop();
     } 
@@ -143,11 +143,11 @@ public class Simulator  extends Thread implements RuntimeSupport
         double menor;
         menor = Double.MAX_VALUE;
         for (int i = 0;i<n;i++ ){
-            clockreal[i] = p[i].infra.clock.value() + ro * p[i].infra.clock.tickValue();
+            clockreal[i] = p[i].getInfra().clock.value() + ro * p[i].getInfra().clock.tickValue();
             if (clockreal[i] < menor) menor = clockreal[i];
         }
         for (int i = 0;i<n;i++ )
-            if ( (p[i].tipo == 's') && p[i].status() ) 
+            if ( (p[i].getTipo() == 's') && p[i].status() )
                 if (Math.abs(clockreal[i] - clockreal[j]) > DESVIO ) {
                     if (clockreal[j] == menor) {
                             return true;            
@@ -159,8 +159,8 @@ public class Simulator  extends Thread implements RuntimeSupport
     
     public final double calculaDiferenca(int i, int j) {
         double clockr_i, clockr_j;
-        clockr_i = p[i].infra.clock.value() + ro * p[i].infra.clock.tickValue();
-        clockr_j = p[j].infra.clock.value() + ro * p[j].infra.clock.tickValue();
+        clockr_i = p[i].getInfra().clock.value() + ro * p[i].getInfra().clock.tickValue();
+        clockr_j = p[j].getInfra().clock.value() + ro * p[j].getInfra().clock.tickValue();
         return Math.abs(clockr_i - clockr_j);
     }
     
@@ -197,6 +197,8 @@ public class Simulator  extends Thread implements RuntimeSupport
         iniciaModoHwClock();
 
         estatisticas();
+        
+        System.exit(0);
     }
 
     public void estatisticas() {
@@ -263,7 +265,7 @@ public class Simulator  extends Thread implements RuntimeSupport
 
             set(Variable.Network, network);
 
-            prepareAgent(scheduler);
+            //prepareAgent(scheduler);
             
             //initing and setuping the agents
             for(int i = 0; i < n; i++){
@@ -276,7 +278,7 @@ public class Simulator  extends Thread implements RuntimeSupport
                     p[i] = (Agent) Factory.create(Agent.TAG, Agent.class.getName());
                 }
 
-                p[i].setId(i);
+                p[i].setAgentID(i);
                 p[i].setType(get(Variable.Type).<String>value().charAt(0));
 
                 prepareAgent(p[i]);
@@ -317,6 +319,8 @@ public class Simulator  extends Thread implements RuntimeSupport
             ((Clock_Virtual)(a.infra.clock)).rho =
                     ((new Randomize()).irandom(-maxro,maxro));
         }
+
+        //a.infra.scheduler = scheduler;
 
         a.init();
     }
@@ -395,7 +399,7 @@ public class Simulator  extends Thread implements RuntimeSupport
         set(Variable.StdOutput, out);
         set(Variable.ClockDeviation, ro);
         set(Variable.MaxClockDeviation, maxro);
-        set(Variable.Scheduler, scheduler);
+        //set(Variable.Scheduler, scheduler);
         
     }
     public Value get(Variable variable) {

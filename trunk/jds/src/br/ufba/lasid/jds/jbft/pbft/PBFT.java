@@ -5,971 +5,153 @@
 
 package br.ufba.lasid.jds.jbft.pbft;
 
-import br.ufba.lasid.jds.cs.ClientServerProtocol;
-import br.ufba.lasid.jds.util.Wrapper;
-import br.ufba.lasid.jds.factories.PBFTActionFactory;
-import br.ufba.lasid.jds.group.Group;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBatchMessage;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
-import br.ufba.lasid.jds.security.Authenticator;
-import br.ufba.lasid.jds.util.Buffer;
-import br.ufba.lasid.jds.util.Clock;
-import br.ufba.lasid.jds.util.Debugger;
-import br.ufba.lasid.jds.util.Scheduler;
+import br.ufba.lasid.jds.group.IGroup;
+import trash.br.ufba.lasid.jds.DistributedProtocol;
+import br.ufba.lasid.jds.architectures.Architecture;
+import br.ufba.lasid.jds.security.IMessageAuthenticator;
+import br.ufba.lasid.jds.util.IClock;
+import br.ufba.lasid.jds.util.IScheduler;
+import br.ufba.lasid.jds.util.TaskTable;
+import br.ufba.lasid.jds.util.TaskTableStore;
+import org.apache.commons.collections.Buffer;
+import org.apache.commons.collections.BufferUtils;
+import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTStateLog;
 
 /**
- * Pratical Byzantine Fault Tolerant Protocol (Castro and Liskov, 1999)
+ *
  * @author aliriosa
  */
-public class PBFT extends ClientServerProtocol{
+public class PBFT extends DistributedProtocol{
 
-    public static String DEBUGGER = "__DEBUGGER";
-    public static String LOCALGROUP = "__LOCALGROUP";
-    public static String GROUPLEADER = "__GROUPLEADER";
-    public static String CLIENTSCHEDULER  = "__CLIENTSCHEDULER";
-    public static String PRIMARYFDSCHEDULER = "__PRIMARYFDSCHEDULER";
-    public static String PREPREPARETIMEOUT = "__PREPREPARETIMEOUT";
-    public static String LATEPRIMARYTIMEOUT = "__LATEPRIMAYTIMEOUT";
-    public static String CLIENTRETRANSMISSIONTIMEOUT = "__CLIENTRETRANSMISSIONTIMEOUT";
-    public static String CLIENTMSGAUTHENTICATOR = "CLIENTMSGAUTHENTICATOR";
-    public static String CURRENTVIEW = "__CURRENTVIEW";
-    public static String ALLOWABLENUMBEROFFAULTREPLICAS = "__ALLOWABLENUMBEROFFAULTREPLICAS";
-    public static String CLOCKSYSTEM = "__CLOCKSYSTEM";
-    public static String REQUESTBUFFER = "__REQUESTBUFFER";
-    public static String PREPREPAREBUFFER = "__PREPREPAREBUFFER";
-    public static String PREPAREBUFFER = "__PREPAREBUFFER";
-    public static String COMMITBUFFER = "__COMMITBUFFER";
-    public static String CHANGEVIEWBUFFER = "__CHANGEVIEWBUFFER";
-    public static String CHANGEVIEWACKBUFFER = "__CHANGEVIEWACKBUFFER";
-    public static String COMMITTEDBUFFER = "__COMMITTEDBUFFER";
-    public static String REPLYBUFFER = "__REPLYBUFFER";
-    public static String CHECKPOINTBUFFER = "__CHECKPOINTBUFFER";
-    public static String CLIENTAUTHENTICATOR = "__CLIENTAUTHENTICATOR";
-    public static String SERVERAUTHENTICATOR = "__SERVERAUTHENTICATOR";
-    public static String PRIMARYFAULTTIMEOUT = "__PRIMARYFAULTYTIMEOUT";
-    public static String BATCHINGSIZE        = "__BATCHINGSIZE";
-    public static String BATCHINGTIMEOUT = "__BATCHINGTIMEOUT";
-    public static String BATCHSCHEDULER = "__BATCHSCHEDULER";
-    public static String REJUVENATIONSCHEDULER = "__REJUVENATIONSCHEDULER";
-    public static String CHECKPOINTPERIOD = "__CHECKPOINTPERIOD";
-    public static String CHECKPOINTNUMBER = "__CHECKPOINTNUMBER";
-    public static String LASTCHECKPOINT  = "__LASTCHECKPOINT";
-    public static String REJUVENATIONWINDOW  = "__REJUVENATIONWINDOW";
-    public static String PREPARESTATEINFORMATION = "__PREPARESTATEINFORMATION";
-    public static String PREPREPARESTATEINFORMATION = "__PREPREPARESTATEINFORMATION";
-    public static String CHANGEVIEWCERTIFICATEBUFFER = "__CHANGEVIEWCERTIFICATEBUFFER";
-    public static String CHECKPOINTSTATEINFORMATION = "__CHECKPOINTSTATEINFORMATION";
-    public static String CHANGEVIEWRETRANSMITIONSCHEDULER = "__CHANGEVIEWRETRANSMITIONSCHEDULER";
+    protected TaskTableStore ttstore = new TaskTableStore();
 
-    public static String VIEWCHANGERETRANSMITIONTIMEOUT = "__VIEWCHANGERETRANSMITIONTIMEOUT";
-    
-    protected boolean lock = false;
-    
-    protected int viewChangeAttemps = 0;
+    public static String REQUESTTASKS       = "REQUESTTASKS";
+    public static String VIEWCHANGETASKS    = "VIEWCHANGETASKS";
+    public static String BATCHTASKS         = "BATCHTASKS";
+    public static String PREPAREQUORUMSTORE = "__PREPAREQUORUMSTORE";
+    public static String COMMITQUORUMSTORE = "__COMMITQUORUMSTORE";
 
-    public void initViewChangeAttemps(){
+    protected volatile PBFTStateLog stateLog = new PBFTStateLog();
 
-        this.viewChangeAttemps = 0;
-        
-    }
-
-    public int getViewChangeAttemps(){
-        return this.viewChangeAttemps;
-    }
-
-    public int incViewChangeAttemps(){
-        return ++ this.viewChangeAttemps ;
-    }
-
-
-
-    public void lock(){
-        this.lock = true;
-    }
-
-    public void unlock(){
-        this.lock = false;
-    }
-
-    public boolean isLooked(){
-        return this.lock;
-    }
-
-    public boolean isUnlooked(){
-        return (!isLooked());
-    }
-
-    public PBFTTuple getPrepareStateInformation(){
-        return (PBFTTuple)getContext().get(PREPARESTATEINFORMATION);
-    }
-
-    public PBFTTuple getPrePrepareStateInformation(){
-        return (PBFTTuple)getContext().get(PREPREPARESTATEINFORMATION);
-    }
-
-    public void setPrepareStateInformation(PBFTTuple tuple){
-        getContext().put(PREPARESTATEINFORMATION, tuple);
-    }
-
-    public void setPrePrepareStateInformation(PBFTTuple tuple){
-        getContext().put(PREPREPARESTATEINFORMATION, tuple);
-    }
-
-    public void initPrePrepareStateInformation(){
-        PBFTTuple tuple = getPrePrepareStateInformation();
-        if(tuple == null){
-            tuple = new PBFTTuple();
-        }
-
-        tuple.clear();
-
-        setPrePrepareStateInformation(tuple);
-    }
-
-    public void initPrepareStateInformation(){
-        PBFTTuple tuple = getPrepareStateInformation();
-        if(tuple == null){
-            tuple = new PBFTTuple();
-        }
-
-        tuple.clear();
-
-        setPrepareStateInformation(tuple);
-    }
-
-    public void initCheckpointStateInformation(){
-        PBFTTuple tuple = getCheckpointedStateInformation();
-        if(tuple == null){
-            tuple = new PBFTTuple();
-        }
-
-        tuple.clear();
-
-        setCheckpointStateInformation(tuple);
-    }
-
-    public boolean hasViewConsistentInformation(Buffer state){
-        
-        for(Object item : state){
-
-            String ID = (String) item;
-            
-            try{
-
-                String viewString = (ID.split(":"))[2];
-
-                Integer view = new Integer(viewString);
-
-                if(view.compareTo(getCurrentView()) > 0){
-
-                    return false;
-
-                }
-                
-            }catch(Exception e){
-
-                return false;
-                
-            }
-        }
-
-        return true;
+    public PBFTStateLog getStateLog() {
+        return stateLog;
     }
     
-    public PBFTTuple updateStateInformation(PBFTTuple state, PBFTMessage m, Integer view, Long seqn){
+    public TaskTableStore getTaskTableStore(){
+        return ttstore;
+    }
 
-        if(state == null){
+    public TaskTable getTaskTable(String ttname){
 
-            state = new PBFTTuple();
+        TaskTable ttable = ttstore.get(ttname);
 
+        if(ttable == null){
+            ttable = new TaskTable();
+            ttstore.put(ttname, ttable);
         }
-        
-        PBFTMessage batch = (PBFTMessage) m.get(PBFTMessage.REQUESTFIELD);
 
-        if(m instanceof PBFTBatchMessage){
-            batch = m;
-        }
-        
-        PBFTTuple tuple = new PBFTTuple();
-        
-        tuple.put(PBFTMessage.SEQUENCENUMBERFIELD, seqn);
-        tuple.put(PBFTMessage.VIEWFIELD, view);
-        tuple.put(PBFTMessage.DIGESTFIELD, batch.get(PBFTMessage.DIGESTFIELD));
-        
-        String tupleID = getLocalProcess().getID().toString() + ":" + batch.getID();
-
-        state.put(tupleID, tuple);
-
-        /*
-
-        int batchSize = ((Integer)batch.get(PBFTMessage.BATCHSIZEFIELD)).intValue();
-
-        for(int r = 0; r < batchSize; r ++){
-
-            String reqField = getRequestField(r);
-
-            PBFTMessage request  = (PBFTMessage) batch.get(reqField);
-
-            PBFTTuple tuple = new PBFTTuple();
-
-            tuple.put(PBFTMessage.SEQUENCENUMBERFIELD, seqn);
-            tuple.put(PBFTMessage.VIEWFIELD, view);
-            tuple.put(PBFTMessage.DIGESTFIELD, request.get(PBFTMessage.DIGESTFIELD));
-
-            String tupleID = getLocalProcess().getID().toString() + ":" + request.getID();
-            
-            state.put(tupleID, tuple);
-
-        }
-        */
-        return state;
+        return ttable;
     }
     
-    public void updatePrepareStateInformation(PBFTMessage prepare, Integer view, Long seqn){
-        
-        setPrepareStateInformation(
-            updateStateInformation(
-              getPrepareStateInformation(), prepare, view, seqn
-            )
-        );
-        
+    protected volatile IScheduler scheduler;
+
+    public IScheduler getScheduler() {
+        return scheduler;
     }
 
-    public void updatePrePrepareStateInformation(PBFTMessage preprepare, Integer view, Long seqn){
-        setPrePrepareStateInformation(
-            updateStateInformation(
-              getPrePrepareStateInformation(), preprepare, view, seqn
-            )
-        );
-
-
-
+    public void setScheduler(IScheduler scheduler) {
+        this.scheduler = scheduler;
     }
 
-    public void setLastCheckpoint(PBFTMessage checkpoint){
-        getContext().put(LASTCHECKPOINT, checkpoint);
+    protected IClock clock;
+
+    public IClock getClock() {
+        return clock;
     }
 
-    public PBFTMessage getLastCheckpoint(){
-        return (PBFTMessage)(getContext().get(LASTCHECKPOINT));
+    public void setClock(IClock clock) {
+        this.clock = clock;
     }
 
-    public Long getLastCheckpointSequenceNumber(){
-        Buffer buffer = getCommittedBuffer();
+    /**
+     * Input buffer which is used to keep the received replies before they be able
+     * to be checked and delivered to the application.
+     */
+    protected Buffer inbox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
 
-        long chk = -1;
+    /**
+     * Get the input buffer.
+     * @return the input buffer.
+     */
+    protected Buffer getInbox() { return inbox;  }
 
-        for(Object item : buffer){
+    /**
+     * Output buffer where the requests are kept until be able to be encrypted
+     * and send to the server group.
+     */
+    protected Buffer outbox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
 
-            PBFTMessage m = (PBFTMessage) item;
+    /**
+     * Get the output buffer.
+     * @return the output buffer.
+     */
+    protected Buffer getOutbox() { return outbox;  }
 
-            long seq = (Long)m.get(PBFTMessage.SEQUENCENUMBERFIELD);
+    /**
+     * Application buffer where the results are kept until be able to be
+     * delivered to the application.
+     */
+    protected Buffer appbox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
 
-            if(seq > chk) chk = seq;
+    protected IMessageAuthenticator authenticator;
 
-        }
 
-        if(chk < 0){
-
-            PBFTMessage checkpoint = getLastCheckpoint();
-
-            if(checkpoint != null){
-
-                chk =  (Long)checkpoint.get(PBFTMessage.SEQUENCENUMBERFIELD);
-                
-            }
-
-        }
-
-        return new Long(chk);
+    public IMessageAuthenticator getAuthenticator() {
+        return authenticator;
     }
 
-    public Long getCheckpointLowWaterMark(){
-        long low = 0;
-        PBFTMessage checkpoint = getLastCheckpoint();
-
-        if(checkpoint != null){
-            long SEQCheckpoint = (Long)checkpoint.get(PBFTMessage.SEQUENCENUMBERFIELD);
-            low = SEQCheckpoint;
-        }
-
-        return new Long(low);
-
+    public void setAuthenticator(IMessageAuthenticator authenticator) {
+        this.authenticator = authenticator;
     }
 
-    public Long getCheckpointHighWaterMark(){
-        long factor  = 20;
-        long low  = getCheckpointLowWaterMark().longValue();
-        return new Long(low + factor * getCheckPointPeriod());
-    }
-    /*
-        [TODO] verify if sequence number of the message achieves the criteries.
-     */    
-    public  boolean isValidSequenceNumber(PBFTMessage m) {
-        long low  = getCheckpointLowWaterMark().longValue();
-        long high = getCheckpointHighWaterMark().longValue();
-
-        long SEQMessage = (Long)m.get(PBFTMessage.SEQUENCENUMBERFIELD);
-
-        return ((SEQMessage >= low) && (SEQMessage <= high));
-
-    }
-
-    public Buffer getCheckpointBuffer() {
-        return (Buffer)getContext().get(PBFT.CHECKPOINTBUFFER);
-    }
-
-    public Buffer getCommittedBuffer() {
-        return (Buffer)getContext().get(PBFT.COMMITTEDBUFFER);
-    }
-
-    public Buffer getReplyBuffer() {
-        return (Buffer)getContext().get(PBFT.REPLYBUFFER);
-    }
-
-    public boolean existsPrePrepareForRequest(PBFTMessage m) {
-        Buffer buffer = getPrePrepareBuffer();
-
-        for(Object item : buffer){
-
-            PBFTMessage preprepare = (PBFTMessage) item;
-
-            PBFTMessage batch =
-                (PBFTMessage) preprepare.get(PBFTMessage.REQUESTFIELD);
-
-            int batchSize = (Integer)batch.get(PBFTMessage.BATCHSIZEFIELD);
-
-            for(int r = 0; r < batchSize; r++){
-
-                String requestField = getRequestField(r);
-                
-                PBFTMessage request = (PBFTMessage)batch.get(requestField);
-
-                if(request.getID().equals(m.getID())){
-
-                    return true;
-                    
-                }
-            }
-        }
-
-        return false;
-    }
-
-    public Buffer getChangeViewAckBuffer() {
-
-        return (Buffer)getContext().get(PBFT.CHANGEVIEWACKBUFFER);
-        
-    }
-
-    public PBFTMessage getChangeViewSentFromSelectedPrimary(PBFTMessage m) {
-
-        Buffer buffer = getChangeViewBuffer();
-        Integer theView  = (Integer)m.get(PBFTMessage.VIEWFIELD);
-
-        Integer ID = new Integer(Integer.MAX_VALUE);
-        
-        PBFTMessage result = null;
-
-        for(Object item : buffer){
-
-            PBFTMessage cv  = (PBFTMessage) item;
-            Integer myView = (Integer) cv.get(PBFTMessage.VIEWFIELD);
-
-            if(myView.equals(theView)){
-
-                if((((Integer)cv.get(PBFTMessage.REPLICAIDFIELD)).compareTo(ID)) < 0){
-
-                    result = cv;
-
-                    ID = ((Integer)cv.get(PBFTMessage.REPLICAIDFIELD));
-
-                }
-
-            }
-
-        }
-
-        return result;
-        
-    }
-
-    public PBFTTuple getCheckpointedStateInformation() {
-        return (PBFTTuple)getContext().get(CHECKPOINTSTATEINFORMATION);
-    }
-
-    public PBFTTuple selectHighestCheckpointTupleFromChangeView() {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public void updateCheckpointStateInformation(PBFTMessage checkpoint, Integer view, Long seqn) {
-        setCheckpointStateInformation(
-            updateStateInformation(
-                getCheckpointedStateInformation(), checkpoint, view, seqn
-            )
-        );
-
-    }
-
-    public void setCheckpointStateInformation(PBFTTuple tuple) {
-        getContext().put(CHECKPOINTSTATEINFORMATION, tuple);
-    }
-
-    public enum BATCHSTATE{
-        NOBATCH, INBATCH, BATCHED
-    }
-
-
-    public int BATCHINGCOUNT = 0;
-    public Long lastCommitedSequenceNumber = new Long(0);
-
-    protected static long SEQ = 0;
-
-    public static long newSequenceNumber(){
-        return ++SEQ;
-    }
-
-    public static long getCurrentSequenceNumber(){
-        return SEQ;
-    }
-
-    public static void updateCurrentSequenceNumber(long sqn){
-        SEQ = sqn;
-    }
+    protected IGroup group;
     
-    public String getRequestField(){
-        return getRequestField(BATCHINGCOUNT);
+    public IGroup getLocalGroup(){
+        return group;
     }
 
-    public long getLastStableStateSequenceNumber(){
-        Buffer buffer = getCommittedBuffer();
-        
-        if(buffer.isEmpty()){
-
-            return -1;
-
-        }
-
-
-        PBFTMessage m = (PBFTMessage) buffer.get(buffer.size()-1);
-        return (Long)m.get(PBFTMessage.SEQUENCENUMBERFIELD);
-        
-    }
-    public String getRequestField(int i){
-        return (PBFTMessage.REQUESTFIELD +  i);
+    public void setLocalGroup(IGroup g){
+        group = g;
     }
 
-    public int getBatchingCount(){
-        return BATCHINGCOUNT;
-    }
-
-    public void increaseBatch() {
-        BATCHINGCOUNT++;
-    }
-
-    public int getMaxBatchSize(){
-        return (((Integer)getContext().get(PBFT.BATCHINGSIZE)).intValue());
-    }
-    public boolean batchIsNotComplete(){
-        return (getBatchingCount() < getMaxBatchSize());
-    }
-
-    public void initBatching(){
-        BATCHINGCOUNT = 0;
-    }
-    @Override
-    public void doAction(Wrapper w){
-       //System.out.println("[Protocol] call Protocol.perform");
-       perform(PBFTActionFactory.create(w));
-    }
-
-    public Long getBatchingTimeout(){
-        return (Long)getContext().get(PBFT.BATCHINGTIMEOUT);
-    }
-
-    public Long getChangeViewRetransmissionTimeout(){
-        return (Long)getContext().get(PBFT.VIEWCHANGERETRANSMITIONTIMEOUT);
-    }
-
-
-    public Long getRetransmissionTimeout(){
-        return (Long)getContext().get(PBFT.CLIENTRETRANSMISSIONTIMEOUT);
-    }
-
-    public Long getPrimaryFaultyTimeout(){
-        return (Long)getContext().get(PBFT.PRIMARYFAULTTIMEOUT);
-    }
-
-    public void setPrimaryFaultTimeout(Long timeout){
-        getContext().put(PBFT.PRIMARYFAULTTIMEOUT, timeout);
-    }
-    public Long getTimestamp(){
-        return new Long(((Clock)getContext().get(PBFT.CLOCKSYSTEM)).value());
-    }
-
-    public Debugger getDebugger(){
-        return (Debugger) getContext().get(PBFT.DEBUGGER);
-    }
-
-    public Scheduler getChangeViewRetransmittionScheduler(){
-        return (Scheduler)(getContext().get(PBFT.CHANGEVIEWRETRANSMITIONSCHEDULER));
-    }
-
-    public Scheduler getClientScheduler(){
-        return (Scheduler)(getContext().get(PBFT.CLIENTSCHEDULER));
-    }
-
-    public Scheduler getBatchingScheduler(){
-        return (Scheduler)(getContext().get(PBFT.BATCHSCHEDULER));
-    }
-
-    public Scheduler getRejuvenationScheduler(){
-        return (Scheduler)(getContext().get(PBFT.REJUVENATIONSCHEDULER));
-    }
-
-    public Scheduler getPrimaryFDScheduler(){
-        return (Scheduler)(getContext().get(PBFT.PRIMARYFDSCHEDULER));
-    }
-
-    public Authenticator getServerAuthenticator(){
-        return (Authenticator)(getContext().get(PBFT.SERVERAUTHENTICATOR));
-    }
-
-    public Authenticator getClientMessageAuthenticator(){
-        return (Authenticator)(getContext().get(PBFT.CLIENTMSGAUTHENTICATOR));
-    }
-
-    public synchronized Buffer getRequestBuffer(){
-        return ((Buffer)(getContext().get(PBFT.REQUESTBUFFER)));
-    }
-
-    public boolean isPrimary(){
-        return isPrimary(getLocalProcess());
-    }
-    public boolean isPrimary(br.ufba.lasid.jds.Process p){
-        return (getContext().get(PBFT.GROUPLEADER)).equals(p.getID());
-    }
-
-    public void setGroupLeader(Object ID){
-        getContext().put(PBFT.GROUPLEADER, ID);
-    }
-
-    public Integer getCurrentView(){
-        return (Integer)getContext().get(PBFT.CURRENTVIEW);
-    }
-
-    public void setCurrentView(Integer v){
-        getContext().put(PBFT.CURRENTVIEW, v);
-    }
-
-    public Group getLocalGroup(){
-        return (Group)getContext().get(PBFT.LOCALGROUP);
-    }
-
-    public Buffer getPrePrepareBuffer() {
-        return (Buffer)getContext().get(PBFT.PREPREPAREBUFFER);
-    }
-
-    public Buffer getPrepareBuffer() {
-        return (Buffer)getContext().get(PBFT.PREPAREBUFFER);
-    }
-
-    public Buffer getCommitBuffer() {
-        return (Buffer)getContext().get(PBFT.COMMITBUFFER);
-    }
-
-    public Buffer getChangeViewBuffer() {
-        return (Buffer)getContext().get(PBFT.CHANGEVIEWBUFFER);
-    }
-
-    public boolean belongsToCurrentView(PBFTMessage m) {
-        return getCurrentView().equals(m.get(PBFTMessage.VIEWFIELD));
-    }
-
-    public boolean exists(PBFTMessage m, Buffer buffer){
-
-        for(Object item : buffer){
-            PBFTMessage m1 = (PBFTMessage) item;
-
-            boolean viewCheck   = m1.get(PBFTMessage.VIEWFIELD).equals(m.get(PBFTMessage.VIEWFIELD));
-            boolean digestCheck = m1.get(PBFTMessage.DIGESTFIELD).equals(m.get(PBFTMessage.DIGESTFIELD));
-            boolean sequenceCheck = m1.get(PBFTMessage.SEQUENCENUMBERFIELD).equals(m.get(PBFTMessage.SEQUENCENUMBERFIELD));
-
-            if(viewCheck && digestCheck && sequenceCheck){
-                return true;
-            }
-
-        }
-
-        return false;
-
-    }
-    public boolean existsPrePrepare(PBFTMessage m) {
-        return exists(m, getPrePrepareBuffer());
-    }
-
-    public boolean existsPrepare(PBFTMessage m) {
-        return exists(m, getPrepareBuffer());
-    }
-
-    public boolean existsRequest(PBFTMessage m){
-        Buffer buffer = getRequestBuffer();
-        
-        for(Object item : buffer){
-            PBFTMessage m1 = (PBFTMessage) item;
-
-            boolean clientCheck   = m1.get(PBFTMessage.CLIENTFIELD).equals(m.get(PBFTMessage.CLIENTFIELD));            
-            boolean timestamptCheck   = m1.get(PBFTMessage.TIMESTAMPFIELD).equals(m.get(PBFTMessage.TIMESTAMPFIELD));
-
-            if(clientCheck && timestamptCheck){
-                return true;
-            }
-
-        }
-
-        return false;
-        
-    }
     public int getServiceBFTResilience(){
         return (int)(Math.floor(getLocalGroup().getGroupSize()/3));
     }
-    public boolean gotQuorum(PBFTMessage m){
 
-        if(isPrepare(m)){
-            return gotPrepareQuorum(m);
-        }
+    Architecture architecture = null;
 
-        if(isCommit(m)){
-            return gotCommitQuorum(m);
-        }
-
-        if(isReceivedReply(m)){
-            return gotReceiveReplyQuorum(m);
-        }
-
-        if(isChangeView(m)){
-            return gotChangeViewQuorum(m);
-        }
-
-        if(isChangeViewAck(m)){
-            return gotChangeViewAckQuorum(m);
-        }
-
-        if(isCheckpoint(m)){
-            return gotCheckpointQuorum(m);
-        }
-
-
-        return false;
+    public Architecture getArchitecture() {
+        return architecture;
     }
 
-    public synchronized void garbage(long seq){
-        Buffer buffer = getCommittedBuffer();
-        int size = buffer.size();
-        
-        for(int i = size-1; i >= 0; i--){
-
-            PBFTMessage batch = (PBFTMessage) buffer.get(i);
-            
-            long SEQ = (Long)batch.get(PBFTMessage.SEQUENCENUMBERFIELD);
-
-            if(SEQ <= seq){
-
-                int batchSize =  (Integer)batch.get(PBFTMessage.BATCHSIZEFIELD);
-
-                for(int j = 0; j < batchSize; j++){
-
-                    String reqField = getRequestField(j);
-
-                    PBFTMessage req = (PBFTMessage)batch.get(reqField);
-                    PBFTMessage rep = req;
-
-                    req = getBufferedMessage(getRequestBuffer(), req);
-                    rep = getBufferedMessage(getReplyBuffer(), rep);
-
-                    getRequestBuffer().remove(req);
-                    getReplyBuffer().remove(rep);
-                }
-                
-                buffer.remove(batch);
-                
-            }
-
-            System.gc();
-            
-        }
-
-        int size2 = getPrePrepareBuffer().size();
-
-        for(int j = size2-1; j >=0; j --){
-            PBFTMessage pp = (PBFTMessage)getPrePrepareBuffer().get(j);
-            long SEQ2 = (Long)pp.get(PBFTMessage.SEQUENCENUMBERFIELD);
-            if(SEQ2 <= seq){
-                getPrePrepareBuffer().remove(pp);
-            }
-        }
-
-        size2 = getPrepareBuffer().size();
-
-        for(int j = size2-1; j >=0; j --){
-            PBFTMessage pp = (PBFTMessage)getPrepareBuffer().get(j);
-            long SEQ2 = (Long)pp.get(PBFTMessage.SEQUENCENUMBERFIELD);
-            if(SEQ2 <= seq){
-                getPrepareBuffer().remove(pp);
-            }
-        }
-
-        size2 = getCommitBuffer().size();
-
-        for(int j = size2-1; j >=0; j --){
-            PBFTMessage pp = (PBFTMessage)getCommitBuffer().get(j);
-            long SEQ2 = (Long)pp.get(PBFTMessage.SEQUENCENUMBERFIELD);
-            if(SEQ2 <= seq){
-                getCommitBuffer().remove(pp);
-            }
-        }
-
-        size2 = getCheckpointBuffer().size();
-        
-        for(int j = size2-1; j >=0; j --){
-            PBFTMessage pp = (PBFTMessage)getCheckpointBuffer().get(j);
-            long SEQ2 = (Long)pp.get(PBFTMessage.SEQUENCENUMBERFIELD);
-            if(SEQ2 < seq){
-                getCheckpointBuffer().remove(pp);
-            }
-        }
-
+    public void setArchitecture(Architecture architecture) {
+        this.architecture = architecture;        
     }
+
+    public void buildup(){
+        getArchitecture().buildup();
+    }
+    public void startup(){
+        getArchitecture().startup();
+    }
+
+    protected boolean shutdown = false;
     
-    public boolean gotQuorum(PBFTMessage m, Buffer buffer, int minQuorum, boolean includeItsOwn){
-
-        int quorum = 0;
-        int f      = getServiceBFTResilience();
-
-        for(Object item : buffer){
-
-            PBFTMessage p = (PBFTMessage) item;
-            boolean viewCheck   = p.get(PBFTMessage.VIEWFIELD).equals(m.get(PBFTMessage.VIEWFIELD));
-            boolean digestCheck = p.get(PBFTMessage.DIGESTFIELD).equals(m.get(PBFTMessage.DIGESTFIELD));
-            boolean sequenceCheck = p.get(PBFTMessage.SEQUENCENUMBERFIELD).equals(m.get(PBFTMessage.SEQUENCENUMBERFIELD));
-            boolean replicaCheck = p.get(PBFTMessage.REPLICAIDFIELD).equals(m.get(PBFTMessage.REPLICAIDFIELD));
-
-            if(!includeItsOwn){
-
-                if(viewCheck && digestCheck && sequenceCheck && !replicaCheck){
-                    quorum++;
-                }
-
-            }else{
-
-                if(viewCheck && digestCheck && sequenceCheck){
-                    quorum++;
-                }
-                
-            }
-
-        }
-
-        return (quorum >= minQuorum);
-    }
-
-    public boolean gotReceiveReplyQuorum(PBFTMessage m){
-
-        int f      = getServiceBFTResilience();
-
-        int quorum = 0;        
-
-        Buffer buffer = getReplyBuffer();
-        Buffer replicas = new Buffer();
-        
-        for(Object item : buffer){
-
-            PBFTMessage p = (PBFTMessage) item;
-            
-            boolean clientCheck   = p.get(PBFTMessage.CLIENTFIELD).equals(m.get(PBFTMessage.CLIENTFIELD));
-            boolean digestCheck = p.get(PBFTMessage.DIGESTFIELD).equals(m.get(PBFTMessage.DIGESTFIELD));
-            
-            Object i  = p.get(PBFTMessage.REPLICAIDFIELD);
-            
-            if(!replicas.contains(i) && clientCheck && digestCheck){
-                quorum ++;
-                replicas.add(i);
-            }
-
-        }
-
-        return (quorum >= f + 1);
-    }
-
-    public boolean gotPrepareQuorum(PBFTMessage m){
-
-        int f      = getServiceBFTResilience();
-
-        return gotQuorum(m, getPrepareBuffer(), 2 * f, false);
-        
-    }
-
-    public boolean gotCheckpointQuorum(PBFTMessage m){
-        int f      = getServiceBFTResilience();
-        return gotQuorum(m, getCheckpointBuffer(), 2 * f + 1, false);
-    }
-    
-    public boolean gotCommitQuorum(PBFTMessage m){
-        
-        int f      = getServiceBFTResilience();
-
-        return gotQuorum(m, getCommitBuffer(), 2 * f + 1, true);
-
-    }
-
-    public boolean gotChangeViewQuorum(PBFTMessage m){
-
-        int f      = getServiceBFTResilience();
-        int minQuorum = 2 * f + 1;
-        int quorum = 0;
-        Buffer buffer = getChangeViewBuffer();
-
-        for(Object item : buffer){
-
-            PBFTMessage p = (PBFTMessage) item;
-            
-            boolean viewCheck   = p.get(PBFTMessage.VIEWFIELD).equals(m.get(PBFTMessage.VIEWFIELD));
-            //boolean digestCheck = p.get(PBFTMessage.DIGESTFIELD).equals(m.get(PBFTMessage.DIGESTFIELD));
-            //boolean chknumber = p.get(PBFTMessage.CHECKPOINTLOWWATERMARK).equals(m.get(PBFTMessage.CHECKPOINTLOWWATERMARK));
-
-            if(viewCheck){// && digestCheck && chknumber){
-                
-                quorum++;
-            }
-
-        }
-
-        return (quorum >= minQuorum);
-
-
-//        return gotQuorum(m, getChangeViewBuffer(), 2 * f - 1, false);
-
-    }
-
-    public boolean gotChangeViewAckQuorum(PBFTMessage m){
-
-        int f      = getServiceBFTResilience();
-        int minQuorum = 2 * f;
-        int quorum = 0;
-        Buffer buffer = getChangeViewAckBuffer();
-
-        for(Object item : buffer){
-
-            PBFTMessage p = (PBFTMessage) item;
-
-            boolean viewCheck   = p.get(PBFTMessage.VIEWFIELD).equals(m.get(PBFTMessage.VIEWFIELD));
-            //boolean digestCheck = p.get(PBFTMessage.DIGESTFIELD).equals(m.get(PBFTMessage.DIGESTFIELD));
-            boolean primary = p.get(PBFTMessage.REPLICAIDRECEIVERFIELD).equals(m.get(PBFTMessage.REPLICAIDRECEIVERFIELD));
-
-
-            if(viewCheck && /* digestCheck &&*/ primary){
-                quorum++;
-            }
-
-        }
-
-        return (quorum >= minQuorum);
-
-    }
-
-    public boolean isCheckpoint(PBFTMessage m){
-        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVECHECKPOINT);
-    }
-
-    public boolean isPrepare(PBFTMessage m){
-        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVEPREPARE);
-    }
-
-    public boolean isCommit(PBFTMessage m){
-        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVECOMMIT);
-    }
-
-    public boolean isChangeView(PBFTMessage m){
-        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVECHANGEVIEW);
-    }
-
-    public boolean isChangeViewAck(PBFTMessage m){
-        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVECHANGEVIEWACK);
+    public void shutdown(){
+        getArchitecture().shutdown();
+        shutdown = true;
     }
 
 
-    public boolean isReceivedReply(PBFTMessage m){
-        return m.get(PBFTMessage.TYPEFIELD).equals(PBFTMessage.TYPE.RECEIVEREPLY);
-    }
-
-    public Long getCheckPointPeriod() {
-        return ((Long)getContext().get(PBFT.CHECKPOINTPERIOD));
-    }
-    
-    public void setCheckPointPeriod(Long period) {
-        getContext().put(PBFT.CHECKPOINTPERIOD, period);
-    }
-
-    public static String __getRequestID(PBFTMessage m){
-        
-        String client =                
-            ((br.ufba.lasid.jds.Process)m.get(PBFTMessage.CLIENTFIELD)).getID().toString();
-
-        String timestamp = ((Long)m.get(PBFTMessage.TIMESTAMPFIELD)).toString();
-
-        String payload   = m.get(PBFTMessage.PAYLOADFIELD).toString();
-
-        return client + "." + timestamp + "." + payload;
-        
-    }
-
-    public static boolean isABufferedMessage(Buffer buffer, PBFTMessage m){
-        /* check if request exists in the buffer */
-        PBFTMessage bm = getBufferedMessage(buffer, m);
-
-        if(bm == null)
-            return false;
-
-        return bm.getID().equals(m.getID());//getRequestID(bRequest).equals(getRequestID((PBFTMessage)request));
-        
-    }
-
-    public static PBFTMessage getBufferedMessage(Buffer buffer, PBFTMessage m){
-        
-        for(Object item : buffer){
-
-            PBFTMessage bm = (PBFTMessage)item;
-
-            if(bm.getID().equals(m.getID())){//getRequestID(bRequest).equals(getRequestID((PBFTMessage)request))){
-
-                return bm;
-
-            }
-        }
-    
-        return null;
-        
-    }
-    public static boolean hasBeenAlreadyServed(Buffer buffer, PBFTMessage request) {
-        PBFTMessage bRequest = getBufferedMessage(buffer, request);
-
-        if(bRequest == null)
-            return false;
-
-        Object done = bRequest.get(PBFTMessage.REQUESTDONEFIELD);
-        
-        if(done == null)
-            return false;
-
-        return (Boolean) done;
-
-    }
-
-    public Buffer getChangeViewCertificate(){
-        return (Buffer) getContext().get(PBFT.CHANGEVIEWCERTIFICATEBUFFER);
-    }
-
-    public void setChangeViewCertificate(Buffer buffer){
-        getContext().put(PBFT.CHANGEVIEWCERTIFICATEBUFFER, buffer);
-    }
 }

@@ -181,7 +181,7 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
 
         meanIA = 0.9999 * meanIA + 0.0001 * sum;
         
-        //System.nic_out.println("p" + id + "meanIA="+meanIA);
+        //System.nic_out.println("p" + ID + "meanIA="+meanIA);
         
     }
 
@@ -221,6 +221,6 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
 
     public void actuate(double value){
         ts = (int)value;
-        //System.nic_out.println("p" + id + "," + dmean + "," + meanOVH + "," +ts + "," + RC);
+        //System.nic_out.println("p" + ID + "," + dmean + "," + meanOVH + "," +ts + "," + RC);
     }    
 }

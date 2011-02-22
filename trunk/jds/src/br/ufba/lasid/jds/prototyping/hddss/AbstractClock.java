@@ -1,6 +1,6 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
-import br.ufba.lasid.jds.util.Clock;
+import br.ufba.lasid.jds.util.IClock;
 
 /*
  * To change this template, choose Tools | Templates
@@ -11,7 +11,7 @@ import br.ufba.lasid.jds.util.Clock;
  *
  * @author aliriosa
  */
-public abstract class AbstractClock implements Clock {
+public abstract class AbstractClock implements IClock {
 
     public static final String TAG = "clock";
     

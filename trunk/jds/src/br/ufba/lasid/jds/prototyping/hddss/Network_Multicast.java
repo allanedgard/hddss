@@ -35,8 +35,8 @@ public class Network_Multicast extends Network_Deterministic{
             members = new ArrayList<Integer>();
         }
 
-        if(!members.contains(agent.id)){
-            members.add(agent.id);
+        if(!members.contains(agent.getAgentID())){
+            members.add(agent.getAgentID());
         }
 
         membership.put(group, members);
@@ -52,7 +52,7 @@ public class Network_Multicast extends Network_Deterministic{
 
         ArrayList<Integer> members = membership.get(group);
 
-        if(members != null) members.remove(new Integer(agent.id));
+        if(members != null) members.remove(new Integer(agent.getAgentID()));
 
     }
     

@@ -1,6 +1,4 @@
 package br.ufba.lasid.jds.prototyping.hddss;
-import br.ufba.lasid.jds.prototyping.hddss.FaultModelAgent;
-import br.ufba.lasid.jds.prototyping.hddss.*;
 
 public class FaultModelAgent_Omission extends FaultModelAgent {
    
@@ -16,10 +14,12 @@ public class FaultModelAgent_Omission extends FaultModelAgent {
         infra.nic_out = new Buffer_Omission(prob);
    }
 
+    @Override
    public void increaseTick() {
        infra.execute();
    }
 
+    @Override
    public boolean status() {
        return true;
    }

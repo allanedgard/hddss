@@ -5,19 +5,21 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft;
 
-import br.ufba.lasid.jds.prototyping.hddss.pbft.Agent_ServerPBFT;
+import br.ufba.lasid.jds.prototyping.hddss.pbft.SimulatedPBFTServerAgent;
+import br.ufba.lasid.jds.util.IPayload;
 
 /**
  *
  * @author aliriosa
  */
-public class CalcPBFTServer extends Agent_ServerPBFT{
+public class CalcPBFTServer extends SimulatedPBFTServerAgent{
+    
     public Calculator calculator = new Calculator();
 
     @Override
-    public Object doService(Object arg) {
+    public IPayload doService(IPayload arg) {
         CalculatorPayload args = (CalculatorPayload)arg;
-        CalculatorPayload result = args;
+        CalculatorPayload result = new CalculatorPayload();
         
         if(args == null){
             result.put(Calculator.RESULT, "NOP");
@@ -31,32 +33,13 @@ public class CalcPBFTServer extends Agent_ServerPBFT{
 
         Calculator.OPERATION opcode = (Calculator.OPERATION)args.get(Calculator.OPCODE);
         double op1 = ((Double)args.get(Calculator.OP1)).doubleValue();
-        double op2 = ((Double)args.get(Calculator.OP2)).doubleValue();
+        double op2 = ((Double)args.get(Calculator.OP2)).doubleValue();        
+        Double r = calculator.solve(opcode, op1, op2);
         
-        
-
-        if(opcode.equals(Calculator.OPERATION.DIV)){
-            result.put(Calculator.RESULT, new Double(calculator.div(op1, op2)));
-        }
-
-        if(opcode.equals(Calculator.OPERATION.MINUS)){
-            result.put(Calculator.RESULT, new Double(calculator.minus(op1, op2)));
-        }
-
-        if(opcode.equals(Calculator.OPERATION.PLUS)){
-            result.put(Calculator.RESULT, new Double(calculator.plus(op1, op2)));
-        }
-
-        if(opcode.equals(Calculator.OPERATION.POW)){
-            result.put(Calculator.RESULT, new Double(calculator.pow(op1, op2)));
-        }
-
-        if(opcode.equals(Calculator.OPERATION.SQR)){
-            result.put(Calculator.RESULT, new Double(calculator.sqr(op1, op2)));
-        }
-
-        if(opcode.equals(Calculator.OPERATION.TIMES)){
-            result.put(Calculator.RESULT, new Double(calculator.times(op1, op2)));
+        if(r != null){
+            result.put(Calculator.RESULT, calculator.solve(opcode, op1, op2));
+        }else{
+            result.put(Calculator.RESULT,"[ERROR]INVALID OPERATION");
         }
 
         return result;

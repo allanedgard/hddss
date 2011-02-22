@@ -1,6 +1,4 @@
 package br.ufba.lasid.jds.prototyping.hddss;
-import br.ufba.lasid.jds.prototyping.hddss.FaultModelAgent;
-import br.ufba.lasid.jds.prototyping.hddss.*;
 
 /*
  * To change this template, choose Tools | Templates
@@ -28,6 +26,7 @@ public class FaultModelAgent_BizantineValue extends FaultModelAgent {
         prob = r.uniform();
     }   
 
+    @Override
     public void sendMessage(int c, Message msg) {
         if (r.uniform() <= prob) {
                     super.sendMessage(c, msg);

@@ -1,6 +1,4 @@
 package br.ufba.lasid.jds.prototyping.hddss;
-import br.ufba.lasid.jds.prototyping.hddss.FaultModelAgent;
-import br.ufba.lasid.jds.prototyping.hddss.*;
 
 /*
  * To change this template, choose Tools | Templates
@@ -42,19 +40,20 @@ public class FaultModelAgent_Crash extends FaultModelAgent {
     
 
     
+    @Override
     public void increaseTick() {
             if (!parado) {
                 infra.agent.done = true;
                 
                 if ( (r.uniform() <= prob)&& (infra.clock.value() >= 1000) )  {
                     this.crash();
-                    System.out.println("p" +infra.agent.id+": falhou por crash em "+infra.clock.value());
+                    System.out.println("p" +infra.agent.ID+": falhou por crash em "+infra.clock.value());
                 }
                 else infra.execute();
                 /*
-                if ( (ag.id == 1) && (ag.clock == 200) ) {
+                if ( (ag.ID == 1) && (ag.clock == 200) ) {
                     this.crash();
-                    System.nic_out.println("p" +ag.id+": falhou por crash em "+ag.clock);
+                    System.nic_out.println("p" +ag.ID+": falhou por crash em "+ag.clock);
                 }
                 else ag.processaRelogio(); 
                 */
@@ -65,6 +64,7 @@ public class FaultModelAgent_Crash extends FaultModelAgent {
         parado = true;
     }
 
+    @Override
     public boolean status() {
         return !parado;
     }

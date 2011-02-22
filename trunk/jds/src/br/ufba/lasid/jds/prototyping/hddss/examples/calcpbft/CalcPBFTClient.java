@@ -5,50 +5,55 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft;
 
-import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.prototyping.hddss.Randomize;
-import br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.Calculator.OPERATION;
-import br.ufba.lasid.jds.prototyping.hddss.pbft.Agent_ClientPBFT;
+import br.ufba.lasid.jds.prototyping.hddss.pbft.SimulatedPBFTClientAgent;
+import br.ufba.lasid.jds.util.IPayload;
+import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
 
 /**
  *
  * @author aliriosa
  */
-public class CalcPBFTClient extends Agent_ClientPBFT{
+public class CalcPBFTClient extends SimulatedPBFTClientAgent{
     private double rgp = 0.0;
     private Randomize r = new Randomize();
-    
+    private volatile boolean waiting = false;
+    private static int nThread = 0;
+
+
+    public void setRequestGenerationProbability(String prob){
+        rgp = Double.parseDouble(prob);
+    }
+
+    public boolean hasRequest(){
+        return (r.uniform() <= rgp);
+    }
+
+
+    public CalcPBFTClient() {
+    }
+
     @Override
     public void execute() {
-
-        if(hasRequest()){
-
-            CalculatorPayload operation = newContent();
-            getProtocol().doAction(operation);
-            
+        
+        if(hasRequest() && !waiting){
+                waiting = true;
+                new ClientCaller().start();
         }
+            
     }
 
     @Override
-    public void receiveReply(Object content) {
-        CalculatorPayload calc = (CalculatorPayload) content;
-        System.out.println(
-            "client [p" + getProtocol().getLocalProcess().getID()+"] "
-          + calc.get(Calculator.OPCODE) + "(" + calc.get(Calculator.OP1)
-          + ", " + calc.get(Calculator.OP2) + ") = " + calc.get(Calculator.RESULT)
-        );
+    public void receiveResult(IPayload content) {
 
-/*        ((PBFT)getProtocol()).getDebugger().debug(
-            "[CalcPBFTClient.receiveReply] result (" + content + ") "
-          + " by client(p" + getProtocol().getLocalProcess().getID() + ") "
-          + " at time " + ((PBFT)getProtocol()).getTimestamp()
-         );
- * 
- */
+        CalculatorPayload calc = (CalculatorPayload) content;
+
+        System.out.println(
+            "client [p" + getAgentID()+"] has obtained result = " + calc +
+            "at time = " + getProtocol().getClock().value()
+        );
         
     }
-
-
 
     private CalculatorPayload newContent(){
 
@@ -66,7 +71,7 @@ public class CalcPBFTClient extends Agent_ClientPBFT{
             return content;
         
     }
-    private OPERATION selectOperation() {
+    private Calculator.OPERATION selectOperation() {
         int range = Calculator.OPERATION.values().length;
         int opindex = (int) (Math.random()* range);
 
@@ -81,11 +86,45 @@ public class CalcPBFTClient extends Agent_ClientPBFT{
         return Math.round(Math.random() * 100)/10.0;
     }
 
-    public void setRequestGenerationProbability(String prob){
-        rgp = Double.parseDouble(prob);
+
+    /**
+     * It adapts to the simulator.
+     */
+    public void doCall(){
+            CalculatorPayload operation = newContent();
+
+            CalculatorPayload calc =
+                    (CalculatorPayload)((PBFTClient)getProtocol()).syncCall(operation);
+
+            System.out.println(
+                "client [p" + getAgentID()+"] has obtained result = " + calc +
+                " at time = " + getProtocol().getClock().value()
+            );
+            
+        
     }
 
-    public boolean hasRequest(){
-        return (r.uniform() <= rgp);
+    class ClientCaller extends Thread{
+
+        public ClientCaller() {
+            super("ClientCaller" + nThread);
+            nThread ++;
+        }
+
+
+        @Override
+        public void run() {
+            doCall();
+            
+            waiting = false;
+
+        }
+        
     }
+
+    @Override
+    public void shutdown() {
+        super.shutdown();
+    }
+
 }

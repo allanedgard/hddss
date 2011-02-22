@@ -1,5 +1,4 @@
 package br.ufba.lasid.jds.prototyping.hddss;
-import br.ufba.lasid.jds.prototyping.hddss.*;
 
 /**
  *

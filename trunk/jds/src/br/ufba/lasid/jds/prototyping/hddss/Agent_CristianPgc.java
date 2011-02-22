@@ -29,7 +29,7 @@ public class Agent_CristianPgc extends SimulatedAgent {
         public void setup() {
             membership = new int[infra.nprocess];
             Renewal_Time = -1;
-            r = new Randomize(id);
+            r = new Randomize(ID);
             LogicalClock = 0;
             msgRecebidas = new java.util.ArrayList();
             resiliencia = 0;
@@ -63,7 +63,7 @@ public class Agent_CristianPgc extends SimulatedAgent {
                 membership[i]=0;
             }
             int clock = (int)infra.clock.value();
-            this.createMessage(clock, this.id, infra.nprocess, PG_NEW_GROUP, new Content_PGC(clock+DELTA, id), -1 );
+            this.createMessage(clock, this.ID, infra.nprocess, PG_NEW_GROUP, new Content_PGC(clock+DELTA, ID), -1 );
         }
     
         public boolean[] visao() {
@@ -86,21 +86,21 @@ public class Agent_CristianPgc extends SimulatedAgent {
             int clock = (int)infra.clock.value();
             int tick  = (int)infra.clock.tickValue();
             double ro = infra.context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
-            infra.debug("p"+id+": clock="+clock);
+            infra.debug("p"+ID+": clock="+clock);
             if (r.uniform() <= prob) {
                 LogicalClock ++;
-                this.createMessage(clock, this.id, infra.nprocess, PG_APP, "payload", LogicalClock, true );
+                this.createMessage(clock, this.ID, infra.nprocess, PG_APP, "payload", LogicalClock, true );
             }
             if (clock == Renewal_Time) {
                 Renewal_Time = -1;
-                this.createMessage(clock, this.id, infra.nprocess, PG_PRESENT, new Content_PGC(clock, id), -1);
+                this.createMessage(clock, this.ID, infra.nprocess, PG_PRESENT, new Content_PGC(clock, ID), -1);
                 Renewal_Time = clock + pi;
             }
             if (clock == CRT) {
-                infra.debug("p"+id+": sinc, clock="+clock);
+                infra.debug("p"+ID+": sinc, clock="+clock);
                 Content_Sync sc = new Content_Sync(clock + ro * tick);
                 lastClock++;
-                this.createMessage(clock,this.id,infra.nprocess,CK_REQ,sc,lastClock);
+                this.createMessage(clock,this.ID,infra.nprocess,CK_REQ,sc,lastClock);
                 somaClocks = 0.0;
                 numeroClocks = 0;
                 CRT = clock + Clock_Renewal_Time;
@@ -135,7 +135,7 @@ public class Agent_CristianPgc extends SimulatedAgent {
                     V = ( (Content_PGC) msg.content).V;
                     M = ( (Content_PGC) msg.content).M;
                     // if (V <= clock) {
-                        this.createMessage(V, this.id, infra.nprocess, PG_PRESENT, new Content_PGC(V, id), 0 );
+                        this.createMessage(V, this.ID, infra.nprocess, PG_PRESENT, new Content_PGC(V, ID), 0 );
                         Renewal_Time = V+pi;
                     // }                    
                     break;
@@ -150,12 +150,12 @@ public class Agent_CristianPgc extends SimulatedAgent {
                      */
                     int t_e = msg.physicalClock + (int) DESVIO + (1+resiliencia) * DELTA;
                     if (msgRecebidas.contains(msg.getId()) == false) {
-                        infra.debug("p"+id+": relayed from "+msg.sender);
+                        infra.debug("p"+ID+": relayed from "+msg.sender);
                         msgRecebidas.add(msg.getId());
                         if (msg.hops < resiliencia) {
                             msg.hops++;
                             for (int i=0; i< infra.nprocess; i++) {
-                                if (  (i != id) && (i != msg.relayFrom) )
+                                if (  (i != ID) && (i != msg.relayFrom) )
                                 relayMessage(clock, msg, i);
                             }
                         };
@@ -170,7 +170,7 @@ public class Agent_CristianPgc extends SimulatedAgent {
                 case CK_REQ:
                     sc = (Content_Sync) msg.content;
                     sc.atual = clock + ro * tick;
-                    this.createMessage(clock,this.id,msg.sender,CK_REP,sc, msg.logicalClock);
+                    this.createMessage(clock,this.ID,msg.sender,CK_REP,sc, msg.logicalClock);
                     break;
                 case CK_REP:
                     double agora = clock + ro * tick;
@@ -180,7 +180,7 @@ public class Agent_CristianPgc extends SimulatedAgent {
                         numeroClocks++;
                         somaClocks += sc.atual+(agora-sc.inicio)/2;
                         if (numeroClocks == infra.nprocess) {
-                            infra.debug("p"+id+" clock atual:"+clock+" tick:"+tick);
+                            infra.debug("p"+ID+" clock atual:"+clock+" tick:"+tick);
                             double ajusta = somaClocks/numeroClocks;
                             double atual = clock + ro * tick;
                             somaClocks = .0;

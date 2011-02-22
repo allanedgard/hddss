@@ -1,15 +1,16 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
-import br.ufba.lasid.jds.util.Debugger;
+import trash.br.ufba.lasid.jds.util.IDebugger;
 import java.util.ArrayList;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
+import br.ufba.lasid.jds.util.IScheduler;
 
 /**
  * A RuntimeContainer can be a Operating System, a Middleware or a Simulator.
  * It allows to hide details about the execution infra of the agent.
  * @author aliriosa
  */
-public class RuntimeContainer extends Thread implements RuntimeSupport, Debugger{
+public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugger{
     public AbstractClock clock;
     public RuntimeSupport context;
     
@@ -26,6 +27,8 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, Debugger
     int nprocess = 0;
 
     RuntimeVariables variables = new RuntimeVariables();
+
+    //public IScheduler scheduler;
     
     public RuntimeContainer(RuntimeSupport context){
         this.context = context;
@@ -41,11 +44,15 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, Debugger
     }
     
     public void execute(){
+        
         if(agent.status()){
+
             while(send());
             while(receive());
             while(deliver());
+            
         }
+
         ((Clock_Virtual)clock).tick();
 
         if(((Clock_Virtual)clock).tickValue() == 1 && agent.status()) {
@@ -72,7 +79,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, Debugger
 
                 faultModel.initialize(this);
 
-                debug("Modelo de Falhas "+fault_model+" implantado em p"+agent.id);
+                debug("Modelo de Falhas "+fault_model+" implantado em p"+agent.ID);
 
     	} catch (Exception e) {
     		e.printStackTrace();
@@ -162,7 +169,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, Debugger
     public final void reportEvent(Message msg, char ev) {
         try{
                 String saida = ""+
-                agent.id +"; "+
+                agent.ID +"; "+
                 ev+"; "+
                 msg.sender+"; "+
                 msg.destination+"; "+
