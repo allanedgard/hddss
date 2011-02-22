@@ -1,16 +1,64 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 //
-public class Agent extends Thread {
-    public int id;
+
+import br.ufba.lasid.jds.util.IScheduler;
+
+public class Agent extends Thread implements Hook{
+    public int ID;
     public char tipo;
     public Context contexto;
     public boolean done;
-
+    public long exectime = 0;
+    protected boolean shutdown = false;
     public static final String TAG = "agent";
     public RuntimeContainer infra;
-    
+
+    public int getAgentID() {
+        return ID;
+    }    
+
     public Agent() {
         done = false;
+    }
+
+    public Context getContexto() {
+        return contexto;
+    }
+
+    public void setContexto(Context contexto) {
+        this.contexto = contexto;
+    }
+
+    public boolean isDone() {
+        return done;
+    }
+
+    public void setDone(boolean done) {
+        this.done = done;
+    }
+
+    public long getExectime() {
+        return exectime;
+    }
+
+    public void setExectime(long exectime) {
+        this.exectime = exectime;
+    }
+
+    public RuntimeContainer getInfra() {
+        return infra;
+    }
+
+    public void setInfra(RuntimeContainer infra) {
+        this.infra = infra;
+    }
+
+    public char getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(char tipo) {
+        this.tipo = tipo;
     }
     
     /**
@@ -19,8 +67,8 @@ public class Agent extends Thread {
     public void setup() {
     }
 
-    public void setId(int i){
-        id = i;
+    public void setAgentID(int i){
+        ID = i;
     }
 
     public void setType(char tp){
@@ -56,7 +104,7 @@ public class Agent extends Thread {
         for (int i = 0; i<temp.length; i++) {
             System.out.println("avanca");
             send(new Mensagem());
-            //this.criamensagem(temp[i], this.id, infra.nprocess, i, "teste",0);
+            //this.criamensagem(temp[i], this.ID, infra.nprocess, i, "teste",0);
         }*/
     }
     
@@ -82,5 +130,28 @@ public class Agent extends Thread {
          *   do protocolo
          */
     }
-        
+
+    public long getExecutionTime() {
+        return this.exectime;
+    }
+
+    public void setExecutionTime(long exectime) {
+        this.exectime = exectime;
+    }
+
+    public IScheduler getScheduler(){
+        return null;//(IScheduler)infra.scheduler;
+    }
+
+    public void shutdown(){
+        stop();
+        shutdown = true;
+    }
+
+    @Override
+    public String toString() {
+        return "Agent{" + "ID=" + ID + '}';
+    }
+
+
 }

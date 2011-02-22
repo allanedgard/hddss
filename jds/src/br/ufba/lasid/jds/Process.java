@@ -9,10 +9,48 @@ package br.ufba.lasid.jds;
  *
  * @author aliriosa
  */
-public interface Process<T> {
+public class Process<ProcessID> implements IProcess<ProcessID>{
 
-    public T getID();
+    ProcessID id;
 
-    public void setID(T id);
+    public Process() {
+    }
+
+    public Process(ProcessID id) {
+        this.id = id;
+    }
+
+
+    public ProcessID getID() {
+        return id;
+    }
+
+    public void setID(ProcessID id) {
+        this.id = id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        IProcess<ProcessID> process = (IProcess<ProcessID>) obj;
+        return (this.id != null && this.id.equals(process.getID()));
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 23 * hash + (this.id != null ? this.id.hashCode() : 0);
+        return hash;
+    }
+
+    public static IProcess create(Object id){
+        return new Process(id);
+    }
+
+    @Override
+    public String toString() {
+        return "Process{" + "id=" + id + '}';
+    }
+
     
+
 }

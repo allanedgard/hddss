@@ -1,6 +1,4 @@
 package br.ufba.lasid.jds.prototyping.hddss;
-import br.ufba.lasid.jds.prototyping.hddss.FaultModelAgent;
-import br.ufba.lasid.jds.prototyping.hddss.*;
 
 /*
  * To change this template, choose Tools | Templates
@@ -30,6 +28,7 @@ public class FaultModelAgent_FailStop extends FaultModelAgent {
         prob = r.uniform();
         parado = false;
     }
+    @Override
     public void increaseTick() {
             if (!parado)
                 infra.agent.done = true;
@@ -39,6 +38,7 @@ public class FaultModelAgent_FailStop extends FaultModelAgent {
                 else infra.execute();
         }
     
+    @Override
     public boolean status() {
         return !parado;
     }

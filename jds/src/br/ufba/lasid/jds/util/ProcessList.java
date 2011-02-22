@@ -5,17 +5,17 @@
 
 package br.ufba.lasid.jds.util;
 
-import br.ufba.lasid.jds.Process;
+import br.ufba.lasid.jds.IProcess;
 import java.util.ArrayList;
 
 /**
  *
  * @author aliriosa
  */
-public class ProcessList<T> extends ArrayList<br.ufba.lasid.jds.Process<T>>{
+public class ProcessList<T> extends ArrayList<br.ufba.lasid.jds.IProcess<T>>{
 
-    public Process<T> getProcessByID(T ID){
-        for(Process<T> process : this){
+    public IProcess<T> getProcessByID(T ID){
+        for(IProcess<T> process : this){
             if(process.getID().equals(ID))
                 return process;
         }
@@ -25,20 +25,20 @@ public class ProcessList<T> extends ArrayList<br.ufba.lasid.jds.Process<T>>{
 
     public void removeProcessByID(T ID){
 
-        Process<T> process = getProcessByID(ID);
+        IProcess<T> process = getProcessByID(ID);
         
         if(process != null)
             this.remove(process);
     }
 
-    public void removeProcess(Process<T> process){
+    public void removeProcess(IProcess<T> process){
         process = getProcessByID(process.getID());
         if(process != null)
             this.remove(process);
     }
 
     public boolean containsProcessByID(T ID){
-        Process<T> process = getProcessByID(ID);
+        IProcess<T> process = getProcessByID(ID);
         return (process != null);
     }
 }

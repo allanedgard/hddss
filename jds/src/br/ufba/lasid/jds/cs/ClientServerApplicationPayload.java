@@ -5,14 +5,14 @@
 
 package br.ufba.lasid.jds.cs;
 
-import br.ufba.lasid.jds.util.ApplicationPayload;
+import br.ufba.lasid.jds.util.IPayload;
 import java.util.Hashtable;
 
 /**
  *
  * @author aliriosa
  */
-public class ClientServerApplicationPayload extends Hashtable<String, Object> implements ApplicationPayload{
+public class ClientServerApplicationPayload extends Hashtable<String, Object> implements IPayload{
 
     public Object getContent() {
         return this;

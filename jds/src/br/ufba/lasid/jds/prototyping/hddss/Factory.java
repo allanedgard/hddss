@@ -47,17 +47,33 @@ public class Factory {
     }
 
     public static void setProperty(Object obj, String property, String value) {
-        try {
+        try {            
             String _name = "set"+property;
-            Class _class = obj.getClass();
-            Class args[] = new Class[1];
-            args[0] = String.class;
-            Method method = _class.getMethod(_name, args);
-            method.invoke(obj, value);
+            if(hasMethod(obj, _name)){
+                Class _class = obj.getClass();
+                Class args[] = new Class[1];
+                args[0] = String.class;
+                Method method = _class.getMethod(_name, args);
+                method.invoke(obj, value);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
+    }
+
+    public static boolean hasMethod(Object obj, String mthname){
+
+        try{
+            Method[] methods = obj.getClass().getMethods();
+
+            for(int m = 0; m < methods.length; m++){
+                if(methods[m].getName().equals(mthname)){
+                    return true;
+                }
+            }
+        }catch(Exception e){}
+        return false;
     }
 
     public static boolean isInstanceof(Object obj, Class _class){

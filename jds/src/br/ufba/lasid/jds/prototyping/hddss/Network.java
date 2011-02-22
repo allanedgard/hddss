@@ -141,7 +141,7 @@ public abstract class Network extends Thread{
     public void loopback(Message msg){
         int address = msg.sender;
         Agent p = conteiner.p[address];
-        p.infra.nic_in.add((int)(p.infra.clock.value()) + 1, msg);
+        p.getInfra().nic_in.add((int)(p.getInfra().clock.value()) + 1, msg);
     }
 
     public boolean isLoopback(Message msg){

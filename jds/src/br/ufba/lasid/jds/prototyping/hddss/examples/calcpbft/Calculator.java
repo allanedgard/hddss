@@ -10,10 +10,10 @@ package br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft;
  * @author aliriosa
  */
 public class Calculator {
-    public static String OPCODE = "__OPCODE";
-    public static String OP1 = "__OP1";
-    public static String OP2 = "__OP2";
-    public static String RESULT = "__RESULT";
+    public static String OPCODE = "opcode";
+    public static String OP1 = "op1";
+    public static String OP2 = "op2";
+    public static String RESULT = "result";
 
     public enum OPERATION{
         PLUS, MINUS, TIMES, DIV, POW, SQR;
@@ -40,5 +40,35 @@ public class Calculator {
 
    public double sqr(double a, double b){
        return Math.pow(a, 1.0/b);
+   }
+
+   public Double solve(OPERATION opcode, double op1, double op2){
+
+        if(opcode.equals(Calculator.OPERATION.DIV)){
+            return div(op1, op2);
+        }
+
+        if(opcode.equals(Calculator.OPERATION.MINUS)){
+            return  minus(op1, op2);
+        }
+
+        if(opcode.equals(Calculator.OPERATION.PLUS)){
+            return  plus(op1, op2);
+        }
+
+        if(opcode.equals(Calculator.OPERATION.POW)){
+            return  pow(op1, op2);
+        }
+
+        if(opcode.equals(Calculator.OPERATION.SQR)){
+            return  sqr(op1, op2);
+        }
+
+        if(opcode.equals(Calculator.OPERATION.TIMES)){
+            return  times(op1, op2);
+        }
+
+        return null;
+       
    }
 }

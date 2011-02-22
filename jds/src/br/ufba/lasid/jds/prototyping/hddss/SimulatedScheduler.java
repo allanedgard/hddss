@@ -6,23 +6,22 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
 import br.ufba.lasid.jds.util.Agenda;
-import br.ufba.lasid.jds.util.Scheduler;
-import br.ufba.lasid.jds.util.Task;
+import br.ufba.lasid.jds.util.IScheduler;
+import br.ufba.lasid.jds.util.ITask;
+import java.util.Collection;
 import br.ufba.lasid.jds.util.TaskList;
-import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  *
  * @author aliriosa
  */
-public class SimulatedScheduler extends Agent implements Scheduler{
+public class SimulatedScheduler extends Agent implements IScheduler{
     
     public static String TAG = "SimulatedScheduler";
     
-    protected Agenda agenda = new Agenda();
+    protected volatile Agenda agenda = new Agenda();
 
-    public void schedule(Task task, long time) {
+    public synchronized void schedule(ITask task, long time) {
 
         Long _time = new Long(time);
         
@@ -39,39 +38,64 @@ public class SimulatedScheduler extends Agent implements Scheduler{
     }
 
     @Override
-    public void execute() {
+    public synchronized void execute() {
 
         Long _time = new Long(infra.clock.value());
 
         TaskList tasks = agenda.get(_time);
 
         if(tasks != null){
-            for(Task task : tasks){
+            TaskList tasks2 = new TaskList();
+
+            tasks2.addAll(tasks);
+
+            for(ITask task : tasks2){
                 task.runMe();
+                tasks.remove(task);
             }
+
+            tasks2.clear();
+            tasks.clear();
         }
+
+        agenda.remove(_time);
         
     }
 
-    public void cancel(Task task){
-         Set<Entry<Long, TaskList>> set =  agenda.entrySet();
+    public synchronized boolean cancel(ITask task){
+        
 
-         for(Entry<Long, TaskList> e : set){
+        Collection<TaskList> taskLists = agenda.values();
 
-            if(e.getValue().equals(task)){
+        Agenda agenda2 = new Agenda();
+        agenda2.putAll(agenda);
+        
+        for(Long _time : agenda2.keySet()){
 
-                agenda.remove(e.getKey());
-
-                return;
-            }
+            TaskList t2 = new TaskList();
             
-         }
+            t2.addAll(agenda2.get(_time));
+            
+            for(ITask t : t2){
+                if(t.equals(task)){
+                    agenda.get(_time).remove(t);
+                }
+            }
+
+            if(agenda.get(_time).isEmpty()){
+                agenda.remove(_time);
+            }
+
+            return true;
+        }
+        
+        return false;
 
     }
 
-    public void cancelAll() {
-        //throw new UnsupportedOperationException("Not supported yet.");
-        //do nothing
+    public synchronized boolean cancelAll() {
+        agenda.clear();
+        return true;
     }
     
 }

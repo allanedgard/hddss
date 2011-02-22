@@ -45,8 +45,8 @@ public class MulticastNetwork<T extends Network> extends Network{
             members = new ArrayList<Integer>();
         }
 
-        if(!members.contains(agent.id)){
-            members.add(agent.id);
+        if(!members.contains(agent.getAgentID())){
+            members.add(agent.getAgentID());
         }
 
         membership.put(group, members);
@@ -62,7 +62,7 @@ public class MulticastNetwork<T extends Network> extends Network{
 
         ArrayList<Integer> members = membership.get(group);
 
-        if(members != null) members.remove(new Integer(agent.id));
+        if(members != null) members.remove(new Integer(agent.getAgentID()));
 
     }
     

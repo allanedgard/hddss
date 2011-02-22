@@ -5,52 +5,74 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.pbft.comm;
 
-import br.ufba.lasid.jds.Process;
-import br.ufba.lasid.jds.comm.Message;
-import br.ufba.lasid.jds.jbft.pbft.PBFT;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
+import br.ufba.lasid.jds.IProcess;
+import br.ufba.lasid.jds.comm.IMessage;
+import br.ufba.lasid.jds.group.IGroup;
+import br.ufba.lasid.jds.jbft.pbft.comm.communicators.PBFTCommunicator;
 import br.ufba.lasid.jds.prototyping.hddss.Agent;
-import br.ufba.lasid.jds.prototyping.hddss.cs.comm.SimulatedClientServerCommunicator;
-import br.ufba.lasid.jds.prototyping.hddss.pbft.Agent_PBFT;
-import br.ufba.lasid.jds.util.Clock;
+import br.ufba.lasid.jds.util.Debugger;
 
 /**
  *
  * @author aliriosa
  */
-public class SimulatedPBFTCommunicator extends SimulatedClientServerCommunicator{
+public class SimulatedPBFTCommunicator extends PBFTCommunicator{
+    
+    protected Agent agent;
+
+    public Agent getAgent() {
+        return agent;
+    }
+
+    public void setAgent(Agent agent) {
+        this.agent = agent;
+    }
     
     public SimulatedPBFTCommunicator(Agent agent) {
-        super(agent);
+         setAgent(agent);
     }
 
     @Override
-    public void multicast(Message m, Process group) {
+    public void multicast(IMessage m, IGroup g) {
         
-        Agent_PBFT ag = (Agent_PBFT) agent;
 
-        Process<Integer> dest = (Process<Integer>) group;
+        int source = agent.ID;
 
-        int source = ((Process<Integer>)agent).getID().intValue();
-        int destin = dest.getID().intValue();
-        
-        int now   = (int)((Clock)ag.getProtocol().getContext().get(PBFT.CLOCKSYSTEM)).value();
-        
-        int type  = ((PBFTMessage.TYPE)m.get(PBFTMessage.TYPEFIELD)).getValue();
-        
+        for(Object p : g.getMembers()){
+            int dest = (Integer) ((IProcess)p).getID();
+            int destin = dest;
+
+            int now   = (int)agent.infra.clock.value();
+
+
+            agent.send(
+             new br.ufba.lasid.jds.prototyping.hddss.Message(
+                source, destin, 0, 0, now, m
+             )
+            );
+        }
+    }
+
+    public void unicast(IMessage m, IProcess p) {
+
+        int dest = (Integer) p.getID();
+
+        int source = agent.ID;
+        int destin = dest;
+        int now   = (int) agent.infra.clock.value();
+        int type  = 0;
+
         agent.send(
          new br.ufba.lasid.jds.prototyping.hddss.Message(
             source, destin, type, 0, now, m
          )
         );
-        
     }
 
     @Override
-    protected int getTypeValue(Message m) {
-        return ((PBFTMessage.TYPE)m.get(PBFTMessage.TYPEFIELD)).getValue();
+    public void receive(IMessage m) {
+        Debugger.debug("[p"+agent.ID +"] received " + m + " at time " +agent.infra.clock.value());
+        super.receive(m);
     }
-
-
 
 }

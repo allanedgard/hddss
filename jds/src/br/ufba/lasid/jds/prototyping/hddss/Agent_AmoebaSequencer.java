@@ -79,7 +79,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             bloquearEntrega = false;
             consenso = false;
             Lider = 1;
-            if (id==Lider) 
+            if (ID==Lider)
                 SouLider = true;
             r = new Randomize();
             /*  Constrói os blocos básicos:
@@ -161,7 +161,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             if ( (r.uniform() <= prob) && !bloquearEntrega ) {
                 int clock = (int)infra.clock.value();
                 SENT = clock;    // Registra numero do bloco do ultimo envio
-                this.createMessage(clock, id, Lider, REQ_SEQ, "payload", -1);
+                this.createMessage(clock, ID, Lider, REQ_SEQ, "payload", -1);
             }
             /*
             if ((clock-SENT) > DELTA) {
@@ -179,12 +179,12 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
          */
         public void sendGroupMsg(int clock, int tipo, Object valor, int LC) {
             for (int j=0; j<infra.nprocess;j++)
-                this.createMessage(clock, this.id, j, tipo, valor, LC);
+                this.createMessage(clock, this.ID, j, tipo, valor, LC);
         }
         
         public void sendGroupMsg(int clock, int tipo, Object valor, int LC, boolean pay) {
             for (int j=0; j<infra.nprocess;j++)
-                this.createMessage(clock, this.id, j, tipo, valor, LC, pay);
+                this.createMessage(clock, this.ID, j, tipo, valor, LC, pay);
         }
 
         public void relayGroupMsg(int clock, int i, int tipo, Object valor, int LC, boolean pay) {
@@ -212,7 +212,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                     break;
                 case APP:
                     msgs.add(msg.logicalClock, msg);
-                    this.createMessage(clock, id, Lider, ACK, msg, msg.logicalClock);
+                    this.createMessage(clock, ID, Lider, ACK, msg, msg.logicalClock);
                     
                     break;
                 case ACK:
@@ -253,7 +253,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
 
                             Consensus[uC.bloco] = iniciaConsensus(uC);
                             
-                            if (Consensus[uC.bloco].getRound()%infra.nprocess == id)
+                            if (Consensus[uC.bloco].getRound()%infra.nprocess == ID)
                                 sendGroupMsg(clock, CONSENSUS_P1,Consensus[uC.bloco], LogicalClock);
                         
                         }
@@ -351,13 +351,13 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                         visao.clean();
                         visao.add(visaoProposta);
                         System.out.println("Consenso Obtido em "+clock);
-                        System.out.println("Visao em p"+id);
+                        System.out.println("Visao em p"+ID);
                         for (int i=0; i<infra.nprocess; i++)
                             if (visao.exists(i) )
                                 System.out.print(i+" \t");
                         System.out.println("");
                         Lider = visao.min();
-                        if (id == Lider) {
+                        if (ID == Lider) {
                             SouLider = true;
                         }
                         else {
@@ -375,7 +375,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
         void rotacionaCoordenador(int i) {
             Consensus[i].alteraRound(Consensus[i].getRound()+1);
             int clock = (int)infra.clock.value();
-            if (Consensus[i].getRound()%infra.nprocess == id)
+            if (Consensus[i].getRound()%infra.nprocess == ID)
                 sendGroupMsg(clock, CONSENSUS_P1,Consensus[i], LogicalClock);
         }
         
