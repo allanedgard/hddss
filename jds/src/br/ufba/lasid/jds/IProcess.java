@@ -12,6 +12,8 @@ import java.io.Serializable;
  * @author aliriosa
  */
 public interface IProcess<ProcessID> extends Serializable, ISystemEntity{
+    
+    public static final long serialVersionUID = -7348058540247979182L;
 
     public ProcessID getID();
 

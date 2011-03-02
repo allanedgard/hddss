@@ -68,7 +68,7 @@ public class PBFTSimulatedAuthenticator implements IAuthenticator<PBFTMessage>{
         return false;//digest.equals(data.get(PBFTMessage.DIGESTFIELD));
     }
 
-    public String getDisgest(PBFTMessage data) {
+    public String getDigest(PBFTMessage data) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

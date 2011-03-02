@@ -3,7 +3,7 @@ package br.ufba.lasid.jds.prototyping.hddss;
 
 import br.ufba.lasid.jds.util.IScheduler;
 
-public class Agent extends Thread implements Hook{
+public class Agent extends Thread implements IAgent{
     public int ID;
     public char tipo;
     public Context contexto;

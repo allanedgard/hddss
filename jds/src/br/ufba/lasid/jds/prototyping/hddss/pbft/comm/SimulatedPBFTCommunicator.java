@@ -71,7 +71,7 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
 
     @Override
     public void receive(IMessage m) {
-        Debugger.debug("[p"+agent.ID +"] received " + m + " at time " +agent.infra.clock.value());
+        //Debugger.debug("[p"+agent.ID +"] received " + m + " at time " +agent.infra.clock.value());
         super.receive(m);
     }
 

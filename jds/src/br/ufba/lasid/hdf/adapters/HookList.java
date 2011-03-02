@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.adapters;
+package br.ufba.lasid.hdf.adapters;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -24,10 +24,10 @@ public class HookList extends ArrayList<IHook> implements IHook{
         return false;
     }
 
-    public void call(Method m, Object[] args) {
+    public void call(Object who, Method m, Object[] args) {
         for(IHook hook: this){
             if(hook.check(m)){
-                hook.call(m, args);
+                hook.call(who, m, args);
             }
         }
     }

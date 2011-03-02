@@ -2305,7 +2305,7 @@ public class PBFT2 extends ClientServerProtocol{
     protected PBFTCheckpoint createCheckpointMessage(){
         PBFTCheckpoint checkpoint = new PBFTCheckpoint();
 
-        checkpoint.setSequenceNumber(getState().getLastExecutedSequenceNumber());
+//        checkpoint.setSequenceNumber(getState().getLastExecutedSequenceNumber());
 
         //checkpoint.setDigest(getServerToServerAuthenticator().makeDisgest(getState()));
 
@@ -2951,7 +2951,7 @@ public class PBFT2 extends ClientServerProtocol{
     
     protected PBFTMessage makeDigest(PBFTMessage m){
 
-///        m.put(PBFTMessage.DIGESTFIELD, getAuthenticator(m).getDisgest(m));
+///        m.put(PBFTMessage.DIGESTFIELD, getAuthenticator(m).getDigest(m));
 
         return m;
         

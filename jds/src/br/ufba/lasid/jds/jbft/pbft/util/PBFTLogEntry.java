@@ -9,16 +9,18 @@ import br.ufba.lasid.jds.comm.Quorum;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
+import java.io.Serializable;
 
 /**
  *
  * @author aliriosa
  */
-public class PBFTLogEntry {
+public class PBFTLogEntry implements Serializable{
 
     volatile PBFTPrePrepare preprepare = null;
     volatile Quorum prq = null;
     volatile Quorum cmq = null;
+
     
     public PBFTLogEntry(PBFTPrePrepare preprepare) {
         

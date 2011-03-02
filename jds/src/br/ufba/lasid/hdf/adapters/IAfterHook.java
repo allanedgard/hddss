@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.adapters;
+package br.ufba.lasid.hdf.adapters;
 
 import java.lang.reflect.Method;
 
@@ -13,6 +13,6 @@ import java.lang.reflect.Method;
  */
 public interface IAfterHook extends IHook{
 
-    public void call(Method method, Object[] args, Object result);
+    public void call(Object who, Method method, Object[] args, Object result);
 
 }

@@ -34,7 +34,7 @@ public class Architecture {
         if(obj instanceof IConsumer) addConsumer(name, (IConsumer)obj);
         if(obj instanceof Thread)    addThread(name, (Thread)obj);
     }
-
+    
     public void addThread(String name, Thread thr){
         thtable.put(name, thr);
     }
@@ -46,7 +46,7 @@ public class Architecture {
         cntable.put(name, consumer);
     }
     
-    public void addConnection(String suppliername, String consumername){
+    public void connect(String suppliername, String consumername){
 
         ISupplier supplier = sptable.get(suppliername);
         IConsumer consumer = cntable.get(consumername);

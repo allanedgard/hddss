@@ -3,20 +3,19 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.util;
-
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
+package br.ufba.lasid.jds.jbft.pbft.comm;
 
 /**
  *
  * @author aliriosa
  */
-public class StatedPBFTRequestMessage {
+public class StatedPBFTRequestMessage extends PBFTMessage{
 
     public enum RequestState{
         NONE, WAITING, PREPREPARED, PREPARED, COMMITTED, SERVED
     }
+
+    
 
     private volatile RequestState rstate = RequestState.NONE;
     private volatile String digest = null;
@@ -79,6 +78,12 @@ public class StatedPBFTRequestMessage {
     public void setState(RequestState rstate) {
         this.rstate = rstate;
     }
+
+    @Override
+    public String toString() {
+        return "STATED(" + this.request + "; " + this.rstate + ")";
+    }
    
+
 
 }

@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.jbft.pbft.executors;
 
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTRequestCollectorServant;
+import br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors.PBFTRequestCollectorServant;
 import br.ufba.lasid.hdf.IConsumer;
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.SignedMessage;

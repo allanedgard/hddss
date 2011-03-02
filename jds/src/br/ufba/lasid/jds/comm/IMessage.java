@@ -12,5 +12,6 @@ import java.io.Serializable;
  * @author aliriosa
  */
 public interface IMessage extends Serializable{
+    public static final long serialVersionUID = 8186032393583278399L;
 
 }

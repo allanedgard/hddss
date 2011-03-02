@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.adapters;
+package br.ufba.lasid.hdf.adapters;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -14,20 +14,20 @@ import java.util.Arrays;
  *
  * @author aliriosa
  */
-public class Adapter implements InvocationHandler{
+public class Adapter<T> implements InvocationHandler{
 
-    private Object object = null;
+    private T object = null;
     private HookList hooks = new HookList();
     
-    public static Object newInstance(Object object, IHook ... hooks) {
-        return Proxy.newProxyInstance(
+    public static <T> T newInstance(T object, IHook ... hooks) {
+        return (T)Proxy.newProxyInstance(
                     object.getClass().getClassLoader(),
                     object.getClass().getInterfaces(),
                     new Adapter(object, hooks)
         );
     }
 
-    private Adapter(Object object, IHook ... hooks){
+    private Adapter(T object, IHook ... hooks){
         this.object = object;
         this.hooks.addAll(Arrays.asList(hooks));
     }
@@ -41,11 +41,11 @@ public class Adapter implements InvocationHandler{
             for(IHook hook : this.hooks){
                 if(hook instanceof IBeforeHook){
                     if(hook.check(method)){
-                        hook.call(method, args);
+                        hook.call(object, method, args);
                     }
                 }
             }
-            
+            System.out.println("*********** before ***********");
             result = method.invoke(object, args);
 
         }catch(Exception e){
@@ -56,10 +56,11 @@ public class Adapter implements InvocationHandler{
             for(IHook hook : this.hooks){
                 if(hook instanceof IAfterHook){
                     if(hook.check(method)){
-                        ((IAfterHook)hook).call(method, args, result);
+                        ((IAfterHook)hook).call(object, method, args, result);
                     }
                 }
-            }            
+            }
+            System.out.println("*********** after ***********");
         }
         
         return result;

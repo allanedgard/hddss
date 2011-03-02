@@ -9,6 +9,7 @@ import trash.br.ufba.lasid.jds.comm.Message;
 import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.util.XObject;
 import java.io.IOException;
+import java.io.Serializable;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -120,7 +121,7 @@ public class XSecurity {
      */
     public static String getDigest(String algname, Object obj)
             throws NoSuchAlgorithmException, ClassNotFoundException, IOException
-    {
+    {       
 
         byte[] ibytes = XObject.objectToByteArray(obj);
         byte[] obytes = getDigest(algname, ibytes);

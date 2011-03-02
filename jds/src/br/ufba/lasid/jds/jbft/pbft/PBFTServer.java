@@ -5,11 +5,11 @@
 
 package br.ufba.lasid.jds.jbft.pbft;
 
-import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.Quorum;
 import br.ufba.lasid.jds.cs.IServer;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
@@ -17,10 +17,22 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;
 import br.ufba.lasid.jds.util.DigestList;
+import java.io.IOException;
 import java.util.Hashtable;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTLogEntry;
 import br.ufba.lasid.jds.util.Debugger;
-import br.ufba.lasid.jds.util.StatedPBFTRequestMessage;
+import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTCheckpointStorage;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTCheckpointTuple;
+import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IRecoverableServer;
+import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
+import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IStore;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import jdbm.helper.Tuple;
+import org.apache.commons.collections.Buffer;
+import org.apache.commons.collections.BufferUtils;
+import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
 
 /**
  *
@@ -39,11 +51,6 @@ public class PBFTServer extends PBFT{
     protected static long SEQ = -1;
     protected IServer server;
 
-    protected volatile long nextPrePrepareSEQ =  0L;
-    protected volatile long nextPrepareSEQ    =  0L;
-    protected volatile long nextCommitSEQ     =  0L;
-    protected volatile long nextExecuteSEQ    =  0L;
-
     public synchronized long getSendStatusPeriod() {
         return sendStatusPeriod;
     }
@@ -52,67 +59,6 @@ public class PBFTServer extends PBFT{
         this.sendStatusPeriod = sendStatusPeriod;
     }
 
-    public synchronized void updateNextPrePrepareSEQ(PBFTPrePrepare m){
-        if(m != null && m.getSequenceNumber() != null){
-            long seqn = m.getSequenceNumber();
-            if(seqn == nextPrePrepareSEQ){
-                nextPrePrepareSEQ++;
-            }
-        }
-    }
-
-    public synchronized void updateNextPrepareSEQ(PBFTPrepare m){
-        if(m != null && m.getSequenceNumber() != null){
-            long seqn = m.getSequenceNumber();
-            if(seqn < nextPrePrepareSEQ && seqn == nextPrepareSEQ){
-                nextPrepareSEQ++;
-            }
-        }
-    }
-
-    public synchronized void updateNextCommitSEQ(PBFTCommit m){
-        if(m != null && m.getSequenceNumber() != null){
-            long seqn = m.getSequenceNumber();
-            if(seqn < nextPrePrepareSEQ && seqn < nextPrepareSEQ && seqn == nextCommitSEQ){
-                nextCommitSEQ++;
-            }
-        }
-    }
-
-    public synchronized void updateNextExecuteSEQ(Long theSEQ){
-        if(theSEQ != null){
-
-            long seqn = theSEQ;
-            
-            if(seqn < nextPrePrepareSEQ && seqn < nextPrepareSEQ && seqn < nextCommitSEQ && seqn == nextExecuteSEQ){
-                nextExecuteSEQ++;
-            }
-
-            //System.out.print("seqn = " + seqn + "; nextExec =" + nextExecuteSEQ);
-        }
-    }
-
-
-    public synchronized long getNextCommitSEQ() {
-        return nextCommitSEQ;
-    }
-
-    public synchronized long getNextPrePrepareSEQ() {
-        return nextPrePrepareSEQ;
-    }
-
-    public synchronized long getNextPrepareSEQ() {
-        return nextPrepareSEQ;
-    }
-
-    public synchronized long getNextExecuteSEQ() {
-        return nextExecuteSEQ;
-    }
-
-    public synchronized boolean isTheNextToExecute(long seqn){
-        return seqn == nextExecuteSEQ;
-    }
-    
     protected Long primaryFaultTimeout = null;
     
     public Long getPrimaryFaultTimeout(){
@@ -226,6 +172,7 @@ public class PBFTServer extends PBFT{
     Hashtable<Object, PBFTRequest> currentRequestTable = new Hashtable<Object, PBFTRequest>();
     
     public boolean isTheNext(PBFTRequest currRequest){
+        
         if(currRequest != null){
             PBFTRequest lastRequest = currentRequestTable.get(currRequest.getClientID());
 
@@ -267,6 +214,9 @@ public class PBFTServer extends PBFT{
      */
     protected synchronized boolean isOrdered(PBFTServerMessage m){
         
+        long nextPrePrepareSEQ = getStateLog().getNextPrePrepareSEQ();
+        long nextPrepareSEQ = getStateLog().getNextPrepareSEQ();
+
         if(m != null && m.getSequenceNumber() != null){
             
             long seqn = m.getSequenceNumber();
@@ -316,14 +266,13 @@ public class PBFTServer extends PBFT{
         long low  = getCheckpointLowWaterMark();
         long high = getCheckpointHighWaterMark();
 
-        return seqn >= low && seqn <= high;
+        return seqn > low && seqn <= high;
 
 
     }
 
     public Long getCheckpointLowWaterMark(){
         return getStateLog().getCheckpointLowWaterMark();
-
     }
 
     Long checkpointFactor;
@@ -677,6 +626,84 @@ public class PBFTServer extends PBFT{
 
     }
 
+    /**
+     * Update the state of the PBFT. Insert the pre-prepare message in
+     * the log entry.
+     * @param m
+     */
+    public synchronized boolean updateState(PBFTCheckpoint checkpoint){
+
+        /**
+         * If the preprepare is null then do nothing.
+         */
+        if(checkpoint == null){
+
+            return false;
+
+        }
+
+        /*
+         * Get composite key of the prepare.
+         */
+
+        Long entryKey = checkpoint.getSequenceNumber();
+
+        /**
+         * If the entry key is diferent of null then update state. Otherwise do
+         * nothing.
+         */
+        if(entryKey != null) {
+
+            Quorum q = getStateLog().getQuorum(CHECKPOINTQUORUMSTORE, entryKey.toString());
+
+            if(q == null){
+
+                int f = getServiceBFTResilience();
+
+                q = new Quorum(2 * f + 1);
+
+                getStateLog().getQuorumTable(CHECKPOINTQUORUMSTORE).put(entryKey.toString(), q);
+            }
+
+            if(q.size() > 0){
+
+                for(IMessage m : q){
+
+                    PBFTCheckpoint c1 = (PBFTCheckpoint) m;
+                    if(!(
+                        c1.getSequenceNumber().equals(checkpoint.getSequenceNumber()) &&
+                        c1.getDigest().equals(checkpoint.getDigest())
+                    )){
+                        return false;
+                    }
+
+                    if(c1.getReplicaID().equals(checkpoint.getReplicaID())){
+                    Debugger.debug(
+                      "[PBFTServer] s"  + getLocalProcess().getID() +
+                      ", at time " + getClock().value() + ", cann't use " + checkpoint +
+                      " to update its log because it's a duplicated prepare."
+                    );
+                        return false;
+                    }
+                }
+            }
+
+            q.add(checkpoint);
+
+            Debugger.debug(
+              "[PBFTServer] s"  + getLocalServerID() +
+              ", at time " + getClock().value() + ", update a entry in "
+            + "its log for " + checkpoint
+            );
+
+            return true;
+        }
+
+        return false;
+
+    }
+
+
 
     /**
      * Update the state of the PBFT. Insert the pre-prepare message in
@@ -722,7 +749,7 @@ public class PBFTServer extends PBFT{
                     }
                 }
 
-                updateNextExecuteSEQ(preprepare.getSequenceNumber());
+                getStateLog().updateNextExecuteSEQ(preprepare.getSequenceNumber());
                 return true;
             }
 
@@ -734,7 +761,127 @@ public class PBFTServer extends PBFT{
 
     @Override
     public void startup() {
+        try {
+            chkStore = new PBFTCheckpointStorage(getLocalServerID());
+            Tuple tuple = chkStore.getLast();
+            if(tuple != null){
+                String index = (String)tuple.getKey();
+                String pair[] = index.split(";");
+
+                long seqn = Long.valueOf(pair[0]);
+
+                getStateLog().setNextPrePrepareSEQ(seqn+1);
+                getStateLog().setNextPrepareSEQ(seqn+1);
+                getStateLog().setNextCommitSEQ(seqn+1);
+                getStateLog().setNextExecuteSEQ(seqn+1);
+
+                getStateLog().setCheckpointLowWaterMark(seqn);
+
+                IRecoverableServer srv = (IRecoverableServer)getServer();
+                srv.setCurrentState((IState)tuple.getValue());
+
+                updateCurrentSequenceNumber(seqn);
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+        }
+        
         super.startup();
+
+    }
+
+    IStore<String, IState> chkStore;
+
+    public IStore<String, IState> getCheckpointStore() {
+        return chkStore;
+    }
+
+    public void setCheckpointStore(IStore<String, IState> chkStore) {
+        this.chkStore = chkStore;
+    }
+
+    
+
+    public synchronized void doCheckpoint(long seqn) {
+
+        long lowWater = getCheckpointLowWaterMark();
+        long startSEQ = lowWater+1;
+        long finalSEQ = seqn;
+        long execSEQ = getStateLog().getNextExecuteSEQ() - 1;
+        
+        
+        for(long currSEQ = startSEQ; currSEQ <= finalSEQ; currSEQ ++){
+            /**
+             * If the sequence number was executed by the replica then we'll be
+             * able to compute the checkpoint.
+             */
+            if(currSEQ <= execSEQ){
+                
+                Quorum q = getStateLog().getQuorum(CHECKPOINTQUORUMSTORE, String.valueOf(currSEQ));
+
+                if(q != null && q.complete()){
+
+                    PBFTCheckpoint checkpoint = (PBFTCheckpoint)q.get(0);
+                    PBFTCheckpointTuple ctuple = getStateLog().getCachedState().get(checkpoint.getSequenceNumber());
+
+                    if(!(ctuple != null && ctuple.getDigest().equals(checkpoint.getDigest()))){
+                        break;
+                    }
+
+                    if(!ctuple.isUpdated()){
+                        try {
+                            chkStore.write(checkpoint.getEntryKey(), ctuple.getCurrentState(), true);
+                            chkStore.commit();
+                            lowWater = currSEQ;
+                            
+                        } catch (IOException ex) {
+                            Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
+                            ex.printStackTrace();
+                        }                        
+                        ctuple.setUpdated(true);
+                        
+                    }
+                }
+            }
+        }
+
+        getStateLog().setCheckpointLowWaterMark(lowWater);
+        
+        Debugger.debug("[PBFTServer] s" + getLocalServerID() + ", at time " + getClock().value() + ", starts the garbage collection procedure ...");
+        
+        getStateLog().doGarbage();
+        
+        Debugger.debug("[PBFTServer] s" + getLocalServerID() + " starts the garbage collection complete!");
+
+    }
+
+    protected long slidindWindowSize = 1;
+
+    public void setSlidingWindowSize(Long size) {
+        slidindWindowSize = size;
+    }
+
+    Buffer window = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
+    
+    public long getSlidingWindowSize(){
+        return slidindWindowSize;
+    }
+
+    public  synchronized void waitWindow(){
+        long ppSEQ = getStateLog().getNextPrePrepareSEQ();
+        long exSEQ = getStateLog().getNextExecuteSEQ();
+        boolean isFull = ppSEQ >= exSEQ + slidindWindowSize;
+        while (isFull) {
+            isFull = (Boolean)window.remove();
+        }
     }
     
+    public void slidWindow(){
+        long ppSEQ = getStateLog().getNextPrePrepareSEQ();
+        long exSEQ = getStateLog().getNextExecuteSEQ();
+        boolean isFull = ppSEQ >= exSEQ + slidindWindowSize;
+        
+        window.add(isFull);
+    }
 }

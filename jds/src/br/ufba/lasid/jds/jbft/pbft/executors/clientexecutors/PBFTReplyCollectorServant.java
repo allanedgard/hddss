@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.jbft.pbft.executors;
+package br.ufba.lasid.jds.jbft.pbft.executors.clientexecutors;
 
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.Quorum;
@@ -11,6 +11,7 @@ import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCollectorServant;
 import br.ufba.lasid.jds.util.Debugger;
 
 /**

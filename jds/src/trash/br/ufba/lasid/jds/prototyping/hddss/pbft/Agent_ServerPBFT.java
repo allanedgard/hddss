@@ -5,7 +5,6 @@
 
 package trash.br.ufba.lasid.jds.prototyping.hddss.pbft;
 
-import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
 
 //import br.ufba.lasid.jds.jbft.pbft.actions.SendCheckPointRequestAction;
 //import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCommitExecutor;
@@ -18,7 +17,7 @@ import br.ufba.lasid.jds.util.IPayload;
  *
  * @author aliriosa
  */
-public class Agent_ServerPBFT extends Agent_PBFT implements IPBFTServer{
+public class Agent_ServerPBFT extends Agent_PBFT {
 
     public IPayload doService(IPayload arg) {
         throw new UnsupportedOperationException("Not supported yet.");

@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.pbft;
 
-import br.ufba.lasid.jds.adapters.IBeforeHook;
+import br.ufba.lasid.hdf.adapters.IBeforeHook;
 import br.ufba.lasid.jds.util.ITask;
 import java.lang.reflect.Method;
 import br.ufba.lasid.jds.util.Agenda;
@@ -108,5 +108,9 @@ public class SimulatedSchedulerHook implements IBeforeHook, IScheduler{
         agenda.clear();
 
         return true;
+    }
+
+    public void call(Object who, Method method, Object[] args) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }
