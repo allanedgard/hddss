@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.jbft.pbft.executors;
+package br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors;
 
 import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.comm.PDU;
@@ -15,6 +15,7 @@ import br.ufba.lasid.jds.util.ITask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecutor;
 import br.ufba.lasid.jds.util.Debugger;
 
 /**
@@ -22,7 +23,7 @@ import br.ufba.lasid.jds.util.Debugger;
  * @author aliriosa
  */
 public class PBFTPeriodicStatusActiveExecutor extends PBFTExecutor<PBFTStatusActive>{
-
+    PBFTTimeoutDetector task;
     public PBFTPeriodicStatusActiveExecutor(){
         
     }
@@ -33,29 +34,34 @@ public class PBFTPeriodicStatusActiveExecutor extends PBFTExecutor<PBFTStatusAct
     public void execute(PBFTStatusActive sa) {
         PBFTServer pbft = (PBFTServer)getProtocol();
         
-        long nextPP = pbft.getNextPrePrepareSEQ();
-        long nextP  = pbft.getNextPrepareSEQ();
-        long nextC  = pbft.getNextCommitSEQ();
+        long nextPP = pbft.getStateLog().getNextPrePrepareSEQ();
+        long nextP  = pbft.getStateLog().getNextPrepareSEQ();
+        long nextC  = pbft.getStateLog().getNextCommitSEQ();
 
         if(nextP < nextPP || nextC < nextP)
             emit(sa);
+
     }
 
-    public void execute() {
-        PBFTTimeoutDetector task = new PBFTTimeoutDetector() {
+    public void execute(){
+        
+        if(task == null){
+            
+            task = new PBFTTimeoutDetector() {
 
-            @Override
-            public void onTimeout() {
-                
-                //revokeSchedule(this);
+                @Override
+                public void onTimeout() {
 
-                execute(createStatusActiveMessage());
+                    execute(createStatusActiveMessage());
 
-                execute();
+                    execute();
 
-            }
-        };
-
+                }
+            };
+            
+            execute(createStatusActiveMessage());
+        }
+        
         schedule(task);
               
     }
@@ -78,10 +84,10 @@ public class PBFTPeriodicStatusActiveExecutor extends PBFTExecutor<PBFTStatusAct
     public PBFTStatusActive createStatusActiveMessage(){
 
         PBFTServer pbft = (PBFTServer)getProtocol();
-        long ppSEQ = pbft.getNextPrePrepareSEQ() - 1L;
-        long pSEQ = pbft.getNextPrepareSEQ() - 1L;
-        long cSEQ = pbft.getNextCommitSEQ()  - 1L;
-        long eSEQ = pbft.getNextExecuteSEQ() - 1L;
+        long ppSEQ = pbft.getStateLog().getNextPrePrepareSEQ() - 1L;
+        long pSEQ = pbft.getStateLog().getNextPrepareSEQ() - 1L;
+        long cSEQ = pbft.getStateLog().getNextCommitSEQ()  - 1L;
+        long eSEQ = pbft.getStateLog().getNextExecuteSEQ() - 1L;
         long ckSEQ = pbft.getCheckpointLowWaterMark();
         
         return new PBFTStatusActive(

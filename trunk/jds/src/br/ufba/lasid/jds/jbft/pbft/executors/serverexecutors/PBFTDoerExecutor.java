@@ -3,13 +3,14 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.jbft.pbft.executors;
+package br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors;
 
 import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.Quorum;
 import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.cs.IServer;
+import br.ufba.lasid.jds.group.IGroup;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
@@ -19,9 +20,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTLogEntry;
 import br.ufba.lasid.jds.util.Debugger;
-import br.ufba.lasid.jds.util.StatedPBFTRequestMessage;
+import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCollectorServant;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTCheckpointTable;
+import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IRecoverableServer;
+import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  *
@@ -48,7 +56,8 @@ public class PBFTDoerExecutor extends PBFTCollectorServant<PBFTCommit>{
         PBFTServer pbft = (PBFTServer)getProtocol();
 
         try{
-            long startSEQ = pbft.getNextExecuteSEQ();
+            
+            long startSEQ = pbft.getStateLog().getNextExecuteSEQ();
             long finalSEQ = commit.getSequenceNumber();
 
             for(long currSEQ = startSEQ; currSEQ <= finalSEQ; currSEQ++ ){
@@ -124,7 +133,17 @@ public class PBFTDoerExecutor extends PBFTCollectorServant<PBFTCommit>{
 
                 }//end for each digest (execute and reply)
 
-                pbft.updateNextExecuteSEQ(currSEQ);
+                pbft.getStateLog().updateNextExecuteSEQ(currSEQ);
+
+                long execSEQ = pbft.getStateLog().getNextExecuteSEQ() -1;
+                long chkpSEQ = pbft.getCheckpointPeriod();
+
+                //pbft.slidWindow();
+                
+                if(execSEQ > 0 && ((execSEQ % chkpSEQ) == 0)){
+                    emit(createCheckpointMessage(execSEQ));
+                }
+
                 
             }//end for each seqn
 
@@ -157,6 +176,91 @@ public class PBFTDoerExecutor extends PBFTCollectorServant<PBFTCommit>{
         return reply;
 
     }
+
+    protected PBFTCheckpoint createCheckpointMessage(long seqn){
+
+        PBFTServer pbft = (PBFTServer)getProtocol();
+
+        IRecoverableServer server = (IRecoverableServer) pbft.getServer();
+
+        IState state = server.getCurrentState();
+
+        String digest = computeStateDigest(state, seqn);
+        
+        PBFTCheckpoint c = new PBFTCheckpoint(seqn, digest, pbft.getLocalServerID());
+
+        pbft.getStateLog().doCacheServerState(seqn, digest, state);
+
+        return c;
+
+    }
+
+    public synchronized String computeStateDigest(IState state, long seqn){
+        PBFTServer pbft = (PBFTServer)getProtocol();
+        String digest = "";
+        String more = "";
+
+        PBFTCheckpointTable ctable = pbft.getStateLog().getCachedState();
+        
+        ArrayList<Long> seqns = new ArrayList<Long>(ctable.keySet());
+
+        Collections.sort(seqns);
+
+        long maxSEQ = -1;
+        
+        if(!seqns.isEmpty()){
+            maxSEQ = seqns.get(seqns.size()-1);
+            digest = ctable.get(maxSEQ).getDigest();
+            more = "|";
+        }
+        
+        try {
+
+            digest = pbft.getAuthenticator().getDigest(
+                "<" + seqn + "|" + pbft.getAuthenticator().getDigest(state) + more + digest +">"
+            );
+
+        } catch (Exception ex) {
+            Logger.getLogger(PBFTDoerExecutor.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+            return null;
+        }
+
+        return digest;
+    }
+    public synchronized void emit(PBFTCheckpoint c){
+        PBFTServer pbft = (PBFTServer)getProtocol();
+
+        SignedMessage m;
+
+        try {
+
+            m = pbft.getAuthenticator().encrypt(c);
+
+            IGroup  g  = pbft.getLocalGroup();
+            IProcess s = pbft.getLocalProcess();
+
+            PDU pdu = new PDU();
+            pdu.setSource(s);
+            pdu.setDestination(g);
+            pdu.setPayload(m);
+
+            pbft.getCommunicator().multicast(pdu, g);
+
+            Debugger.debug(
+              "[PBFTDoerExecutor]s" +  pbft.getLocalServerID() +
+              " sent checkpoint " + c + " at timestamp " + pbft.getClock().value() +
+              " to group " + pbft.getLocalGroup() + "."
+            );
+
+
+        } catch (Exception ex) {
+            Logger.getLogger(PBFTDoerExecutor.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+        }
+
+    }
+
 
     public synchronized void emit(PBFTReply reply){
         PBFTServer pbft = (PBFTServer)getProtocol();
@@ -212,7 +316,5 @@ public class PBFTDoerExecutor extends PBFTCollectorServant<PBFTCommit>{
 
         }
     }
-
-
 }
 

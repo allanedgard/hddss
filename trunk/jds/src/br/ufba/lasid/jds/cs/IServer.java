@@ -13,5 +13,6 @@ import br.ufba.lasid.jds.util.IPayload;
  * @author aliriosa
  */
 public interface IServer<ProcessID> extends IProcess<ProcessID>{
+    
     public IPayload doService(IPayload arg);
 }

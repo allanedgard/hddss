@@ -64,5 +64,31 @@ public class PBFTReply extends PBFTServerMessage{
                  ">"
         );
     }
-    
+
+    public boolean isSameRound(PBFTReply r){
+        if(
+            r != null                 &&
+            r.getClientID()  != null  &&
+            r.getTimestamp()  != null &&
+            r.getViewNumber() != null
+        ){
+            if( r.getClientID().equals(getClientID())   &&
+                r.getTimestamp().equals(getTimestamp()) &&
+                r.getViewNumber().equals(getViewNumber())
+             ){
+                return true;
+            }
+        }
+        
+        return false;
+
+    }
+
+    public boolean isSameServer(PBFTReply r){
+        if(r != null && r.getReplicaID() != null){
+            return r.getReplicaID().equals(getReplicaID());
+        }
+        
+        return false;
+    }
 }

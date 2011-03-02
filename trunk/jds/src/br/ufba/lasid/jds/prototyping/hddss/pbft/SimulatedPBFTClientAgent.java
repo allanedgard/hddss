@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.pbft;
 
-import br.ufba.lasid.jds.adapters.Adapter;
+import br.ufba.lasid.hdf.adapters.Adapter;
 import br.ufba.lasid.jds.cs.IClient;
 import br.ufba.lasid.jds.prototyping.hddss.Agent;
 import br.ufba.lasid.jds.prototyping.hddss.Simulator;

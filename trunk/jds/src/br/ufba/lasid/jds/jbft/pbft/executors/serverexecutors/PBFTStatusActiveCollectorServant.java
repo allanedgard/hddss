@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.jbft.pbft.executors;
+package br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors;
 
 import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.comm.IMessage;
@@ -15,13 +15,21 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrepareCollectorServant;
+import br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors.PBFTPrepareCollectorServant;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCollectorServant;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTCheckpointTable;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTCheckpointTuple;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTLogEntry;
+import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IStore;
 import br.ufba.lasid.jds.util.Debugger;
+import jdbm.helper.Tuple;
+import trash.br.ufba.lasid.jds.comm.QuorumTable;
 
 /**
  *
@@ -57,14 +65,20 @@ public class PBFTStatusActiveCollectorServant extends PBFTCollectorServant<PBFTS
              * change view.
              */
             if(!pbft.hasAValidViewNumber(statusActive)){
+                long nextPP = pbft.getStateLog().getNextPrePrepareSEQ();
+                long nextP  = pbft.getStateLog().getNextPrepareSEQ();
+                long nextC  = pbft.getStateLog().getNextCommitSEQ();
+                long nextE  = pbft.getStateLog().getNextExecuteSEQ();
+                long lwSEQ  = pbft.getCheckpointLowWaterMark();
+
                 Debugger.debug(
                   "[PBFTStatusActiveCollectorServant] s"  + pbft.getLocalServerID() +
                   ", at time " + pbft.getClock().value() + ", discarded " + statusActive +
                   " because it hasn't a valid view number. "
                   + "(currView = " + pbft.getCurrentViewNumber() + ")"
-                  + "[nextPP = " + pbft.getNextPrePrepareSEQ() + ", nextP = "
-                  + pbft.getNextPrepareSEQ() + ", nextC =" + pbft.getNextCommitSEQ() 
-                  + " , nextE = " + pbft.getNextExecuteSEQ() + "]"
+                  + "[nextPP = " + nextPP + ", nextP = "
+                  + nextP + ", nextC =" + nextC
+                  + " , nextE = " + nextE + ", lowWaterMark = " + lwSEQ + "]"
                 );
 
                 return false;
@@ -88,14 +102,15 @@ public class PBFTStatusActiveCollectorServant extends PBFTCollectorServant<PBFTS
             /**
              * Send the executed request.
              */
-            if(pbft.getNextPrepareSEQ() >= 0){
-                Long maxSEQ = pbft.getNextPrePrepareSEQ();
-                Long minSEQ = pbft.getNextExecuteSEQ()-1;
+            if(pbft.getStateLog().getNextPrepareSEQ() >= 0){
+                Long maxSEQ = pbft.getStateLog().getNextPrePrepareSEQ();
+                Long minSEQ = pbft.getStateLog().getNextExecuteSEQ()-1;
 
                 long eSEQ  = statusActive.getLastExecutedSEQ();
                 long cSEQ  = statusActive.getLastCommittedSEQ();
                 long pSEQ  = statusActive.getLastPreparedSEQ();
                 long ppSEQ = statusActive.getLastPrePreparedSEQ();
+                long lwSEQ   = statusActive.getLastStableCheckpointSEQ();
                 
                 if(minSEQ > eSEQ ) minSEQ = eSEQ;
                 if(minSEQ > cSEQ ) minSEQ = cSEQ;
@@ -103,23 +118,20 @@ public class PBFTStatusActiveCollectorServant extends PBFTCollectorServant<PBFTS
                 if(minSEQ > ppSEQ) minSEQ = ppSEQ;
                 if(minSEQ < 0L)    minSEQ = 0L;
 
-                if(maxSEQ < eSEQ )
-                    maxSEQ = eSEQ;
-                if(maxSEQ < cSEQ )
-                    maxSEQ = cSEQ;
-                if(maxSEQ < pSEQ )
-                    maxSEQ = pSEQ;
-                if(maxSEQ < ppSEQ)
-                    maxSEQ = ppSEQ;
+                if(maxSEQ < eSEQ ) maxSEQ = eSEQ;
+                if(maxSEQ < cSEQ ) maxSEQ = cSEQ;
+                if(maxSEQ < pSEQ ) maxSEQ = pSEQ;
+                if(maxSEQ < ppSEQ) maxSEQ = ppSEQ;
 
-                if(maxSEQ < 0L)
-                    maxSEQ = 0L;
+                if(maxSEQ < 0L) maxSEQ = 0L;
 
-                long _eSEQ  = pbft.getNextExecuteSEQ() - 1L;
-                long _cSEQ  = pbft.getNextCommitSEQ()  - 1L;
-                long _pSEQ  = pbft.getNextPrepareSEQ() - 1L;
-                long _ppSEQ = pbft.getNextPrePrepareSEQ() - 1L;
-                
+                long _eSEQ  = pbft.getStateLog().getNextExecuteSEQ() - 1L;
+                long _cSEQ  = pbft.getStateLog().getNextCommitSEQ()  - 1L;
+                long _pSEQ  = pbft.getStateLog().getNextPrepareSEQ() - 1L;
+                long _ppSEQ = pbft.getStateLog().getNextPrePrepareSEQ() - 1L;
+                long _lwSEQ = pbft.getCheckpointLowWaterMark();
+
+                QuorumTable qtable = pbft.getStateLog().getQuorumTable(PBFT.CHECKPOINTQUORUMSTORE);
                 
                 boolean sent = false;
                 
@@ -172,13 +184,42 @@ public class PBFTStatusActiveCollectorServant extends PBFTCollectorServant<PBFTS
                                 }
                             }
                         }
-                    }
+                    }//end if entry
+                }//end for seq
 
-                    //if(sent) break;
-                }
+                long currSEQ = lwSEQ + 1;
+                IStore store = pbft.getCheckpointStore();
+                
+                while(currSEQ < _lwSEQ){
+                    try {
+                        String index = String.valueOf(currSEQ) + ";" + "null";
+                        
+                        Tuple tuple = store.findGreaterOrEqual(index);
+
+                        if(tuple == null){
+                            break;
+                        }
+
+                        String key = (String)tuple.getKey();
+                        String[] pair = key.split(";");
+
+                        Long seqn = Long.valueOf(pair[0]);
+
+                        String digest = pair[1];
+
+                        PBFTCheckpoint checkpoint = new PBFTCheckpoint(seqn, digest, pbft.getLocalServerID());
+
+                        emit(checkpoint);
+                        
+                        currSEQ = seqn + 1;
+
+                    } catch (IOException ex) {
+                        Logger.getLogger(PBFTStatusActiveCollectorServant.class.getName()).log(Level.SEVERE, null, ex);
+                        ex.printStackTrace();
+                    }
+                }//end while currSEQ < _lwSEQ, if currSEQ_0 = lwSEQ
 
             }
-
         }
 
         return true;
@@ -206,7 +247,7 @@ public class PBFTStatusActiveCollectorServant extends PBFTCollectorServant<PBFTS
             pbft.getCommunicator().unicast(pdu, d);
 
             Debugger.debug(
-              "[PBFTStatusActiveCollectorServant]s" +  pbft.getLocalProcess().getID() +
+              "[PBFTStatusActiveCollectorServant]s" +  pbft.getLocalServerID() +
               " sent " + message + " at timestamp " + pbft.getClock().value() +
               " to  s" + activeReplicaID + "."
             );

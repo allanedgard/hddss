@@ -6,14 +6,15 @@
 package br.ufba.lasid.jds.jbft.pbft.architectures;
 
 import br.ufba.lasid.jds.architectures.Architecture;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPeriodicStatusActiveExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors.PBFTPeriodicStatusActiveExecutor;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrePrepareCollectorServant;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTPrepareCollectorServant;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTRequestCollectorServant;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCommitBrokerServant;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTDoerExecutor;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTStatusActiveCollectorServant;
+import br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors.PBFTCheckpointCollectorServant;
+import br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors.PBFTPrePrepareCollectorServant;
+import br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors.PBFTPrepareCollectorServant;
+import br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors.PBFTRequestCollectorServant;
+import br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors.PBFTCommitBrokerServant;
+import br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors.PBFTDoerExecutor;
+import br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors.PBFTStatusActiveCollectorServant;
 
 /**
  *
@@ -21,7 +22,7 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTStatusActiveCollectorServant;
  */
 public class PBFTServerArchitecture extends Architecture{
 
-    PBFTServer pbftServer;
+    PBFTServer pbft;
     protected static String requestCollector = "requestCollector";
     protected static String preprepareCollector = "preprepareCollector";
     protected static String prepareCollector = "prepareCollector";
@@ -29,17 +30,19 @@ public class PBFTServerArchitecture extends Architecture{
     protected static String replyDoer = "replyDoer";
     protected static String periodicStatusActive = "periodicStatusActive";
     protected static String statusActiveCollector = "statusActiveCollector";
+    protected static String checkpointCollector = "checkpointCollector";
     protected static String communicator = "communicator";
+    
     public PBFTServer getPBFTServer() {
-        return pbftServer;
+        return pbft;
     }
 
     public void setPBFTServer(PBFTServer pbftServer) {
-        this.pbftServer = pbftServer;
+        this.pbft = pbftServer;
     }
 
     public PBFTServerArchitecture(PBFTServer pbft){
-        this.pbftServer = pbft;
+        this.pbft = pbft;
     }
 
     public PBFTServerArchitecture(){
@@ -49,22 +52,29 @@ public class PBFTServerArchitecture extends Architecture{
     @Override
     public void buildup() {
 
-        add(requestCollector, new PBFTRequestCollectorServant(pbftServer));
-        add(preprepareCollector, new PBFTPrePrepareCollectorServant(pbftServer));
-        add(prepareCollector, new PBFTPrepareCollectorServant(pbftServer));
-        add(commitBroker, new PBFTCommitBrokerServant(pbftServer));
-        add(replyDoer, new PBFTDoerExecutor(pbftServer));
-        add(periodicStatusActive, new PBFTPeriodicStatusActiveExecutor(pbftServer));
-        add(statusActiveCollector, new PBFTStatusActiveCollectorServant(pbftServer));
-        add(communicator, pbftServer.getCommunicator());
+        //set();
+        add(requestCollector, new PBFTRequestCollectorServant(pbft));
+        add(preprepareCollector, new PBFTPrePrepareCollectorServant(pbft));
+        add(prepareCollector, new PBFTPrepareCollectorServant(pbft));
+        add(commitBroker, new PBFTCommitBrokerServant(pbft));
+        add(replyDoer, new PBFTDoerExecutor(pbft));
+        add(periodicStatusActive, new PBFTPeriodicStatusActiveExecutor(pbft));
+        add(statusActiveCollector, new PBFTStatusActiveCollectorServant(pbft));
+        add(checkpointCollector, new PBFTCheckpointCollectorServant(pbft));
+        add(communicator, pbft.getCommunicator());
 
-        addConnection(communicator, requestCollector);
-        addConnection(communicator, preprepareCollector);
-        addConnection(communicator, prepareCollector);
-        addConnection(communicator, commitBroker);
-        addConnection(communicator, statusActiveCollector);
-        addConnection(commitBroker, replyDoer);
-        //addConnection(requestCollector, communicator);
+        connect(communicator, requestCollector);
+        connect(communicator, preprepareCollector);
+        connect(communicator, prepareCollector);
+        connect(communicator, commitBroker);
+        connect(communicator, statusActiveCollector);
+        connect(communicator, checkpointCollector);
+        connect(commitBroker, replyDoer);
+
+        //event("AfterRequestExecutionEvent", pbft, "updateXXXXX", after);
+        //handle(""AfterRequestExecutionEvent", ckecpoint);
+
+        //connect(requestCollector, communicator);
         
         super.buildup();
     }

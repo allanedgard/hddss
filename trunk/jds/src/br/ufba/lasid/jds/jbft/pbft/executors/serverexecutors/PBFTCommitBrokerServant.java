@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.jbft.pbft.executors;
+package br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors;
 
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.Quorum;
@@ -13,7 +13,8 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.util.Debugger;
-import br.ufba.lasid.jds.util.StatedPBFTRequestMessage;
+import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecutorBroker;
 
 /**
  *
@@ -44,14 +45,19 @@ public class PBFTCommitBrokerServant extends PBFTExecutorBroker<PBFTCommit, PBFT
          * change view.
          */
         if(!(pbft.hasAValidSequenceNumber(commit) && pbft.hasAValidViewNumber(commit))){
+
+            long nextPP = pbft.getStateLog().getNextPrePrepareSEQ();
+            long nextP  = pbft.getStateLog().getNextPrepareSEQ();
+            long nextC  = pbft.getStateLog().getNextCommitSEQ();
+            long nextE  = pbft.getStateLog().getNextExecuteSEQ();
             Debugger.debug(
               "[PBFTCommitBrokerServant] s"  + pbft.getLocalProcess().getID() +
               ", at time " + pbft.getClock().value() + ", discarded " + commit +
               " because it hasn't a valid sequence/view number. "
               + "(currView = " + pbft.getCurrentViewNumber() + ")"
-              + "[nextPP = " + pbft.getNextPrePrepareSEQ() + ", nextP = "
-              + pbft.getNextPrepareSEQ() + ", nextC =" + pbft.getNextCommitSEQ()
-              + " , nextE = " + pbft.getNextExecuteSEQ() + "]"
+              + "[nextPP = " + nextPP + ", nextP = "
+              + nextP + ", nextC =" + nextC
+              + " , nextE = " + nextE + "]"
             );
 
             return false;
@@ -114,7 +120,7 @@ public class PBFTCommitBrokerServant extends PBFTExecutorBroker<PBFTCommit, PBFT
 
                 }
 
-                pbft.updateNextCommitSEQ(commit);
+                pbft.getStateLog().updateNextCommitSEQ(commit);
 
                 store(commit);
 

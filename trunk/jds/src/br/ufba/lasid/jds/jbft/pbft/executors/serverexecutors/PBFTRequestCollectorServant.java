@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.jbft.pbft.executors;
+package br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors;
 
 import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.comm.PDU;
@@ -16,11 +16,12 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTTimeoutDetector;
 import br.ufba.lasid.jds.util.ITask;
-import br.ufba.lasid.jds.util.StatedPBFTRequestMessage.RequestState;
+import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage.RequestState;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import br.ufba.lasid.jds.util.Debugger;
-import br.ufba.lasid.jds.util.StatedPBFTRequestMessage;
+import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCollectorServant;
 
 /**
  *
@@ -116,7 +117,7 @@ public class PBFTRequestCollectorServant extends PBFTCollectorServant<PBFTReques
         String digest = null;
         
         try{
-            digest = pbft.getAuthenticator().getDisgest(request);
+            digest = pbft.getAuthenticator().getDigest(request);
         } catch (Exception ex) {
             Logger.getLogger(PBFTRequestCollectorServant.class.getName()).log(Level.SEVERE, null, ex);
             ex.printStackTrace();
@@ -142,6 +143,7 @@ public class PBFTRequestCollectorServant extends PBFTCollectorServant<PBFTReques
          * Perform the batch procedure if the server is the primary replica.
          */
         if(pbft.isPrimary()){
+            //pbft.waitWindow();
             Debugger.debug(
               "[PBFTRequestCollectorServant] s" + pbft.getLocalProcess().getID() +
               " is the primary and is executing the batch procedure for " + request + "."

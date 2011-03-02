@@ -9,38 +9,41 @@ package br.ufba.lasid.jds.jbft.pbft.comm;
  *
  * @author aliriosa
  */
-public class PBFTCheckpoint extends PBFTMessage{
+public class PBFTCheckpoint extends PBFTServerMessage{
 
+    public PBFTCheckpoint(){
+
+    }
+
+    public PBFTCheckpoint(Long seqn, String digest, Object replicaID){
+        setSequenceNumber(seqn);
+        setDigest(digest);
+        setReplicaID(replicaID);        
+    }
     @Override
     public final synchronized String toString() {
 
         return (
-                "<CHECKPOINT" + "," +
+                "<CHECKPOINT" + ", " +
                  "SEQ = " + getSequenceNumber().toString() + ", " +
+                 "DIGEST = " + getDigest().toString() + ", " +
                  "SENDER = " + getReplicaID().toString() +
                  ">"
         );
     }
 
-    Long sequenceNumber;
+    String digest;
 
-    public Long getSequenceNumber() {
-        return sequenceNumber;
+    public String getDigest() {
+        return digest;
     }
 
-    public void setSequenceNumber(Long sequenceNumber) {
-        this.sequenceNumber = sequenceNumber;
+    public void setDigest(String digest) {
+        this.digest = digest;
     }
 
-    Object replicaID;
-
-    public Object getReplicaID() {
-        return replicaID;
+    public String getEntryKey(){
+        return  getSequenceNumber().toString() + ";" + getDigest().toString();
     }
-
-    public void setReplicaID(Object replicaID) {
-        this.replicaID = replicaID;
-    }
-    
 
 }

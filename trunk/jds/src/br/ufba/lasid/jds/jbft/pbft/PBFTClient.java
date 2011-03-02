@@ -5,8 +5,6 @@
 
 package br.ufba.lasid.jds.jbft.pbft;
 
-import br.ufba.lasid.jds.jbft.pbft.PBFT;
-import br.ufba.lasid.jds.jbft.pbft.IPBFTClient;
 import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.PDU;
@@ -33,10 +31,10 @@ import br.ufba.lasid.jds.util.Debugger;
 public class PBFTClient extends PBFT implements IPBFTClient{
 
 
-    protected Buffer applbox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
+    protected Buffer applicationBox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
 
     public Buffer getApplicationBox(){
-        return applbox;
+        return applicationBox;
     }
     
     protected IClient client;
@@ -107,16 +105,6 @@ public class PBFTClient extends PBFT implements IPBFTClient{
         accept(payload, true);
     }
 
-
-    /**
-     * Keep the timestamp of the previous request sent.
-     */
-//    private Long lastClientTimestamp = Long.valueOf(-1);
-
-    /**
-     * Keep the timestamp of the current request sent.
-     */
-  //  private Long currClientTimestamp = Long.valueOf(-1);
 
     /**
      * Create a new PBFT' IClient request message.
@@ -208,29 +196,25 @@ public class PBFTClient extends PBFT implements IPBFTClient{
             if(q != null){
 
                 for(IMessage m :  q){
+
                     PBFTReply r1 = (PBFTReply)m;
-
-                    if(!(
-                            r.getClientID()   != null && r1.getClientID().equals(r.getClientID())    &&
-                            r.getTimestamp()  != null && r1.getTimestamp().equals(r.getTimestamp())  &&
-                            r.getViewNumber() != null && r1.getViewNumber().equals(r.getViewNumber())
-                    )){
+                    
+                    if(!(r1.isSameRound(r) && !r1.isSameServer(r))){
                         return false;
                     }
-
-                    if(r.getReplicaID() != null && r1.getReplicaID().equals(r.getReplicaID())){
-                        return false;
-                    }
+                    
                 }
+
                 q.add(r);
+
                 Debugger.debug(
-                  "[PBFTClient] c"  + getLocalProcess().getID() +
-                  ", at time " + getClock().value() + ", update a entry in "
-                + "its log for the received " + r
+                   "[PBFTClient] c"  + getLocalProcess().getID() + ", at time "
+                  + getClock().value() + ", updated a entry in its log for the received " + r
                 );
 
             }
         }
+
         return true;
     }
 

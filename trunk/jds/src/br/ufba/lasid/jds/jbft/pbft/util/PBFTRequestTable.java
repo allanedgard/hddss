@@ -12,6 +12,7 @@ import java.util.Hashtable;
  * @author aliriosa
  */
 public class PBFTRequestTable extends Hashtable<Object, PBFTRequestTuple>{
+    private static final long serialVersionUID = -4946552082748994666L;
 
 
 }

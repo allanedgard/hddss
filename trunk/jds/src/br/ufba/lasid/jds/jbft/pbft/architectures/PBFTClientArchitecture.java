@@ -7,7 +7,7 @@ package br.ufba.lasid.jds.jbft.pbft.architectures;
 
 import br.ufba.lasid.jds.architectures.Architecture;
 import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
-import br.ufba.lasid.jds.jbft.pbft.executors.PBFTReplyCollectorServant;
+import br.ufba.lasid.jds.jbft.pbft.executors.clientexecutors.PBFTReplyCollectorServant;
 
 /**
  *
@@ -41,8 +41,8 @@ public class PBFTClientArchitecture extends Architecture{
         add(replyCollector, new PBFTReplyCollectorServant(getPBFTClient()));
         add(communicator, pbftclient.getCommunicator());
 
-        addConnection(communicator, replyCollector);
-        //addConnection(replyCollector, communicator);
+        connect(communicator, replyCollector);
+        //connect(replyCollector, communicator);
 
         super.buildup();
     }

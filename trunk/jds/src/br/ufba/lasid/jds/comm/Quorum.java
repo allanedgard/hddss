@@ -12,6 +12,8 @@ import java.util.ArrayList;
  * @author aliriosa
  */
 public class Quorum extends ArrayList<IMessage>{
+    
+    private static final long serialVersionUID = -1024102331698905981L;
 
     int quorumSize = 1;
     

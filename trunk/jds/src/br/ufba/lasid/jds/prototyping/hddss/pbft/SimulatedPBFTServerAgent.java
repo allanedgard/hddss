@@ -5,7 +5,6 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.pbft;
 
-import br.ufba.lasid.jds.adapters.Adapter;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.comm.SimulatedPBFTCommunicator;
 import br.ufba.lasid.jds.security.SHA1withDSASunMessageAuthenticator;
 import java.util.logging.Level;
@@ -13,8 +12,6 @@ import java.util.logging.Logger;
 import br.ufba.lasid.jds.cs.IServer;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.architectures.PBFTServerArchitecture;
-import br.ufba.lasid.jds.prototyping.hddss.Agent;
-import br.ufba.lasid.jds.prototyping.hddss.Simulator;
 
 /**
  *
@@ -96,6 +93,10 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
 
     public void setSendStatusPeriod(String period){
         ((PBFTServer)getProtocol()).setSendStatusPeriod(Long.valueOf(period));
+    }
+
+    public void setSlidingWindowSize(String size){
+        ((PBFTServer)getProtocol()).setSlidingWindowSize(Long.valueOf(size));
     }
 
 }

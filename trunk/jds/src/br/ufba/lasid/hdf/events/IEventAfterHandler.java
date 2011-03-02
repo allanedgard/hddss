@@ -3,13 +3,12 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.adapters;
+package br.ufba.lasid.hdf.events;
 
 /**
  *
  * @author aliriosa
  */
-public interface IBeforeHook extends IHook{
-   
+public interface IEventAfterHandler extends IEventHandler{    
 
 }

@@ -22,7 +22,7 @@ public interface IAuthenticator<T> {
 
     public T makeDisgest(T data);
 
-    public String getDisgest(T data) throws Exception;
+    public String getDigest(T data) throws Exception;
 
     public boolean checkDisgest(T data);
 

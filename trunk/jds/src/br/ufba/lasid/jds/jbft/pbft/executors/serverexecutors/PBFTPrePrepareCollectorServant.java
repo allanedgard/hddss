@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.jbft.pbft.executors;
+package br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors;
 
 import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.comm.PDU;
@@ -17,7 +17,8 @@ import java.util.logging.Logger;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.util.Debugger;
-import br.ufba.lasid.jds.util.StatedPBFTRequestMessage;
+import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
+import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCollectorServant;
 
 /**
  *
@@ -48,14 +49,19 @@ public class PBFTPrePrepareCollectorServant extends PBFTCollectorServant<PBFTPre
          * change view.
          */
         if(!(pbft.hasAValidSequenceNumber(preprepare) && pbft.hasAValidViewNumber(preprepare))){
+            long nextPP = pbft.getStateLog().getNextPrePrepareSEQ();
+            long nextP  = pbft.getStateLog().getNextPrepareSEQ();
+            long nextC  = pbft.getStateLog().getNextCommitSEQ();
+            long nextE  = pbft.getStateLog().getNextExecuteSEQ();
+
             Debugger.debug(
-              "[PBFTPrePrepareCollectorServant] s"  + pbft.getLocalProcess().getID() +
+              "[PBFTPrePrepareCollectorServant] s"  + pbft.getLocalServerID() +
               ", at time " + pbft.getClock().value() + ", discarded " + preprepare +
               " because it hasn't a valid sequence/view number. "
               + "(currView = " + pbft.getCurrentViewNumber() + ")"
-              + "[nextPP = " + pbft.getNextPrePrepareSEQ() + ", nextP = "
-              + pbft.getNextPrepareSEQ() + ", nextC =" + pbft.getNextCommitSEQ()
-              + " , nextE = " + pbft.getNextExecuteSEQ() + "]"
+              + "[nextPP = " + nextPP + ", nextP = "
+              + nextP + ", nextC =" + nextC
+              + " , nextE = " + nextE + "]"
             );
 
             return false;
@@ -68,7 +74,7 @@ public class PBFTPrePrepareCollectorServant extends PBFTCollectorServant<PBFTPre
          */
         if(!pbft.wasSentByPrimary(preprepare)){
             Debugger.debug(
-              "[PBFTPrePrepareCollectorServant] s"   + pbft.getLocalProcess().getID()   +
+              "[PBFTPrePrepareCollectorServant] s"   + pbft.getLocalServerID()   +
               ", at time " + pbft.getClock().value() + ", discarded " + preprepare      +
               " because it wasn't sent by primary server s" + pbft.getCurrentPrimaryID()
             );
@@ -98,7 +104,7 @@ public class PBFTPrePrepareCollectorServant extends PBFTCollectorServant<PBFTPre
 
             }
 
-            pbft.updateNextPrePrepareSEQ(preprepare);
+            pbft.getStateLog().updateNextPrePrepareSEQ(preprepare);
             
             if(!pbft.isPrimary()){
                 emit(createPrepareMessage(preprepare));
@@ -156,7 +162,7 @@ public class PBFTPrePrepareCollectorServant extends PBFTCollectorServant<PBFTPre
             pbft.getCommunicator().multicast(pdu, g);
 
             Debugger.debug(
-              "[PBFTPrePrepareCollectorServant]s" +  pbft.getLocalProcess().getID() +
+              "[PBFTPrePrepareCollectorServant]s" +  pbft.getLocalServerID() +
               " sent prepare " + p + " at timestamp " + pbft.getClock().value() +
               " to group " + pbft.getLocalGroup() + "."
             );
@@ -169,8 +175,6 @@ public class PBFTPrePrepareCollectorServant extends PBFTCollectorServant<PBFTPre
         }
 
     }
-
-
 
 
     public boolean canConsume(Object object) {

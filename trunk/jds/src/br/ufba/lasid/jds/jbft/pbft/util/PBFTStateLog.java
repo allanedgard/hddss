@@ -5,7 +5,6 @@
 
 package br.ufba.lasid.jds.jbft.pbft.util;
 
-import br.ufba.lasid.jds.jbft.pbft.util.PBFTLogEntry;
 import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.Quorum;
 import trash.br.ufba.lasid.jds.comm.QuorumTable;
@@ -16,8 +15,11 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
-import br.ufba.lasid.jds.util.StatedPBFTRequestMessage;
-import br.ufba.lasid.jds.util.StatedPBFTRequestMessage.RequestState;
+import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
+import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage.RequestState;
+import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
+import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.DigestList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -27,6 +29,8 @@ import java.util.Hashtable;
  * @author aliriosa
  */
 public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
+    
+    private static final long serialVersionUID = 9080466116863750014L;
 
     volatile QuorumTableStore qstore = new QuorumTableStore();
     
@@ -34,15 +38,103 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
     private static String COMMITQUORUMTABLE = "__COMMITQUORUMTABLE";
     private static String CHECKPOINTQUORUMTABLE = "__CHECKPOINTQUORUMTABLE";
     private static String REPLYQUORUMTABLE = "__REPLYQUORUMTABLE";
-   
-    ArrayList<Long> nsequences = new ArrayList<Long>();
-    
+       
     private int lastChangeViewTimestamp = -1;
 
     private long cpLowWaterMark = -1;
 
     private volatile PBFTRequestTable rseqtable = new PBFTRequestTable();
     private volatile PBFTRequestTable rdigtable = new PBFTRequestTable();
+    private volatile PBFTCheckpointTable cptable = new PBFTCheckpointTable();
+    
+    public void doCacheServerState(Long seqn, String digest, IState state){
+
+        PBFTCheckpointTuple ctuple = new PBFTCheckpointTuple(seqn, digest, state);
+        
+        cptable.put(seqn, ctuple);
+
+    }
+
+    public PBFTCheckpointTable getCachedState(){
+        return cptable;
+    }
+
+    protected volatile long nextPrePrepareSEQ =  0L;
+    protected volatile long nextPrepareSEQ    =  0L;
+    protected volatile long nextCommitSEQ     =  0L;
+    protected volatile long nextExecuteSEQ    =  0L;
+    
+    public synchronized void updateNextPrePrepareSEQ(PBFTPrePrepare m){
+        if(m != null && m.getSequenceNumber() != null){
+            long seqn = m.getSequenceNumber();
+            if(seqn == nextPrePrepareSEQ){
+                nextPrePrepareSEQ++;
+            }
+        }
+    }
+
+    public synchronized void updateNextPrepareSEQ(PBFTPrepare m){
+        if(m != null && m.getSequenceNumber() != null){
+            long seqn = m.getSequenceNumber();
+            if(seqn < nextPrePrepareSEQ && seqn == nextPrepareSEQ){
+                nextPrepareSEQ++;
+            }
+        }
+    }
+
+    public synchronized void updateNextCommitSEQ(PBFTCommit m){
+        if(m != null && m.getSequenceNumber() != null){
+            long seqn = m.getSequenceNumber();
+            if(seqn < nextPrePrepareSEQ && seqn < nextPrepareSEQ && seqn == nextCommitSEQ){
+                nextCommitSEQ++;
+            }
+        }
+    }
+
+    public synchronized void updateNextExecuteSEQ(Long theSEQ){
+        if(theSEQ != null){
+
+            long seqn = theSEQ;
+
+            if(seqn < nextPrePrepareSEQ && seqn < nextPrepareSEQ && seqn < nextCommitSEQ && seqn == nextExecuteSEQ){
+                nextExecuteSEQ++;
+            }
+        }
+    }
+
+    public void setNextCommitSEQ(long nextCommitSEQ) {
+        this.nextCommitSEQ = nextCommitSEQ;
+    }
+
+    public void setNextExecuteSEQ(long nextExecuteSEQ) {
+        this.nextExecuteSEQ = nextExecuteSEQ;
+    }
+
+    public void setNextPrePrepareSEQ(long nextPrePrepareSEQ) {
+        this.nextPrePrepareSEQ = nextPrePrepareSEQ;
+    }
+
+    public void setNextPrepareSEQ(long nextPrepareSEQ) {
+        this.nextPrepareSEQ = nextPrepareSEQ;
+    }
+
+
+    public synchronized long getNextCommitSEQ() {
+        return nextCommitSEQ;
+    }
+
+    public synchronized long getNextPrePrepareSEQ() {
+        return nextPrePrepareSEQ;
+    }
+
+    public synchronized long getNextPrepareSEQ() {
+        return nextPrepareSEQ;
+    }
+
+    public synchronized long getNextExecuteSEQ() {
+        return nextExecuteSEQ;
+    }
+
 
     public boolean wasPrePrepared(PBFTPrepare p){
         /**
@@ -249,7 +341,8 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
     }
 
     public void setCheckpointLowWaterMark(long mark){
-        cpLowWaterMark = mark;
+        if(cpLowWaterMark < mark)
+            cpLowWaterMark = mark;
     }
     
     public long getCheckpointLowWaterMark(){
@@ -456,41 +549,49 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
 
     }
 
-    public long getLastExecutedSequenceNumber(){
-
-        /**
-         * It isn't efficient.
-         */
-        Collections.sort(nsequences);
-
-        if(nsequences.isEmpty()){
-            return -1;
-        }
-
-        return nsequences.get(nsequences.size()-1);
+    public synchronized void doGarbage() {
         
-    }
+        long finalSEQ = getCheckpointLowWaterMark();
 
-    public synchronized  void cleanupStoredSequence(long seqn){
+        ArrayList<Long> seqns = new ArrayList<Long>();
+        seqns.addAll(keySet());
 
-        if(!nsequences.isEmpty()){
+        Collections.sort(seqns);
 
-            ArrayList<Long> sequences = new ArrayList<Long>();
+        if(!seqns.isEmpty()){
 
-            sequences.addAll(nsequences);
+            long startSEQ = seqns.get(0);
+            QuorumTable qtable = null;
 
-            Collections.sort(sequences);
+            for(long seq = startSEQ; seq <= finalSEQ; seq++){
+                PBFTLogEntry entry = get(seq);
+                DigestList digests = new DigestList();
 
-            long max = sequences.get(sequences.size()-1);
 
-            for(long seq : sequences){
-                
-                if(seq <= seqn && seq < max){
-                    nsequences.remove(seq);
+                digests.addAll(entry.getPrePrepare().getDigests());
+                //Debugger.debug("\t removing messages for sequence number " + seq);
+                //Debugger.debug("\t\t cleaning up the related client requests" + seq);
+                for(String digest : digests){
+                    rseqtable.remove(seq);
+                    rdigtable.remove(digest);
                 }
+
+                //Debugger.debug("\t\t cleaning up the prepare / commit / checkpoint message quorums ...");
+                
+                qtable = qstore.get(PREPAREQUORUMTABLE);    if(qtable != null) qtable.remove(seq);
+                qtable = qstore.get(COMMITQUORUMTABLE);     if(qtable != null) qtable.remove(seq);
+                qtable = qstore.get(CHECKPOINTQUORUMTABLE); if(qtable != null) qtable.remove(seq);
+
+                remove(seq);
+
+                if(seq < finalSEQ){
+                    //Debugger.debug("\t\t cleaning up the cached checkpoints ...");
+                    cptable.remove(seq);
+                }
+                
             }
         }
-        
+
     }
 
 }

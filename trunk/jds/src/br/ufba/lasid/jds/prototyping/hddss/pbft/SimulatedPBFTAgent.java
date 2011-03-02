@@ -20,7 +20,7 @@ import br.ufba.lasid.jds.jbft.pbft.PBFT;
  *
  * @author aliriosa
  */
-public class SimulatedPBFTAgent extends Agent implements IProcess<Integer>{
+public class SimulatedPBFTAgent extends Agent implements IProcess<Integer>, IPBFTAgent{
 
     protected PBFT  protocol;
     protected IGroup group = new Group();

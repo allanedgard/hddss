@@ -5,6 +5,8 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft;
 
+import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IRecoverableServer;
+import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.SimulatedPBFTServerAgent;
 import br.ufba.lasid.jds.util.IPayload;
 
@@ -12,9 +14,12 @@ import br.ufba.lasid.jds.util.IPayload;
  *
  * @author aliriosa
  */
-public class CalcPBFTServer extends SimulatedPBFTServerAgent{
+public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecoverableServer<Integer>{
+
     
     public Calculator calculator = new Calculator();
+    protected int ncalcs = 0;
+    protected CalculatorState _state = new CalculatorState();
 
     @Override
     public IPayload doService(IPayload arg) {
@@ -42,7 +47,27 @@ public class CalcPBFTServer extends SimulatedPBFTServerAgent{
             result.put(Calculator.RESULT,"[ERROR]INVALID OPERATION");
         }
 
+        Long count = _state.get(opcode);
+        if(count == null){
+            count = 0L;
+        }
+
+        count++;
+
+        _state.put(opcode, count);
+
+
+        //_state.put("ncalcs", ncalcs);
+
         return result;
-    }    
+    }
+
+    public IState getCurrentState() {
+        return _state;
+    }
+
+    public void setCurrentState(IState state) {
+        _state = (CalculatorState)state;
+    }
 
 }

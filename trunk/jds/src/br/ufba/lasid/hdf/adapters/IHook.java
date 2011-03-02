@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.adapters;
+package br.ufba.lasid.hdf.adapters;
 
 import java.lang.reflect.Method;
 
@@ -14,6 +14,6 @@ import java.lang.reflect.Method;
 public interface IHook {
 
     public boolean check(Method method);
-    public void call(Method method, Object[] args);
+    public void call(Object who, Method method, Object[] args);
 
 }

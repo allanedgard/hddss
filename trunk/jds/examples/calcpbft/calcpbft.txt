@@ -1,5 +1,5 @@
-FinalTime = 50000
-NumberOfAgents = 6
+FinalTime = 500000
+NumberOfAgents = 8
 MaximumDeviation = 4
 Mode = clock
 Debug = false
@@ -9,29 +9,42 @@ clock.Mode = s
 
 
 agent[0] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
-agent[0].ServerGroupAddress = 6
+agent[0].ServerGroupAddress = 8
 agent[0].GroupSize = 4
 agent[0].RetransmissionTimeout = 800
-agent[0].RequestGenerationProbability = 0.01
+agent[0].RequestGenerationProbability = 0.001
 
 agent[1] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
-agent[1].ServerGroupAddress = 6
+agent[1].ServerGroupAddress = 8
 agent[1].GroupSize = 4
 agent[1].RetransmissionTimeout = 800
-agent[1].RequestGenerationProbability = 0.1
+agent[1].RequestGenerationProbability = 0.001
+
+agent[2] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
+agent[2].ServerGroupAddress = 8
+agent[2].GroupSize = 4
+agent[2].RetransmissionTimeout = 800
+agent[2].RequestGenerationProbability = 0.001
+
+agent[3] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
+agent[3].ServerGroupAddress = 8
+agent[3].GroupSize = 4
+agent[3].RetransmissionTimeout = 800
+agent[3].RequestGenerationProbability = 0.001
 
 agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
-agent.ServerGroupAddress = 6
-agent.GroupList = 2,3,4,5
-agent.CurrentPrimary  = 2
+agent.ServerGroupAddress = 8
+agent.GroupList = 4,5,6,7
+agent.CurrentPrimary  = 4
 agent.CurrentView = 0
 agent.PrimaryFaultTimeout = 1800
-agent.BatchingSize = 10
-agent.BatchingTimeout = 50
-agent.CheckpointPeriod = 10000
-agent.CheckpointFactor = 50
+agent.BatchingSize = 5
+agent.BatchingTimeout = 20
+agent.CheckpointPeriod = 128
+agent.CheckpointFactor = 3
 agent.ViewChangeRetransmittionTimeout = 2000
-agent.SendStatusPeriod = 100
+agent.SendStatusPeriod = 500
+agent.SlidingWindowSize = 2
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelDeterministicInterval
 channel.Contention = false
