@@ -21,13 +21,13 @@ public class MessageAuthenticator extends Authenticator implements IMessageAuthe
         super(ngen, kgen, encAlg, provider);
     }
 
-    public SignedMessage encrypt(IMessage data) throws Exception{
+    public synchronized SignedMessage encrypt(IMessage data) throws Exception{
         SignedObject signedObject = super.encrypt(data);
 
         return new SignedMessage(signedObject, keys.getPublic());
     }
 
-    public boolean check(SignedMessage m){
+    public synchronized boolean check(SignedMessage m){
         try{
             return super.check(m.getSignedObject(), m.getPublicKey());
         }catch(Exception e){

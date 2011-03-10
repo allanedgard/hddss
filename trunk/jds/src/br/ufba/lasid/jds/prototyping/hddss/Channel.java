@@ -28,26 +28,28 @@ public abstract class Channel {
     }
 
     public final void deliverMsg(Message m, double a) {
-        if ( this.status() ) {
-            int at = (int) (delay()+a);
-            int nextDelivery =(int)(p_j.infra.clock.value())+at;
-            
-            if (!contention) {
+        synchronized(this){
+            if ( this.status() ) {
+                int at = (int) (delay()+a);
+                int nextDelivery =(int)(p_j.infra.clock.value())+at;
 
-                     /*  Sem contenção
-                     */
-                    if (nextDelivery < lastDelivery)
-                        nextDelivery = lastDelivery+1;
+                if (!contention) {
+
+                         /*  Sem contenção
+                         */
+                        if (nextDelivery < lastDelivery)
+                            nextDelivery = lastDelivery+1;
+                }
+                else {
+                 /*  Contenção
+                 */
+                        nextDelivery = max(lastDelivery,(int)(p_j.infra.clock.value()))+at;
+                };
+
+                p_j.infra.debug("process p" + p_j.ID + " delivers at time " + nextDelivery);
+                p_j.infra.nic_in.add(nextDelivery, m);
+                lastDelivery=nextDelivery;
             }
-            else {
-             /*  Contenção
-             */ 
-                    nextDelivery = max(lastDelivery,(int)(p_j.infra.clock.value()))+at;
-            };
-
-            p_j.infra.debug("process p" + p_j.ID + " delivers at time " + nextDelivery);
-            p_j.infra.nic_in.add(nextDelivery, m);
-            lastDelivery=nextDelivery;
         }
     }
     

@@ -38,7 +38,7 @@ public class ClientServerServerExecuteRequestExecutor extends Executor{
         //System.out.println("[DistributedProtocol] call ClientServerServerExecuteRequestExecutor.execute");
         ClientServerMessage m = (ClientServerMessage)act.getWrapper();
 
-        m.setContent(server.doService((IPayload)m.getContent()));
+        m.setContent(server.executeCommand((IPayload)m.getContent()));
         
         //m.setType(ClientServerMessage.TYPE.SENDREPLY);
 //        m.put(ClientServerMessage.TYPEFIELD, ClientServerMessage.TYPE.SENDREPLY);

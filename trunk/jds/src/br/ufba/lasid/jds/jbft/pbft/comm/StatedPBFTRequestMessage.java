@@ -17,11 +17,11 @@ public class StatedPBFTRequestMessage extends PBFTMessage{
 
     
 
-    private volatile RequestState rstate = RequestState.NONE;
-    private volatile String digest = null;
-    private volatile PBFTRequest request = null;
-    private volatile PBFTReply   reply = null;
-    private volatile Long sequenceNumber = null;
+    private  RequestState rstate = RequestState.NONE;
+    private  String digest = null;
+    private  PBFTRequest request = null;
+    private  PBFTReply   reply = null;
+    private  Long sequenceNumber = null;
     
     public StatedPBFTRequestMessage(PBFTRequest request, RequestState rstate, String digest) {
         this.request = request;

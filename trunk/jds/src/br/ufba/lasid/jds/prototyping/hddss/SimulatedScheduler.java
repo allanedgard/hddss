@@ -19,7 +19,7 @@ public class SimulatedScheduler extends Agent implements IScheduler{
     
     public static String TAG = "SimulatedScheduler";
     
-    protected volatile Agenda agenda = new Agenda();
+    protected  Agenda agenda = new Agenda();
 
     public synchronized void schedule(ITask task, long time) {
 

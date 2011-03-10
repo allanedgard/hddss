@@ -24,6 +24,7 @@ import br.ufba.lasid.jds.util.Debugger;
  */
 public class PBFTPeriodicStatusActiveExecutor extends PBFTExecutor<PBFTStatusActive>{
     PBFTTimeoutDetector task;
+    boolean start = true;
     public PBFTPeriodicStatusActiveExecutor(){
         
     }
@@ -38,8 +39,10 @@ public class PBFTPeriodicStatusActiveExecutor extends PBFTExecutor<PBFTStatusAct
         long nextP  = pbft.getStateLog().getNextPrepareSEQ();
         long nextC  = pbft.getStateLog().getNextCommitSEQ();
 
-        if(nextP < nextPP || nextC < nextP)
+        if(start || nextP < nextPP || nextC < nextP){
+            start = false;
             emit(sa);
+        }
 
     }
 
@@ -60,6 +63,7 @@ public class PBFTPeriodicStatusActiveExecutor extends PBFTExecutor<PBFTStatusAct
             };
             
             execute(createStatusActiveMessage());
+            
         }
         
         schedule(task);
@@ -97,6 +101,7 @@ public class PBFTPeriodicStatusActiveExecutor extends PBFTExecutor<PBFTStatusAct
                    );
         
     }
+    
     public void emit(PBFTStatusActive sa){
         PBFTServer pbft = (PBFTServer)getProtocol();
 

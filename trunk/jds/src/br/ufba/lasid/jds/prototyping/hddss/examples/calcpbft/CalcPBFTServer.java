@@ -22,7 +22,7 @@ public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecover
     protected CalculatorState _state = new CalculatorState();
 
     @Override
-    public IPayload doService(IPayload arg) {
+    public IPayload executeCommand(IPayload arg) {
         CalculatorPayload args = (CalculatorPayload)arg;
         CalculatorPayload result = new CalculatorPayload();
         
@@ -39,10 +39,10 @@ public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecover
         Calculator.OPERATION opcode = (Calculator.OPERATION)args.get(Calculator.OPCODE);
         double op1 = ((Double)args.get(Calculator.OP1)).doubleValue();
         double op2 = ((Double)args.get(Calculator.OP2)).doubleValue();        
-        Double r = calculator.solve(opcode, op1, op2);
+        Double r = round(calculator.solve(opcode, op1, op2));
         
         if(r != null){
-            result.put(Calculator.RESULT, calculator.solve(opcode, op1, op2));
+            result.put(Calculator.RESULT, round(calculator.solve(opcode, op1, op2)));
         }else{
             result.put(Calculator.RESULT,"[ERROR]INVALID OPERATION");
         }
@@ -62,6 +62,9 @@ public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecover
         return result;
     }
 
+    public double round(double value){
+        return Math.round(value * 100)/10.0;
+    }
     public IState getCurrentState() {
         return _state;
     }

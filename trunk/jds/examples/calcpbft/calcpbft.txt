@@ -11,26 +11,26 @@ clock.Mode = s
 agent[0] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
 agent[0].ServerGroupAddress = 8
 agent[0].GroupSize = 4
-agent[0].RetransmissionTimeout = 800
-agent[0].RequestGenerationProbability = 0.001
+agent[0].RetransmissionTimeout = 300
+agent[0].RequestGenerationProbability = 0.1
 
 agent[1] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
 agent[1].ServerGroupAddress = 8
 agent[1].GroupSize = 4
-agent[1].RetransmissionTimeout = 800
-agent[1].RequestGenerationProbability = 0.001
+agent[1].RetransmissionTimeout = 300
+agent[1].RequestGenerationProbability = 0.1
 
 agent[2] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
 agent[2].ServerGroupAddress = 8
 agent[2].GroupSize = 4
-agent[2].RetransmissionTimeout = 800
-agent[2].RequestGenerationProbability = 0.001
+agent[2].RetransmissionTimeout = 300
+agent[2].RequestGenerationProbability = 0.1
 
 agent[3] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
 agent[3].ServerGroupAddress = 8
 agent[3].GroupSize = 4
-agent[3].RetransmissionTimeout = 800
-agent[3].RequestGenerationProbability = 0.001
+agent[3].RetransmissionTimeout = 300
+agent[3].RequestGenerationProbability = 0.1
 
 agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
 agent.ServerGroupAddress = 8
@@ -38,12 +38,12 @@ agent.GroupList = 4,5,6,7
 agent.CurrentPrimary  = 4
 agent.CurrentView = 0
 agent.PrimaryFaultTimeout = 1800
-agent.BatchingSize = 5
-agent.BatchingTimeout = 20
+agent.BatchingSize = 4
+agent.BatchingTimeout = 100
 agent.CheckpointPeriod = 128
 agent.CheckpointFactor = 3
-agent.ViewChangeRetransmittionTimeout = 2000
-agent.SendStatusPeriod = 500
+agent.ViewChangeRetransmittionTimeout = 5000
+agent.SendStatusPeriod = 150
 agent.SlidingWindowSize = 2
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelDeterministicInterval
@@ -51,4 +51,4 @@ channel.Contention = false
 channel.DeltaMaximo = 10
 channel.DeltaMinimo = 10
 network = br.ufba.lasid.jds.prototyping.hddss.NetworkDeterministic
-network.ProcessingTime = 0.0000000001
+network.ProcessingTime = 1

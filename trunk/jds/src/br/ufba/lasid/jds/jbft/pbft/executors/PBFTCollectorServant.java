@@ -25,29 +25,29 @@ public abstract class PBFTCollectorServant<T> extends PBFTExecutor<SignedMessage
      * Input buffer which is used to keep the received messages before they be able
      * to be checked and processed.
      */
-    protected volatile Buffer inbox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
+    protected  Buffer inbox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
+    
 
     /**
      * Get the input buffer.
      * @return the input buffer.
      */
     public synchronized Buffer getInbox() { return inbox;  }
-    
+    volatile Object itemBox;
     public void execute(){
 
         while(true){
             try{
 
-                Object obj = getInbox().remove();
-                
-                SignedMessage m = extract(obj);
+//                synchronized(this){
+                    itemBox = getInbox().remove();
+                    SignedMessage m = extract(itemBox);
 
+                    if(m != null && canConsume(m.getSignedObject().getObject())){
 
-
-                if(m != null && canConsume(m.getSignedObject().getObject())){
-
-                    execute(m);
-                }
+                        execute(m);
+                    }
+  //              }
 
             }catch(Exception ex){
                 ex.printStackTrace();

@@ -26,7 +26,7 @@ public class PBFT extends DistributedProtocol{
      * associated to timers (such as, active-status period, primary response 
      * timeout, batching request timeout etc.).
      */
-    protected TaskTableStore ttstore = new TaskTableStore();
+    protected  TaskTableStore ttstore = new TaskTableStore();
 
     public static String REQUESTTASKS       = "REQUESTTASKS";
     public static String VIEWCHANGETASKS    = "VIEWCHANGETASKS";
@@ -36,7 +36,7 @@ public class PBFT extends DistributedProtocol{
     public static String CHECKPOINTQUORUMSTORE = "__CHECKPOINTQUORUMSTORE";
 
 
-    protected volatile PBFTStateLog stateLog = new PBFTStateLog();
+    protected  PBFTStateLog stateLog = new PBFTStateLog();
     
 
     public PBFTStateLog getStateLog() {
@@ -48,28 +48,31 @@ public class PBFT extends DistributedProtocol{
     }
 
     public TaskTable getTaskTable(String ttname){
-
         TaskTable ttable = ttstore.get(ttname);
-
-        if(ttable == null){
-            ttable = new TaskTable();
-            ttstore.put(ttname, ttable);
+        synchronized(this){
+            if(ttable == null){
+                ttable = new TaskTable();
+                ttstore.put(ttname, ttable);
+            }
         }
-
         return ttable;
+        
     }
     
-    protected volatile IScheduler scheduler;
+    protected  IScheduler scheduler;
 
     public IScheduler getScheduler() {
         return scheduler;
     }
 
+    public Object getLocalProcessID(){
+        return getLocalProcess().getID();
+    }
     public void setScheduler(IScheduler scheduler) {
         this.scheduler = scheduler;
     }
 
-    protected IClock clock;
+    protected  IClock clock;
 
     public IClock getClock() {
         return clock;
@@ -79,7 +82,11 @@ public class PBFT extends DistributedProtocol{
         this.clock = clock;
     }
 
-    protected IMessageAuthenticator authenticator;
+    public  long getClockValue(){
+        return getClock().value();
+    }
+
+    protected  IMessageAuthenticator authenticator;
 
 
     public IMessageAuthenticator getAuthenticator() {
@@ -90,7 +97,7 @@ public class PBFT extends DistributedProtocol{
         this.authenticator = authenticator;
     }
 
-    protected IGroup group;
+    protected  IGroup group;
     
     public IGroup getLocalGroup(){
         return group;
@@ -104,7 +111,7 @@ public class PBFT extends DistributedProtocol{
         return (int)(Math.floor(getLocalGroup().getGroupSize()/3));
     }
 
-    Architecture architecture = null;
+    protected  Architecture architecture = null;
 
     public Architecture getArchitecture() {
         return architecture;
@@ -127,6 +134,4 @@ public class PBFT extends DistributedProtocol{
         getArchitecture().shutdown();
         shutdown = true;
     }
-
-
 }

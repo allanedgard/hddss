@@ -16,6 +16,10 @@ public class OneToOneConnector extends Thread implements IConnector{
     ISupplier supplier = null;
     IConsumer consumer = null;
     boolean connected = false;
+
+    public OneToOneConnector() {
+        setName(this.getClass().getSimpleName());
+    }
     
     public void connect(ISupplier supplier, IConsumer consumer) {
         connectTo(supplier);
@@ -40,13 +44,25 @@ public class OneToOneConnector extends Thread implements IConnector{
 
     @Override
     public void run() {
+        if(this.supplier instanceof Thread && this.consumer instanceof Thread){
+            Thread s = (Thread) this.supplier;
+            Thread c = (Thread) this.consumer;
+            setName(getName() + "(" + s.getName() + ", " + c.getName() + ")");
+        }
         connected = true;
         while(connected){
 
             try{
-                Object obj = supplier.getOutbox().remove();
-                if(consumer.canConsume(obj)){
-                    consumer.getInbox().add(obj);
+                synchronized(this){
+                    Object obj = supplier.getOutbox().remove();
+                    
+                    //Debugger.debug("[" + getName() + "] received " + obj);
+
+                    if(consumer.canConsume(obj)){
+                        consumer.getInbox().add(obj);
+                        //Debugger.debug("[" + getName() + "] forwarded " + obj);
+
+                    }
                 }
             }catch(Exception e){
                 e.printStackTrace();

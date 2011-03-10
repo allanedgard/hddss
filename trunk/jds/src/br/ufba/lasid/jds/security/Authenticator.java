@@ -112,7 +112,9 @@ public class Authenticator implements IAuthenticator{
     }
 
     public String getDigest(Object data) throws Exception{
-        return XSecurity.getDigest(data);
+        synchronized(this){
+            return XSecurity.getDigest(data);
+        }
     }
 
     public boolean checkDisgest(Object data) {

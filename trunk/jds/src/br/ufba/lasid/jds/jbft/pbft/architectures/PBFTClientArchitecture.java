@@ -8,6 +8,7 @@ package br.ufba.lasid.jds.jbft.pbft.architectures;
 import br.ufba.lasid.jds.architectures.Architecture;
 import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
 import br.ufba.lasid.jds.jbft.pbft.executors.clientexecutors.PBFTReplyCollectorServant;
+import br.ufba.lasid.jds.jbft.pbft.handlers.PBFTClientServant;
 
 /**
  *
@@ -15,20 +16,20 @@ import br.ufba.lasid.jds.jbft.pbft.executors.clientexecutors.PBFTReplyCollectorS
  */
 public class PBFTClientArchitecture extends Architecture{
 
-    PBFTClient pbftclient;
-    protected static String replyCollector = "replyCollector";
-    protected static String communicator = "communicator";
+    PBFTClient pbftc;
+    protected static String PBFTClientServantTAG = "__PBFTClientServantTAG";
+    protected static String PBFTCommunicatorTAG = "__PBFTCommunicatorTAG";
 
     public PBFTClient getPBFTClient() {
-        return pbftclient;
+        return pbftc;
     }
 
-    public void setPBFTClient(PBFTClient pbftclient) {
-        this.pbftclient = pbftclient;
+    public void setPBFTClient(PBFTClient pbftc) {
+        this.pbftc = pbftc;
     }
 
-    public PBFTClientArchitecture(PBFTClient pbftclient){
-        this.pbftclient = pbftclient;
+    public PBFTClientArchitecture(PBFTClient pbftc){
+        this.pbftc = pbftc;
     }
 
     public PBFTClientArchitecture(){
@@ -38,11 +39,10 @@ public class PBFTClientArchitecture extends Architecture{
     @Override
     public void buildup() {
 
-        add(replyCollector, new PBFTReplyCollectorServant(getPBFTClient()));
-        add(communicator, pbftclient.getCommunicator());
+        add(PBFTClientServantTAG, new PBFTClientServant(getPBFTClient()));
+        add(PBFTCommunicatorTAG, pbftc.getCommunicator());
 
-        connect(communicator, replyCollector);
-        //connect(replyCollector, communicator);
+        connect(PBFTCommunicatorTAG, PBFTClientServantTAG);        
 
         super.buildup();
     }

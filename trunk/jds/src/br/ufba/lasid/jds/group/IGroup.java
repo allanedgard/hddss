@@ -31,6 +31,9 @@ public interface IGroup<GroupID, ProcessID> extends Serializable, ISystemEntity{
     public void removeMember(IProcess<ProcessID> process);
 
     public void makeGroupFromIDs(ProcessID[] IDs);
+
+    public IGroup<GroupID, ProcessID> minus(IProcess<ProcessID> p);
+    public IGroup<GroupID, ProcessID> plus(IProcess<ProcessID> p);
     
 
 }

@@ -23,6 +23,11 @@ public class ManyToManyConnector extends Thread implements IConnector{
     ConsumerList consumers = new ConsumerList();
     ConnectorList connectors = new ConnectorList();
     boolean connected = false;
+
+    public ManyToManyConnector() {
+        setName(this.getClass().getSimpleName());
+    }
+
     public void connect(ISupplier supplier, IConsumer consumer) {
         this.connectTo(supplier);
         this.connectTo(consumer);
@@ -40,14 +45,13 @@ public class ManyToManyConnector extends Thread implements IConnector{
     public void run() {
 
         for(ISupplier supplier : suppliers){
-
             OneToManyConnector connector = new OneToManyConnector();
             
             for(IConsumer consumer : consumers){
                 connector.connect(supplier, consumer);
                 connectors.add(connector);
             }
-
+            
             connector.start();
         }
 

@@ -48,7 +48,7 @@ public class PBFTCheckpointStorage implements IStore<String, IState> {
         
     }
     
-    public synchronized void write(String index, IState data, boolean replace) throws IOException {
+    public synchronized  void write(String index, IState data, boolean replace) throws IOException {
         tree.insert(index, data, replace);
     }
 

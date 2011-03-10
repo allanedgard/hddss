@@ -12,7 +12,7 @@ package br.ufba.lasid.jds.jbft.pbft.comm;
 public class PBFTChangeViewACK extends PBFTServerMessage{
 
     @Override
-    public final synchronized String toString() {
+    public final String toString() {
 
         return (
                 "<VIEW-CHANGE-ACK"                              + "," +

@@ -5,11 +5,9 @@
 
 package br.ufba.lasid.jds.jbft.pbft.util;
 
-import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.Quorum;
 import trash.br.ufba.lasid.jds.comm.QuorumTable;
 import trash.br.ufba.lasid.jds.comm.QuorumTableStore;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
@@ -18,7 +16,6 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage.RequestState;
 import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
-import br.ufba.lasid.jds.util.Debugger;
 import br.ufba.lasid.jds.util.DigestList;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,7 +29,7 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
     
     private static final long serialVersionUID = 9080466116863750014L;
 
-    volatile QuorumTableStore qstore = new QuorumTableStore();
+     QuorumTableStore qstore = new QuorumTableStore();
     
     private static String PREPAREQUORUMTABLE = "__PREPAREQUORUMTABLE";
     private static String COMMITQUORUMTABLE = "__COMMITQUORUMTABLE";
@@ -43,9 +40,9 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
 
     private long cpLowWaterMark = -1;
 
-    private volatile PBFTRequestTable rseqtable = new PBFTRequestTable();
-    private volatile PBFTRequestTable rdigtable = new PBFTRequestTable();
-    private volatile PBFTCheckpointTable cptable = new PBFTCheckpointTable();
+    private  PBFTRequestTable rseqtable = new PBFTRequestTable();
+    private  PBFTRequestTable rdigtable = new PBFTRequestTable();
+    private  PBFTCheckpointTable cptable = new PBFTCheckpointTable();
     
     public void doCacheServerState(Long seqn, String digest, IState state){
 
@@ -59,45 +56,51 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
         return cptable;
     }
 
-    protected volatile long nextPrePrepareSEQ =  0L;
-    protected volatile long nextPrepareSEQ    =  0L;
-    protected volatile long nextCommitSEQ     =  0L;
-    protected volatile long nextExecuteSEQ    =  0L;
+    protected  long nextPrePrepareSEQ =  0L;
+    protected  long nextPrepareSEQ    =  0L;
+    protected  long nextCommitSEQ     =  0L;
+    protected  long nextExecuteSEQ    =  0L;
     
-    public synchronized void updateNextPrePrepareSEQ(PBFTPrePrepare m){
-        if(m != null && m.getSequenceNumber() != null){
-            long seqn = m.getSequenceNumber();
-            if(seqn == nextPrePrepareSEQ){
-                nextPrePrepareSEQ++;
+    public void updateNextPrePrepareSEQ(PBFTPrePrepare m){
+        synchronized(this){
+            if(m != null && m.getSequenceNumber() != null){
+                long seqn = m.getSequenceNumber();
+                if(seqn == nextPrePrepareSEQ){
+                    nextPrePrepareSEQ++;
+                }
             }
         }
     }
 
-    public synchronized void updateNextPrepareSEQ(PBFTPrepare m){
-        if(m != null && m.getSequenceNumber() != null){
-            long seqn = m.getSequenceNumber();
-            if(seqn < nextPrePrepareSEQ && seqn == nextPrepareSEQ){
-                nextPrepareSEQ++;
+    public void updateNextPrepareSEQ(PBFTPrepare m){
+        synchronized(this){
+            if(m != null && m.getSequenceNumber() != null){
+                long seqn = m.getSequenceNumber();
+                if(seqn < nextPrePrepareSEQ && seqn == nextPrepareSEQ){
+                    nextPrepareSEQ++;
+                }
             }
         }
     }
 
-    public synchronized void updateNextCommitSEQ(PBFTCommit m){
-        if(m != null && m.getSequenceNumber() != null){
-            long seqn = m.getSequenceNumber();
-            if(seqn < nextPrePrepareSEQ && seqn < nextPrepareSEQ && seqn == nextCommitSEQ){
-                nextCommitSEQ++;
+    public void updateNextCommitSEQ(PBFTCommit m){
+        synchronized(this){
+            if(m != null && m.getSequenceNumber() != null){
+                long seqn = m.getSequenceNumber();
+                if(seqn < nextPrePrepareSEQ && seqn < nextPrepareSEQ && seqn == nextCommitSEQ){
+                    nextCommitSEQ++;
+                }
             }
         }
     }
 
-    public synchronized void updateNextExecuteSEQ(Long theSEQ){
-        if(theSEQ != null){
-
-            long seqn = theSEQ;
-
-            if(seqn < nextPrePrepareSEQ && seqn < nextPrepareSEQ && seqn < nextCommitSEQ && seqn == nextExecuteSEQ){
-                nextExecuteSEQ++;
+    public void updateNextExecuteSEQ(Long theSEQ){
+        synchronized(this){
+            if(theSEQ != null){
+                long seqn = theSEQ;
+                if(seqn < nextPrePrepareSEQ && seqn < nextPrepareSEQ && seqn < nextCommitSEQ && seqn == nextExecuteSEQ){
+                    nextExecuteSEQ++;
+                }
             }
         }
     }
@@ -119,149 +122,152 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
     }
 
 
-    public synchronized long getNextCommitSEQ() {
+    public long getNextCommitSEQ() {
         return nextCommitSEQ;
     }
 
-    public synchronized long getNextPrePrepareSEQ() {
+    public long getNextPrePrepareSEQ() {
         return nextPrePrepareSEQ;
     }
 
-    public synchronized long getNextPrepareSEQ() {
+    public long getNextPrepareSEQ() {
         return nextPrepareSEQ;
     }
 
-    public synchronized long getNextExecuteSEQ() {
+    public long getNextExecuteSEQ() {
         return nextExecuteSEQ;
     }
 
 
     public boolean wasPrePrepared(PBFTPrepare p){
-        /**
-         * If not is a null prepare
-         */
-        if(p != null){
-
-            PBFTLogEntry entry = get(p.getSequenceNumber());
-
+        synchronized(this){
             /**
-             * If the prepare has request digests and there's a entry in the log
-             * for the related sequence number.
+             * If not is a null prepare
              */
-            if(p.getDigests() != null && entry != null){
+            if(p != null){
 
-                PBFTPrePrepare pp = entry.getPrePrepare();
+                PBFTLogEntry entry = get(p.getSequenceNumber());
+
                 /**
-                 * If there's a preprepare message in the log entry and this
-                 * preprepare has the same view and sequence number of the cur-
-                 * rent prepare. Moreover, the preprepare and prepare have to
-                 * have to same number of digests.
+                 * If the prepare has request digests and there's a entry in the log
+                 * for the related sequence number.
                  */
-                if(
-                        pp != null &&
-                        pp.getSequenceNumber().equals(p.getSequenceNumber()) &&
-                        pp.getViewNumber().equals(p.getViewNumber()) &&
-                        pp.getDigests().size() == p.getDigests().size()
-                ){
+                if(p.getDigests() != null && entry != null){
+
+                    PBFTPrePrepare pp = entry.getPrePrepare();
                     /**
-                     * Each digest in the current prepare message has to be a
-                     * request the was preprepared, prepared, commited or served
-                     * and such digest has to in the related preprepare.
+                     * If there's a preprepare message in the log entry and this
+                     * preprepare has the same view and sequence number of the cur-
+                     * rent prepare. Moreover, the preprepare and prepare have to
+                     * have to same number of digests.
                      */
-                    for(String digest : p.getDigests()){
-                        StatedPBFTRequestMessage statedReq =  getStatedRequest(digest);
-                        if((
-                            !statedReq.getState().equals(RequestState.PREPREPARED) &&
-                            !statedReq.getState().equals(RequestState.PREPARED)    &&
-                            !statedReq.getState().equals(RequestState.COMMITTED)   &&
-                            !statedReq.getState().equals(RequestState.SERVED)
-                        )){
-                          return false;
+                    if(
+                            pp != null &&
+                            pp.getSequenceNumber().equals(p.getSequenceNumber()) &&
+                            pp.getViewNumber().equals(p.getViewNumber()) &&
+                            pp.getDigests().size() == p.getDigests().size()
+                    ){
+                        /**
+                         * Each digest in the current prepare message has to be a
+                         * request the was preprepared, prepared, commited or served
+                         * and such digest has to in the related preprepare.
+                         */
+                        for(String digest : p.getDigests()){
+                            StatedPBFTRequestMessage statedReq =  getStatedRequest(digest);
+                            if((
+                                !statedReq.getState().equals(RequestState.PREPREPARED) &&
+                                !statedReq.getState().equals(RequestState.PREPARED)    &&
+                                !statedReq.getState().equals(RequestState.COMMITTED)   &&
+                                !statedReq.getState().equals(RequestState.SERVED)
+                            )){
+                              return false;
+                            }
+
+                            /**
+                             * If the prepare has a digest that wasn't pre-prepared
+                             * then the prepare wasn't pre-prepared.
+                             */
+                            if(!pp.getDigests().contains(digest)){
+
+                                return false;
+
+                            }
                         }
 
                         /**
-                         * If the prepare has a digest that wasn't pre-prepared
-                         * then the prepare wasn't pre-prepared.
+                         * All the request that in the current prepare were
+                         * pre-prepared.
                          */
-                        if(!pp.getDigests().contains(digest)){
 
-                            return false;
-                            
-                        }
+                        return true;
                     }
-
-                    /**
-                     * All the request that in the current prepare were
-                     * pre-prepared.
-                     */
-
-                    return true;
                 }
             }
         }
-        
         return false;
     }
 
     public boolean wasPrepared(PBFTCommit c){
-        /**
-         * If not is a null prepare
-         */
-        if(c != null){
-
-            PBFTLogEntry entry = get(c.getSequenceNumber());
-
+        synchronized(this){
             /**
-             * If the prepare has request digests and there's a entry in the log
-             * for the related sequence number.
+             * If not is a null prepare
              */
-            if(entry != null){
+            if(c != null){
 
-                PBFTPrePrepare pp = entry.getPrePrepare();
+                PBFTLogEntry entry = get(c.getSequenceNumber());
+
                 /**
-                 * If there's a preprepare message in the log entry and this
-                 * preprepare has the same view and sequence number of the cur-
-                 * rent prepare. Moreover, the preprepare and prepare have to
-                 * have to same number of digests.
+                 * If the prepare has request digests and there's a entry in the log
+                 * for the related sequence number.
                  */
-                if(
-                        pp != null &&
-                        pp.getSequenceNumber().equals(c.getSequenceNumber()) &&
-                        pp.getViewNumber().equals(c.getViewNumber())
-                ){
+                if(entry != null){
 
+                    PBFTPrePrepare pp = entry.getPrePrepare();
                     /**
-                     * All the request that in the current prepare were
-                     * pre-prepared.
+                     * If there's a preprepare message in the log entry and this
+                     * preprepare has the same view and sequence number of the cur-
+                     * rent prepare. Moreover, the preprepare and prepare have to
+                     * have to same number of digests.
                      */
+                    if(
+                            pp != null &&
+                            pp.getSequenceNumber().equals(c.getSequenceNumber()) &&
+                            pp.getViewNumber().equals(c.getViewNumber())
+                    ){
 
-                    return true;
+                        /**
+                         * All the request that in the current prepare were
+                         * pre-prepared.
+                         */
+
+                        return true;
+                    }
                 }
             }
         }
-
         return false;
     }
     
-    public synchronized void insertRequestInTables(String digest, PBFTRequest r, RequestState rstate){
+    public void insertRequestInTables(String digest, PBFTRequest r, RequestState rstate){
+        synchronized(this){
 
-        if(digest != null){
+            if(digest != null){
 
-            PBFTRequestTuple rtuple = rdigtable.get(digest);
+                PBFTRequestTuple rtuple = rdigtable.get(digest);
 
-            if(rtuple == null){
-                rtuple = new PBFTRequestTuple();
-                rdigtable.put(digest, rtuple);
-                rseqtable.put(r.getClientID(), rtuple);
+                if(rtuple == null){
+                    rtuple = new PBFTRequestTuple();
+                    rdigtable.put(digest, rtuple);
+                    rseqtable.put(r.getClientID(), rtuple);
 
-                StatedPBFTRequestMessage m =
-                        new StatedPBFTRequestMessage(r, rstate, digest);
-                
-                rtuple.put(r.getTimestamp(), m);
+                    StatedPBFTRequestMessage m =
+                            new StatedPBFTRequestMessage(r, rstate, digest);
+
+                    rtuple.put(r.getTimestamp(), m);
+                }
+
             }
-            
         }
-        
     }
 
     public StatedPBFTRequestMessage getStatedRequest(String digest){
@@ -307,42 +313,46 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
     }
 
     public Quorum getPrepareQuorum(Long seqn){
+        synchronized(this){
         
-        PBFTLogEntry entry = get(seqn);
+            PBFTLogEntry entry = get(seqn);
 
-        if(entry != null){
-            return entry.getPrepareQuorum();
+            if(entry != null){
+                return entry.getPrepareQuorum();
+            }
         }
-
         return null;
     }
 
     public Quorum getCommitQuorum(Long seqn){
 
-        PBFTLogEntry entry = get(seqn);
+        synchronized(this){
+            PBFTLogEntry entry = get(seqn);
 
-        if(entry != null){
-            return entry.getCommitQuorum();
+            if(entry != null){
+                return entry.getCommitQuorum();
+            }
         }
-
         return null;
     }
 
     public PBFTPrePrepare getPrePrepare(Long seqn){
-        
-        PBFTLogEntry entry = get(seqn);
+        synchronized(this){
+            PBFTLogEntry entry = get(seqn);
 
-        if(entry != null){
-            return entry.getPrePrepare();
+            if(entry != null){
+                return entry.getPrePrepare();
+            }
         }
-
         return null;
 
     }
 
     public void setCheckpointLowWaterMark(long mark){
-        if(cpLowWaterMark < mark)
-            cpLowWaterMark = mark;
+        synchronized(this){
+            if(cpLowWaterMark < mark)
+                cpLowWaterMark = mark;
+        }
     }
     
     public long getCheckpointLowWaterMark(){
@@ -350,25 +360,24 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
     }
 
     public long getCheckpointHighWaterMark(long checkpointPeriod, long factor){
-        return cpLowWaterMark + factor * checkpointPeriod;
+            return cpLowWaterMark + factor * checkpointPeriod;
     }
 
-    public void putInBacklog(PBFTRequest req){
-        changeRequestStatus(req);
-    }
+//    public synchronized void putInBacklog(PBFTRequest req){
+//        changeRequestStatus(req);
+//    }
 
     public PBFTReply getReplyInRequestTable(PBFTRequest r){
         return getReplyInRequestTable(r.getClientID(), r.getTimestamp());
     }
 
     public PBFTReply getReplyInRequestTable(Object clientID, Long timestamp){
-
         try{
-
-            PBFTRequestTuple rtuple = rseqtable.get(clientID);
-            StatedPBFTRequestMessage stateReq = rtuple.get(timestamp);
-            return stateReq.getReply();
-
+            synchronized(this){
+                PBFTRequestTuple rtuple = rseqtable.get(clientID);
+                StatedPBFTRequestMessage stateReq = rtuple.get(timestamp);
+                return stateReq.getReply();
+            }
         }catch(Exception ex){
             ex.printStackTrace();
             return null;
@@ -376,7 +385,7 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
         }
 
     }
-    
+    /*
     public void changeRequestStatus(IMessage m) {
         
         if(m instanceof PBFTRequest){
@@ -405,6 +414,7 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
 
 
     }
+     */
 
     public boolean isWaiting(PBFTRequest r){
         return inState(r, RequestState.WAITING);
@@ -453,7 +463,7 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
         
     }
 
-    public boolean wasAlreadyAccepted(PBFTRequest r){
+    public boolean wasAccepted(PBFTRequest r){
 
         try{
 
@@ -477,15 +487,17 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
 
     public QuorumTable getQuorumTable(String name){
 
-        QuorumTable qtable = qstore.get(name);
+        synchronized(this){
+            QuorumTable qtable = qstore.get(name);
 
-        if(qtable == null){
+            if(qtable == null){
 
-            qtable = new QuorumTable();
-            qstore.put(name, qtable);
+                qtable = new QuorumTable();
+                qstore.put(name, qtable);
+            }
+
+            return qtable;
         }
-
-        return qtable;
         
     }
     
@@ -505,7 +517,7 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
      * @param request -- the request.
      * @return true if no more in the PBFT' Log state.
      */
-    public synchronized boolean noMore(PBFTRequest request) {
+    public boolean noMore(PBFTRequest request) {
 
         StatedPBFTRequestMessage statedReq = getStatedRequest(request);
 
@@ -526,72 +538,72 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
         
     }
 
-    protected boolean hasLowestTimestamp(PBFTRequest r){
+//    protected synchronized boolean hasLowestTimestamp(PBFTRequest r){
+//
+//        try{
+//
+//            PBFTRequestTuple rtuple = rseqtable.get(r.getClientID());
+//
+//            ArrayList<Long> myTimestamps = new ArrayList<Long>(rtuple.keySet());
+//
+//            Collections.sort(myTimestamps);
+//
+//            long maxTimestamp = myTimestamps.get(myTimestamps.size()-1);
+//            long theTimestamp = r.getTimestamp();
+//
+//            return maxTimestamp > theTimestamp;
+//
+//
+//        }catch(Exception e){
+//            e.printStackTrace();
+//            return false;
+//        }
+//
+//    }
 
-        try{
+    public void doGarbage() {
+        synchronized(this){
+            long finalSEQ = getCheckpointLowWaterMark();
 
-            PBFTRequestTuple rtuple = rseqtable.get(r.getClientID());
-            
-            ArrayList<Long> myTimestamps = new ArrayList<Long>(rtuple.keySet());
+            ArrayList<Long> seqns = new ArrayList<Long>();
+            seqns.addAll(keySet());
 
-            Collections.sort(myTimestamps);
+            Collections.sort(seqns);
 
-            long maxTimestamp = myTimestamps.get(myTimestamps.size()-1);
-            long theTimestamp = r.getTimestamp();
+            if(!seqns.isEmpty()){
 
-            return maxTimestamp > theTimestamp;
+                long startSEQ = seqns.get(0);
+                QuorumTable qtable = null;
 
-
-        }catch(Exception e){
-            e.printStackTrace();
-            return false;
-        }
-
-    }
-
-    public synchronized void doGarbage() {
-        
-        long finalSEQ = getCheckpointLowWaterMark();
-
-        ArrayList<Long> seqns = new ArrayList<Long>();
-        seqns.addAll(keySet());
-
-        Collections.sort(seqns);
-
-        if(!seqns.isEmpty()){
-
-            long startSEQ = seqns.get(0);
-            QuorumTable qtable = null;
-
-            for(long seq = startSEQ; seq <= finalSEQ; seq++){
-                PBFTLogEntry entry = get(seq);
-                DigestList digests = new DigestList();
+                for(long seq = startSEQ; seq <= finalSEQ; seq++){
+                    PBFTLogEntry entry = get(seq);
+                    DigestList digests = new DigestList();
 
 
-                digests.addAll(entry.getPrePrepare().getDigests());
-                //Debugger.debug("\t removing messages for sequence number " + seq);
-                //Debugger.debug("\t\t cleaning up the related client requests" + seq);
-                for(String digest : digests){
-                    rseqtable.remove(seq);
-                    rdigtable.remove(digest);
+                    digests.addAll(entry.getPrePrepare().getDigests());
+                    //Debugger.debug("\t removing messages for sequence number " + seq);
+                    //Debugger.debug("\t\t cleaning up the related client requests" + seq);
+                    for(String digest : digests){
+                        rseqtable.remove(seq);
+                        rdigtable.remove(digest);
+                    }
+
+                    //Debugger.debug("\t\t cleaning up the prepare / commit / checkpoint message quorums ...");
+
+                    qtable = qstore.get(PREPAREQUORUMTABLE);    if(qtable != null) qtable.remove(seq);
+                    qtable = qstore.get(COMMITQUORUMTABLE);     if(qtable != null) qtable.remove(seq);
+                    qtable = qstore.get(CHECKPOINTQUORUMTABLE); if(qtable != null) qtable.remove(seq);
+
+                    remove(seq);
+
+                    if(seq < finalSEQ){
+                        //Debugger.debug("\t\t cleaning up the cached checkpoints ...");
+                        cptable.remove(seq);
+                    }
+
                 }
-
-                //Debugger.debug("\t\t cleaning up the prepare / commit / checkpoint message quorums ...");
-                
-                qtable = qstore.get(PREPAREQUORUMTABLE);    if(qtable != null) qtable.remove(seq);
-                qtable = qstore.get(COMMITQUORUMTABLE);     if(qtable != null) qtable.remove(seq);
-                qtable = qstore.get(CHECKPOINTQUORUMTABLE); if(qtable != null) qtable.remove(seq);
-
-                remove(seq);
-
-                if(seq < finalSEQ){
-                    //Debugger.debug("\t\t cleaning up the cached checkpoints ...");
-                    cptable.remove(seq);
-                }
-                
             }
         }
-
     }
 
 }

@@ -15,7 +15,7 @@ import br.ufba.lasid.jds.util.IPayload;
 public class HelloWorldServer extends Agent_Server{
 
     @Override
-    public IPayload doService(IPayload arg) {
+    public IPayload executeCommand(IPayload arg) {
         HelloWorldPayload hello = (HelloWorldPayload) arg;
 
         System.out.println("HelloWorldServer received: " + hello.get(HelloWorldPayload.OPERATION));

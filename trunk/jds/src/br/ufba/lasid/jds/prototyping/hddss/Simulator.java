@@ -42,96 +42,100 @@ public class Simulator  extends Thread implements RuntimeSupport
          
     }
      
-    public final synchronized void ok() {
-        m++;
-        if (m==get(Variable.NumberOfAgents).<Integer>value().intValue()) {
-            fim = true;
+    public final void ok() {
+        synchronized(this){
+            m++;
+            if (m==get(Variable.NumberOfAgents).<Integer>value().intValue()) {
+                fim = true;
+                try {
+                    this.notifyAll();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public final void iniciaModoHwClock() {
+        synchronized(this){
+            int n = get(Variable.NumberOfAgents).<Integer>value();
+            int finalTime = get(Variable.FinalTime).<Integer>value();
+
             try {
-                this.notifyAll();
+                out.println("[*** Clock emulation mode ***]");
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }                 
 
-    }
-
-    public final synchronized void iniciaModoHwClock() {
-        
-        int n = get(Variable.NumberOfAgents).<Integer>value();
-        int finalTime = get(Variable.FinalTime).<Integer>value();
-
-        try {
-            out.println("[*** Clock emulation mode ***]");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        for (int i=0;i<n;i++) {
-            p[i].startup();
-        }
-
-        //scheduler.startup();
-
-        boolean done = false;
-
-        while(!done){
-
-            done = true;
-
-            for(int i = 0; i < n; i++){
-
-                p[i].getInfra().increaseTick();
-
-                /* 
-                  if simulation time isn't over and p is not crashed then 
-                  it hasn't been done yet.
-                 */
-
-                done = done && ((p[i].getInfra().clock.value() >= finalTime) || !p[i].status());
+            for (int i=0;i<n;i++) {
+                p[i].startup();
             }
 
-            network.avancaTick();
+            //scheduler.startup();
 
-            //scheduler.infra.increaseTick();
-            
+            boolean done = false;
+
+            while(!done){
+
+                done = true;
+
+                for(int i = 0; i < n; i++){
+
+                    p[i].getInfra().increaseTick();
+
+                    /*
+                      if simulation time isn't over and p is not crashed then
+                      it hasn't been done yet.
+                     */
+
+                    done = done && ((p[i].getInfra().clock.value() >= finalTime) || !p[i].status());
+                }
+
+                network.avancaTick();
+
+                //scheduler.infra.increaseTick();
+
+            }
+
+            network.done = true;
         }
-
-        network.done = true;
     } 
     
-    public final synchronized void inicia() {
+    public final void inicia() {
 
-        int n = get(Variable.NumberOfAgents).<Integer>value();
-        
-        try {
-            out.println("modo thread");
-        } catch (Exception e) {
-            e.printStackTrace();
+        synchronized(this){
+
+            int n = get(Variable.NumberOfAgents).<Integer>value();
+
+            try {
+                out.println("modo thread");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            network.start();
+
+            //scheduler.start();
+
+            for(int i = 0; i < n; i++)
+            {
+                p[i].start();
+            }  
         }
-
-        network.start();
-
-        //scheduler.start();
-        
-        for(int i = 0; i < n; i++)
-        {
-            p[i].start();
-        }
-    
-                
-
     } 
     
-    public final synchronized void finaliza() {
-        int n = get(Variable.NumberOfAgents).<Integer>value();
-        for(int i = 0; i < n; i++)
-        {
-            p[i].shutdown();
-        }
+    public final void finaliza() {
+        synchronized(this){
+            int n = get(Variable.NumberOfAgents).<Integer>value();
+            for(int i = 0; i < n; i++)
+            {
+                p[i].shutdown();
+            }
 
-        //scheduler.shutdown();
-        
-        network.stop();
+            //scheduler.shutdown();
+
+            network.stop();
+        }
     } 
     
     public final boolean sincTicks(int j) {
@@ -164,9 +168,11 @@ public class Simulator  extends Thread implements RuntimeSupport
         return Math.abs(clockr_i - clockr_j);
     }
     
-    private final synchronized void verificaPausa() throws InterruptedException {
-        while (!fim) {
-            wait();
+    private final void verificaPausa() throws InterruptedException {
+        synchronized(this){
+            while (!fim) {
+                wait();
+            }
         }
     }
     
@@ -244,9 +250,10 @@ public class Simulator  extends Thread implements RuntimeSupport
      * específicos
      */ 
     
-    public final synchronized void perform(RuntimeContainer rc) {
-
-        rc.increaseTick();
+    public final void perform(RuntimeContainer rc) {
+         synchronized(this){
+            rc.increaseTick();
+        }
     }
 
     public void init() {

@@ -12,6 +12,7 @@ public class Agent extends Thread implements IAgent{
     protected boolean shutdown = false;
     public static final String TAG = "agent";
     public RuntimeContainer infra;
+    public final Object lock = this;
 
     public int getAgentID() {
         return ID;
@@ -96,7 +97,10 @@ public class Agent extends Thread implements IAgent{
     }
     
    public void send(Message m){
-       infra.nic_out.add((int)(infra.clock.value()), m);
+       synchronized(this){
+            infra.nic_out.add((int)(infra.clock.value()), m);
+            //Debugger.debug("[p"+this.ID+"] send buffer =>" + infra.nic_out);
+       }
 
    }
     public void startup(){
@@ -120,7 +124,9 @@ public class Agent extends Thread implements IAgent{
          *   Este evento pode ser sobrecarregado pela ação específica 
          *   do protocolo
          */
-        infra.app_in.add((int)this.infra.clock.value(), msg);
+        synchronized(this){
+            infra.app_in.add((int)this.infra.clock.value(), msg);
+        }
     }
     
     

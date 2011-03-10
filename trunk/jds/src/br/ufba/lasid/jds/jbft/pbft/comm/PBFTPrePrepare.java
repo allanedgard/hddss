@@ -39,7 +39,7 @@ public class PBFTPrePrepare extends PBFTServerMessage{
     }
 
     @Override
-    public final synchronized String toString() {
+    public final String toString() {
         
         return (
                 "<PRE-PREPARE" + ", " +

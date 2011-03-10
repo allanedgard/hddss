@@ -27,7 +27,7 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
     public void setup() {
 
         super.setup();
-        SimulatedSchedulerHook scheduler = new SimulatedSchedulerHook(this.infra.clock);
+        SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.clock);
 
         //((Simulator)this.infra.context).p[this.ID] = (Agent) Adapter.newInstance(this, scheduler);
 
@@ -43,13 +43,14 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
             
         } catch (Exception ex) {
             Logger.getLogger(SimulatedPBFTAgent.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
 
         getProtocol().setArchitecture(
             new PBFTServerArchitecture((PBFTServer)getProtocol())
         );
         
-        getProtocol().buildup();
+//        getProtocol().buildup();
         getProtocol().startup();
 
     }
