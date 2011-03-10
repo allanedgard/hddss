@@ -92,6 +92,7 @@ public class Architecture {
     }
 
     public void startup(){
+        buildup();
         connectors.start();
 
         for(Thread t : thtable.values()){

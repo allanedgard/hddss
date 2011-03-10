@@ -16,7 +16,7 @@ import br.ufba.lasid.jds.util.IPayload;
 public class FSPBFTClient extends SimulatedPBFTClientAgent implements IFileSystem{
     private double rgp = 0.0;
     private Randomize r = new Randomize();
-    private volatile boolean waiting = false;
+    private  boolean waiting = false;
     private static int nThread = 0;
 
     public void setRequestGenerationProbability(String prob){

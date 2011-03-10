@@ -61,7 +61,7 @@ public class Agent_Server extends Agent_ServiceComponent implements IServer<Inte
         return this.client;
     }
 
-    public IPayload doService(IPayload arg) {
+    public IPayload executeCommand(IPayload arg) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 }

@@ -9,6 +9,8 @@ import br.ufba.lasid.jds.prototyping.hddss.Randomize;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.SimulatedPBFTClientAgent;
 import br.ufba.lasid.jds.util.IPayload;
 import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -17,8 +19,8 @@ import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
 public class CalcPBFTClient extends SimulatedPBFTClientAgent{
     private double rgp = 0.0;
     private Randomize r = new Randomize();
-    private volatile boolean waiting = false;
-    private static int nThread = 0;
+    private  boolean cansend = false;
+    private ClientCaller caller = null;
 
 
     public void setRequestGenerationProbability(String prob){
@@ -31,16 +33,22 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
 
 
     public CalcPBFTClient() {
+
     }
 
     @Override
     public void execute() {
-        
-        if(hasRequest() && !waiting){
-                waiting = true;
-                new ClientCaller().start();
-        }
-            
+        super.execute();
+        if(hasRequest()){
+            if(caller == null){
+                caller = new ClientCaller();
+                caller.setName("Caller[" + this.ID +"]");
+                caller.start();
+            }
+            synchronized(caller.lock){
+                cansend = true;
+            }
+        }            
     }
 
     @Override
@@ -105,18 +113,18 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
     }
 
     class ClientCaller extends Thread{
-
-        public ClientCaller() {
-            super("ClientCaller" + nThread);
-            nThread ++;
-        }
-
+        public final Object lock = this;
 
         @Override
         public void run() {
-            doCall();
+            while(true){
+                if(cansend) doCall();
+                synchronized(lock){
+                    cansend = true;
+                    notify();
+                }
+            }
             
-            waiting = false;
 
         }
         

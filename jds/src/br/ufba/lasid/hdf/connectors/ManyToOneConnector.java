@@ -23,6 +23,10 @@ public class ManyToOneConnector extends Thread implements IConnector{
     boolean connected = false;
     ConnectorList connectors = new ConnectorList();
 
+    public ManyToOneConnector() {
+        setName(this.getClass().getSimpleName());
+    }
+
     public void connect(ISupplier supplier, IConsumer consumer) {
         connectTo(consumer);
         connectTo(supplier);

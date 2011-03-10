@@ -16,7 +16,7 @@ import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
  */
 public abstract class PBFTExecutorBroker<Input, Product> extends PBFTCollectorServant<Input> implements ISupplier{
 
-    protected volatile Buffer outbox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
+    protected  Buffer outbox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
     
     public synchronized Buffer getOutbox() {
         return outbox;

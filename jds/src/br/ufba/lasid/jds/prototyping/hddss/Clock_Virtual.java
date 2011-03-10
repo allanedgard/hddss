@@ -22,44 +22,54 @@ public class Clock_Virtual extends AbstractClock{
     
     @Override
     public long value() {
-        return clock;
-    }
-
-    public void synchTick(){
-        tick++;
-        if (tick > nticks) {
-            clock++;
-            tick=0;
+        synchronized(this){
+            return clock;
         }
     }
 
-    public void asynchTick(){
-        if (CORR==0) {
+    public void synchTick(){
+        synchronized(this){
             tick++;
             if (tick > nticks) {
                 clock++;
                 tick=0;
-                tick += rho;
             }
-        } else {
-            CORR--;
+        }
+    }
+
+    public void asynchTick(){
+        synchronized(this){
+            if (CORR==0) {
+                tick++;
+                if (tick > nticks) {
+                    clock++;
+                    tick=0;
+                    tick += rho;
+                }
+            } else {
+                CORR--;
+            }
         }
     }
 
     public void tick(){
-        if(mode == SYNCHMODE){
+        synchronized(this){
+            if(mode == SYNCHMODE){
 
-            synchTick();
+                synchTick();
 
-        }else{
+            }else{
 
-            asynchTick();
-            
+                asynchTick();
+
+            }
         }
     }
 
     public long tickValue(){
-        return tick;
+        synchronized(this){
+            return tick;
+        }
     }
 
     @Override
@@ -68,14 +78,20 @@ public class Clock_Virtual extends AbstractClock{
     }
 
     public void adjustCorrection(long c){
-        CORR = c;
+        synchronized(this){
+            CORR = c;
+        }
     }
     public void adjustValue(long v){
-        clock = v;
+        synchronized(this){
+            clock = v;
+        }
     }
 
     public void adjustTickValue(long v){
-        tick = v;
+        synchronized(this){
+            tick = v;
+        }
     }
 
     @Override

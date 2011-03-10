@@ -14,7 +14,7 @@ import br.ufba.lasid.jds.jbft.pbft.PBFT;
  */
 public abstract class PBFTExecutor<T> extends Executor<T>{
 
-    volatile PBFT protocol = null;
+     PBFT protocol = null;
 
     public void setProtocol(PBFT p){
         this.protocol =  p;

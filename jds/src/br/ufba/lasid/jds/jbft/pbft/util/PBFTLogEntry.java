@@ -17,9 +17,9 @@ import java.io.Serializable;
  */
 public class PBFTLogEntry implements Serializable{
 
-    volatile PBFTPrePrepare preprepare = null;
-    volatile Quorum prq = null;
-    volatile Quorum cmq = null;
+     PBFTPrePrepare preprepare = null;
+     Quorum prq = null;
+     Quorum cmq = null;
 
     
     public PBFTLogEntry(PBFTPrePrepare preprepare) {
@@ -28,8 +28,8 @@ public class PBFTLogEntry implements Serializable{
         
     }
 
-    public synchronized void setQuorum(Quorum q){
-
+    public void setQuorum(Quorum q){
+        synchronized(this){
 //        if(check(q)){
             if(q.get(0) instanceof PBFTPrepare){
                 setPrepareQuorum(q);
@@ -39,34 +39,35 @@ public class PBFTLogEntry implements Serializable{
                 setCommitQuorum(q);
             }
   //      }
+        }
     }
 
-    public synchronized Quorum getCommitQuorum() {
+    public Quorum getCommitQuorum() {
         return cmq;
     }
 
-    public synchronized void setCommitQuorum(Quorum q) {
+    public void setCommitQuorum(Quorum q) {
             this.cmq = q;
     }
 
-    public synchronized Quorum getPrepareQuorum() {
+    public Quorum getPrepareQuorum() {
         return prq;
     }
 
-    public synchronized void setPrepareQuorum(Quorum q) {
+    public void setPrepareQuorum(Quorum q) {
             this.prq = q;
     }
 
-    public synchronized PBFTPrePrepare getPrePrepare() {
+    public PBFTPrePrepare getPrePrepare() {
         return preprepare;
     }
   
-    public synchronized Long getSequenceNumber(){
+    public Long getSequenceNumber(){
 
         return getPrePrepare().getSequenceNumber();
     }
 
-    public synchronized Integer getViewNumber(){
+    public Integer getViewNumber(){
         return getPrePrepare().getViewNumber();
     }
     

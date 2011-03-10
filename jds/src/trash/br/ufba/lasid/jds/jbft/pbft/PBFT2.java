@@ -1276,7 +1276,7 @@ public class PBFT2 extends ClientServerProtocol{
         /**
          * Check if request was already accepted.
          */
-        if(getState().wasAlreadyAccepted(request)){
+        if(getState().wasAccepted(request)){
 
             /**
              * Check if request was already served.
@@ -1311,7 +1311,7 @@ public class PBFT2 extends ClientServerProtocol{
          * If a request is new then it will be accepted and put it in back log
          * state.
          */
-        getState().putInBacklog(request);
+//        getState().putInBacklog(request);
 
         /**
          * Perform the batch procedure if the server is the primary replica.
@@ -1811,7 +1811,7 @@ public class PBFT2 extends ClientServerProtocol{
         
         for(IMessage m : q){
 
-            getState().changeRequestStatus(m);
+//            getState().changeRequestStatus(m);
             
         }
 
@@ -2197,7 +2197,7 @@ public class PBFT2 extends ClientServerProtocol{
 
         IServer server = (IServer) getLocalProcess();
 
-        return server.doService(operation);
+        return server.executeCommand(operation);
 
 
     }

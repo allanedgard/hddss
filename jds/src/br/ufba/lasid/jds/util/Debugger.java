@@ -21,7 +21,7 @@ public class Debugger {
         Debugger.debug = debug;
     }
 
-    public static void debug(String txt){
+    public synchronized static void debug(String txt){
         //if(txt.matches("[s4]") || txt.matches("[p4]") || txt.matches("[ID=4]"))
         if(isDebug())  System.out.println(txt);
     }

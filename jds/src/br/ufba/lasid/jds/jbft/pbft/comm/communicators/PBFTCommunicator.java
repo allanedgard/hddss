@@ -18,15 +18,21 @@ import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
  */
 public abstract class  PBFTCommunicator extends Thread implements ISupplier, ICommunicator{
 
-    protected volatile Buffer outbox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
+    protected  Buffer outbox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
 
-
+    public PBFTCommunicator() {
+        setName(this.getClass().getSimpleName());
+    }
+    
     public Buffer getOutbox() {
         return this.outbox;
     }
 
     public void receive(IMessage m) {
-        this.outbox.add(m);        
+        synchronized(this){
+//        Debugger.debug("" + m);
+            this.outbox.add(m);
+        }
     }
 
 }

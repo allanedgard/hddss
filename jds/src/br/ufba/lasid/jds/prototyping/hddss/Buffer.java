@@ -71,7 +71,7 @@ public  class Buffer {
          
      }
 
-     int totalMsgs(int tempo) {
+     synchronized int totalMsgs(int tempo) {
          int j = 0;
          java.util.ArrayList a;
          for(int i=tempo;i<this.getLast();i++) {
@@ -83,8 +83,13 @@ public  class Buffer {
          return j;
      }
      
-     int getLast() {
+     synchronized int getLast() {
          return ((Integer) inside.lastKey()).intValue();
      }
+
+    @Override
+    public String toString() {
+        return "Buffer{" + "inside=" + inside + '}';
+    }
     
 }

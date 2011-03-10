@@ -76,11 +76,21 @@ public class SimulatedPBFTAgent extends Agent implements IProcess<Integer>, IPBF
 
     @Override
     public void receive(Message msg) {
-        super.receive(msg);
-
-        PBFTCommunicator comm = (PBFTCommunicator)getProtocol().getCommunicator();
-        comm.receive((IMessage)msg.getContent());
+        //super.receive(msg);
+//        synchronized(this){
+            PBFTCommunicator comm = (PBFTCommunicator)getProtocol().getCommunicator();
+            comm.receive((IMessage)msg.getContent());
+  //      }
     }
+
+    @Override
+    public void execute() {
+//        synchronized(this){
+            ((SimulatedScheduler)getProtocol().getScheduler()).execute();
+  //      }
+        //super.execute();
+    }
+
 
     @Override
     public void shutdown() {
@@ -89,14 +99,5 @@ public class SimulatedPBFTAgent extends Agent implements IProcess<Integer>, IPBF
 
         shutdown= true;
     }
-
-    @Override
-    public void execute() {
-        ((SimulatedSchedulerHook)getProtocol().getScheduler()).execute();
-        super.execute();
-    }
-
-
-
 
 }

@@ -23,6 +23,7 @@ public class Teste {
                 br.ufba.lasid.jds.prototyping.hddss.Network.class.getName());
         } catch (Exception ex) {
             Logger.getLogger(Teste.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
     }
 

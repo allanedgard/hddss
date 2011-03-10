@@ -17,6 +17,11 @@ public class OneToManyConnector extends Thread implements IConnector{
     ISupplier supplier = null;
     ConsumerList consumers = new ConsumerList();
     boolean connected = false;
+
+    public OneToManyConnector() {
+        setName(this.getClass().getSimpleName());
+    }
+
     public void connect(ISupplier supplier, IConsumer consumer) {
         connectTo(supplier);
         connectTo(consumer);
@@ -38,12 +43,13 @@ public class OneToManyConnector extends Thread implements IConnector{
     public void run() {
         connected = true;
         while(connected){
-            
-            Object obj = supplier.getOutbox().remove();
+            synchronized(this){
+                Object obj = supplier.getOutbox().remove();
 
-            for(IConsumer consumer : consumers){
-                if(consumer.canConsume(obj)){
-                    consumer.getInbox().add(obj);
+                for(IConsumer consumer : consumers){
+                    if(consumer.canConsume(obj)){
+                        consumer.getInbox().add(obj);
+                    }
                 }
             }
         }

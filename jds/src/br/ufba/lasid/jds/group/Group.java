@@ -43,7 +43,7 @@ public class Group<GroupID, ProcessID> implements IGroup<GroupID, ProcessID>{
         return members;
     }
 
-    public void addMember(IProcess<ProcessID> process) {
+    public synchronized void addMember(IProcess<ProcessID> process) {
 
         if(process!= null && !members.containsProcessByID(process.getID())){
             members.add(process);
@@ -55,7 +55,7 @@ public class Group<GroupID, ProcessID> implements IGroup<GroupID, ProcessID>{
         return members.containsProcessByID(process.getID());
     }
 
-    public void removeMember(IProcess<ProcessID> process) {
+    public synchronized void removeMember(IProcess<ProcessID> process) {
         members.removeProcess(process);
     }
 
@@ -96,6 +96,33 @@ public class Group<GroupID, ProcessID> implements IGroup<GroupID, ProcessID>{
 
         
         return "Group{" + "gid=" + groupID + ", members=(" + m + ")}";
+    }
+
+    public synchronized IGroup<GroupID, ProcessID> minus(IProcess<ProcessID> p) {
+        
+        Group<GroupID, ProcessID> g = this;
+
+        if(p!= null && p.getID()!=null){
+            g = new Group<GroupID, ProcessID>();
+            g.setID(this.getID());
+            g.setGroupSize(this.getGroupSize());
+            for(IProcess<ProcessID> member : this.getMembers()){
+                if(!member.getID().equals(p.getID())){
+                    g.addMember(member);
+                }
+            }
+        }
+        return g;
+    }
+
+    public synchronized IGroup<GroupID, ProcessID> plus(IProcess<ProcessID> p) {
+
+        Group<GroupID, ProcessID> g = new Group<GroupID, ProcessID>();
+        g.setID(this.getID());
+        g.setGroupSize(this.getGroupSize());
+        g.getMembers().addAll(this.getMembers());
+        g.addMember(p);
+        return g;
     }
 
     

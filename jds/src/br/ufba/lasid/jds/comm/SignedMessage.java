@@ -5,8 +5,11 @@
 
 package br.ufba.lasid.jds.comm;
 
+import java.io.IOException;
 import java.security.PublicKey;
 import java.security.SignedObject;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -43,4 +46,19 @@ public class SignedMessage implements IMessage{
     public void setSignedObject(SignedObject signedObject) {
         this.signedObject = signedObject;
     }
+
+    @Override
+    public String toString() {
+        Object obj = null;
+        try {
+            obj = signedObject.getObject();
+        } catch (IOException ex) {
+            Logger.getLogger(SignedMessage.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(SignedMessage.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return "SignedMessage{" + obj + '}';
+    }
+
+
 }

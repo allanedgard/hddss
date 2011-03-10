@@ -45,22 +45,8 @@ public class PBFTRequest  extends PBFTMessage{
 
 
     @Override
-    public final synchronized String toString() {
+    public final String toString() {
         
-//        String lasttimestamp = "null";
-//
-//        if(getLastTimestamp() != null){
-//            lasttimestamp = getLastTimestamp().toString();
-//        }
-//        return (
-//                "<REQUEST"                                  + ", " +
-//                 "C = " + getClientID().toString()     + ", " +
-//                 "(LT = " + lasttimestamp + "; " +
-//                 "CT = " + getTimestamp().toString() + "), " +
-//                 "OP = " + getPayload().toString()   +
-//                 ">"
-//        );
-
         return (
                 "<REQUEST"                             + ", " +
                  "CLIENT = " + getClientID().toString()     + ", " +

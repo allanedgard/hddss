@@ -74,7 +74,9 @@ public abstract class Network extends Thread{
     }
 
     public final void avancaTick() {
-        this.processaRelogio();
+        synchronized(this){
+            this.processaRelogio();
+        }
     }
 
     @Override
@@ -92,6 +94,7 @@ public abstract class Network extends Thread{
 
 
     public final void processaRelogio() {
+        synchronized(this){
             tick++;
             this.yield();
             //if ( (tick == 1)&& status() ) this.processa();
@@ -99,10 +102,11 @@ public abstract class Network extends Thread{
                 clock++;
                 tick=0;
             }
-
+        }
     }
 
-    public synchronized void send(Message msg){
+    public void send(Message msg){
+        synchronized(this){
         long dt = clock - last;
         last = clock;
         tqueue -= dt;
@@ -116,32 +120,37 @@ public abstract class Network extends Thread{
 //        conteiner.atraso_fila.addValue(tqueue);
        // System.nic_out.println("queue=" + tqueue);
         
-       propagate(msg, at);
+            propagate(msg, at);
+        }
        
     }
 
     public void propagate(Message msg, double at){
-        if(isRelay(msg)){
+        synchronized(this){
+            if(isRelay(msg)){
 
-            relay(msg, at);
+                relay(msg, at);
 
-        }else{
+            }else{
 
-            if(isBroadcast(msg)){
+                if(isBroadcast(msg)){
 
-                broadcast(msg, at);
+                    broadcast(msg, at);
 
-                return;
-            }//end if isBroadcast
+                    return;
+                }//end if isBroadcast
 
-            unicast(msg, at);
+                unicast(msg, at);
 
-        }//end if isRelay        
+            }//end if isRelay
+        }
     }
     public void loopback(Message msg){
-        int address = msg.sender;
-        Agent p = conteiner.p[address];
-        p.getInfra().nic_in.add((int)(p.getInfra().clock.value()) + 1, msg);
+        synchronized(this){
+            int address = msg.sender;
+            Agent p = conteiner.p[address];
+            p.getInfra().nic_in.add((int)(p.getInfra().clock.value()) + 1, msg);
+        }
     }
 
     public boolean isLoopback(Message msg){
@@ -162,48 +171,53 @@ public abstract class Network extends Thread{
     }
 
     public void relay(Message msg, double atraso){
-        int p_i = msg.relayFrom;
-        int p_j = msg.relayTo;
-        
-        if(verifyChannel(p_i, p_j)) transfer(p_i, p_j, msg, (int)atraso);
+        synchronized(this){
+            int p_i = msg.relayFrom;
+            int p_j = msg.relayTo;
+
+            if(verifyChannel(p_i, p_j)) transfer(p_i, p_j, msg, (int)atraso);
+        }
     }
     
     public void unicast(Message msg, double atraso){
-        unicasts[msg.type]++;
-        if (isLoopback(msg)) {
-            loopback(msg);
-            return;
+        synchronized(this){
+            unicasts[msg.type]++;
+            if (isLoopback(msg)) {
+                loopback(msg);
+                return;
+            }
+            if (verifyChannel(msg.sender, msg.destination))
+                transfer(msg.sender, msg.destination, msg, atraso);
         }
-
-        if (verifyChannel(msg.sender, msg.destination))
-            transfer(msg.sender, msg.destination, msg, atraso);
     }
 
     public void transfer(int p_i, int p_j, Message msg, double atraso){
-        Channels[p_i][p_j].deliverMsg(msg, atraso);
+        synchronized(this){
+            Channels[p_i][p_j].deliverMsg(msg, atraso);
+        }
     }
 
     public void broadcast(Message msg, double atraso){
-        
-        int n = conteiner.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value();
-        
-        broadcasts[msg.type]++;
-        
-        int p_i = msg.sender;
+        synchronized(this){
+            int n = conteiner.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value();
 
-        for (int p_j=0; p_j < n; p_j++) {
+            broadcasts[msg.type]++;
 
-            if (isLoopback(p_i, p_j)){
+            int p_i = msg.sender;
 
-                loopback(msg);
-                
-            }else if (verifyChannel(p_i, p_j)){
+            for (int p_j=0; p_j < n; p_j++) {
 
-                    transfer(p_i, p_j, msg, atraso);
+                if (isLoopback(p_i, p_j)){
 
-            }//end else if
-        }//end for
-        
+                    loopback(msg);
+
+                }else if (verifyChannel(p_i, p_j)){
+
+                        transfer(p_i, p_j, msg, atraso);
+
+                }//end else if
+            }//end for
+        }
     }
     
     public final void debug(String d) {

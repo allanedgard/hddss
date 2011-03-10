@@ -21,7 +21,7 @@ public class PBFTCheckpoint extends PBFTServerMessage{
         setReplicaID(replicaID);        
     }
     @Override
-    public final synchronized String toString() {
+    public final String toString() {
 
         return (
                 "<CHECKPOINT" + ", " +

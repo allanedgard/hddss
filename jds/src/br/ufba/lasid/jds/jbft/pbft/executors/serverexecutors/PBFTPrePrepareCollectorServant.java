@@ -5,19 +5,12 @@
 
 package br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors;
 
-import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.SignedMessage;
-import br.ufba.lasid.jds.group.IGroup;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
-import br.ufba.lasid.jds.jbft.pbft.util.PBFTTimeoutDetector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
-import br.ufba.lasid.jds.util.Debugger;
-import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
+import br.ufba.lasid.jds.jbft.pbft.acceptors.PBFTPrePrepareAcceptor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCollectorServant;
 
 /**
@@ -25,7 +18,7 @@ import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCollectorServant;
  * @author aliriosa
  */
 public class PBFTPrePrepareCollectorServant extends PBFTCollectorServant<PBFTPrePrepare>{
-
+    PBFTPrePrepareAcceptor acceptor;
 
     public PBFTPrePrepareCollectorServant(){
 
@@ -33,149 +26,12 @@ public class PBFTPrePrepareCollectorServant extends PBFTCollectorServant<PBFTPre
 
     public PBFTPrePrepareCollectorServant(PBFT p){
         setProtocol(p);
+        acceptor = new PBFTPrePrepareAcceptor(p);
     }
 
-
-    /**
-     * Collect the request sent by the client.
-     * @param preprepare -- the client request.
-     */
     protected synchronized boolean accept(PBFTPrePrepare preprepare){
-
-        PBFTServer pbft = (PBFTServer)getProtocol();
-
-        /**
-         * If the preprepare hasn't a valid sequence or view number then force a
-         * change view.
-         */
-        if(!(pbft.hasAValidSequenceNumber(preprepare) && pbft.hasAValidViewNumber(preprepare))){
-            long nextPP = pbft.getStateLog().getNextPrePrepareSEQ();
-            long nextP  = pbft.getStateLog().getNextPrepareSEQ();
-            long nextC  = pbft.getStateLog().getNextCommitSEQ();
-            long nextE  = pbft.getStateLog().getNextExecuteSEQ();
-
-            Debugger.debug(
-              "[PBFTPrePrepareCollectorServant] s"  + pbft.getLocalServerID() +
-              ", at time " + pbft.getClock().value() + ", discarded " + preprepare +
-              " because it hasn't a valid sequence/view number. "
-              + "(currView = " + pbft.getCurrentViewNumber() + ")"
-              + "[nextPP = " + nextPP + ", nextP = "
-              + nextP + ", nextC =" + nextC
-              + " , nextE = " + nextE + "]"
-            );
-
-            return false;
-
-        }
-
-        /**
-         * If the preprepare message wasn't sent by the primary replica then
-         * it will be discarded.
-         */
-        if(!pbft.wasSentByPrimary(preprepare)){
-            Debugger.debug(
-              "[PBFTPrePrepareCollectorServant] s"   + pbft.getLocalServerID()   +
-              ", at time " + pbft.getClock().value() + ", discarded " + preprepare      +
-              " because it wasn't sent by primary server s" + pbft.getCurrentPrimaryID()
-            );
-
-            return false;
-        }
-
-        if(pbft.updateState(preprepare)){
-
-            /**
-             * For each request in batch, check if such request was received.
-             */
-            for(String digest : preprepare.getDigests()){
-
-                StatedPBFTRequestMessage sr = pbft.getStateLog().getStatedRequest(digest);
-
-                sr.setState(StatedPBFTRequestMessage.RequestState.PREPREPARED);
-                sr.setSequenceNumber(preprepare.getSequenceNumber());
-                
-                revokeSchedule(digest);
-
-                Debugger.debug(
-                  "[PBFTServer] s"  + pbft.getLocalServerID() +
-                  ", at time " + pbft.getClock().value() + ", revoked the timeout "
-                + "for pre-prepare of " + sr.getRequest()
-                );
-
-            }
-
-            pbft.getStateLog().updateNextPrePrepareSEQ(preprepare);
-            
-            if(!pbft.isPrimary()){
-                emit(createPrepareMessage(preprepare));
-            }
-
-            return true;
-        }
-
-        return false;
-            
+        return acceptor.accept(preprepare);
     }
-
-    public void revokeSchedule(String digest){
-
-        PBFTServer pbft = (PBFTServer)getProtocol();
-
-        PBFTTimeoutDetector timeoutTask =
-            (PBFTTimeoutDetector)pbft.getTaskTable(PBFT.REQUESTTASKS).get(digest);
-        
-        if(timeoutTask != null){
-            timeoutTask.cancel();
-            pbft.getTaskTable(PBFT.REQUESTTASKS).remove(digest);
-        }
-
-
-    }
-
-    protected PBFTPrepare createPrepareMessage(PBFTPrePrepare pp){
-
-        PBFTServer pbft = (PBFTServer)getProtocol();
-
-        PBFTPrepare p = new PBFTPrepare(pp, pbft.getLocalServerID());
-
-        return p;
-        
-    }
-
-    public synchronized void emit(PBFTPrepare p){
-        PBFTServer pbft = (PBFTServer)getProtocol();
-
-        SignedMessage m;
-
-        try {
-
-            m = pbft.getAuthenticator().encrypt(p);
-
-            IGroup  g  = pbft.getLocalGroup();
-            IProcess s = pbft.getLocalProcess();
-
-            PDU pdu = new PDU();
-            pdu.setSource(s);
-            pdu.setDestination(g);
-            pdu.setPayload(m);
-
-            pbft.getCommunicator().multicast(pdu, g);
-
-            Debugger.debug(
-              "[PBFTPrePrepareCollectorServant]s" +  pbft.getLocalServerID() +
-              " sent prepare " + p + " at timestamp " + pbft.getClock().value() +
-              " to group " + pbft.getLocalGroup() + "."
-            );
-
-
-        } catch (Exception ex) {
-            Logger.getLogger(PBFTPrePrepareCollectorServant.class.getName()).log(Level.SEVERE, null, ex);
-            ex.printStackTrace();
-
-        }
-
-    }
-
 
     public boolean canConsume(Object object) {
 

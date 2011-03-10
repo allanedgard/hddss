@@ -24,7 +24,7 @@ public class PBFTCommit extends PBFTServerMessage{
     }
     
     @Override
-    public final synchronized String toString() {
+    public final String toString() {
 
         return (
                 "<COMMIT" + ", " +

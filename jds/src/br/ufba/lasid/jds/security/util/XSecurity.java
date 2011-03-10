@@ -150,6 +150,7 @@ public class XSecurity {
 
         } catch (Exception ex) {
             Logger.getLogger(XSecurity.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
 
         return false;

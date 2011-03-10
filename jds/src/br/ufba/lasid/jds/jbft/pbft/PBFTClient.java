@@ -5,7 +5,6 @@
 
 package br.ufba.lasid.jds.jbft.pbft;
 
-import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.Quorum;
@@ -15,6 +14,7 @@ import br.ufba.lasid.jds.cs.IClient;
 import br.ufba.lasid.jds.group.IGroup;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestMessageList;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTTimeoutDetector;
 import br.ufba.lasid.jds.util.IPayload;
 import java.util.logging.Level;
@@ -23,6 +23,7 @@ import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
 import br.ufba.lasid.jds.util.Debugger;
+import java.util.Hashtable;
 
 /**
  *
@@ -31,13 +32,14 @@ import br.ufba.lasid.jds.util.Debugger;
 public class PBFTClient extends PBFT implements IPBFTClient{
 
 
-    protected Buffer applicationBox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
+    protected  Buffer applicationBox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
+    protected Hashtable<Long, PBFTRequest> rtable = new Hashtable<Long, PBFTRequest>();
 
     public Buffer getApplicationBox(){
         return applicationBox;
     }
     
-    protected IClient client;
+    protected  IClient client;
 
     public IClient getClient() {
         return client;
@@ -48,7 +50,7 @@ public class PBFTClient extends PBFT implements IPBFTClient{
     }
 
     
-    protected long retransmissionTimeout = Long.valueOf(120000);
+    protected  long retransmissionTimeout = Long.valueOf(120000);
     /**
      * Get the request retransmission timeout.
      * @return - the timeout.
@@ -65,45 +67,42 @@ public class PBFTClient extends PBFT implements IPBFTClient{
         this.retransmissionTimeout = retransmissionTimeout;
     }
 
-    protected QuorumTable qtable = new QuorumTable();
+    protected  QuorumTable qtable = new QuorumTable();
 
     /**
      * Perform an asynchronous call of the remote pbft service.
      * @param payload - the operation payload.
      */
-    @Deprecated
-    public void asyncCall(IPayload payload) {
-        //accept(payload, false); /*does not properly working*/
-    }
 
     public IPayload syncCall(IPayload payload){
-        
-        accept(payload, true);
-
-        return (IPayload) getApplicationBox().remove();
+            PBFTRequest r = createRequestMessage(payload);
+            r.setSynch(true);
+            rtable.put(r.getTimestamp(), r);
+            emit(r);
+            return (IPayload) getApplicationBox().remove();
     }
 
-    /**
-     * Collect the payload from the application.
-     * @param payload -- the application payload.
-     */
-    public void accept(IPayload payload, boolean sync){
-    
-        PBFTRequest request = createRequestMessage(payload);
-        request.setSynch(sync);
-
-        emit(request);
-
-        Debugger.debug(
-          "[PBFTClient] c" + getLocalProcess().getID() +
-          " sent " + request + " to " + getRemoteProcess() +
-          " at time " + getClock().value()
-        );
-        
-    }
-    public void accept(IPayload payload){
-        accept(payload, true);
-    }
+//    /**
+//     * Collect the payload from the application.
+//     * @param payload -- the application payload.
+//     */
+//    public synchronized void accept(IPayload payload, boolean sync){
+//
+//        PBFTRequest request = createRequestMessage(payload);
+//        request.setSynch(sync);
+//
+//        emit(request);
+//
+//        Debugger.debug(
+//          "[PBFTClient] c" + getLocalProcessID() +
+//          " sent " + request + " to " + getRemoteProcess() +
+//          " at time " + getClockValue()
+//        );
+//
+//    }
+//    public synchronized void accept(IPayload payload){
+//        accept(payload, true);
+//    }
 
 
     /**
@@ -113,16 +112,7 @@ public class PBFTClient extends PBFT implements IPBFTClient{
      */
     protected PBFTRequest createRequestMessage(IPayload payload){
 
-        IProcess c = getLocalProcess();
-
-        long timestamp = getClock().value();
-
-  //      lastClientTimestamp = currClientTimestamp;
-//        currClientTimestamp = timestamp;
-
-        PBFTRequest r = new PBFTRequest(payload, timestamp, c.getID());
-        
-//        r.setLastTimestamp(lastClientTimestamp);
+        PBFTRequest r = new PBFTRequest(payload, getClockValue(), getLocalProcessID());
         r.setSent(false);
 
         return r;
@@ -133,10 +123,9 @@ public class PBFTClient extends PBFT implements IPBFTClient{
      * do a request to server group and doSchedule the request retransmission.
      * @param request -- the client request.
      */
-    protected synchronized void emit(PBFTRequest request){
+    protected void emit(PBFTRequest request){
 
         if(request!= null && !request.wasSent()){
-
 
             try{
 
@@ -146,9 +135,12 @@ public class PBFTClient extends PBFT implements IPBFTClient{
 
                 pdu.setSource(getLocalProcess());
                 pdu.setDestination(getRemoteProcess());
-                pdu.setPayload(m);
-                
+                pdu.setPayload(m);                
                 getCommunicator().multicast(pdu, (IGroup)getRemoteProcess());
+                Debugger.debug(
+                  "[PBFTClient] c" + getLocalProcessID() + " sent " + request + " " +
+                  "to " + getRemoteProcess() + " at time " + getClockValue() + "."
+                );
 
                 request.setSent(true);
 
@@ -163,24 +155,21 @@ public class PBFTClient extends PBFT implements IPBFTClient{
     
 
     public Quorum getQuorum(PBFTReply r){
+
         Quorum q = null;
 
-        if(r != null){
-            if(r.getTimestamp() != null){
+        if(r!= null && r.getTimestamp() != null){
 
-                q = qtable.get(r.getTimestamp());
+            q = qtable.get(r.getTimestamp());
 
-                int f = getServiceBFTResilience();
+            int f = getServiceBFTResilience();
 
-                if(q == null){
-                    q = new Quorum(f + 1);
-                    qtable.put(r.getTimestamp(), q);
-                }
-                
+            if(q == null){
+                q = new Quorum(f + 1);
+                qtable.put(r.getTimestamp(), q);
             }
+
         }
-
-
         
         return q;
 
@@ -191,11 +180,11 @@ public class PBFTClient extends PBFT implements IPBFTClient{
 
         if(r != null){
             
-            Quorum q = getQuorum(r);
+            Quorum quorum = getQuorum(r);
 
-            if(q != null){
+            if(quorum != null){
 
-                for(IMessage m :  q){
+                for(IMessage m :  quorum){
 
                     PBFTReply r1 = (PBFTReply)m;
                     
@@ -205,17 +194,27 @@ public class PBFTClient extends PBFT implements IPBFTClient{
                     
                 }
 
-                q.add(r);
+                quorum.add(r);
 
                 Debugger.debug(
-                   "[PBFTClient] c"  + getLocalProcess().getID() + ", at time "
-                  + getClock().value() + ", updated a entry in its log for the received " + r
+                   "[PBFTClient:updateState(reply)] c"  + getLocalProcessID() + ", " + 
+                   "at time " + getClockValue() + ", updated a entry in its log " +
+                   "for the received " + r + "."
                 );
+
+                if(quorum.complete()){
+                    revokeSchedule(r.getTimestamp());
+                    rtable.remove(r.getTimestamp());
+                    qtable.remove(r.getTimestamp());
+                    quorum.clear();
+                    
+                    return true;
+                }
 
             }
         }
 
-        return true;
+        return false;
     }
 
     /*
@@ -224,7 +223,7 @@ public class PBFTClient extends PBFT implements IPBFTClient{
      */
     public void doSchedule(PBFTRequest request){
 
-        PBFTTimeoutDetector timeoutTask = new PBFTTimeoutDetector()
+        PBFTTimeoutDetector ttask = new PBFTTimeoutDetector()
         {
 
             @Override
@@ -233,16 +232,15 @@ public class PBFTClient extends PBFT implements IPBFTClient{
                 //getScheduler().cancel(this);
                 
                 PBFTRequest r = (PBFTRequest) this.get("REQUEST");
-                revokeSchedule(r);
+                //revokeSchedule(r);
 
                 r.setSent(false);
                 
                 emit(r);
 
                 Debugger.debug(
-                  "[PBFTClient] c" + getLocalProcess().getID() +
-                  " re-sent " + r + " to " + getRemoteProcess() +
-                  " at time " + getClock().value()
+                  "[PBFTClient] c" + getLocalProcessID() + " re-sent " + r +
+                  " to " + getRemoteProcess() + " at time " + getClockValue()
                 );
 
 
@@ -256,18 +254,87 @@ public class PBFTClient extends PBFT implements IPBFTClient{
 
         };
 
-        timeoutTask.put("REQUEST", request);
+        ttask.put("REQUEST", request);
         
         getTaskTable(PBFT.REQUESTTASKS).put(
-                request.getTimestamp(), timeoutTask
+                request.getTimestamp(), ttask
         );
 
         getScheduler().schedule(
                 
-           timeoutTask, getClock().value() + getRetransmissionTimeout()
+           ttask, getClockValue() + getRetransmissionTimeout()
 
         );
 
+    }
+
+//   public synchronized boolean accept(PBFTReply m){
+//
+//        /**
+//         * We must check if the view number is bigger or equal than last received.
+//         * (We're going to implement this later).
+//         */
+//
+//        if(getLocalProcessID().equals(m.getClientID())){
+//            Quorum q = getQuorum(m);
+//            if(!(q != null && q.complete())){
+//                if(updateState(m)){
+//
+//                    q = getQuorum(m);
+//
+//                    if(q!=null && q.complete()){
+//                        revokeSchedule(m.getTimestamp());
+//                        Debugger.debug(
+//                          "[PBFTClient:accept(reply)] c"  + getLocalProcessID() +
+//                          ", at time " + getClockValue() + ", revoked the timeout "
+//                        + "for receive of the " + m
+//                        );
+//
+//                        getApplicationBox().add(m.getPayload());
+//                    }
+//                }
+//            }else{
+//                if(q.complete()){
+//                    if(updateState(m)){
+//                        revokeSchedule(m.getTimestamp());
+//                        Debugger.debug(
+//                          "[PBFTClient:accept(reply)] c"  + getLocalProcessID() +
+//                          ", at time " + getClockValue() + ", has just" +
+//                          " updated the quorum for " + m + "because such " +
+//                          "quorum has already completed."
+//                        );
+//                    }
+//
+//                }
+//            }
+//        }
+//
+//        return false;
+//    }
+
+    public boolean canProceed(PBFTReply reply){
+        if(!isAReplyForMe(reply.getClientID())){
+            return false;
+        }
+
+        if(!hasARelatedRequest(reply)){
+            Debugger.debug(
+               "[PBFTClient:wasAcceptedAsAValidReply(reply)] c" + getLocalProcessID() + ", " +
+               "at time " + getClockValue() + ", discarded " + reply + " because there isn't " +
+               " a related request."
+             );
+            return false;
+        }
+        return true;
+    }
+
+    public boolean hasARelatedRequest(PBFTReply r){
+        PBFTRequest request = rtable.get(r.getTimestamp());
+        return (request != null && r.getClientID().equals(r.getClientID()));
+    }
+
+    public boolean isAReplyForMe(Object clientID){
+        return getLocalProcessID().equals(clientID);
     }
 
     public void revokeSchedule(PBFTRequest r){
@@ -288,6 +355,14 @@ public class PBFTClient extends PBFT implements IPBFTClient{
     @Override
     public void shutdown() {
         super.shutdown();
+    }
+
+    public void asyncCall(IPayload payload) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void accept(IPayload payload) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 
