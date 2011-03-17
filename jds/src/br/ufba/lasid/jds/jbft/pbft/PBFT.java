@@ -34,6 +34,8 @@ public class PBFT extends DistributedProtocol{
     public static String PREPAREQUORUMSTORE = "__PREPAREQUORUMSTORE";
     public static String COMMITQUORUMSTORE = "__COMMITQUORUMSTORE";
     public static String CHECKPOINTQUORUMSTORE = "__CHECKPOINTQUORUMSTORE";
+    public static String METADATAQUORUMSTORE = "__METADATAQUORUMSTORE";
+    public static String BAGQUORUMSTORE = "__BAGQUORUMSTORE";
 
 
     protected  PBFTStateLog stateLog = new PBFTStateLog();

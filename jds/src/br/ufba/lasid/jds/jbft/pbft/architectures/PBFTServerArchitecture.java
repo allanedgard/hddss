@@ -26,7 +26,7 @@ public class PBFTServerArchitecture extends Architecture{
 //    protected static String statusActiveCollector = "statusActiveCollector";
 //    protected static String checkpointCollector = "checkpointCollector";
     protected static String PBFTCommunicatorTag = "__PBFTCommunicator";
-    protected static String PBFTServantTag = "__PBFTServant";
+    public static String PBFTServantTag = "__PBFTServant";
     
     public PBFTServer getPBFTServer() {
         return pbft;

@@ -7,9 +7,9 @@ package br.ufba.lasid.jds.prototyping.hddss.pbft;
 
 import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.comm.IMessage;
+import br.ufba.lasid.jds.comm.MessageHandler;
 import br.ufba.lasid.jds.group.IGroup;
 import br.ufba.lasid.jds.group.Group;
-import br.ufba.lasid.jds.jbft.pbft.comm.communicators.PBFTCommunicator;
 import br.ufba.lasid.jds.prototyping.hddss.Agent;
 import br.ufba.lasid.jds.prototyping.hddss.Message;
 import java.util.ArrayList;
@@ -78,9 +78,12 @@ public class SimulatedPBFTAgent extends Agent implements IProcess<Integer>, IPBF
     public void receive(Message msg) {
         //super.receive(msg);
 //        synchronized(this){
-            PBFTCommunicator comm = (PBFTCommunicator)getProtocol().getCommunicator();
-            comm.receive((IMessage)msg.getContent());
+            //PBFTCommunicator comm = (PBFTCommunicator)getProtocol().getCommunicator();
+            //comm.receive((IMessage)msg.getContent());
   //      }
+
+        ((MessageHandler)getProtocol().getArchitecture().getThead("__PBFTServant")).input((IMessage)msg.getContent());
+        ((MessageHandler)getProtocol().getArchitecture().getThead("__PBFTServant")).handle();
     }
 
     @Override
@@ -89,6 +92,7 @@ public class SimulatedPBFTAgent extends Agent implements IProcess<Integer>, IPBF
             ((SimulatedScheduler)getProtocol().getScheduler()).execute();
   //      }
         //super.execute();
+
     }
 
 

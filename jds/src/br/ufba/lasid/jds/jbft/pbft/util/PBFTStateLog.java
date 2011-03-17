@@ -43,12 +43,18 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
     private  PBFTRequestTable rseqtable = new PBFTRequestTable();
     private  PBFTRequestTable rdigtable = new PBFTRequestTable();
     private  PBFTCheckpointTable cptable = new PBFTCheckpointTable();
+
+    public void doCacheServerState(Long seqn, String digest, IState state, boolean updated){
+
+        PBFTCheckpointTuple ctuple = new PBFTCheckpointTuple(seqn, digest, state, updated);
+
+        cptable.put(seqn, ctuple);
+
+    }
     
     public void doCacheServerState(Long seqn, String digest, IState state){
 
-        PBFTCheckpointTuple ctuple = new PBFTCheckpointTuple(seqn, digest, state);
-        
-        cptable.put(seqn, ctuple);
+        doCacheServerState(seqn, digest, state, false);
 
     }
 
@@ -312,7 +318,7 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
         return false;        
     }
 
-    public Quorum getPrepareQuorum(Long seqn){
+    public PBFTQuorum getPrepareQuorum(Long seqn){
         synchronized(this){
         
             PBFTLogEntry entry = get(seqn);
@@ -324,7 +330,7 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
         return null;
     }
 
-    public Quorum getCommitQuorum(Long seqn){
+    public PBFTQuorum getCommitQuorum(Long seqn){
 
         synchronized(this){
             PBFTLogEntry entry = get(seqn);
@@ -346,6 +352,25 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
         }
         return null;
 
+    }
+
+    public boolean wasServed(Long seqn){
+        PBFTPrePrepare pp = getPrePrepare(seqn);
+
+        if(pp == null){
+            return false;
+        }
+
+        for(String digest : pp.getDigests()){
+            
+            StatedPBFTRequestMessage statedRequest = getStatedRequest(digest);
+
+            if(!inState(statedRequest.getRequest(), RequestState.SERVED)){
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public void setCheckpointLowWaterMark(long mark){
@@ -577,17 +602,21 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
 
                 for(long seq = startSEQ; seq <= finalSEQ; seq++){
                     PBFTLogEntry entry = get(seq);
-                    DigestList digests = new DigestList();
-
-
-                    digests.addAll(entry.getPrePrepare().getDigests());
-                    //Debugger.debug("\t removing messages for sequence number " + seq);
-                    //Debugger.debug("\t\t cleaning up the related client requests" + seq);
-                    for(String digest : digests){
-                        rseqtable.remove(seq);
-                        rdigtable.remove(digest);
+                    if(entry!= null){
+                        DigestList digests = new DigestList();
+                    
+                        try{
+                            digests.addAll(entry.getPrePrepare().getDigests());
+                        }catch(Exception except){
+                            except.printStackTrace();
+                        }
+                        //Debugger.debug("\t removing messages for sequence number " + seq);
+                        //Debugger.debug("\t\t cleaning up the related client requests" + seq);
+                        for(String digest : digests){
+                            rseqtable.remove(seq);
+                            rdigtable.remove(digest);
+                        }
                     }
-
                     //Debugger.debug("\t\t cleaning up the prepare / commit / checkpoint message quorums ...");
 
                     qtable = qstore.get(PREPAREQUORUMTABLE);    if(qtable != null) qtable.remove(seq);

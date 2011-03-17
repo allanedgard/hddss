@@ -31,11 +31,16 @@ public class PBFTCheckpointTuple {
     public String getEntry(){
         return  seqn.toString() + ";" + digest.toString() ;
     }
-    
-    public PBFTCheckpointTuple(Long seqn, String digest, IState currentState) {
+
+    public PBFTCheckpointTuple(Long seqn, String digest, IState currentState, boolean updated) {
         this.seqn = seqn;
         this.digest = digest;
         this.currentState = currentState;
+        this.updated = updated;
+    }
+    
+    public PBFTCheckpointTuple(Long seqn, String digest, IState currentState) {
+        this(seqn, digest, currentState, false);
     }
     
     public IState getCurrentState() {

@@ -28,6 +28,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import trash.br.ufba.lasid.jds.jbft.pbft.comm.AbstractPBFTServerMessage;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTTimeoutDetector;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTLogEntry;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTQuorum;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestMessageList;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTStateLog;
 import br.ufba.lasid.jds.util.TaskTable;
@@ -1771,7 +1772,7 @@ public class PBFT2 extends ClientServerProtocol{
      * the log entry. The quorum can be a prepare or commit quorum of messages.
      * @param q -- the quorum of message.
      */
-    public void updateState(Quorum q){
+    public void updateState(PBFTQuorum q){
 
         /**
          * If the quorum is null then return.

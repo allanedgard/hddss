@@ -5,6 +5,7 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.pbft;
 
+import br.ufba.lasid.jds.prototyping.hddss.Agent;
 import br.ufba.lasid.jds.util.ITask;
 import br.ufba.lasid.jds.util.Agenda;
 import br.ufba.lasid.jds.util.IClock;
@@ -20,13 +21,22 @@ public class SimulatedScheduler implements IScheduler{
     protected  Agenda agenda = new Agenda();
     protected  final Object lock = this;
     protected IClock clock;
+    protected Agent agent;
+
+    public Agent getAgent() {
+        return agent;
+    }
+
+    public void setAgent(Agent agent) {
+        this.agent = agent;
+    }    
     
     public SimulatedScheduler(IClock clock){
         this.clock = clock;
     }
     
     public void execute(){
-        synchronized(this){
+//        synchronized(this){
 
             Long time = clock.value();
 
@@ -42,11 +52,11 @@ public class SimulatedScheduler implements IScheduler{
                 tasks.clear();
                 agenda.remove(time);
             }
-        }
+  //      }
     }
 
     public void schedule(ITask task, long time) {
-        synchronized(this){
+    //    synchronized(this){
             TaskList tasks = agenda.get(time);
 
             if(tasks == null){
@@ -57,11 +67,11 @@ public class SimulatedScheduler implements IScheduler{
                 tasks.add(task);
                 agenda.put(time, tasks);
             }
-        }
+      //  }
     }
 
     public boolean cancel(ITask task) {
-        synchronized(this){
+        //synchronized(this){
 
             boolean cancelled = false;
             Agenda _agenda = new Agenda();
@@ -89,18 +99,18 @@ public class SimulatedScheduler implements IScheduler{
             }
 
             return cancelled;
-        }
+        //}
     }
 
     public boolean cancelAll() {
-        synchronized(this){
+//        synchronized(agent.lock){
             for(TaskList tasks : agenda.values()){
                 tasks.clear();
             }
 
             agenda.clear();
-        }
+  //      }
         return true;
-    }
+   }
 
 }

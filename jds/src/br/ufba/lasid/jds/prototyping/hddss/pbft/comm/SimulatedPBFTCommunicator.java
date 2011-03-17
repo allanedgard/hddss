@@ -7,9 +7,28 @@ package br.ufba.lasid.jds.prototyping.hddss.pbft.comm;
 
 import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.comm.IMessage;
+import br.ufba.lasid.jds.comm.PDU;
+import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.group.IGroup;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBag;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeView;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeViewACK;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTData;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetch;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetchMetaData;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewView;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
 import br.ufba.lasid.jds.jbft.pbft.comm.communicators.PBFTCommunicator;
 import br.ufba.lasid.jds.prototyping.hddss.Agent;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -41,15 +60,18 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
             for(Object p : g.getMembers()){
                 int dest = (Integer) ((IProcess)p).getID();
                 int destin = dest;
+                int type  = getMSGTYPE(m);
 
                 agent.send(
                  new br.ufba.lasid.jds.prototyping.hddss.Message(
-                    source, destin, 0, 0, now, m
+                    source, destin, type, 0, now, m
                  )
                 );
                 
-                agent.lock.notify();
             }
+            
+            agent.lock.notify();
+
         }
     }
 
@@ -60,7 +82,7 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
             int source = agent.ID;
             int destin = dest;
             int now   = (int) agent.infra.clock.value();
-            int type  = 0;
+            int type  = getMSGTYPE(m);
 
             agent.send(
              new br.ufba.lasid.jds.prototyping.hddss.Message(
@@ -80,4 +102,37 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
         }
     }
 
+    public int getMSGTYPE(IMessage m){
+        if(m instanceof PDU){
+            return getMSGTYPE((IMessage)((PDU)m).getPayload());
+        }
+
+        if(m instanceof SignedMessage){
+            try {
+                return getMSGTYPE((IMessage) ((SignedMessage)m).getSignedObject().getObject());
+            } catch (Exception ex) {
+                Logger.getLogger(SimulatedPBFTCommunicator.class.getName()).log(Level.SEVERE, null, ex);
+                ex.printStackTrace();
+            } 
+        }
+
+        if(m instanceof PBFTRequest)        return  0;
+        if(m instanceof PBFTPrePrepare)     return  1;
+        if(m instanceof PBFTPrepare)        return  2;
+        if(m instanceof PBFTCommit)         return  3;
+        if(m instanceof PBFTCheckpoint)     return  4;
+        if(m instanceof PBFTFetch)          return  5;
+        if(m instanceof PBFTData)           return  6;
+        if(m instanceof PBFTBag)            return  7;
+        if(m instanceof PBFTStatusActive)   return  8;
+        if(m instanceof PBFTReply)          return  9;
+        if(m instanceof PBFTChangeView)     return 10;
+        if(m instanceof PBFTChangeViewACK)  return 11;
+        if(m instanceof PBFTNewView)        return 12;
+        if(m instanceof PBFTFetchMetaData)  return 13;
+        if(m instanceof PBFTMetaData)       return 14;
+
+
+        return -1;
+    }
 }

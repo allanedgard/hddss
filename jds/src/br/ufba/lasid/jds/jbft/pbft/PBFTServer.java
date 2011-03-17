@@ -5,7 +5,6 @@
 
 package br.ufba.lasid.jds.jbft.pbft;
 
-import br.ufba.lasid.hdf.ISupplier;
 import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.ISystemEntity;
 import br.ufba.lasid.jds.comm.IMessage;
@@ -17,7 +16,10 @@ import br.ufba.lasid.jds.group.IGroup;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBag;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetch;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetchMetaData;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTProcessingToken;
@@ -30,11 +32,15 @@ import java.io.IOException;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTLogEntry;
 import br.ufba.lasid.jds.util.Debugger;
 import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
-import br.ufba.lasid.jds.jbft.pbft.handlers.PBFTProcessingHandler;
+import br.ufba.lasid.jds.jbft.pbft.util.CheckpointIndex;
+import br.ufba.lasid.jds.jbft.pbft.util.CheckpointIndexList;
+import br.ufba.lasid.jds.jbft.pbft.util.MessageCollection;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTCheckpointStorage;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTCheckpointTable;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTCheckpointTuple;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTClientSessionTable;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTQuorum;
+import br.ufba.lasid.jds.jbft.pbft.util.PBFTServerMessageSequenceNumberComparator;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTTimeoutDetector;
 import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IRecoverableServer;
 import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
@@ -46,10 +52,10 @@ import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jdbm.helper.Tuple;
+import jdbm.helper.TupleBrowser;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
-import trash.br.ufba.lasid.jds.comm.QuorumTable;
 
 /**
  *
@@ -236,7 +242,7 @@ public class PBFTServer extends PBFT{
             }
 
             if(m instanceof PBFTCommit){
-                return seqn == nextCommitSEQ;//nextPrepareSEQ;//nextCommitSEQ;
+                return seqn <= nextPrepareSEQ; //nextCommitSEQ;
             }
         }
 
@@ -412,13 +418,7 @@ public class PBFTServer extends PBFT{
                         if(!isPrimary()){
                             doRevokeViewChange(digest);
                         }
-
-    //                    Debugger.debug(
-    //                      "[PBFTServer:handle(preprepare)] s"  + getLocalServerID() +
-    //                      ", at time " + getClockValue() + ", revoked the timeout "
-    //                    + "for pre-prepare of " + statedRequest.getRequest()
-    //                    );
-
+                        
                     }
 
                     getStateLog().updateNextPrePrepareSEQ(preprepare);
@@ -494,13 +494,13 @@ public class PBFTServer extends PBFT{
                  */
                 if(entry != null){
 
-                    Quorum q = entry.getPrepareQuorum();
+                    PBFTQuorum q = entry.getPrepareQuorum();
 
                     if(q == null){
 
                         int f = getServiceBFTResilience();
 
-                        q = new Quorum(2 * f);
+                        q = new PBFTQuorum(2 * f);
 
                         entry.setPrepareQuorum(q);
 
@@ -555,6 +555,7 @@ public class PBFTServer extends PBFT{
 
                             statedReq.setSequenceNumber(prepare.getSequenceNumber());
                         }
+                        
                         Debugger.debug(
                           "[PBFTServer:accept(prepare)] s" + getLocalServerID()     +
                           ", at time " + getClockValue() + ", has just complete " +
@@ -638,13 +639,13 @@ public class PBFTServer extends PBFT{
                             }
                         }
 
-                        Quorum q = entry.getCommitQuorum();
+                        PBFTQuorum q = entry.getCommitQuorum();
 
                         if(q == null){
 
                             int f = getServiceBFTResilience();
 
-                            q = new Quorum(2 * f + 1);
+                            q = new PBFTQuorum(2 * f + 1);
 
                             entry.setCommitQuorum(q);
                         }
@@ -776,15 +777,21 @@ public class PBFTServer extends PBFT{
                         c1.getSequenceNumber().equals(checkpoint.getSequenceNumber()) &&
                         c1.getDigest().equals(checkpoint.getDigest())
                     )){
+                        Debugger.debug(
+                          "[PBFTServer:updateState(checkpoint)] s"  + getLocalServerID() +
+                          ", at time " + getClock().value() + ", cann't use " + checkpoint +
+                          " the digests don't match (" + c1 +  " / " + checkpoint + ")."
+                        );
+
                         return false;
                     }
 
                     if(c1.getReplicaID().equals(checkpoint.getReplicaID())){
-                    Debugger.debug(
-                      "[PBFTServer:updateState(checkpoint)] s"  + getLocalProcess().getID() +
-                      ", at time " + getClock().value() + ", cann't use " + checkpoint +
-                      " to update its log because it's a duplicated prepare."
-                    );
+                        Debugger.debug(
+                          "[PBFTServer:updateState(checkpoint)] s"  + getLocalServerID() +
+                          ", at time " + getClockValue() + ", cann't use " + checkpoint +
+                          " to update its log because it's a duplicated checkpoint."
+                        );
                         return false;
                     }
                 }
@@ -804,7 +811,6 @@ public class PBFTServer extends PBFT{
                       ", at time " + getClockValue() + ", has already complete  a quorum for " +
                       " checkpoint with sequence number (" + checkpoint.getSequenceNumber() + ")."
                     );
-
 
                     return true;
                 }
@@ -872,9 +878,8 @@ public class PBFTServer extends PBFT{
 
     }
 
-    @Override
-    public void startup() {
-        try {
+    public void loadState(){
+                try {
             chkStore = new PBFTCheckpointStorage(getLocalServerID());
             Tuple tuple = chkStore.getLast();
             if(tuple != null){
@@ -891,7 +896,7 @@ public class PBFTServer extends PBFT{
                 getStateLog().setCheckpointLowWaterMark(seqn);
 
                 IRecoverableServer srv = (IRecoverableServer)getServer();
-                srv.setCurrentState((IState)tuple.getValue());
+                srv.setCurrentState(((IState)tuple.getValue()).copy());
 
                 updateCurrentSequenceNumber(seqn);
             }
@@ -899,12 +904,22 @@ public class PBFTServer extends PBFT{
             Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
             ex.printStackTrace();
         }
+
+    }
+    @Override
+    public void startup() {
+
+        loadState();
         
         super.startup();
 
+        doSchedulePeriodicStatusSend();
+        
+        emit(createFetchMetaDataMessage(), getLocalGroup().minus(getLocalProcess()));
+
     }
 
-     IStore<String, IState> chkStore;
+   IStore<String, IState> chkStore;
 
     public IStore<String, IState> getCheckpointStore() {
         return chkStore;
@@ -958,7 +973,7 @@ public class PBFTServer extends PBFT{
                 }
             }
 
-            if(lowWater > getStateLog().getCheckpointLowWaterMark()){
+            if(lowWater >= getStateLog().getCheckpointLowWaterMark()){
                 getStateLog().setCheckpointLowWaterMark(lowWater);
 
                 Debugger.debug("[PBFTServer:doCheckpoint(seqn)] s" + getLocalServerID() + ", at time " + getClockValue() + ", starts the garbage collection procedure with LCWM = " + lowWater +"...");
@@ -969,7 +984,17 @@ public class PBFTServer extends PBFT{
             }else{
                 Debugger.debug("[PBFTServer:doCheckpoint(seqn)] s" + getLocalServerID() + ", at time " + getClockValue() + ", does not have cached stated matching LCWM = " + seqn +"...");
             }
-        //}
+//        if(seqn > lowWater){
+//            if(getHighestCheckpointIndex() == null){
+//                 setHighestCheckpointIndex(new CheckpointIndex());
+//                 getHighestCheckpointIndex().setSequenceNumber(seqn);
+//            }
+//
+//            PBFTFetch fetch = createFetchMessage();
+//            emit(fetch, new br.ufba.lasid.jds.Process(fetch.getSelectedReplierID()));
+//            return;
+//
+//        }
     }
 
     protected  boolean lockCheckpointProcedure = false;
@@ -1096,15 +1121,7 @@ public class PBFTServer extends PBFT{
 
     public boolean canProceed(PBFTRequest request){
 //        synchronized(this){
-            if(!isTheNext(request)){
-                Debugger.debug(
-                  "[PBFTServer:canProceed(request)] s" + getLocalServerID() +
-                  " didn't accept " + request + " because this is out of order."
-                );
-
-                return false;
-            }
-
+        
             IProcess client = new br.ufba.lasid.jds.Process(request.getClientID());
 
             /**
@@ -1154,6 +1171,15 @@ public class PBFTServer extends PBFT{
                 return false;
 
             }
+            
+            if(!isTheNext(request)){
+                Debugger.debug(
+                  "[PBFTServer:canProceed(request)] s" + getLocalServerID() +
+                  " didn't accept " + request + " because this is out of order."
+                );
+
+                return false;
+            }
 
             updateClientSession(request);
   //      }
@@ -1200,7 +1226,7 @@ public class PBFTServer extends PBFT{
                 PBFTPrePrepare preprepare = new PBFTPrePrepare
                 (
                         getCurrentViewNumber(),
-                        newSequenceNumber(),
+                        getStateLog().getNextPrePrepareSEQ(),
                         getLocalServerID()
                 );
 
@@ -1211,9 +1237,10 @@ public class PBFTServer extends PBFT{
                     batch.remove(digest);
                 }
 
+                updateState(preprepare);
+
                 emit(preprepare, getLocalGroup().minus(getLocalProcess()));
 
-                updateState(preprepare);
 
             }
         }
@@ -1380,9 +1407,14 @@ public class PBFTServer extends PBFT{
                 if(!isPrimary()){
 
                     PBFTPrepare prepare = createPrepareMessage(preprepare);
-
-                    emit(prepare, getLocalGroup().minus(getLocalProcess()));
-
+                    long seqn = preprepare.getSequenceNumber();
+                    
+                    if(getStateLog().get(seqn) != null && !getStateLog().get(seqn).isNOP()){
+//                        if(!preprepare.isNop()){
+                            emit(prepare, getLocalGroup().minus(getLocalProcess()));
+  //                      }
+                    }
+                    
                     updateState(prepare);
                 }
             }
@@ -1473,8 +1505,13 @@ public class PBFTServer extends PBFT{
             if(updateState(prepare)){
 
                 PBFTCommit commit = createCommitMessage(prepare);
-
-                emit(commit, getLocalGroup().minus(getLocalProcess()));
+                
+                long seqn = prepare.getSequenceNumber();
+                if(!getStateLog().get(seqn).isNOP()){
+                    //if(!getStateLog().getPrepareQuorum(seqn).isNOP()){
+                        emit(commit, getLocalGroup().minus(getLocalProcess()));
+                    //}
+                }
 
                 updateState(commit);
             }
@@ -1484,42 +1521,6 @@ public class PBFTServer extends PBFT{
 
     public boolean canProceed(PBFTPrepare prepare){
 //        synchronized(this){
-            /**
-             * If the preprepare hasn't a valid sequence or view number then force a
-             * change view.
-             */
-            if(!(checkSequenceNumber(prepare) && checkViewNumber(prepare))){
-                long nextPP = getStateLog().getNextPrePrepareSEQ();
-                long nextP  = getStateLog().getNextPrepareSEQ();
-                long nextC  = getStateLog().getNextCommitSEQ();
-                long nextE  = getStateLog().getNextExecuteSEQ();
-
-                Debugger.debug(
-                  "[PBFTServer:canProceed(prepare)] s"  + getLocalServerID() +
-                  ", at time " + getClockValue() + ", discarded " + prepare +
-                  " because it hasn't a valid sequence/view number. "
-                  + "(currView = " + getCurrentViewNumber() + ")"
-                  + "[nextPP = " + nextPP + ", nextP = " + nextP + ", nextC =" + nextC + " , nextE = " + nextE + "]"
-                );
-
-                return false;
-
-            }
-
-            /**
-             * If the preprepare message wasn't sent by a group member then it will
-             * be discarded.
-             */
-            if(!wasSentByAGroupMember(prepare)){
-                Debugger.debug(
-                  "[PBFTServer:canProceed(prepare)] s"   + getLocalServerID()   +
-                  ", at time " + getClockValue() + ", discarded " + prepare      +
-                  " because it wasn't sent by a member of the group " + getLocalGroup()
-                );
-
-                return false;
-            }
-
             /**
              * If the prepare message was sent by the primary then it will
              * be discarded.
@@ -1534,17 +1535,61 @@ public class PBFTServer extends PBFT{
                 return false;
             }
 
-
-            if(!getStateLog().wasPrePrepared(prepare)){
+            /**
+             * If the preprepare message wasn't sent by a group member then it will
+             * be discarded.
+             */
+            if(!wasSentByAGroupMember(prepare)){
                 Debugger.debug(
-                  "[PBFTServer:canProceed(prepare)] s"   + getLocalServerID()   +
-                  ", at time " + getClockValue() + ", discarded " + prepare      +
-                  " because it hasn't received a related pre-prepare."
+                  "[PBFTServer:canProceed(prepare)] s" + getLocalServerID() + ", at " +
+                  "time " + getClockValue() + ", discarded " + prepare + " because " +
+                  "it wasn't sent by a member of the group " + getLocalGroup()
                 );
 
                 return false;
             }
 
+            if(!getStateLog().wasPrePrepared(prepare)){
+                Debugger.debug(
+                  "[PBFTServer:canProceed(prepare)] s" + getLocalServerID() + ", at " +
+                  "time " + getClockValue() + ", discarded " + prepare + " because " +
+                  "it hasn't received a related pre-prepare."
+                );
+
+                return false;
+            }
+            
+            /**
+             * If the preprepare hasn't a valid sequence or view number then force a
+             * change view.
+             */
+            if(!checkViewNumber(prepare)){
+                Debugger.debug(
+                  "[PBFTServer:canProceed(prepare)] s" + getLocalServerID() + ", at " +
+                  "time " + getClockValue() + ", discarded " + prepare + " because " +
+                  "it hasn't a valid view number. (CURRENT-VIEW = " + getCurrentViewNumber() + ")."
+                );
+
+                return false;
+
+            }
+
+            /**
+             * If the preprepare hasn't a valid sequence or view number then force a
+             * change view.
+             */
+            if(!inAValidSequenceRange(prepare)){
+                long lcwm = getCheckpointLowWaterMark();
+                long hcwm = getCheckpointHighWaterMark();
+                Debugger.debug(
+                  "[PBFTServer:canProceed(prepare)] s" + getLocalServerID() + ", at " +
+                  "time " + getClockValue() + ", discarded " + prepare + " because " +
+                  "it hasn't a valid sequence (LCWM = " + lcwm + ", HCWM = " + hcwm + ")."
+                );
+
+                return false;
+
+            }
   //      }
         return true;
     }
@@ -1576,48 +1621,21 @@ public class PBFTServer extends PBFT{
         if(canProceed(commit)){
             if(updateState(commit)){
                 handle(new PBFTProcessingToken(commit.getViewNumber(), commit.getSequenceNumber()));
-//                PBFTProcessingHandler handler = new PBFTProcessingHandler(this);
-//                handler.input(new PBFTProcessingToken(commit.getViewNumber(), commit.getSequenceNumber()));
-//                handler.handle();
             }
         }
     }
 
     public boolean canProceed(PBFTCommit commit){
         //synchronized(this){
-
-            /**
-             * If the preprepare hasn't a valid sequence or view number then force a
-             * change view.
-             */
-            if(!(checkSequenceNumber(commit) && checkViewNumber(commit))){
-
-                long nextPP = getStateLog().getNextPrePrepareSEQ();
-                long nextP  = getStateLog().getNextPrepareSEQ();
-                long nextC  = getStateLog().getNextCommitSEQ();
-                long nextE  = getStateLog().getNextExecuteSEQ();
-                Debugger.debug(
-                  "[PBFTServer:canProceed(commit)] s"  + getLocalServerID() +
-                  ", at time " + getClockValue() + ", discarded " + commit +
-                  " because it hasn't a valid sequence/view number. "
-                  + "(currView = " + getCurrentViewNumber() + ")"
-                  + "[nextPP = " + nextPP + ", nextP = " + nextP + ", nextC =" + nextC
-                  + " , nextE = " + nextE + "]"
-                );
-
-                return false;
-
-            }
-
             /**
              * If the preprepare message wasn't sent by a group member then it will
              * be discarded.
              */
             if(!wasSentByAGroupMember(commit)){
                 Debugger.debug(
-                  "[PBFTServer:canProceed(commit)] s"   + getLocalServerID()   +
-                  ", at time " + getClockValue() + ", discarded " + commit      +
-                  " because it wasn't sent by a member of the group " + getLocalGroup()
+                  "[PBFTServer:canProceed(commit)] s" + getLocalServerID() + ", at " +
+                  "time " + getClockValue() + ", discarded " + commit + " because " +
+                  "it wasn't sent by a member of the group " + getLocalGroup()
                 );
 
                 return false;
@@ -1625,26 +1643,53 @@ public class PBFTServer extends PBFT{
 
             if(!getStateLog().wasPrepared(commit)){
                 Debugger.debug(
-                  "[PBFTServer:canProceed(commit)] s"   + getLocalServerID()   +
-                  ", at time " + getClockValue() + ", discarded " + commit      +
-                  " because it hasn't received a related pre-prepare."
+                  "[PBFTServer:canProceed(commit)] s" + getLocalServerID() + ", at " +
+                  "time " + getClockValue() + ", discarded " + commit + " because " +
+                  "it hasn't received a related prepare."
                 );
 
                 return false;
             }
+
+            /**
+             * If the preprepare hasn't a valid sequence or view number then force a
+             * change view.
+             */
+            if(!checkViewNumber(commit)){
+
+                Debugger.debug(
+                  "[PBFTServer:canProceed(commit)] s"  + getLocalServerID() + ", at " +
+                  "time " + getClockValue() + ", discarded " + commit + " because " +
+                  "it hasn't a valid view number (CURRENT-VIEW = " + getCurrentViewNumber() + ")."
+                );
+                return false;
+            }
+
+            /**
+             * If the preprepare hasn't a valid sequence or view number then force a
+             * change view.
+             */
+            if(!inAValidSequenceRange(commit)){
+                long lcwm = getCheckpointLowWaterMark();
+                long hcwm = getCheckpointHighWaterMark();
+                Debugger.debug(
+                  "[PBFTServer:canProceed(commit)] s"  + getLocalServerID() + ", at " +
+                  "time " + getClockValue() + ", discarded " + commit + " because it " +
+                  "hasn't a valid sequence number (LCWM = " + lcwm + ", HCWM = " + hcwm + ")."
+                );
+
+                return false;
+
+            }
         //}
         return true;
-
 
     }
 
    /*########################################################################
      # 5. Methods for handling checkpoint messages.
      #########################################################################*/
-    /**
-     * Collect the request sent by the client.
-     * @param checkpoint -- the client request.
-     */
+    
     public void handle(PBFTCheckpoint checkpoint){
 
         Debugger.debug(
@@ -1661,25 +1706,43 @@ public class PBFTServer extends PBFT{
 
                 if(seqn > hcwm){
                     Debugger.debug(
-                      "[PBFTServer:handle(checkpoint)] s" + getLocalServerID()     +
-                      ", at time " + getClockValue() + ", detected a stable " +
-                      "checkpoint certificate with sequence number (" + seqn + ") " +
-                      "greater than its high checkpoint water mark (HCWM = " + hcwm + ")."
+                      "[PBFTServer:handle(checkpoint)] s" + getLocalServerID() + ", at " +
+                      "time " + getClockValue() + ", detected a stable checkpoint " +
+                      "certificate with sequence number (" + seqn + ") " + "greater than " +
+                      "its high checkpoint water mark (HCWM = " + hcwm + ")."
                     );
                     Debugger.debug(
-                      "[PBFTServer:handle(checkpoint)] s" + getLocalServerID()     +
-                      ", at time " + getClockValue() + ", is going to start " +
-                      " a start transfer procedure."
+                      "[PBFTServer:handle(checkpoint)] s" + getLocalServerID() + ", at " +
+                      "time " + getClockValue() + ", is going to start a start transfer procedure."
                     );
 
-                    emit(createFetchMessage(),getLocalGroup().minus(getLocalProcess()));
+
+                    doFetchMetaData();
+                    //emit(createFetchMetaDataMessage(), getLocalGroup().minus(getLocalProcess()));
                     return;
                 }
 
-                doCheckpoint(seqn);
-            }
-        }
-    }
+                PBFTCheckpointTuple ctuple =
+                        getStateLog().getCachedState().get(checkpoint.getSequenceNumber());
+                
+                if(ctuple != null){
+                    doCheckpoint(seqn);
+                    return;
+                }//end if ctupe != null
+                
+                Debugger.debug(
+                  "[PBFTServer:handle(checkpoint)] s" + getLocalServerID() + ", at " +
+                  "time " + getClockValue() + ", is going to fetch the current state " + 
+                  "because it hasn't a cached state for the stable checkpoint " + checkpoint + "."
+                );
+                
+                doFetchMetaData();
+                
+            }//end if updateState(checkpoint)
+
+        }//end if canProceed(checkpoint)
+        
+    }//end handle(checkpoint);
 
     public boolean canProceed(PBFTCheckpoint checkpoint){
 //        synchronized(this){
@@ -1689,35 +1752,34 @@ public class PBFTServer extends PBFT{
              */
             if(!wasSentByAGroupMember(checkpoint)){
                 Debugger.debug(
-                  "[PBFTServer:canProceed(checkpoint)] s"   + getLocalServerID()   +
-                  ", at time " + getClockValue() + ", discarded " + checkpoint      +
-                  " because it wasn't sent by a member of the group " + getLocalGroup()
+                  "[PBFTServer:canProceed(checkpoint)] s" + getLocalServerID() + ", at " +
+                  "time " + getClockValue() + ", discarded " + checkpoint + " because " +
+                  "it wasn't sent by a member of the group " + getLocalGroup()
                 );
 
                 return false;
-            }
+            }//end if wasSentByAGroupMember(checkpoint)
 
             /**
              * If the preprepare message wasn't sent by a group member then it will
              * be discarded.
              */
-            long lowWaterMark = getCheckpointLowWaterMark();
-            //long highWaterMark = getCheckpointHighWaterMark();
+            long lcwm = getCheckpointLowWaterMark();
             long seqn = checkpoint.getSequenceNumber();
 
-            if(lowWaterMark > seqn){
+            if(lcwm > seqn){
                 Debugger.debug(
-                  "[PBFTServer:canProceed(checkpoint)] s"   + getLocalServerID()     +
-                  ", at time " + getClockValue() + ", discarded " + checkpoint +
-                  " because it has sequence number lower than current low water mark " +
-                  "(LCWM = " + lowWaterMark + "). "
+                  "[PBFTServer:canProceed(checkpoint)] s" + getLocalServerID() + ", at " +
+                  "time " + getClockValue() + ", discarded " + checkpoint + " because " +
+                  "it has a sequence number < current LCWM = " + lcwm + "). "
                 );
 
                 return false;
-            }
+            }//end if lcwm  > seqn
   //      }
         return true;
-    }
+        
+    }//end canProceed(checkpoint)
 
     protected Object getReplierID(){
     //    synchronized(this){
@@ -1753,45 +1815,597 @@ public class PBFTServer extends PBFT{
             return sortedReplierID;
       //  }
     }
-    public PBFTFetch createFetchMessage(){
 
-        PBFTFetch f = new PBFTFetch(getCheckpointLowWaterMark(), getReplierID(), getLocalServerID());
+
+    public void handle(PBFTFetchMetaData fmd) {
+
+        Debugger.debug(
+           "[PBFTServer:handle(fetchmetada)] s" + getLocalServerID() + ", " +
+           "at time " + getClockValue() + ", received " + fmd
+        );
+
+        if(canProceed(fmd)){
+            long lc  = fmd.getSequenceNumber();
+            IProcess rServer = new br.ufba.lasid.jds.Process(fmd.getReplicaID());
+
+            try{
+
+                IStore store = getCheckpointStore();
+
+                PBFTMetaData mdata = createMetaDataMessage();
+
+                CheckpointIndex index = new CheckpointIndex(lc+1);
+                TupleBrowser browser = store.browser(index.getIndexPattern());
+
+                Tuple tuple = new Tuple();
+
+                while(browser.getNext(tuple)){
+                    mdata.addIndex(String.valueOf(tuple.getKey()));
+                }
+
+                emit(mdata, rServer);
+
+            }catch(Exception except){
+                except.printStackTrace();
+            }
+        }//end if canProceed
+    }
+
+    public boolean canProceed(PBFTFetchMetaData fmd){
+        if(!wasSentByAGroupMember(fmd)){
+            Debugger.debug(
+              "[PBFTServer:canProceed(fetchmetadata)] s"   + getLocalServerID()   +
+              ", at time " + getClockValue() + ", discarded " + fmd      +
+              " because it wasn't sent by a member of the group " + getLocalGroup()
+            );
+
+            return false;
+        }
+
+        long seqn = fmd.getSequenceNumber();
+        long lcwm = getCheckpointLowWaterMark();
+
+        return seqn < lcwm;
+    }
+    public PBFTMetaData createMetaDataMessage(){
+        return new PBFTMetaData(getCheckpointLowWaterMark(), getLocalServerID());
+    }
+    public PBFTFetchMetaData createFetchMetaDataMessage(){
+        return new PBFTFetchMetaData(getCheckpointLowWaterMark(), getLocalServerID());
+    }
+
+    public PBFTData createDataMessage(Long seqn, String digest, IState data){
+        return new PBFTData(seqn, digest, data, getLocalServerID());
+    }
+
+    protected CheckpointIndexList checklist =  new CheckpointIndexList();
+    
+    public void handle(PBFTMetaData md) {
+        if(canProceed(md)){
+            if(updateState(md)){
+                if(checklist.isEmpty()){
+                    checklist.clear();
+                    checklist.addAll(md.getIndexes());
+                    checklist.restart();
+                    fetch();
+                }
+            }
+        }
+    }
+
+    public void fetch(){
+        fetch(getReplierID());
+    }
+
+    public void fetch(Object replierID){
+        if(checklist.hasNext()){
+            CheckpointIndex index = checklist.next();
+            PBFTFetch fetch = createFetchMessage(replierID);
+            fetch.setWantedCheckpointSequenceNumber(index.getSequenceNumber());
+            emit(fetch, new br.ufba.lasid.jds.Process(fetch.getSelectedReplierID()));
+        }else{
+            checklist.restart();
+            checklist.clear();
+        }
+    }
+    public void handle(PBFTFetch fetch){
+        
+        Debugger.debug(
+           "[PBFTServer:handle(fetch)] s" + getLocalServerID() + ", " +
+           "at time " + getClockValue() + ", received " + fetch
+        );
+        
+        if(canProceed(fetch)){
+            long wcwmSEQ = fetch.getWantedCheckpointSequenceNumber();
+
+            IStore store = getCheckpointStore();
+            try {
+
+                CheckpointIndex index = new CheckpointIndex(wcwmSEQ);
+                Tuple tuple = store.findGreaterOrEqual(index.getIndexPattern());
+                
+                if(tuple != null){
+                    
+                    index.setIndexPattern(String.valueOf(tuple.getKey()));
+                    
+                    Debugger.debug(
+                        "[PBFTServer:handle(fetch)] s" + getLocalServerID() + ", at " +
+                        "time " + getClockValue() + ", retrive data with " + index
+                    );
+
+                    IState fstate = ((IState) tuple.getValue()).copy();
+                    PBFTData data = createDataMessage(index.getSequenceNumber(),index.getDigest(), fstate);
+
+                    emit(data, new br.ufba.lasid.jds.Process(fetch.getReplicaID()));
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
+                ex.printStackTrace();
+            }
+        }
+    }
+    
+    public boolean canProceed(PBFTFetch fetch){
+        if(!wasSentByAGroupMember(fetch)){
+            Debugger.debug(
+              "[PBFTServer:canProceed(fetch)] s"   + getLocalServerID()   +
+              ", at time " + getClockValue() + ", discarded " + fetch +
+              " because it wasn't sent by a member of the group " + getLocalGroup()
+            );
+
+            return false;
+        }
+
+        long wcwm = fetch.getWantedCheckpointSequenceNumber();
+        long lcwm = getStateLog().getCheckpointLowWaterMark();
+
+        Object replier = fetch.getSelectedReplierID();
+
+        return (lcwm >= wcwm) && (replier != null && getLocalServerID().equals(replier));
+    }
+
+    public PBFTFetch createFetchMessage(Object replierID){
+
+        PBFTFetch f = new PBFTFetch(getCheckpointLowWaterMark(), replierID, getLocalServerID());
 
         return f;
 
+    }
+
+    public void handle(PBFTData data){
+        
+        Debugger.debug(
+         "[PBFTServer:handle(data)] s" + getLocalServerID() + ", " +
+         "at time " + getClockValue() + ", " + "received " + data + "."
+        );
+
+        if(canProceed(data)){
+            
+            CheckpointIndex curr = checklist.getCurrent();
+            CheckpointIndex last = checklist.previous(); 
+            checklist.next();
+
+            if(last == null){
+                last = new CheckpointIndex(-1L, "");
+            }
+
+            IState _state = data.getData().copy();
+            long seqn = curr.getSequenceNumber();
+            
+            try{
+                getCheckpointStore().write(curr.getIndexPattern(), _state, true);
+                getCheckpointStore().commit();
+                long lcwm = getCheckpointLowWaterMark();
+                
+                if(seqn > lcwm){
+                    if(getStateLog().getNextPrePrepareSEQ() < seqn){
+                        getStateLog().setNextPrePrepareSEQ(seqn+1);
+                    }
+                    
+                    if(getStateLog().getNextPrepareSEQ() < seqn){
+                        getStateLog().setNextPrepareSEQ(seqn+1);
+                    }
+                    if(getStateLog().getNextCommitSEQ() < seqn){
+                        getStateLog().setNextCommitSEQ(seqn+1);
+                    }
+                    if(getStateLog().getNextExecuteSEQ() < seqn){
+                        getStateLog().setNextExecuteSEQ(seqn+1);
+                    }
+                    
+                    getStateLog().setCheckpointLowWaterMark(seqn);
+                    lcwm = seqn;
+                }
+                
+                getStateLog().doGarbage();
+
+                Debugger.debug(
+                   "[PBFTServer:handle(data)] s" + getLocalServerID() + " " +
+                   "complete the garbage collection procedure for LCWM = " + lcwm + "."
+                );
+
+                fetch(data.getReplicaID());
+
+            }catch(Exception except){
+                except.printStackTrace();
+            }
+            
+        }
+
+//        if(canProceed(data)){
+//            Long seqn = data.getSequenceNumber();
+//            Long hidx = getHighestCheckpointIndex().getSequenceNumber();
+//            int compare = seqn.compareTo(hidx);
+//            if(compare <= 0){
+//                Debugger.debug(
+//                 "[PBFTServer:handle(data)] s" + getLocalServerID() + ", " +
+//                 "at time " + getClockValue() + ", " + "completed the " +
+//                 "state fetch and is going to processing the collected data."
+//                );
+//                getStateLog().doCacheServerState(seqn, data.getDigest(), data.getData());
+//                doProcessingTransferredData(data.getReplicaID());
+//                return;
+//            }
+//
+//            Debugger.debug(
+//             "[PBFTServer:handle(data)] s" + getLocalServerID() + ", " +
+//             "at time " + getClockValue() + ", " + " receive a data " +
+//             "greater than knwon sequence number (" + seqn + " > " + hidx + ")."
+//            );
+//
+//            Debugger.debug(
+//             "[PBFTServer:handle(data)] s" + getLocalServerID() + ", " +
+//             "at time " + getClockValue() + ", " + " is going to " +
+//             "check status with other replicas."
+//            );
+//
+//            getHighestCheckpointIndex().setSequenceNumber(data.getSequenceNumber());
+//            getHighestCheckpointIndex().setDigest(data.getDigest());
+//
+//            emit(createStatusActiveMessage(), getLocalGroup().minus(getLocalProcess()));
+//            return;
+////
+////            if(getStateLog().getCachedState().get(seqn) == null){
+////                Debugger.debug(
+////                 "[PBFTServer:handle(data)] s" + getLocalServerID() + ", " +
+////                 "at time " + getClockValue() + ", " + " stored " + data + " " +
+////                 "in state cache."
+////                );
+////
+////                getStateLog().doCacheServerState(seqn, data.getDigest(), data.getData());
+////                PBFTFetch fetch = createFetchMessage();
+////                fetch.setSelectedReplierID(data.getReplicaID());
+////                fetch.setWantedCheckpointSequenceNumber(seqn + 1);
+////                emit(fetch, new br.ufba.lasid.jds.Process(fetch.getSelectedReplierID()));
+////
+////
+////            }
+//        }
+    }
+
+    public boolean canProceed(PBFTData data){
+
+        CheckpointIndex index = checklist.getCurrent();
+        if(!(index != null && index.getSequenceNumber() != null)){
+            return false;
+        }
+        
+        long iseqn = index.getSequenceNumber();
+        long dseqn = data.getSequenceNumber();
+        
+        
+        if(iseqn != dseqn){
+            return false;
+        }
+
+        return true;
+        
+    }
+
+
+    public boolean canProceed(PBFTMetaData md){
+        if(!wasSentByAGroupMember(md)){
+            Debugger.debug(
+              "[PBFTServer:canProceed(metadata)] s"   + getLocalServerID()   +
+              ", at time " + getClockValue() + ", discarded " + md      +
+              " because it wasn't sent by a member of the group " + getLocalGroup()
+            );
+
+            return false;
+        }
+        
+        long lcwm = getCheckpointLowWaterMark();
+        long rcwm = md.getSequenceNumber();
+
+        if(rcwm <  lcwm){
+            Debugger.debug(
+              "[PBFTServer:canProceed(metadata)] s" + getLocalServerID() + ", at " +
+              "time " + getClockValue() + ", discarded " + md + " because it has " +
+              "a LCWM (" + rcwm + ")" + "< s" + getLocalServerID() +":LCWM(" + lcwm + ")."
+            );
+
+            return false;
+        }
+
+        return true;
+
+    }
+
+    public boolean updateState(PBFTMetaData md){
+
+//        synchronized(this){
+            /**
+             * If the preprepare is null then do nothing.
+             */
+            if(md == null){
+
+                return false;
+
+            }
+
+            /*
+             * Get composite key of the prepare.
+             */
+
+            Long entryKey = md.getSequenceNumber();
+
+            /**
+             * If the entry key is diferent of null then update state. Otherwise do
+             * nothing.
+             */
+            if(entryKey != null) {
+
+                Quorum q = getStateLog().getQuorum(METADATAQUORUMSTORE, entryKey.toString());
+
+                if(q == null){
+
+                    int f = getServiceBFTResilience();
+
+                    q = new Quorum(2 * f + 1);
+
+                    getStateLog().getQuorumTable(METADATAQUORUMSTORE).put(entryKey.toString(), q);
+                }
+
+                for(IMessage m : q){
+
+                    PBFTMetaData md1 = (PBFTMetaData) m;
+                    if(!(
+                        md1.getSequenceNumber().equals(md.getSequenceNumber()) &&
+                        md1.getIndexes().equals(md.getIndexes())
+                    )){
+                        Debugger.debug(
+                          "[PBFTServer:updateState(metadata)] s"  + getLocalServerID() +
+                          ", at time " + getClock().value() + ", couldn't use " + md +
+                          " because it doesn't match with " + md1 +  "."
+                        );
+
+                        return false;
+                    }
+
+                    if(md1.getReplicaID().equals(md.getReplicaID())){
+                        Debugger.debug(
+                          "[PBFTServer:updateState(metadata)] s"  + getLocalServerID() +
+                          ", at time " + getClockValue() + ", can't use " + md +
+                          " to update its log because it's a duplicated metada."
+                        );
+                        return false;
+                    }
+                }
+
+                q.add(md);
+
+                Debugger.debug(
+                  "[PBFTServer:updateState(metadata)] s"  + getLocalServerID() +
+                  ", at time " + getClockValue() + ", updated a entry in "
+                + "its log for " + md
+                );
+
+                if(q.complete()){
+
+                    Debugger.debug(
+                      "[PBFTServer:updateState(metadata)] s" + getLocalServerID()     +
+                      ", at time " + getClockValue() + ", has already complete  a quorum for " +
+                      " metada with LCWM (" + md.getSequenceNumber() + ")."
+                    );
+
+                    return true;
+                }
+
+            }
+  //      }
+        return false;
     }
    /*########################################################################
      # 6. Methods for handling bag of messages.
      #########################################################################*/
 
-    public void handle(PBFTBag bag, ISupplier supplier){
+    public void handle(PBFTBag bag){
 
-        for(IMessage m : bag.getMessages()){
+        Debugger.debug(
+           "[PBFTServer:handle(bag)] s" + getLocalServerID() + ", " +
+           "at time " + getClockValue() + ", received " + bag
+        );
+        if(canProceed(bag)){
+            if(updateState(bag)){
 
-            if(m instanceof PBFTPrePrepare) {
-                handle((PBFTPrePrepare)m);
-            }
+                Long entryKey = bag.getSequenceNumber();
 
-            if(m instanceof PBFTPrepare) {
-                handle((PBFTPrepare)m);
-            }
+                Quorum q = getStateLog().getQuorum(BAGQUORUMSTORE, entryKey.toString());
+                MessageCollection preprepareList = new MessageCollection();
+                MessageCollection prepareList = new MessageCollection();
+                MessageCollection commitList = new MessageCollection();
+                MessageCollection checkpointList = new MessageCollection();
 
-            if(m instanceof PBFTCommit) {
-                handle((PBFTCommit)m);
-            }
+                for(IMessage m : q){
+                    PBFTBag b1 = (PBFTBag)m;
+                    for(IMessage m1 : b1.getMessages()){
+                        if(m1 instanceof PBFTPrePrepare) {
+                            preprepareList.add(m1);                            
+                        }
 
-            if(m instanceof PBFTCheckpoint){
-                handle((PBFTCheckpoint)m);
+                        if(m1 instanceof PBFTPrepare) {
+                            prepareList.add(m1);
+                        }
+
+                        if(m1 instanceof PBFTCommit) {
+                            commitList.add(m1);
+                        }
+
+                        if(m1 instanceof PBFTCheckpoint){
+                            checkpointList.add(m1);
+                        }
+                    }
+                }
+                
+                PBFTServerMessageSequenceNumberComparator comparator =
+                        new PBFTServerMessageSequenceNumberComparator();
+
+                Collections.sort(preprepareList, comparator);
+                Collections.sort(prepareList, comparator);
+                Collections.sort(commitList, comparator);
+                Collections.sort(checkpointList, comparator);
+
+                for(IMessage m : preprepareList){
+                    PBFTPrePrepare m1 = (PBFTPrePrepare)m;
+                    long nextSEQ = getStateLog().getNextPrePrepareSEQ();
+                    long currSEQ = m1.getSequenceNumber();
+                    if(currSEQ == nextSEQ) handle(m1);
+                }
+                
+                for(IMessage m : prepareList){
+                    PBFTPrepare m1 = (PBFTPrepare)m;
+                    long nextSEQ = getStateLog().getNextPrePrepareSEQ();
+                    long currSEQ = m1.getSequenceNumber();
+                    if(currSEQ <= nextSEQ) handle(m1);
+                }
+                for(IMessage m : commitList){
+                    PBFTCommit m1 = (PBFTCommit)m;
+                    long nextSEQ = getStateLog().getNextPrepareSEQ();
+                    long currSEQ = m1.getSequenceNumber();
+                    if(currSEQ <= nextSEQ) handle(m1);
+                }
+                
+                for(IMessage m : checkpointList){
+                    PBFTCheckpoint m1 = (PBFTCheckpoint)m;
+                    long lastSEQ = getStateLog().getCheckpointLowWaterMark();
+                    long currSEQ = m1.getSequenceNumber();
+                    if(currSEQ > lastSEQ) handle(m1);
+                }                
             }
         }
+    }
 
+    public boolean canProceed(PBFTBag bag){
+        /**
+         * If the preprepare message wasn't sent by a group member then it will
+         * be discarded.
+         */
+        if(!wasSentByAGroupMember(bag)){
+            Debugger.debug(
+              "[PBFTServer:canProceed(bag)] s"   + getLocalServerID()   +
+              ", at time " + getClockValue() + ", discarded " + bag      +
+              " because it wasn't sent by a member of the group " + getLocalGroup()
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Update the state of the PBFT. Insert the pre-prepare message in
+     * the log entry.
+     * @param m
+     */
+    public boolean updateState(PBFTBag bag){
+//        synchronized(this){
+            /**
+             * If the preprepare is null then do nothing.
+             */
+            if(bag == null){
+
+                return false;
+
+            }
+
+            /*
+             * Get composite key of the prepare.
+             */
+
+            Long entryKey = bag.getSequenceNumber();
+
+            /**
+             * If the entry key is diferent of null then update state. Otherwise do
+             * nothing.
+             */
+            if(entryKey != null) {
+
+                Quorum q = getStateLog().getQuorum(BAGQUORUMSTORE, entryKey.toString());
+
+                if(q == null){
+
+                    int f = getServiceBFTResilience();
+
+                    q = new Quorum(2 * f + 1);
+
+                    getStateLog().getQuorumTable(BAGQUORUMSTORE).put(entryKey.toString(), q);
+                }
+
+                for(IMessage m : q){
+
+                    PBFTBag b1 = (PBFTBag) m;
+                    
+                    if(b1.getReplicaID().equals(bag.getReplicaID())){
+                        Debugger.debug(
+                          "[PBFTServer:updateState(bag)] s"  + getLocalServerID() +
+                          ", at time " + getClockValue() + ", cann't use " + bag +
+                          " to update its log because it's a duplicated bag."
+                        );
+                        return false;
+                    }
+                }
+
+                q.add(bag);
+
+                Debugger.debug(
+                  "[PBFTServer:updateState(bag)] s"  + getLocalServerID() +
+                  ", at time " + getClockValue() + ", updated a entry in "
+                + "its log for " + bag
+                );
+
+                if(q.complete()){
+
+                    Debugger.debug(
+                      "[PBFTServer:updateState(bag] s" + getLocalServerID()     +
+                      ", at time " + getClockValue() + ", has already complete  a quorum for " +
+                      " bag with EXEC-SEQ (" + bag.getSequenceNumber() + ")."
+                    );
+
+                    return true;
+                }
+            }
+  //      }
+        return false;
     }
 
    /*########################################################################
      # 7. Methods for handling status-active messages.
      #########################################################################*/
 
-    public boolean accept(PBFTStatusActive sa){
+    public void handle(PBFTStatusActive sa){
+        long lexcSEQ = getStateLog().getNextExecuteSEQ()    -1;
+        long lcmtSEQ = getStateLog().getNextCommitSEQ()     -1;
+        long lpreSEQ = getStateLog().getNextPrepareSEQ()    -1;
+        long lpprSEQ = getStateLog().getNextPrePrepareSEQ() -1;
+        long llcwSEQ = getCheckpointLowWaterMark();
+
+        Debugger.debug(
+           "[PBFTServer:handle(statusactive)] s" + getLocalServerID() + ", " +
+           "at time " + getClockValue() + ", received " + sa + " current " + 
+           "(LCWM = " + llcwSEQ + "; PPSEQ = " + lpprSEQ + "; PSEQ = " + lpreSEQ + "; " +
+           "CSEQ = " + lcmtSEQ + "; ESEQ = " + lexcSEQ + ")"
+        );
+
         if(canProceed(sa)){
             
             Long maxSEQ = getStateLog().getNextPrePrepareSEQ();
@@ -1808,206 +2422,112 @@ public class PBFTServer extends PBFT{
             if(minSEQ > rcmtSEQ) minSEQ = rcmtSEQ; if(maxSEQ < rcmtSEQ) maxSEQ = rcmtSEQ;
             if(minSEQ > rpreSEQ) minSEQ = rpreSEQ; if(maxSEQ < rpreSEQ) maxSEQ = rpreSEQ;
             if(minSEQ > rpprSEQ) minSEQ = rpprSEQ; if(maxSEQ < rpprSEQ) maxSEQ = rpprSEQ;
-            if(minSEQ > rlcwSEQ) minSEQ = rlcwSEQ; if(maxSEQ > rlcwSEQ) maxSEQ = rlcwSEQ;
+            if(minSEQ > rlcwSEQ) minSEQ = rlcwSEQ; if(maxSEQ < rlcwSEQ) maxSEQ = rlcwSEQ;
             
             if(maxSEQ < 0) maxSEQ = 0L;
 
             //local active state variables
-            long lexcSEQ = getStateLog().getNextExecuteSEQ()    -1;
-            long lcmtSEQ = getStateLog().getNextCommitSEQ()     -1;
-            long lpreSEQ = getStateLog().getNextPrepareSEQ()    -1;
-            long lpprSEQ = getStateLog().getNextPrePrepareSEQ() -1;
-            long llcwSEQ = getStateLog().getCheckpointLowWaterMark();
+//            long lexcSEQ = getStateLog().getNextExecuteSEQ()    -1;
+//            long lcmtSEQ = getStateLog().getNextCommitSEQ()     -1;
+//            long lpreSEQ = getStateLog().getNextPrepareSEQ()    -1;
+//            long lpprSEQ = getStateLog().getNextPrePrepareSEQ() -1;
+//            long llcwSEQ = getCheckpointLowWaterMark();
+            long lhcwSEQ = getCheckpointHighWaterMark();
             
+            PBFTBag bag = new PBFTBag(getLocalServerID());
+
+            bag.setSequenceNumber(rexcSEQ);
+            
+            if(llcwSEQ <= rpprSEQ ){
+                for(long i = minSEQ; i < maxSEQ; i++){
+
+                    PBFTLogEntry entry = getStateLog().get(i);
+                    if(entry != null){
+                        Quorum pq = entry.getPrepareQuorum();
+                        Quorum cq = entry.getCommitQuorum();
+
+
+                        if(rpreSEQ < i && rpprSEQ < i && isPrimary() && entry.getPrePrepare() != null && lpprSEQ >= i){
+                            PBFTPrePrepare pp = entry.getPrePrepare();
+                            bag.addMessage(pp);
+                            //emit(pp);
+    //                        sent = sent || true;
+                        }
+
+                        if(rpreSEQ < i && pq != null && lpprSEQ >= i){
+                            Quorum q = new Quorum();
+                            q.addAll(pq);
+                            if(!q.isEmpty()){
+
+                                for(IMessage m : q){
+
+                                    PBFTPrepare p = (PBFTPrepare)m;
+
+                                    if(p.getReplicaID().equals(getLocalServerID())){
+                                        bag.addMessage(p);
+                                        //emit(p);
+    //                                    sent = sent || true;
+                                    }
+                                }
+                            }
+                        }
+
+                        if(rlcwSEQ < i && rcmtSEQ < i && cq != null && lcmtSEQ >=i){
+
+                            Quorum q = new Quorum();
+                            q.addAll(cq);
+
+                            if(!q.isEmpty()){
+                                for(IMessage m : q){
+
+                                    PBFTCommit c = (PBFTCommit)m;
+
+                                    if(c.getReplicaID().equals(getLocalServerID())){
+                                        bag.addMessage(c);
+                                        //emit(c);
+    //                                    sent = sent || true;
+                                    }
+                                }
+                            }
+                        }
+                    }//end if entry
+                }//end for
+            }
+            
+            long currSEQ = rlcwSEQ + 1;
+            IStore store = getCheckpointStore();
+            
+            if(currSEQ < llcwSEQ){
+                try {
+
+                    Tuple tuple = store.getLast();
+                    if(tuple != null){
+                        CheckpointIndex cindex = new CheckpointIndex((String)tuple.getKey());
+
+                        long seqn = cindex.getSequenceNumber();
+                        String digest = cindex.getDigest();
+                        PBFTCheckpoint checkpoint = new PBFTCheckpoint(seqn, digest, getLocalServerID());
+
+                        bag.addMessage(checkpoint);
+
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
+                    ex.printStackTrace();
+                }
+            }//end while currSEQ < _lwSEQ, if currSEQ_0 = lwSEQ
+            
+            if(!bag.isEmpty()){
+                emit(bag, new br.ufba.lasid.jds.Process(sa.getReplicaID()));
+            }            
         }
-
-//        IProcess rServer = new br.ufba.lasid.jds.Process(statusActive.getReplicaID());
-//
-//        if(statusActive != null && !getLocalServerID().equals(rServer.getID())){
-//
-//            /**
-//             * If the preprepare hasn't a valid sequence or view number then force a
-//             * change view.
-//             */
-//            if(!checkViewNumber(statusActive)){
-//                long nextPP = getStateLog().getNextPrePrepareSEQ();
-//                long nextP  = getStateLog().getNextPrepareSEQ();
-//                long nextC  = getStateLog().getNextCommitSEQ();
-//                long nextE  = getStateLog().getNextExecuteSEQ();
-//                long lwSEQ  = getCheckpointLowWaterMark();
-//
-//                Debugger.debug(
-//                  "[PBFTServer:handle(activeStatus)] s"  + getLocalServerID() +
-//                  ", at time " + getClockValue() + ", discarded " + statusActive +
-//                  " because it hasn't a valid view number. "
-//                  + "(currView = " + getCurrentViewNumber() + ")"
-//                  + "[nextPP = " + nextPP + ", nextP = "
-//                  + nextP + ", nextC =" + nextC
-//                  + " , nextE = " + nextE + ", lowWaterMark = " + lwSEQ + "]"
-//                );
-//
-//                return false;
-//
-//            }
-//
-//            /**
-//             * If the preprepare message wasn't sent by a group member then it will
-//             * be discarded.
-//             */
-//            if(!wasSentByAGroupMember(statusActive)){
-//                Debugger.debug(
-//                  "[PBFTServer:handle(activeStatus)] s"   + getLocalServerID()   +
-//                  ", at time " + getClockValue() + ", discarded " + statusActive      +
-//                  " because it wasn't sent by a member of the group " + getLocalGroup()
-//                );
-//
-//                return false;
-//            }
-//
-//            /**
-//             * Send the executed request.
-//             */
-//            if(getStateLog().getNextPrepareSEQ() >= 0){
-//                Long maxSEQ = getStateLog().getNextPrePrepareSEQ();
-//                Long minSEQ = getStateLog().getNextExecuteSEQ()-1;
-//
-//                long eSEQ  = statusActive.getLastExecutedSEQ();
-//                long cSEQ  = statusActive.getLastCommittedSEQ();
-//                long pSEQ  = statusActive.getLastPreparedSEQ();
-//                long ppSEQ = statusActive.getLastPrePreparedSEQ();
-//                long lwSEQ   = statusActive.getLastStableCheckpointSEQ();
-//
-//                if(minSEQ > eSEQ ) minSEQ = eSEQ;
-//                if(minSEQ > cSEQ ) minSEQ = cSEQ;
-//                if(minSEQ > pSEQ ) minSEQ = pSEQ;
-//                if(minSEQ > ppSEQ) minSEQ = ppSEQ;
-//                if(minSEQ < 0L)    minSEQ = 0L;
-//
-//                if(maxSEQ < eSEQ ) maxSEQ = eSEQ;
-//                if(maxSEQ < cSEQ ) maxSEQ = cSEQ;
-//                if(maxSEQ < pSEQ ) maxSEQ = pSEQ;
-//                if(maxSEQ < ppSEQ) maxSEQ = ppSEQ;
-//
-//                if(maxSEQ < 0L) maxSEQ = 0L;
-//
-//                long _eSEQ  = getStateLog().getNextExecuteSEQ() - 1L;
-//                long _cSEQ  = getStateLog().getNextCommitSEQ()  - 1L;
-//                long _pSEQ  = getStateLog().getNextPrepareSEQ() - 1L;
-//                long _ppSEQ = getStateLog().getNextPrePrepareSEQ() - 1L;
-//                long _lwSEQ = getCheckpointLowWaterMark();
-//
-//                QuorumTable qtable = getStateLog().getQuorumTable(PBFT.CHECKPOINTQUORUMSTORE);
-//
-//                PBFTBag bag = new PBFTBag(getLocalServerID());
-//
-//                boolean sent = false;
-//                try{
-//                    for(long i = minSEQ; i < maxSEQ; i++){
-//
-//                        PBFTLogEntry entry = getStateLog().get(i);
-//
-//                        if(entry != null){
-//                            Quorum pq = entry.getPrepareQuorum();
-//                            Quorum cq = entry.getCommitQuorum();
-//
-//
-//                            if(cSEQ < i && pSEQ < i && ppSEQ <= i && isPrimary() && entry.getPrePrepare() != null && _ppSEQ >= i){
-//                                PBFTPrePrepare pp = entry.getPrePrepare();
-//                                bag.addMessage(pp);
-//                                //emit(pp);
-//                                sent = sent || true;
-//                            }
-//
-//                            if(cSEQ < i && pSEQ <= i && pq != null/*&& _pSEQ >= i*/){
-//                                Quorum q = new Quorum();
-//                                q.addAll(pq);
-//                                if(!q.isEmpty()){
-//
-//                                    for(IMessage m : q){
-//
-//                                        PBFTPrepare p = (PBFTPrepare)m;
-//
-//                                        if(p.getReplicaID().equals(getLocalServerID())){
-//                                            bag.addMessage(p);
-//                                            //emit(p);
-//                                            sent = sent || true;
-//                                        }
-//                                    }
-//                                }
-//                            }
-//
-//                            if(cSEQ <= i && cq != null/*&& _cSEQ >=i*/){
-//
-//                                Quorum q = new Quorum();
-//                                q.addAll(cq);
-//
-//                                if(!q.isEmpty()){
-//                                    for(IMessage m : q){
-//
-//                                        PBFTCommit c = (PBFTCommit)m;
-//
-//                                        if(c.getReplicaID().equals(getLocalServerID())){
-//                                            bag.addMessage(c);
-//                                            //emit(c);
-//                                            sent = sent || true;
-//                                        }
-//                                    }
-//                                }
-//                            }
-//                        }//end if entry
-//                    }//end for seq
-//
-//                    long currSEQ = lwSEQ + 1;
-//                    IStore store = getCheckpointStore();
-//
-//                    while(currSEQ < _lwSEQ){
-//                        try {
-//                            String index = String.valueOf(currSEQ) + ";" + "null";
-//
-//                            Tuple tuple = store.findGreaterOrEqual(index);
-//
-//                            if(tuple == null){
-//                                break;
-//                            }
-//
-//                            String key = (String)tuple.getKey();
-//                            String[] pair = key.split(";");
-//
-//                            Long seqn = Long.valueOf(pair[0]);
-//
-//                            String digest = pair[1];
-//
-//                            PBFTCheckpoint checkpoint = new PBFTCheckpoint(seqn, digest, getLocalServerID());
-//
-//                            //emit(checkpoint);
-//                            bag.addMessage(checkpoint);
-//
-//                            currSEQ = seqn + 1;
-//
-//                        } catch (Exception ex) {
-//                            Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
-//                            ex.printStackTrace();
-//                        }
-//                    }//end while currSEQ < _lwSEQ, if currSEQ_0 = lwSEQ
-//                }catch(Exception ex){
-//                    Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
-//                    ex.printStackTrace();
-//                }
-//                if(!bag.isEmpty()){
-//                    emit(bag, rServer);
-//                }
-//            }
-//        }
-
-        return true;
-
     }
 
     public boolean canProceed(PBFTStatusActive sa){
         IProcess rServer = new br.ufba.lasid.jds.Process(sa.getReplicaID());
         if(getLocalServerID().equals(rServer.getID())){
             Debugger.debug(
-              "[PBFTServer:canProceed] s" + getLocalServerID() + ", at time " + getClockValue() + ", " +
+              "[PBFTServer:canProceed(activeStatus)] s" + getLocalServerID() + ", at time " + getClockValue() + ", " +
               "discarded " + sa + " because it was sent by the local replica."
             );
             return false;
@@ -2040,6 +2560,70 @@ public class PBFTServer extends PBFT{
 
         return getStateLog().getNextPrepareSEQ() >=0;
     }
+
+    PBFTTimeoutDetector periodStatusTimer = null;
+
+   public void doSchedulePeriodicStatusSend() {
+
+       if(periodStatusTimer == null){
+            periodStatusTimer = new PBFTTimeoutDetector() {
+
+                    @Override
+                    public void onTimeout() {
+//                        long nextPP = getStateLog().getNextPrePrepareSEQ();
+//                        long nextP  = getStateLog().getNextPrepareSEQ();
+//                        long nextC  = getStateLog().getNextCommitSEQ();
+
+//                        if(nextP < nextPP || nextC < nextP){
+
+                            emit(
+                                    createStatusActiveMessage(),
+                                    getLocalGroup().minus(getLocalProcess())
+                            );
+  //                      }
+
+                        doSchedulePeriodicStatusSend();
+
+                    }
+            };
+
+//            if(!getLocalGroup().getMembers().isEmpty()){
+//                emit(
+//                        createStatusActiveMessage(),
+//                        getLocalGroup().minus(getLocalProcess())
+//                );
+//           }
+
+        }
+
+        long timestamp = getClockValue();
+        long period = getSendStatusPeriod();
+        long timeout = timestamp + period;
+
+        getScheduler().schedule(periodStatusTimer, timeout);
+
+   }
+
+    public PBFTStatusActive createStatusActiveMessage(){
+
+        long prepreparedSEQ = getStateLog().getNextPrePrepareSEQ() - 1L;
+        long preparedSEQ = getStateLog().getNextPrepareSEQ() - 1L;
+        long committedSEQ = getStateLog().getNextCommitSEQ()  - 1L;
+        long executedSEQ = getStateLog().getNextExecuteSEQ() - 1L;
+        long lowCheckpointWaterMark = getCheckpointLowWaterMark();
+
+        return new PBFTStatusActive(
+                        getLocalServerID(),
+                        getCurrentViewNumber(),
+                        prepreparedSEQ,
+                        preparedSEQ,
+                        committedSEQ,
+                        executedSEQ,
+                        lowCheckpointWaterMark
+        );
+
+    }
+
    /*########################################################################
      # 8. Execute sequence number.
      #########################################################################*/
@@ -2051,44 +2635,75 @@ public class PBFTServer extends PBFT{
         );
 
         if(canProceed(proctoken)){
-            Long currSEQ = proctoken.getSequenceNumber();
-            PBFTPrePrepare preprepare = getStateLog().getPrePrepare(currSEQ);
+            long startSEQ = getStateLog().getNextExecuteSEQ();
+            long finalSEQ = proctoken.getSequenceNumber();
 
-            for(String digest : preprepare.getDigests()){
+            for(long currSEQ = startSEQ; currSEQ <= finalSEQ; currSEQ ++){
+                Quorum cq = getStateLog().getCommitQuorum(currSEQ);
 
-                StatedPBFTRequestMessage statedReq = getStateLog().getStatedRequest(digest);
+                if(!(cq != null && cq.complete())){
+                    return;
+                }
+                
+                IRecoverableServer lServer = (IRecoverableServer)getServer();
 
-                PBFTRequest request = statedReq.getRequest();
+//            currSEQ = proctoken.getSequenceNumber();
+                PBFTPrePrepare preprepare = getStateLog().getPrePrepare(currSEQ);
 
-                IServer lServer = getServer();
+                for(String digest : preprepare.getDigests()){
 
-                IPayload result = lServer.executeCommand(request.getPayload());
+                    StatedPBFTRequestMessage statedReq = getStateLog().getStatedRequest(digest);
 
-                PBFTReply reply = createReplyMessage(request, result);
+                    PBFTRequest request = statedReq.getRequest();
+                    
+                    IPayload result = lServer.executeCommand(request.getPayload());
 
-                statedReq.setState(StatedPBFTRequestMessage.RequestState.SERVED);
-                statedReq.setReply(reply);
+                    PBFTReply reply = createReplyMessage(request, result);
+
+                    statedReq.setState(StatedPBFTRequestMessage.RequestState.SERVED);
+                    statedReq.setReply(reply);
+
+                    Debugger.debug(
+                      "[PBFTServer:handle(token)] s"  + getLocalServerID() + ", " +
+                      "at time " + getClockValue() + ", executed " + request +
+                      " (currView = " + getCurrentViewNumber() + " / SEQ = " + currSEQ + ")."
+                    );
+                    
+                    Debugger.debug(
+                      "[PBFTServer:handle(token)] s"  + getLocalServerID() + ", " +
+                      "at time " + getClockValue() + ", has the following state " + lServer.getCurrentState()
+                    );
+
+                    if(getStateLog().getCommitQuorum(currSEQ).isNOP(getLocalServerID())){
+                        if(!getStateLog().get(currSEQ).isNOP()){
+                            //if(!getStateLog().getCommitQuorum(currSEQ).isNOP()){
+                                IProcess client = new br.ufba.lasid.jds.Process(reply.getClientID());
+                                emit(reply, client);
+                            //}
+                        }
+                    }
+
+                }//end for each digest (handle and reply)
 
                 Debugger.debug(
                   "[PBFTServer:handle(token)] s"  + getLocalServerID() + ", " +
-                  "at time " + getClockValue() + ", executed " + request +
-                  " (currView = " + getCurrentViewNumber() + ")"
+                  "at time " + getClockValue() + ", after execute SEQN = "  + currSEQ + " " +
+                  "has the following state " + lServer.getCurrentState()
                 );
 
-                IProcess client = new br.ufba.lasid.jds.Process(reply.getClientID());
-                emit(reply, client);
+                getStateLog().updateNextExecuteSEQ(currSEQ);
 
-            }//end for each digest (handle and reply)
+                long execSEQ = getStateLog().getNextExecuteSEQ() -1;
+                long chkPeriod = getCheckpointPeriod();
 
-            getStateLog().updateNextExecuteSEQ(currSEQ);
+                if(execSEQ > 0 && ((execSEQ % chkPeriod) == 0)){
+                    PBFTCheckpoint checkpoint = createCheckpointMessage(execSEQ);
+                    updateState(checkpoint);
+                    emit(checkpoint, getLocalGroup().minus(getLocalProcess()));
+                }
 
-            long execSEQ = getStateLog().getNextExecuteSEQ() -1;
-            long chkpSEQ = getCheckpointPeriod();
-
-            if(execSEQ > 0 && ((execSEQ % chkpSEQ) == 0)){
-                emit(createCheckpointMessage(execSEQ),getLocalGroup().minus(getLocalProcess()));
+                getStateLog().get(currSEQ).setNOP(getLocalServerID());
             }
-
         }
     }
 
@@ -2097,6 +2712,7 @@ public class PBFTServer extends PBFT{
 
         PBFTLogEntry entry = getStateLog().get(currSEQ);
 
+        /* If it isn't preprepared then it won't proceed */
         if(!(entry != null && entry.getPrePrepare() != null)){
             return false;
         }
@@ -2104,7 +2720,16 @@ public class PBFTServer extends PBFT{
         Quorum pq = entry.getPrepareQuorum();
         Quorum cq = entry.getCommitQuorum();
 
-        return (pq != null && pq.complete() && cq != null & cq.complete());
+        /* If it isn't prepared and committed then it won't proceed */
+        if(pq != null && pq.complete() && cq != null & cq.complete()){
+
+            /*if it was served then it wouldn't proceed */
+            if(!getStateLog().wasServed(currSEQ)){
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public  PBFTReply createReplyMessage(PBFTRequest r, IPayload result){
@@ -2130,7 +2755,7 @@ public class PBFTServer extends PBFT{
       //  synchronized(this){
             IRecoverableServer lserver = (IRecoverableServer) getServer();
 
-            IState state = lserver.getCurrentState();
+            IState state = lserver.getCurrentState().copy();
 
             String digest = computeStateDigest(state, seqn);
 
@@ -2142,11 +2767,9 @@ public class PBFTServer extends PBFT{
         //}
     }
 
-    public String computeStateDigest(IState state, long seqn){
-//        synchronized(this){
+    public String computeStateDigest(final IState state, final long seqn){
             String digest = "";
-            String more = "";
-
+            
             PBFTCheckpointTable ctable = getStateLog().getCachedState();
 
             ArrayList<Long> seqns = new ArrayList<Long>(ctable.keySet());
@@ -2158,13 +2781,25 @@ public class PBFTServer extends PBFT{
             if(!seqns.isEmpty()){
                 maxSEQ = seqns.get(seqns.size()-1);
                 digest = ctable.get(maxSEQ).getDigest();
-                more = "|";
+            }
+
+            return computeStateDigest(state, seqn, digest);
+    }
+
+    public String computeStateDigest(final IState state, final long seqn, final String currentDigest){
+            String digest = "";
+            String more = "";
+
+
+            if(currentDigest != null && !currentDigest.equals("")){
+                digest = currentDigest;
+                more = ";";
             }
 
             try {
 
                 digest = getAuthenticator().getDigest(
-                    "<" + seqn + "|" + getAuthenticator().getDigest(state) + more + digest +">"
+                    "<" + seqn + ";" + getAuthenticator().getDigest(state) + more + digest +">"
                 );
 
             } catch (Exception ex) {
@@ -2174,9 +2809,8 @@ public class PBFTServer extends PBFT{
             }
 
             return digest;
-  //      }
+        
     }
-
     /**
      * Send a message to a remote object (a process or a group). All emitted
      * message are signed using the defined authenticator. After the protocol
@@ -2229,5 +2863,10 @@ public class PBFTServer extends PBFT{
        // }
 
     }
+
+    public void doFetchMetaData() {
+        emit(createFetchMetaDataMessage(), getLocalGroup().minus(getLocalProcess()));
+    }
+
 
 }

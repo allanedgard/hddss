@@ -28,6 +28,7 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
 
         super.setup();
         SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.clock);
+        scheduler.setAgent(this);
 
         //((Simulator)this.infra.context).p[this.ID] = (Agent) Adapter.newInstance(this, scheduler);
 
@@ -49,9 +50,10 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
         getProtocol().setArchitecture(
             new PBFTServerArchitecture((PBFTServer)getProtocol())
         );
+
+        getProtocol().getArchitecture().buildup();
         
 //        getProtocol().buildup();
-        getProtocol().startup();
 
     }
 
@@ -99,5 +101,17 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
     public void setSlidingWindowSize(String size){
         ((PBFTServer)getProtocol()).setSlidingWindowSize(Long.valueOf(size));
     }
+
+    @Override
+    public void startup() {
+
+        //do nothing
+        getProtocol().getArchitecture().buildup();
+        ((PBFTServer)getProtocol()).loadState();
+        ((PBFTServer)getProtocol()).doSchedulePeriodicStatusSend();
+        ((PBFTServer)getProtocol()).doFetchMetaData();
+        
+    }
+
 
 }

@@ -10,6 +10,7 @@ import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.collections.Buffer;
@@ -59,6 +60,8 @@ public class PBFTClientServant extends PBFTClientMessageHandler implements ICons
     public void run() {
 
         while(true){
+            IMessage message = (IMessage) inbox.remove();
+            input(message);
             handle();
         }
 
@@ -70,9 +73,9 @@ public class PBFTClientServant extends PBFTClientMessageHandler implements ICons
      */
     public void handle() {
         //try {
-            IMessage message = extract((IMessage)inbox.remove());
+            IMessage message = extract(this.input);
 
-            if(message != null){
+            if(message != null && message instanceof PBFTReply){
                 PBFTReplyHandler handler = new PBFTReplyHandler(getProtocol());
                 handler.input(message);
                 handler.handle();

@@ -34,5 +34,7 @@ public interface IState <VariableID, VariableValue>{
      */
     public VariableValue get(VariableID ID);
 
+    public  IState <VariableID, VariableValue> copy();
+
 }
 

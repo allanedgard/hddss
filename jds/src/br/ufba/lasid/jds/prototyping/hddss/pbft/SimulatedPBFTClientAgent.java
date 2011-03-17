@@ -5,10 +5,7 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.pbft;
 
-import br.ufba.lasid.hdf.adapters.Adapter;
 import br.ufba.lasid.jds.cs.IClient;
-import br.ufba.lasid.jds.prototyping.hddss.Agent;
-import br.ufba.lasid.jds.prototyping.hddss.Simulator;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.comm.SimulatedPBFTCommunicator;
 import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
 import br.ufba.lasid.jds.jbft.pbft.architectures.PBFTClientArchitecture;
@@ -31,6 +28,7 @@ public abstract class SimulatedPBFTClientAgent extends SimulatedPBFTAgent implem
         super.setup();
 
         SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.clock);
+        scheduler.setAgent(this);
 
         //((Simulator)this.infra.context).p[this.ID] = (Agent) Adapter.newInstance(this, scheduler);
         
@@ -54,14 +52,19 @@ public abstract class SimulatedPBFTClientAgent extends SimulatedPBFTAgent implem
             new PBFTClientArchitecture((PBFTClient)getProtocol())
         );
 
-        //getProtocol().buildup();
-        getProtocol().startup();
-
+        getProtocol().getArchitecture().buildup();
+        
                 
     }
 
     public void setRetransmissionTimeout(String timeout) {
         ((PBFTClient)getProtocol()).setRetransmissionTimeout(new Long(timeout));
     }
+
+    @Override
+    public void startup() {
+        //getProtocol().startup();
+    }
+
 
 }

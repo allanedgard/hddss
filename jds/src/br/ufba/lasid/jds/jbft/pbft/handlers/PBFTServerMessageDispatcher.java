@@ -5,6 +5,7 @@
 
 package br.ufba.lasid.jds.jbft.pbft.handlers;
 
+import br.ufba.lasid.jds.comm.IMessageHandler;
 import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.SignedMessage;
@@ -12,6 +13,10 @@ import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBag;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTData;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetch;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetchMetaData;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
@@ -89,11 +94,27 @@ public class PBFTServerMessageDispatcher extends PBFTServerMessageHandler {
         }
 
         if(m instanceof PBFTStatusActive){
-            //handler = new PBFTStatusActiveHandler(getProtocol());
+           handler = new PBFTStatusActiveHandler(getProtocol());
         }
 
         if(m instanceof PBFTBag){
-            //handler = new PBFTBagHandler(getProtocol());
+            handler = new PBFTBagHandler(getProtocol());
+        }
+
+        if(m instanceof PBFTFetchMetaData){
+            handler = new PBFTFetchMetaDataHandler(getProtocol());
+        }
+
+        if(m instanceof PBFTMetaData){
+            handler = new PBFTMetaDataHandler(getProtocol());
+        }
+        
+        if(m instanceof PBFTFetch){
+            handler = new PBFTFetchHandler(getProtocol());
+        }
+
+        if(m instanceof PBFTData){
+            handler = new PBFTDataHandler(getProtocol());
         }
 
         if(handler != null){

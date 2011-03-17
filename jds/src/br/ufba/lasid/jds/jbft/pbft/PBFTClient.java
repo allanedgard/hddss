@@ -14,7 +14,6 @@ import br.ufba.lasid.jds.cs.IClient;
 import br.ufba.lasid.jds.group.IGroup;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
-import br.ufba.lasid.jds.jbft.pbft.util.PBFTRequestMessageList;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTTimeoutDetector;
 import br.ufba.lasid.jds.util.IPayload;
 import java.util.logging.Level;
@@ -81,29 +80,6 @@ public class PBFTClient extends PBFT implements IPBFTClient{
             emit(r);
             return (IPayload) getApplicationBox().remove();
     }
-
-//    /**
-//     * Collect the payload from the application.
-//     * @param payload -- the application payload.
-//     */
-//    public synchronized void accept(IPayload payload, boolean sync){
-//
-//        PBFTRequest request = createRequestMessage(payload);
-//        request.setSynch(sync);
-//
-//        emit(request);
-//
-//        Debugger.debug(
-//          "[PBFTClient] c" + getLocalProcessID() +
-//          " sent " + request + " to " + getRemoteProcess() +
-//          " at time " + getClockValue()
-//        );
-//
-//    }
-//    public synchronized void accept(IPayload payload){
-//        accept(payload, true);
-//    }
-
 
     /**
      * Create a new PBFT' IClient request message.
@@ -268,49 +244,19 @@ public class PBFTClient extends PBFT implements IPBFTClient{
 
     }
 
-//   public synchronized boolean accept(PBFTReply m){
-//
-//        /**
-//         * We must check if the view number is bigger or equal than last received.
-//         * (We're going to implement this later).
-//         */
-//
-//        if(getLocalProcessID().equals(m.getClientID())){
-//            Quorum q = getQuorum(m);
-//            if(!(q != null && q.complete())){
-//                if(updateState(m)){
-//
-//                    q = getQuorum(m);
-//
-//                    if(q!=null && q.complete()){
-//                        revokeSchedule(m.getTimestamp());
-//                        Debugger.debug(
-//                          "[PBFTClient:accept(reply)] c"  + getLocalProcessID() +
-//                          ", at time " + getClockValue() + ", revoked the timeout "
-//                        + "for receive of the " + m
-//                        );
-//
-//                        getApplicationBox().add(m.getPayload());
-//                    }
-//                }
-//            }else{
-//                if(q.complete()){
-//                    if(updateState(m)){
-//                        revokeSchedule(m.getTimestamp());
-//                        Debugger.debug(
-//                          "[PBFTClient:accept(reply)] c"  + getLocalProcessID() +
-//                          ", at time " + getClockValue() + ", has just" +
-//                          " updated the quorum for " + m + "because such " +
-//                          "quorum has already completed."
-//                        );
-//                    }
-//
-//                }
-//            }
-//        }
-//
-//        return false;
-//    }
+    public void handle(PBFTReply reply){
+        
+        if(canProceed(reply)){
+
+            if(updateState(reply)){
+
+               getApplicationBox().add(reply.getPayload());
+
+            }//end if updateState(reply)
+
+        }//end if wasAcceptedAsValidReply (reply)
+        
+    }
 
     public boolean canProceed(PBFTReply reply){
         if(!isAReplyForMe(reply.getClientID())){
@@ -319,7 +265,7 @@ public class PBFTClient extends PBFT implements IPBFTClient{
 
         if(!hasARelatedRequest(reply)){
             Debugger.debug(
-               "[PBFTClient:wasAcceptedAsAValidReply(reply)] c" + getLocalProcessID() + ", " +
+               "[PBFTClient:canProceed(reply)] c" + getLocalProcessID() + ", " +
                "at time " + getClockValue() + ", discarded " + reply + " because there isn't " +
                " a related request."
              );
