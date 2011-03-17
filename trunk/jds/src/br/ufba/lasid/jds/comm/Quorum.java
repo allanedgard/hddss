@@ -29,5 +29,12 @@ public class Quorum extends ArrayList<IMessage>{
         return size() >= quorumSize;
     }
 
-
+    @Override
+    public String toString() {
+        String tostr =  "Quorum{" + "quorumSize=" + quorumSize + "}:";
+        for(IMessage m : this){
+            tostr += "\n" +m;
+        }
+        return tostr;
+    }
 }

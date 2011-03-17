@@ -41,5 +41,4 @@ public abstract class PBFTServerMessage extends PBFTMessage{
         this.replicaID = replicaID;
     }
 
-
 }

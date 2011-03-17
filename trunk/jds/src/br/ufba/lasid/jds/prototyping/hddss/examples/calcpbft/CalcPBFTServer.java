@@ -54,7 +54,7 @@ public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecover
 
         count++;
 
-        _state.put(opcode, count);
+        _state.set(opcode, count);
 
 
         //_state.put("ncalcs", ncalcs);

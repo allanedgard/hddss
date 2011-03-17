@@ -17,7 +17,7 @@ import br.ufba.lasid.jds.jbft.pbft.handlers.PBFTClientServant;
 public class PBFTClientArchitecture extends Architecture{
 
     PBFTClient pbftc;
-    protected static String PBFTClientServantTAG = "__PBFTClientServantTAG";
+    protected static String PBFTServantTAG = "__PBFTServant";
     protected static String PBFTCommunicatorTAG = "__PBFTCommunicatorTAG";
 
     public PBFTClient getPBFTClient() {
@@ -39,10 +39,10 @@ public class PBFTClientArchitecture extends Architecture{
     @Override
     public void buildup() {
 
-        add(PBFTClientServantTAG, new PBFTClientServant(getPBFTClient()));
+        add(PBFTServantTAG, new PBFTClientServant(getPBFTClient()));
         add(PBFTCommunicatorTAG, pbftc.getCommunicator());
 
-        connect(PBFTCommunicatorTAG, PBFTClientServantTAG);        
+        connect(PBFTCommunicatorTAG, PBFTServantTAG);
 
         super.buildup();
     }

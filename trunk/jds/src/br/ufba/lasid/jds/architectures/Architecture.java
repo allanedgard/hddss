@@ -34,16 +34,29 @@ public class Architecture {
         if(obj instanceof IConsumer) addConsumer(name, (IConsumer)obj);
         if(obj instanceof Thread)    addThread(name, (Thread)obj);
     }
+
+    public Thread getThead(String name){
+        return (Thread)thtable.get(name);
+    }
     
     public void addThread(String name, Thread thr){
         thtable.put(name, thr);
     }
+
+    public ISupplier getSupplier(String name){
+        return sptable.get(name);
+    }
+
     public void addSupplier(String name, ISupplier supplier){
         sptable.put(name, supplier);
     }
 
     public void addConsumer(String name, IConsumer consumer){
         cntable.put(name, consumer);
+    }
+
+    public IConsumer getConsumer(String name){
+        return (IConsumer)cntable.get(name);
     }
     
     public void connect(String suppliername, String consumername){

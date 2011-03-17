@@ -55,9 +55,9 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
         ((Clock_Virtual)clock).tick();
 
         if(((Clock_Virtual)clock).tickValue() == 1 && agent.status()) {
-            synchronized(agent.lock){
+            //synchronized(agent.lock){
                 agent.execute();
-            }
+            //}
         }
 
         
@@ -106,7 +106,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
 
 
     public boolean deliver(){
-        synchronized(agent.lock){
+//        synchronized(agent.lock){
             ArrayList a = app_in.getMsgs((int)clock.value());
             if (a.isEmpty()) {
                 return false;
@@ -132,14 +132,14 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
 
             }
             agent.deliver(msg);
-            agent.lock.notify();
+//            agent.lock.notify();
             return true;
-        }
+  //      }
         
     }
 
     public boolean receive(){
-        synchronized(agent.lock){
+//        synchronized(agent.lock){
             //Debugger.debug("[p"+this.agent.ID+"] receiver buffer =>" + nic_in);
             ArrayList a = nic_in.getMsgs((int)clock.value());
             if (a.isEmpty()) {
@@ -152,15 +152,15 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
             reportEvent(msg, 'r');
             msg.tempoRecepcao = (int)clock.value();
             agent.receive(msg);
-            agent.lock.notify();
+//            agent.lock.notify();
             return true;
-        }
+  //      }
           
     }
 
 
     public boolean send(){
-        synchronized(agent.lock){
+//        synchronized(agent.lock){
             ArrayList a = nic_out.getMsgs((int)clock.value());
             if (a.isEmpty()) {
                 return false;
@@ -174,9 +174,9 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
             msg = (Message) a.get(0);
             network.send(msg);
             reportEvent(msg, 's');
-            agent.lock.notify();
+//            agent.lock.notify();
             return true;
-        }
+        //}
                     
     }
 

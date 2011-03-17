@@ -33,8 +33,11 @@ public final class XObject {
         ObjectOutputStream oos = new ObjectOutputStream(bas);
 
         oos.writeObject(obj);
+        oos.flush();
+        oos.close();
 
         byte[] obyte = bas.toByteArray();
+        bas.close();
 
         return obyte;
     }
@@ -54,8 +57,9 @@ public final class XObject {
 
         ByteArrayInputStream bas = new ByteArrayInputStream(ibyte);
         ObjectInputStream ois = new ObjectInputStream(bas);
-
         Object obj = ois.readObject();
+        ois.close();
+        bas.close();
 
         return obj;
 

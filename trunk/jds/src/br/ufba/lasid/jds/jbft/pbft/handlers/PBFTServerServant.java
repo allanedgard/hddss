@@ -52,6 +52,8 @@ public class PBFTServerServant extends PBFTServerMessageHandler implements ICons
     public void run() {
 
         while(true){
+            IMessage message = (IMessage) inbox.remove();
+            input(message);
             handle();
         }
 
@@ -62,7 +64,7 @@ public class PBFTServerServant extends PBFTServerMessageHandler implements ICons
      * and starts the dispatcher handler.
      */
     public void handle() {
-            IMessage message = (IMessage) inbox.remove();
+            IMessage message = this.input;
             PBFTServerMessageDispatcher handler = new PBFTServerMessageDispatcher(getProtocol());
             handler.input(message);
             handler.handle();

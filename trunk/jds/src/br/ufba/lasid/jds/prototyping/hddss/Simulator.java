@@ -80,9 +80,9 @@ public class Simulator  extends Thread implements RuntimeSupport
                 done = true;
 
                 for(int i = 0; i < n; i++){
-
-                    p[i].getInfra().increaseTick();
-
+                    synchronized(p[i].lock){
+                        p[i].getInfra().increaseTick();
+                    }
                     /*
                       if simulation time isn't over and p is not crashed then
                       it hasn't been done yet.
@@ -251,7 +251,7 @@ public class Simulator  extends Thread implements RuntimeSupport
      */ 
     
     public final void perform(RuntimeContainer rc) {
-         synchronized(this){
+         synchronized(rc.agent.lock){
             rc.increaseTick();
         }
     }

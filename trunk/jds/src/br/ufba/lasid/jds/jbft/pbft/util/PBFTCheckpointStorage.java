@@ -49,7 +49,7 @@ public class PBFTCheckpointStorage implements IStore<String, IState> {
     }
     
     public synchronized  void write(String index, IState data, boolean replace) throws IOException {
-        tree.insert(index, data, replace);
+        tree.insert(index, data, replace);        
     }
 
     public synchronized IState read(String index) throws IOException{
@@ -68,6 +68,23 @@ public class PBFTCheckpointStorage implements IStore<String, IState> {
         return tree.findGreaterOrEqual(index);
     }
 
+    public synchronized TupleBrowser browser() throws IOException{
+        return browser(null);
+    }
+
+    public synchronized TupleBrowser browser(String index) throws IOException{
+        return tree.browse(index);
+    }
+
+    public synchronized Tuple findLower(String index) throws IOException{
+        TupleBrowser browser = tree.browse(index);
+        Tuple tuple = new Tuple();
+        if(browser.getPrevious(tuple)){
+            return tuple;
+        }
+
+        return null;
+    }
     public synchronized Tuple getLast() throws IOException{
         Tuple tuple = null;
 

@@ -83,7 +83,7 @@ public class PBFTCheckpointAcceptor extends PBFTAcceptor<PBFTCheckpoint>{
                   " a start transfer procedure."
                 );
 //                pbft.setLockCheckpoint(true);
-                pbft.emit(pbft.createFetchMessage(), pbft.getLocalGroup());
+                //pbft.emit(pbft.createFetchMessage(), pbft.getLocalGroup());
                 return false;
             }
 

@@ -33,6 +33,7 @@ public class PBFTBag extends PBFTServerMessage{
 
         return (
                 "<BAG" + ", " +
+                 "EXEC-SEQUENCE = " + getSequenceNumber() + ", " +
                  "SENDER = " + getReplicaID().toString() + ", " +
                  "SIZE = " + messages.size() + 
                  ">"

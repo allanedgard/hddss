@@ -16,14 +16,12 @@ class PBFTStatusActiveHandler extends PBFTServerMessageHandler{
 
     public PBFTStatusActiveHandler(PBFTServer protocol) {
         super(protocol);
+        lock = getLock("handle", PBFTStatusActive.class);
     }
 
     public void handle() {
-        
-        PBFTStatusActive sa = (PBFTStatusActive) this.input;
-
-        if(getProtocol().canProceed(sa)){
-            
-        }
+        // synchronized(lock){
+            getProtocol().handle((PBFTStatusActive) this.input);
+        //}
     }
 }

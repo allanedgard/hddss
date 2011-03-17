@@ -9,8 +9,6 @@ import br.ufba.lasid.jds.prototyping.hddss.Randomize;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.SimulatedPBFTClientAgent;
 import br.ufba.lasid.jds.util.IPayload;
 import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *

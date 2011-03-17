@@ -97,12 +97,13 @@ public class Agent extends Thread implements IAgent{
     }
     
    public void send(Message m){
-       synchronized(this){
+       synchronized(lock){
             infra.nic_out.add((int)(infra.clock.value()), m);
             //Debugger.debug("[p"+this.ID+"] send buffer =>" + infra.nic_out);
        }
 
    }
+   
     public void startup(){
 /*        int temp[] = {11, 22,33, 44, 55};
         for (int i = 0; i<temp.length; i++) {
@@ -124,7 +125,7 @@ public class Agent extends Thread implements IAgent{
          *   Este evento pode ser sobrecarregado pela ação específica 
          *   do protocolo
          */
-        synchronized(this){
+        synchronized(lock){
             infra.app_in.add((int)this.infra.clock.value(), msg);
         }
     }
