@@ -11,37 +11,57 @@ package br.ufba.lasid.jds.jbft.pbft.comm;
  */
 public class PBFTFetch extends PBFTServerMessage{
 
-    protected Long lastStableCheckpointSequenceNumber = -1L;
-    protected Long wantedCheckpointSequenceNumber     = -1L;
-    protected Object selectedReplierID;
+    protected Long lcSEQ = -1L;
+    protected Long partCheckpoint     = -1L;
+    protected Long partIndex = 0L;
+    protected Long partLevel = 0L;
+    protected Object replier = null;
 
     public Long getLastStableCheckpointSequenceNumber() {
-        return lastStableCheckpointSequenceNumber;
+        return lcSEQ;
     }
 
-    public void setLastStableCheckpointSequenceNumber(Long lastStableCheckpointSequenceNumber) {
-        this.lastStableCheckpointSequenceNumber = lastStableCheckpointSequenceNumber;
+    public void setLastStableCheckpointSequenceNumber(Long lcSEQ) {
+        this.lcSEQ = lcSEQ;
     }
 
     public Object getSelectedReplierID() {
-        return selectedReplierID;
+        return replier;
     }
 
-    public void setSelectedReplierID(Object selectedReplierID) {
-        this.selectedReplierID = selectedReplierID;
+    public void setSelectedReplierID(Object replier) {
+        this.replier = replier;
     }
 
-    public Long getWantedCheckpointSequenceNumber() {
-        return wantedCheckpointSequenceNumber;
+    public Long getPartCheckpoint() {
+        return partCheckpoint;
     }
 
-    public void setWantedCheckpointSequenceNumber(Long wantedCheckpointSequenceNumber) {
-        this.wantedCheckpointSequenceNumber = wantedCheckpointSequenceNumber;
+    public void setPartCheckpoint(Long cpart) {
+        this.partCheckpoint = cpart;
     }
 
-    public PBFTFetch(Long lc, Long c, Object replierID, Object replicaID){
-        setLastStableCheckpointSequenceNumber(lc);
-        setWantedCheckpointSequenceNumber(c);
+    public Long getPartitionIndex() {
+        return partIndex;
+    }
+
+    public void setPartitionIndex(Long ipart) {
+        this.partIndex = ipart;
+    }
+
+    public Long getPartLevel() {
+        return partLevel;
+    }
+
+    public void setPartLevel(Long lpart) {
+        this.partLevel = lpart;
+    }
+
+    public PBFTFetch(Long lpart, Long ipart, Long cpart, Long lcSEQ, Object replierID, Object replicaID){
+        setPartLevel(lpart);
+        setPartitionIndex(ipart);
+        setLastStableCheckpointSequenceNumber(lcSEQ);
+        setPartCheckpoint(cpart);
         setSelectedReplierID(replierID);
         setReplicaID(replicaID);
     }
@@ -51,20 +71,36 @@ public class PBFTFetch extends PBFTServerMessage{
         setSelectedReplierID(replierID);
         setReplicaID(replicaID);
     }
+    
+
+//    public PBFTFetch(Long lc, Long c, Object replierID, Object replicaID){
+//        setLastStableCheckpointSequenceNumber(lc);
+//        setPartCheckpoint(c);
+//        setSelectedReplierID(replierID);
+//        setReplicaID(replicaID);
+//    }
+//
+//    public PBFTFetch(Long lc,  Object replierID, Object replicaID){
+//        setLastStableCheckpointSequenceNumber(lc);
+//        setSelectedReplierID(replierID);
+//        setReplicaID(replicaID);
+//    }
 
     @Override
     public final String toString() {
         String wanted = "nil";
-        if(getWantedCheckpointSequenceNumber()!= null){
-            wanted = getWantedCheckpointSequenceNumber().toString();
+        if(getPartCheckpoint()!= null){
+            wanted = getPartCheckpoint().toString();
         }
 
         return (
                 "<FETCH" + ", " +
-                 "LC = " + getLastStableCheckpointSequenceNumber().toString() + ", " +
+                 "L = " + getPartLevel() + ", " +
+                 "X = " + getPartitionIndex() + ", " +
+                 "LC = " + getLastStableCheckpointSequenceNumber() + ", " +
                  "C  = " + wanted + ", " +
-                 "REPLIER = " + getSelectedReplierID().toString() + ", " +
-                 "SENDER = " + getReplicaID().toString() + ", " + 
+                 "REPLIER = " + getSelectedReplierID() + ", " +
+                 "SENDER = " + getReplicaID() + ", " + 
                  ">"
         );
     }

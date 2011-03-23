@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
-import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
+import br.ufba.lasid.jds.management.memory.pages.IPage;
 
 /**
  *
@@ -13,44 +13,38 @@ import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
  */
 public class PBFTData extends PBFTServerMessage{
 
-    protected IState data;
-    protected String digest;
+    protected IPage page;
+    protected long pageIndex;
 
-    public PBFTData(Long sequenceNumber, String digest, IState data) {
-        this(sequenceNumber, digest, data, null);
-    }
-
-    public PBFTData(Long sequenceNumber, String digest, IState data, Object replicaID) {
-        setData(data);
-        setDigest(digest);
-        setSequenceNumber(sequenceNumber);
+    public PBFTData(long pageIndex, IPage page, Object replicaID) {
+        setPageIndex(pageIndex);
+        setPage(page);
         setReplicaID(replicaID);
     }
 
-    public IState getData() {
-        return data;
+
+    public IPage getPage() {
+        return page;
     }
 
-    public void setData(IState data) {
-        this.data = data;
+    public void setPage(IPage page) {
+        this.page = page;
     }
 
-    public String getDigest() {
-        return digest;
+    public long getPageIndex() {
+        return pageIndex;
     }
 
-    public void setDigest(String digest) {
-        this.digest = digest;
+    public void setPageIndex(long pageIndex) {
+        this.pageIndex = pageIndex;
     }
-
     
     @Override
     public String toString() {
         return (
                 "<DATA" + ", " +
-                 "SEQUENCE = " + getSequenceNumber() + ", " +
-                 "DIGEST = " + getDigest() + ", " +
-                 "STATE = " + getData() + ", " +
+                 "INDEX = " + getPageIndex() + ", " +
+                 "PAGE  = " + getPage() + ", " +
                  "SENDER = " + getReplicaID() + ", " +
                  ">"
         );

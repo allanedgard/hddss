@@ -12,7 +12,7 @@ import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
-import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.JDSUtility;
 
 /**
  *
@@ -41,7 +41,7 @@ public class PBFTCommitAcceptor extends PBFTAcceptor<PBFTCommit>{
             long nextP  = pbft.getStateLog().getNextPrepareSEQ();
             long nextC  = pbft.getStateLog().getNextCommitSEQ();
             long nextE  = pbft.getStateLog().getNextExecuteSEQ();
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTServer:accept(commit)] s"  + pbft.getLocalServerID() +
               ", at time " + pbft.getClockValue() + ", discarded " + commit +
               " because it hasn't a valid sequence/view number. "
@@ -59,7 +59,7 @@ public class PBFTCommitAcceptor extends PBFTAcceptor<PBFTCommit>{
          * be discarded.
          */
         if(!pbft.wasSentByAGroupMember(commit)){
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTServer:accept(commit)] s"   + pbft.getLocalServerID()   +
               ", at time " + pbft.getClockValue() + ", discarded " + commit      +
               " because it wasn't sent by a member of the group " + pbft.getLocalGroup()
@@ -69,7 +69,7 @@ public class PBFTCommitAcceptor extends PBFTAcceptor<PBFTCommit>{
         }
 
         if(!pbft.getStateLog().wasPrepared(commit)){
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTServer:accept(commit)] s"   + pbft.getLocalServerID()   +
               ", at time " + pbft.getClockValue() + ", discarded " + commit      +
               " because it hasn't received a related pre-prepare."
@@ -100,7 +100,7 @@ public class PBFTCommitAcceptor extends PBFTAcceptor<PBFTCommit>{
                     statedReq.setSequenceNumber(commit.getSequenceNumber());
 
 
-                    Debugger.debug(
+                    JDSUtility.debug(
                       "[PBFTServer:accept(commit)] s" + pbft.getLocalServerID()     +
                       ", at time " + pbft.getClockValue() + ", has committed " +
                       "and stored request (" + statedReq.getRequest() + ") for " +
@@ -115,7 +115,7 @@ public class PBFTCommitAcceptor extends PBFTAcceptor<PBFTCommit>{
                 supplier.getOutbox().add(commit);
 
 
-                Debugger.debug(
+                JDSUtility.debug(
                   "[PBFTServer:accept(commit)] s" + pbft.getLocalServerID()     +
                   ", at time " + pbft.getClockValue() + ", has just complete " +
                   "the commit phase for sequence number (" + seqn + ") and "     +

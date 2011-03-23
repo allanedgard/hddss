@@ -11,4 +11,7 @@ package br.ufba.lasid.jds.management.memory;
  */
 public interface IVolatileMemory extends IMemory{
 
+    public void graft(byte[] b) throws Exception;
+    public void graft(byte[] b, int off, int len) throws Exception;
+
 }

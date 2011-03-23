@@ -5,7 +5,6 @@
 
 package br.ufba.lasid.jds.util;
 
-import br.ufba.lasid.jds.util.ITask;
 import java.util.Hashtable;
 
 /**

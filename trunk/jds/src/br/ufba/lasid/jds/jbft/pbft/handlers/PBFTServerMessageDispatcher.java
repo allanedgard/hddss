@@ -101,9 +101,9 @@ public class PBFTServerMessageDispatcher extends PBFTServerMessageHandler {
             handler = new PBFTBagHandler(getProtocol());
         }
 
-        if(m instanceof PBFTFetchMetaData){
-            handler = new PBFTFetchMetaDataHandler(getProtocol());
-        }
+//        if(m instanceof PBFTFetchMetaData){
+//            handler = new PBFTFetchMetaDataHandler(getProtocol());
+//        }
 
         if(m instanceof PBFTMetaData){
             handler = new PBFTMetaDataHandler(getProtocol());

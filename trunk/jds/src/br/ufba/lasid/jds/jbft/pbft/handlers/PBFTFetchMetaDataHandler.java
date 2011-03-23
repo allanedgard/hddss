@@ -21,7 +21,7 @@ public class PBFTFetchMetaDataHandler extends PBFTServerMessageHandler {
 
     public void handle() {
         // synchronized(lock){
-            getProtocol().handle((PBFTFetchMetaData) this.input);
+        //            getProtocol().handle((PBFTFetchMetaData) this.input);
         //}
     }
 

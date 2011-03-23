@@ -10,7 +10,7 @@ import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
-import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.JDSUtility;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,15 +29,15 @@ public class PBFTRequestAcceptor extends PBFTAcceptor<PBFTRequest>{
         PBFTServer pbft = (PBFTServer) getProtocol();
 
         if(request == null){
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTRequestAcceptor:accept(request)] s" + pbft.getLocalServerID() +
               " didn't accept " + request + ". (time = " + pbft.getClockValue() + ")"
             );
             return false;
         }
 
-        if(!pbft.isTheNext(request)){
-            Debugger.debug(
+        if(!pbft.isNextRequest(request)){
+            JDSUtility.debug(
               "[PBFTRequestAcceptor:accept(request)] s" + pbft.getLocalServerID() +
               " didn't accept " + request + " because this is out of order."
             );
@@ -45,7 +45,7 @@ public class PBFTRequestAcceptor extends PBFTAcceptor<PBFTRequest>{
             return false;
         }
 
-        IProcess client = new br.ufba.lasid.jds.Process(request.getClientID());
+        IProcess client = new br.ufba.lasid.jds.BaseProcess(request.getClientID());
 
         /**
          * Check if request was already accepted.
@@ -56,7 +56,7 @@ public class PBFTRequestAcceptor extends PBFTAcceptor<PBFTRequest>{
              * Check if request was already served.
              */
             if(pbft.getStateLog().wasServed(request)){
-                Debugger.debug(
+                JDSUtility.debug(
                   "[PBFTRequestAcceptor:accept(request)] s" + pbft.getLocalServerID() +
                   " has already served " + request + "."
                 );
@@ -71,7 +71,7 @@ public class PBFTRequestAcceptor extends PBFTAcceptor<PBFTRequest>{
 
             }
 
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTRequestAcceptor:accept(request)] s" + pbft.getLocalServerID() +
               " has already accepted " + request + " so this was discarded."
             );
@@ -85,7 +85,7 @@ public class PBFTRequestAcceptor extends PBFTAcceptor<PBFTRequest>{
          * a reply if null payload.
          */
         if(pbft.getStateLog().noMore(request)){
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTRequestAcceptor:accept(request)] s" + pbft.getLocalServerID() +
               " hasn't a response for  " + request + " any more."
             );
@@ -108,7 +108,7 @@ public class PBFTRequestAcceptor extends PBFTAcceptor<PBFTRequest>{
 
         }
 
-        Debugger.debug(
+        JDSUtility.debug(
           "[PBFTRequestAcceptor:accept(request)] s" + pbft.getLocalServerID() +
           " accepted " + request + " at time " + pbft.getClockValue() + "."
         );
@@ -128,7 +128,7 @@ public class PBFTRequestAcceptor extends PBFTAcceptor<PBFTRequest>{
          * Perform the batch procedure if the server is the primary replica.
          */
         if(pbft.isPrimary()){
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTRequestAcceptor:accept(request)] s" + pbft.getLocalServerID() + " (primary)" +
               " is executing the batch procedure for " + request + "."
             );
@@ -142,7 +142,7 @@ public class PBFTRequestAcceptor extends PBFTAcceptor<PBFTRequest>{
          * Schedule a timeout for the arriving of the pre-prepare message if
          * the server is a secundary replica.
          */
-        pbft.doScheduleViewChange(digest);
+        pbft.scheduleViewChange(digest);
 
         return true;
 

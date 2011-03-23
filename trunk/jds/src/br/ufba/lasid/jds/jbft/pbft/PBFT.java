@@ -14,6 +14,7 @@ import br.ufba.lasid.jds.util.IScheduler;
 import br.ufba.lasid.jds.util.TaskTable;
 import br.ufba.lasid.jds.util.TaskTableStore;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTStateLog;
+import br.ufba.lasid.jds.util.ITask;
 
 /**
  *

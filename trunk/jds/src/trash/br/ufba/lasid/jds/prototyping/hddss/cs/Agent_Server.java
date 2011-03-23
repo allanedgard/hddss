@@ -6,7 +6,7 @@
 package trash.br.ufba.lasid.jds.prototyping.hddss.cs;
 
 import trash.br.ufba.lasid.jds.Executor;
-import br.ufba.lasid.jds.Process;
+import br.ufba.lasid.jds.BaseProcess;
 import br.ufba.lasid.jds.cs.IServer;
 import trash.br.ufba.lasid.jds.cs.actions.ExecuteRequestAction;
 import trash.br.ufba.lasid.jds.cs.actions.ReceiveRequestAction;
@@ -23,7 +23,7 @@ import br.ufba.lasid.jds.util.IPayload;
  * @author aliriosa
  */
 public class Agent_Server extends Agent_ServiceComponent implements IServer<Integer>{
-    Process<Integer> client = new Process<Integer>();
+    BaseProcess<Integer> client = new BaseProcess<Integer>();
 
     public void setClientAddress(String addr){
         client.setID(new Integer(addr));
@@ -57,7 +57,7 @@ public class Agent_Server extends Agent_ServiceComponent implements IServer<Inte
         return new ClientServerSendReplyExecutor(proto);
     }
 
-    public Process<Integer> getClientProcessAddressRef(){
+    public BaseProcess<Integer> getClientProcessAddressRef(){
         return this.client;
     }
 

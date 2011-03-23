@@ -15,7 +15,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTLogEntry;
-import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.JDSUtility;
 import br.ufba.lasid.jds.util.IPayload;
 
 /**
@@ -59,7 +59,7 @@ public class PBFTDoerAcceptor extends PBFTAcceptor<Long>{
                     PBFTRequest request = statedReq.getRequest();
 
                     if(!statedReq.getState().equals(StatedPBFTRequestMessage.RequestState.COMMITTED)){
-                        Debugger.debug(
+                        JDSUtility.debug(
                           "[PBFTServer:execute(seqn)] s"  + pbft.getLocalServerID()   +
                           ", at time " + pbft.getClockValue() + ", couldn't " +
                           "execute " + request + " because it hasn't been " +
@@ -88,13 +88,13 @@ public class PBFTDoerAcceptor extends PBFTAcceptor<Long>{
                     statedReq.setState(StatedPBFTRequestMessage.RequestState.SERVED);
                     statedReq.setReply(reply);
 
-                    Debugger.debug(
+                    JDSUtility.debug(
                       "[PBFTServer:execute(seqn)] s"  + pbft.getLocalServerID()       +
                       ", at time " + pbft.getClockValue() + ", executed " + request +
                       " (currView = " + pbft.getCurrentViewNumber() + ")"
                     );
 
-                    IProcess client = new br.ufba.lasid.jds.Process(reply.getClientID());
+                    IProcess client = new br.ufba.lasid.jds.BaseProcess(reply.getClientID());
                     pbft.emit(reply, client);
 
                 }//end for each digest (handle and reply)

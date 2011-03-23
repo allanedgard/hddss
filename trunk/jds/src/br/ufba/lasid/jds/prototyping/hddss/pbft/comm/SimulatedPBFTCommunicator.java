@@ -122,15 +122,14 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
         if(m instanceof PBFTCommit)         return  3;
         if(m instanceof PBFTCheckpoint)     return  4;
         if(m instanceof PBFTFetch)          return  5;
-        if(m instanceof PBFTData)           return  6;
-        if(m instanceof PBFTBag)            return  7;
-        if(m instanceof PBFTStatusActive)   return  8;
-        if(m instanceof PBFTReply)          return  9;
-        if(m instanceof PBFTChangeView)     return 10;
-        if(m instanceof PBFTChangeViewACK)  return 11;
-        if(m instanceof PBFTNewView)        return 12;
-        if(m instanceof PBFTFetchMetaData)  return 13;
-        if(m instanceof PBFTMetaData)       return 14;
+        if(m instanceof PBFTMetaData)       return  6;
+        if(m instanceof PBFTData)           return  7;
+        if(m instanceof PBFTBag)            return  8;
+        if(m instanceof PBFTStatusActive)   return  9;
+        if(m instanceof PBFTReply)          return 10;
+        if(m instanceof PBFTChangeView)     return 11;
+        if(m instanceof PBFTChangeViewACK)  return 12;
+        if(m instanceof PBFTNewView)        return 13;
 
 
         return -1;

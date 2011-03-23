@@ -16,7 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecutor;
-import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.JDSUtility;
 
 /**
  *
@@ -121,7 +121,7 @@ public class PBFTPeriodicStatusActiveExecutor extends PBFTExecutor<PBFTStatusAct
 
             pbft.getCommunicator().multicast(pdu, g);
 
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTPeriodicStatusActiveExecutor]s" +  pbft.getLocalServerID() +
               " sent " + sa + " at timestamp " + pbft.getClock().value() +
               " to group " + pbft.getLocalGroup() + "."

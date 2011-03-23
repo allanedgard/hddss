@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.management.memory.pages;
 
-import br.ufba.lasid.jds.management.JDSConfigurator;
+import br.ufba.lasid.jds.util.JDSUtility;
 import java.util.Properties;
 
 /**
@@ -17,18 +17,18 @@ public class PageProvider implements IPageProvider{
     public IPage create(Properties options) throws Exception{
         IPage page; String maxPageSize; String offset; String index; String bytes;
 
-        Properties defaultOptions = JDSConfigurator.Options;
+        Properties defaultOptions = JDSUtility.Options;
 
-        maxPageSize = options.getProperty( JDSConfigurator.MaximumPageSize,
-                                           defaultOptions.getProperty(JDSConfigurator.MaximumPageSize));
+        maxPageSize = options.getProperty( JDSUtility.MaximumPageSize,
+                                           defaultOptions.getProperty(JDSUtility.MaximumPageSize));
 
-        offset = options.getProperty( JDSConfigurator.PageOffset,
-                                      defaultOptions.getProperty(JDSConfigurator.PageOffset) );
+        offset = options.getProperty( JDSUtility.PageOffset,
+                                      defaultOptions.getProperty(JDSUtility.PageOffset) );
 
-        index = options.getProperty( JDSConfigurator.PageIndex,
-                                     defaultOptions.getProperty(JDSConfigurator.PageIndex) );
+        index = options.getProperty( JDSUtility.PageIndex,
+                                     defaultOptions.getProperty(JDSUtility.PageIndex) );
         
-        bytes = options.getProperty( JDSConfigurator.PageBytes, "");
+        bytes = options.getProperty( JDSUtility.PageBytes, "");
 
         page = new BasePage(Long.parseLong(maxPageSize));
         page.setIndex(Long.parseLong(index));

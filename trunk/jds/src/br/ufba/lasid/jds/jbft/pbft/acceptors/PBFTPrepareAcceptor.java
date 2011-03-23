@@ -10,7 +10,7 @@ import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
-import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.JDSUtility;
 
 /**
  *
@@ -36,7 +36,7 @@ public class PBFTPrepareAcceptor extends PBFTAcceptor<PBFTPrepare>{
             long nextC  = pbft.getStateLog().getNextCommitSEQ();
             long nextE  = pbft.getStateLog().getNextExecuteSEQ();
 
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTServer:accept(prepare)] s"  + pbft.getLocalServerID() +
               ", at time " + pbft.getClockValue() + ", discarded " + prepare +
               " because it hasn't a valid sequence/view number. "
@@ -53,7 +53,7 @@ public class PBFTPrepareAcceptor extends PBFTAcceptor<PBFTPrepare>{
          * be discarded.
          */
         if(!pbft.wasSentByAGroupMember(prepare)){
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTServer:accept(prepare)] s"   + pbft.getLocalServerID()   +
               ", at time " + pbft.getClockValue() + ", discarded " + prepare      +
               " because it wasn't sent by a member of the group " + pbft.getLocalGroup()
@@ -67,7 +67,7 @@ public class PBFTPrepareAcceptor extends PBFTAcceptor<PBFTPrepare>{
          * be discarded.
          */
         if(pbft.wasSentByPrimary(prepare)){
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTServer:accept(prepare)] s"   + pbft.getLocalServerID()   +
               ", at time " + pbft.getClockValue() + ", discarded " + prepare      +
               " because it was sent by the primary " + pbft.getCurrentPrimaryID()
@@ -78,7 +78,7 @@ public class PBFTPrepareAcceptor extends PBFTAcceptor<PBFTPrepare>{
 
 
         if(!pbft.getStateLog().wasPrePrepared(prepare)){
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTServer:accept(prepare)] s"   + pbft.getLocalServerID()   +
               ", at time " + pbft.getClockValue() + ", discarded " + prepare      +
               " because it hasn't received a related pre-prepare."
@@ -106,7 +106,7 @@ public class PBFTPrepareAcceptor extends PBFTAcceptor<PBFTPrepare>{
 
                     statedReq.setSequenceNumber(prepare.getSequenceNumber());
                 }
-                Debugger.debug(
+                JDSUtility.debug(
                   "[PBFTServer:accept(prepare)] s" + pbft.getLocalServerID()     +
                   ", at time " + pbft.getClockValue() + ", has just complete " +
                   "the prepare phase for sequence number (" + seqn + ") and "     +

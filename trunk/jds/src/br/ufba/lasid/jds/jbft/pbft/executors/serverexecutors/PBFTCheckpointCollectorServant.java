@@ -17,7 +17,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetch;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCollectorServant;
-import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.JDSUtility;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,7 +57,7 @@ public class PBFTCheckpointCollectorServant extends PBFTCollectorServant<PBFTChe
 //         * be discarded.
 //         */
 //        if(!pbft.wasSentByAGroupMember(checkpoint)){
-//            Debugger.debug(
+//            JDSUtility.debug(
 //              "[PBFTCheckpointCollectorServant] s"   + pbft.getLocalServerID()   +
 //              ", at time " + pbft.getClock().value() + ", discarded " + checkpoint      +
 //              " because it wasn't sent by a member of the group " + pbft.getLocalGroup()
@@ -75,7 +75,7 @@ public class PBFTCheckpointCollectorServant extends PBFTCollectorServant<PBFTChe
 //        long seqn = checkpoint.getSequenceNumber();
 //
 //        if(lowWaterMark > seqn){
-//            Debugger.debug(
+//            JDSUtility.debug(
 //              "[PBFTCheckpointCollectorServant] s"   + pbft.getLocalServerID()     +
 //              ", at time " + pbft.getClock().value() + ", discarded " + checkpoint +
 //              " because it has sequence number lower than current low water mark " +
@@ -93,20 +93,20 @@ public class PBFTCheckpointCollectorServant extends PBFTCollectorServant<PBFTChe
 //
 //        if(q != null && q.complete()){
 //
-//            Debugger.debug(
+//            JDSUtility.debug(
 //              "[PBFTCheckpointCollectorServant] s" + pbft.getLocalServerID()     +
 //              ", at time " + pbft.getClock().value() + ", has already complete  a quorum for " +
 //              " checkpoint with sequence number (" + seqn + ")."
 //            );
 //
 //            if(seqn > highWaterMark){
-//                Debugger.debug(
+//                JDSUtility.debug(
 //                  "[PBFTCheckpointCollectorServant] s" + pbft.getLocalServerID()     +
 //                  ", at time " + pbft.getClock().value() + ", has detected a stable " +
 //                  " checkpoint certificate with sequence number (" + seqn + ") " +
 //                  "greater than its high checkpoint water mark (HCWK = " + highWaterMark + ")."
 //                );
-//                Debugger.debug(
+//                JDSUtility.debug(
 //                  "[PBFTCheckpointCollectorServant] s" + pbft.getLocalServerID()     +
 //                  ", at time " + pbft.getClock().value() + ", is going to start " +
 //                  " a start transfer procedure."
@@ -188,7 +188,7 @@ public class PBFTCheckpointCollectorServant extends PBFTCollectorServant<PBFTChe
 //
 //            pbft.getCommunicator().multicast(pdu, g);
 //
-//            Debugger.debug(
+//            JDSUtility.debug(
 //              "[PBFTCheckpointCollectorServant]s" +  pbft.getLocalServerID() +
 //              " sent " + message + " at timestamp " + pbft.getClock().value() +
 //              " to  " + g + "."

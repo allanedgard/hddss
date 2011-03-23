@@ -5,16 +5,16 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft;
 
-import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
+//import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
+import br.ufba.lasid.jds.management.memory.state.State;
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Hashtable;
 
 /**
  *
  * @author aliriosa
  */
-public class CalculatorState  implements IState<Object, Long>, Serializable{
+public class CalculatorState  extends State implements Serializable{//IState<Object, Long>, Serializable{
     
     private static final long serialVersionUID = -2076144593995036848L;
     long[] variables = new long[Calculator.OPERATION.values().length];
@@ -69,14 +69,29 @@ public class CalculatorState  implements IState<Object, Long>, Serializable{
         return hash;
     }
 
-    public IState<Object, Long> copy() {
-        CalculatorState calc = new CalculatorState();
-        
-        System.arraycopy(variables, 0, calc.variables, 0, variables.length);
+//    public IState<Object, Long> copy() {
+//        CalculatorState calc = new CalculatorState();
+//
+//        System.arraycopy(variables, 0, calc.variables, 0, variables.length);
+//
+//        return calc;
+//    }
 
-        return calc;
+    @Override
+    public void set(String variable, Object value) throws Exception {
+        Calculator.OPERATION opcode =
+                  Calculator.OPERATION.valueOf(variable);//(Calculator.OPERATION) ID;
+        variables[opcode.ordinal()] = (Long)value;
     }
 
+    @Override
+    public Object get(String variable) throws Exception {
+        Calculator.OPERATION opcode =
+                  Calculator.OPERATION.valueOf(variable);//(Calculator.OPERATION) ID;
+
+        return variables[opcode.ordinal()];
+
+    }
     
     
 }

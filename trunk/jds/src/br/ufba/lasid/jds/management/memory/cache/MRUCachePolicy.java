@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.management.memory.cache;
 
-import br.ufba.lasid.jds.management.JDSConfigurator;
+import br.ufba.lasid.jds.util.JDSUtility;
 import br.ufba.lasid.jds.management.memory.IMemory;
 import br.ufba.lasid.jds.management.memory.pages.IPage;
 
@@ -110,7 +110,7 @@ public class MRUCachePolicy extends MRUStrategy<Long, IPage> implements ICachePo
             IPage page = readPage(pageindex);
             
             if(page == null){
-                page = JDSConfigurator.create(JDSConfigurator.PageProvider, this.memory.getOptions());
+                page = JDSUtility.create(JDSUtility.PageProvider, this.memory.getOptions());
                 page.setIndex(pageindex);
                 page.setOffset(this.memory.getPageOffset(pageindex));
             }

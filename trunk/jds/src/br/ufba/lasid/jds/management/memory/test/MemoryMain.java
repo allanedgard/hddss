@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.management.memory.test;
 
-import br.ufba.lasid.jds.management.JDSConfigurator;
+import br.ufba.lasid.jds.util.JDSUtility;
 import br.ufba.lasid.jds.management.memory.cache.ICache;
 import br.ufba.lasid.jds.management.memory.pages.IPage;
 import java.util.*;
@@ -24,44 +24,58 @@ public class MemoryMain {
 
         Properties options = new Properties();
         
-        options.setProperty(JDSConfigurator.Filename, "Cache.cc");
-        options.setProperty(JDSConfigurator.MaximumPageSize, "8");
-        options.setProperty(JDSConfigurator.MaximumCacheSize, "3");
-
+        options.setProperty(JDSUtility.Filename, "Cache.cc");
+        options.setProperty(JDSUtility.MaximumPageSize, "8");
+        options.setProperty(JDSUtility.MaximumCacheSize, "3");
+        
         //ICache cache = BaseCacheFactory.create(options);
-        ICache cache = JDSConfigurator.create(JDSConfigurator.CacheProvider, options);
-        String s = "Hello World!!!!";
-        cache.write(s.getBytes());
+        ICache cache = JDSUtility.create(JDSUtility.CacheProvider, options);
         byte[] bytes = new byte[3];
         
         //cache.seek(0);
-        IPage p = cache.readPage(0);
+        IPage p = cache.readPage(1);
         System.out.println("read data: '" + new String(p.getBytes(),0, (int)p.getSize()) + "'");
-//        cache.read(bytes, 0, bytes.length);
-//
-//        System.out.println("read data: '" + new String(bytes,0, bytes.length) + "'");
-//        System.out.println("pages: '" + cache.getCurrentNumberOfPages() + "'");
-//
-//        System.out.println("s: '" + s +"', length: " + s.length());
-//
-//        //s += new String(new byte[3]);
-//
-//        //System.out.println("s: '" + s +"', length: " + s.length());
-//
-//        String mem = s;
-//
-//        System.out.println("mem: '" + mem +"', length: " + mem.length());
-//        s = "Hello";
-//        long mlength = mem.length();
-//        long moffset = mem.length();
-//        long eoffset = moffset + s.length();
-//        if(eoffset > mlength){
-//            eoffset = mlength;
-//        }
-//        mem = mem.substring(0, (int)moffset) + s + mem.substring((int)eoffset, mem.length());
-//
-//        System.out.println("mem: '" + mem +"', length: " + mem.length());
-//
+        cache.read(bytes, 0, bytes.length);
+
+        System.out.println("read data: '" + new String(bytes,0, bytes.length) + "'");
+        System.out.println("pages: '" + cache.getCurrentNumberOfPages() + "'");
+
+
+        String s = "Hld!!!!";
+        //cache.write(s.getBytes());
+
+        System.out.println("s: '" + s +"', length: " + s.length());
+
+        System.out.println("NumOfmodifiedpages: '" + cache.getRecentlyModifiedPageIndexes().size() +"'" );
+        long npages = cache.getCurrentNumberOfPages();
+        for(long i = 0; i < npages; i++){
+            IPage page = cache.readPage(i);
+            System.out.println("Page (" + i + ") = " + page + "'");
+
+
+        }
+
+        
+
+
+        //s += new String(new byte[3]);
+
+        //System.out.println("s: '" + s +"', length: " + s.length());
+
+        String mem = s;
+
+        System.out.println("mem: '" + mem +"', length: " + mem.length());
+        s = "Hello";
+        long mlength = mem.length();
+        long moffset = mem.length();
+        long eoffset = moffset + s.length();
+        if(eoffset > mlength){
+            eoffset = mlength;
+        }
+        mem = mem.substring(0, (int)moffset) + s + mem.substring((int)eoffset, mem.length());
+
+        System.out.println("mem: '" + mem +"', length: " + mem.length());
+
         
         
 /**

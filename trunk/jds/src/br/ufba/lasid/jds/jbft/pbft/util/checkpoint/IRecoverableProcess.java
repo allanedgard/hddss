@@ -12,7 +12,7 @@ import br.ufba.lasid.jds.IProcess;
  * @author aliriosa
  */
 public interface IRecoverableProcess<ProcessID> extends IProcess<ProcessID>{
-       public IState getCurrentState();
-       public void setCurrentState(IState state);
+       public br.ufba.lasid.jds.management.memory.state.IState getCurrentState();
+       public void setCurrentState(br.ufba.lasid.jds.management.memory.state.IState state);
 
 }
