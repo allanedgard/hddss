@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.management.memory.cache;
 
-import br.ufba.lasid.jds.management.JDSConfigurator;
+import br.ufba.lasid.jds.util.JDSUtility;
 import java.util.Properties;
 
 /**
@@ -16,10 +16,10 @@ public class MRUCachePolicyProvider implements ICachePolicyProvider{
 
     public ICachePolicy create(Properties options) throws Exception {
         
-        Properties defaultProperties = JDSConfigurator.Options;
+        Properties defaultProperties = JDSUtility.Options;
         
-        String maxSize = options.getProperty( JDSConfigurator.MaximumCacheSize,
-                                              defaultProperties.getProperty(JDSConfigurator.MaximumCacheSize));
+        String maxSize = options.getProperty( JDSUtility.MaximumCacheSize,
+                                              defaultProperties.getProperty(JDSUtility.MaximumCacheSize));
         
         return new MRUCachePolicy(Integer.parseInt(maxSize));
 

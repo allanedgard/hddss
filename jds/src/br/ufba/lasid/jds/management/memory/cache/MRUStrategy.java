@@ -24,46 +24,60 @@ public class MRUStrategy<K, V>{
     }
 
     public void put(K key, V value){
+        //JDSUtility.debug("before [MRUStrategy.put(" + key +", " + value +")]\n" + this);
         Entry<K, V> entry = table.get(key);
 
         if(entry != null){
             entry.setValue(value);
             hint(entry);
-            return;
-        }
-
-        if(table.size() == max){
-            entry = evict();
-            entry.setKey(key);
-            entry.setValue(value);
+            
         }else{
-            entry = new Entry<K, V>(key, value);
+
+            if(table.size() == max){
+                entry = evict();
+                entry.setKey(key);
+                entry.setValue(value);
+            }else{
+                entry = new Entry<K, V>(key, value);
+            }
+
+            insert(entry);
+
+            table.put(entry.getKey(), entry);
         }
-
-        insert(entry);
-
-        table.put(entry.getKey(), entry);
+        
+       // JDSUtility.debug("after [MRUStrategy.put(" + key +", " + value +")]\n" + this);
         
     }
 
     public V get(K key){
-        
+
+        //JDSUtility.debug("before null = [MRUStrategy.get(" + key +")]\n" + this);
+
+        V value = null;
+
         Entry<K, V> entry = table.get(key);
+
         if(entry != null){
             hint(entry);
-            return entry.getValue();
+            value =  entry.getValue();
         }
 
-        return null;
+        //JDSUtility.debug("after " + value + " = [MRUStrategy.get(" + key +")]\n" + this);
+
+        return value;
     }
 
     public void remove(K key){
+        //JDSUtility.debug("before [MRUStrategy.remove(" + key +")]\n" + this);
         Entry<K, V> entry = table.get(key);
 
         if(entry != null){
             remove(entry);
             table.remove(entry.getKey());
         }
+
+        //JDSUtility.debug("after [MRUStrategy.remove(" + key +")]\n" + this);
         
     }
     
@@ -108,9 +122,11 @@ public class MRUStrategy<K, V>{
     }
 
     public void clear(){
+        //JDSUtility.debug("before [MRUStrategy.clear()]\n" + this);
         table = new Hashtable<K, Entry<K, V>>();
         first = null;
         last = null;
+        //JDSUtility.debug("after [MRUStrategy.clear()]\n" + this);
     }
 
     private void hint(Entry<K, V> entry){
@@ -138,8 +154,8 @@ class Entry<K, V>{
         K key;
         V value;
 
-        Entry next;
-        Entry previous;
+        Entry next = null;
+        Entry previous = null;
 
     public Entry(K key, V value) {
         this.key = key;
@@ -176,7 +192,6 @@ class Entry<K, V>{
 
     public void setValue(V value) {
         this.value = value;
-    }
-
+    }    
 }
 

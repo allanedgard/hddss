@@ -5,11 +5,13 @@
 
 package br.ufba.lasid.jds.management.memory.pages;
 
+import java.io.Serializable;
+
 /**
  *
  * @author aliriosa
  */
-public class BasePage implements IPage{
+public class BasePage implements IPage, Serializable{
     protected long size = 0;
     protected long offset;
     protected long index;
@@ -60,5 +62,42 @@ public class BasePage implements IPage{
     public void setSize(long size) throws Exception{
         this.size = size;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final BasePage other = (BasePage) obj;
+        if (this.size != other.size) {
+            return false;
+        }
+        if (this.offset != other.offset) {
+            return false;
+        }
+        if (this.index != other.index) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 53 * hash + (int) (this.size ^ (this.size >>> 32));
+        hash = 53 * hash + (int) (this.offset ^ (this.offset >>> 32));
+        hash = 53 * hash + (int) (this.index ^ (this.index >>> 32));
+        return hash;
+    }
+
+    @Override
+    public String toString() {
+        return "BasePage{" + "size=" + size + ", offset=" + offset + ", index=" + index + ", maxSize=" + maxPageSize + ", bytes=" + new String(bytes) + '}';
+    }
+
+
 
 }

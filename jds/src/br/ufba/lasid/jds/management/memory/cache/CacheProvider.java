@@ -5,8 +5,8 @@
 
 package br.ufba.lasid.jds.management.memory.cache;
 
-import br.ufba.lasid.jds.management.memory.IMemoryProvider;
-import br.ufba.lasid.jds.management.JDSConfigurator;
+import br.ufba.lasid.jds.util.JDSUtility;
+import br.ufba.lasid.jds.management.memory.IPersistentMemory;
 import java.util.Properties;
 
 /**
@@ -16,25 +16,20 @@ import java.util.Properties;
 public class CacheProvider implements ICacheProvider{
 
     public ICache create(Properties options) throws Exception {
-       Properties defaultOptions = JDSConfigurator.Options;
+
+       Properties ioptions = new Properties(JDSUtility.Options);
        
-       String   mProvider = options.getProperty( JDSConfigurator.PersistentMemoryProvider,
-                                defaultOptions.getProperty(JDSConfigurator.PersistentMemoryProvider));
+       ioptions.putAll(options);
+       
+       String maxCacheSize = ioptions.getProperty( JDSUtility.MaximumCacheSize);
 
-       String    pProvider = options.getProperty( JDSConfigurator.CachePolicyProvider,
-                                defaultOptions.getProperty(JDSConfigurator.CachePolicyProvider));
-
-       String maxCacheSize = options.getProperty( JDSConfigurator.MaximumCacheSize,
-                                defaultOptions.getProperty(JDSConfigurator.MaximumCacheSize));
-
-        
-        IMemoryProvider      mp = (    IMemoryProvider  ) Class.forName(mProvider).newInstance();
-        ICachePolicyProvider pp = (ICachePolicyProvider ) Class.forName(pProvider).newInstance();
+        IPersistentMemory pm = JDSUtility.create(JDSUtility.PersistentMemoryProvider, options);
+        ICachePolicy      cp = JDSUtility.create(JDSUtility.CachePolicyProvider, options);
                 
-        ICache cache = new Cache(mp.create(options), pp.create(options));
+        ICache cache = new Cache(pm, cp);
         
         cache.setMaxSize(Integer.parseInt(maxCacheSize));
-        
+
         return cache;
         
     }

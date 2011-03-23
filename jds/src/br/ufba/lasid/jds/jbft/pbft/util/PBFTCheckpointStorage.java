@@ -7,7 +7,7 @@ package br.ufba.lasid.jds.jbft.pbft.util;
 
 import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
 import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IStore;
-import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.JDSUtility;
 import java.io.IOException;
 import jdbm.RecordManager;
 import jdbm.RecordManagerFactory;
@@ -38,12 +38,12 @@ public class PBFTCheckpointStorage implements IStore<String, IState> {
 
         if(recid    != 0){
             tree = BTree.load(recman, recid);
-            Debugger.debug("[PBFTCheckpointStorage]Reloading existing B+Tree with " + tree.size() + " records");
+            JDSUtility.debug("[PBFTCheckpointStorage]Reloading existing B+Tree with " + tree.size() + " records");
         }else{
             tree = BTree.createInstance(recman, new CheckpointKeyComparator());
             
             recman.setNamedObject(btreename, tree.getRecid());
-            Debugger.debug("[PBFTCheckpointStorage]Reloading existing B+Tree with " + tree.size() + " records");
+            JDSUtility.debug("[PBFTCheckpointStorage]Reloading existing B+Tree with " + tree.size() + " records");
         }
         
     }

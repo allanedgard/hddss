@@ -104,13 +104,10 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
 
     @Override
     public void startup() {
-
-        //do nothing
         getProtocol().getArchitecture().buildup();
         ((PBFTServer)getProtocol()).loadState();
         ((PBFTServer)getProtocol()).doSchedulePeriodicStatusSend();
-        ((PBFTServer)getProtocol()).doFetchMetaData();
-        
+        ((PBFTServer)getProtocol()).emitFetch();        
     }
 
 

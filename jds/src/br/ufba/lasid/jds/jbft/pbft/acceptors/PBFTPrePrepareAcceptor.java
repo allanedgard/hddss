@@ -9,7 +9,7 @@ import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
-import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.JDSUtility;
 
 /**
  *
@@ -35,7 +35,7 @@ public class PBFTPrePrepareAcceptor extends PBFTAcceptor<PBFTPrePrepare>{
             long nextC  = pbft.getStateLog().getNextCommitSEQ();
             long nextE  = pbft.getStateLog().getNextExecuteSEQ();
 
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTPrePrepareAcceptor:accept(preprepare)] s"  + pbft.getLocalServerID() +
               ", at time " + pbft.getClockValue() + ", discarded " + preprepare +
               " because it hasn't a valid sequence/view number. "
@@ -53,7 +53,7 @@ public class PBFTPrePrepareAcceptor extends PBFTAcceptor<PBFTPrePrepare>{
          * it will be discarded.
          */
         if(!pbft.wasSentByPrimary(preprepare)){
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTPrePrepareAcceptor:accept(preprepare)] s"   + pbft.getLocalServerID()   +
               ", at time " + pbft.getClockValue() + ", discarded " + preprepare      +
               " because it wasn't sent by primary server s" + pbft.getCurrentPrimaryID()
@@ -74,9 +74,9 @@ public class PBFTPrePrepareAcceptor extends PBFTAcceptor<PBFTPrePrepare>{
                 statedRequest.setState(StatedPBFTRequestMessage.RequestState.PREPREPARED);
                 statedRequest.setSequenceNumber(preprepare.getSequenceNumber());
 
-                pbft.doRevokeViewChange(digest);
+                pbft.revokeViewChange(digest);
 
-                Debugger.debug(
+                JDSUtility.debug(
                   "[PBFTPrePrepareAcceptor:accept(preprepare)] s"  + pbft.getLocalServerID() +
                   ", at time " + pbft.getClockValue() + ", revoked the timeout "
                 + "for pre-prepare of " + statedRequest.getRequest()

@@ -5,8 +5,10 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft;
 
-import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IRecoverableServer;
-import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
+import br.ufba.lasid.jds.ft.IRecoverableServer;
+import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IRecoverableProcess;
+//import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
+import br.ufba.lasid.jds.management.memory.state.IState;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.SimulatedPBFTServerAgent;
 import br.ufba.lasid.jds.util.IPayload;
 
@@ -14,7 +16,7 @@ import br.ufba.lasid.jds.util.IPayload;
  *
  * @author aliriosa
  */
-public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecoverableServer<Integer>{
+public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecoverableServer<Integer>{//IRecoverableServer<Integer>{
 
     
     public Calculator calculator = new Calculator();

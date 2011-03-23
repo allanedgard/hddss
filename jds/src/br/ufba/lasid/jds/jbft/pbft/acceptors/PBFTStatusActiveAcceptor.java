@@ -18,7 +18,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTLogEntry;
 import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IStore;
-import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.JDSUtility;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jdbm.helper.Tuple;
@@ -36,7 +36,7 @@ public class PBFTStatusActiveAcceptor extends PBFTAcceptor<PBFTStatusActive>{
 
     public synchronized boolean accept(PBFTStatusActive stsActive) {
         PBFTServer pbft = (PBFTServer) getProtocol();
-        IProcess rServer = new br.ufba.lasid.jds.Process(stsActive.getReplicaID());
+        IProcess rServer = new br.ufba.lasid.jds.BaseProcess(stsActive.getReplicaID());
 
         if(stsActive != null && !pbft.getLocalServerID().equals(rServer.getID())){
 
@@ -51,7 +51,7 @@ public class PBFTStatusActiveAcceptor extends PBFTAcceptor<PBFTStatusActive>{
                 long nextE  = pbft.getStateLog().getNextExecuteSEQ();
                 long lwSEQ  = pbft.getCheckpointLowWaterMark();
 
-                Debugger.debug(
+                JDSUtility.debug(
                   "[PBFTServer:accept(activeStatus)] s"  + pbft.getLocalServerID() +
                   ", at time " + pbft.getClockValue() + ", discarded " + stsActive +
                   " because it hasn't a valid view number. "
@@ -70,7 +70,7 @@ public class PBFTStatusActiveAcceptor extends PBFTAcceptor<PBFTStatusActive>{
              * be discarded.
              */
             if(!pbft.wasSentByAGroupMember(stsActive)){
-                Debugger.debug(
+                JDSUtility.debug(
                   "[PBFTServer:accept(activeStatus)] s"   + pbft.getLocalServerID()   +
                   ", at time " + pbft.getClockValue() + ", discarded " + stsActive      +
                   " because it wasn't sent by a member of " + pbft.getLocalGroup()
@@ -173,7 +173,7 @@ public class PBFTStatusActiveAcceptor extends PBFTAcceptor<PBFTStatusActive>{
                     }//end for seq
 
                     long currSEQ = lwSEQ + 1;
-                    IStore store = pbft.getCheckpointStore();
+                    IStore store = null;//pbft.getCheckpointStore();
 
                     while(currSEQ < _lwSEQ){
                         try {

@@ -179,4 +179,8 @@ public interface IMemory {
     public long getPageOffset(long pageindex) throws Exception;
 
     public void release() throws Exception;
+
+//    public int  readPages (byte[] buffer, int offset, int length) throws Exception;
+ //   public void writePages(byte[] buffer, int offset, int length) throws Exception;
+
 }

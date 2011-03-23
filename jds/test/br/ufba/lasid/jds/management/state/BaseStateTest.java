@@ -5,7 +5,9 @@
 
 package br.ufba.lasid.jds.management.state;
 
-import br.ufba.lasid.jds.management.memory.BufferArrayVolatileMemory;
+import br.ufba.lasid.jds.management.trash.state.BaseStateManager;
+import br.ufba.lasid.jds.management.trash.state.BaseState;
+import br.ufba.lasid.jds.management.memory.BufferMemory;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -37,7 +39,7 @@ public class BaseStateTest {
         try{
         instance = new BaseState(
                         new BaseStateManager(),
-                        new BufferArrayVolatileMemory()
+                        new BufferMemory()
                     );
         }catch(Exception except){
             except.printStackTrace();

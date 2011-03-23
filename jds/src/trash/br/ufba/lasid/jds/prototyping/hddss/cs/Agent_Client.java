@@ -6,7 +6,7 @@
 package trash.br.ufba.lasid.jds.prototyping.hddss.cs;
 
 import trash.br.ufba.lasid.jds.Executor;
-import br.ufba.lasid.jds.Process;
+import br.ufba.lasid.jds.BaseProcess;
 import br.ufba.lasid.jds.cs.IClient;
 import trash.br.ufba.lasid.jds.cs.actions.CreateRequestAction;
 import trash.br.ufba.lasid.jds.cs.actions.ReceiveReplyAction;
@@ -23,7 +23,7 @@ import br.ufba.lasid.jds.util.IPayload;
  * @author aliriosa
  */
 public class Agent_Client extends Agent_ServiceComponent implements IClient<Integer>{
-    Process<Integer> server = new Process<Integer>();
+    BaseProcess<Integer> server = new BaseProcess<Integer>();
 
     @Override
     public void receive(Message msg) {
@@ -52,7 +52,7 @@ public class Agent_Client extends Agent_ServiceComponent implements IClient<Inte
         return new ClientServerReceiveReplyExecutor(getProtocol());
     }
 
-    public Process<Integer> getServerProcessAddressRef(){
+    public BaseProcess<Integer> getServerProcessAddressRef(){
         return this.server;
     }
 

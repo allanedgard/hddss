@@ -9,7 +9,7 @@ import br.ufba.lasid.jds.comm.Quorum;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
-import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.JDSUtility;
 
 /**
  *
@@ -28,7 +28,7 @@ public class PBFTCheckpointAcceptor extends PBFTAcceptor<PBFTCheckpoint>{
          * be discarded.
          */
         if(!pbft.wasSentByAGroupMember(checkpoint)){
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTServer:accept(checkpoint)] s"   + pbft.getLocalServerID()   +
               ", at time " + pbft.getClockValue() + ", discarded " + checkpoint      +
               " because it wasn't sent by a member of the group " + pbft.getLocalGroup()
@@ -46,7 +46,7 @@ public class PBFTCheckpointAcceptor extends PBFTAcceptor<PBFTCheckpoint>{
         long seqn = checkpoint.getSequenceNumber();
 
         if(lowWaterMark > seqn){
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTServer:accept(checkpoint)] s"   + pbft.getLocalServerID()     +
               ", at time " + pbft.getClockValue() + ", discarded " + checkpoint +
               " because it has sequence number lower than current low water mark " +
@@ -64,20 +64,20 @@ public class PBFTCheckpointAcceptor extends PBFTAcceptor<PBFTCheckpoint>{
 
         if(q != null && q.complete()){
 
-            Debugger.debug(
+            JDSUtility.debug(
               "[PBFTServer:accept(checkpoint)] s" + pbft.getLocalServerID()     +
               ", at time " + pbft.getClockValue() + ", has already complete  a quorum for " +
               " checkpoint with sequence number (" + seqn + ")."
             );
 
             if(seqn > highWaterMark){
-                Debugger.debug(
+                JDSUtility.debug(
                   "[PBFTServer:accept(checkpoint)] s" + pbft.getLocalServerID()     +
                   ", at time " + pbft.getClockValue() + ", has detected a stable " +
                   " checkpoint certificate with sequence number (" + seqn + ") " +
                   "greater than its high checkpoint water mark (HCWK = " + highWaterMark + ")."
                 );
-                Debugger.debug(
+                JDSUtility.debug(
                   "[PBFTServer:accept(checkpoint)] s" + pbft.getLocalServerID()     +
                   ", at time " + pbft.getClockValue() + ", is going to start " +
                   " a start transfer procedure."

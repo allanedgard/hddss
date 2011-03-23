@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
-import br.ufba.lasid.jds.util.Debugger;
+import br.ufba.lasid.jds.util.JDSUtility;
 import java.util.Hashtable;
 
 /**
@@ -113,7 +113,7 @@ public class PBFTClient extends PBFT implements IPBFTClient{
                 pdu.setDestination(getRemoteProcess());
                 pdu.setPayload(m);                
                 getCommunicator().multicast(pdu, (IGroup)getRemoteProcess());
-                Debugger.debug(
+                JDSUtility.debug(
                   "[PBFTClient] c" + getLocalProcessID() + " sent " + request + " " +
                   "to " + getRemoteProcess() + " at time " + getClockValue() + "."
                 );
@@ -172,7 +172,7 @@ public class PBFTClient extends PBFT implements IPBFTClient{
 
                 quorum.add(r);
 
-                Debugger.debug(
+                JDSUtility.debug(
                    "[PBFTClient:updateState(reply)] c"  + getLocalProcessID() + ", " + 
                    "at time " + getClockValue() + ", updated a entry in its log " +
                    "for the received " + r + "."
@@ -214,7 +214,7 @@ public class PBFTClient extends PBFT implements IPBFTClient{
                 
                 emit(r);
 
-                Debugger.debug(
+                JDSUtility.debug(
                   "[PBFTClient] c" + getLocalProcessID() + " re-sent " + r +
                   " to " + getRemoteProcess() + " at time " + getClockValue()
                 );
@@ -264,7 +264,7 @@ public class PBFTClient extends PBFT implements IPBFTClient{
         }
 
         if(!hasARelatedRequest(reply)){
-            Debugger.debug(
+            JDSUtility.debug(
                "[PBFTClient:canProceed(reply)] c" + getLocalProcessID() + ", " +
                "at time " + getClockValue() + ", discarded " + reply + " because there isn't " +
                " a related request."

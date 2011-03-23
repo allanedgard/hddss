@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.management.memory;
 
-import br.ufba.lasid.jds.management.JDSConfigurator;
+import br.ufba.lasid.jds.util.JDSUtility;
 import java.util.Properties;
 
 /**
@@ -16,19 +16,19 @@ public class MemoryFactory {
 
     public static IMemory create() throws Exception{
 
-        return create(new Properties(JDSConfigurator.Options));
+        return create(new Properties(JDSUtility.Options));
     }
 
     public static IMemory create(Properties options) throws Exception{
 
-         Properties ioptions = new Properties(JDSConfigurator.Options);
-         ioptions.putAll(JDSConfigurator.Options);
+         Properties ioptions = new Properties(JDSUtility.Options);
+         ioptions.putAll(JDSUtility.Options);
          ioptions.putAll(options);
 
         String provider = ioptions.getProperty(
-                              JDSConfigurator.VolatileMemoryProvider,
-                              JDSConfigurator.Options.getProperty(
-                                JDSConfigurator.VolatileMemoryProvider
+                              JDSUtility.VolatileMemoryProvider,
+                              JDSUtility.Options.getProperty(
+                                JDSUtility.VolatileMemoryProvider
                               )
                            );
 
