@@ -10,11 +10,11 @@ import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.MessageHandler;
 import br.ufba.lasid.jds.group.IGroup;
 import br.ufba.lasid.jds.group.Group;
+import br.ufba.lasid.jds.jbft.pbft.IPBFT;
 import br.ufba.lasid.jds.prototyping.hddss.Agent;
 import br.ufba.lasid.jds.prototyping.hddss.Message;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
-import br.ufba.lasid.jds.jbft.pbft.PBFT;
 
 /**
  *
@@ -22,15 +22,15 @@ import br.ufba.lasid.jds.jbft.pbft.PBFT;
  */
 public class SimulatedPBFTAgent extends Agent implements IProcess<Integer>, IPBFTAgent{
 
-    protected PBFT  protocol;
+    protected IPBFT  protocol;
     protected IGroup group = new Group();
 
 
-    public PBFT getProtocol() {
+    public IPBFT getProtocol() {
         return protocol;
     }
 
-    public void setProtocol(PBFT protocol) {
+    public void setProtocol(IPBFT protocol) {
         this.protocol = protocol;
     }
     

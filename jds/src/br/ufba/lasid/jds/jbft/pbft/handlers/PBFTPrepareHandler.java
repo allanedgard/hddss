@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.jbft.pbft.handlers;
 
-import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 
 /**
@@ -14,7 +14,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
  */
 public class PBFTPrepareHandler extends PBFTServerMessageHandler{
 
-    public PBFTPrepareHandler(PBFTServer protocol) {
+    public PBFTPrepareHandler(IPBFTServer protocol) {
         super(protocol);
         lock = getLock("handle", PBFTPrepare.class);
     }

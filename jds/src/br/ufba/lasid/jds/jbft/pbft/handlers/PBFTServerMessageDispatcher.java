@@ -9,13 +9,13 @@ import br.ufba.lasid.jds.comm.IMessageHandler;
 import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.SignedMessage;
+import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBag;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetch;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetchMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  * @author aliriosa
  */
 public class PBFTServerMessageDispatcher extends PBFTServerMessageHandler {
-    public PBFTServerMessageDispatcher(PBFTServer protocol){
+    public PBFTServerMessageDispatcher(IPBFTServer protocol){
         super(protocol);
     }
 
@@ -100,10 +100,6 @@ public class PBFTServerMessageDispatcher extends PBFTServerMessageHandler {
         if(m instanceof PBFTBag){
             handler = new PBFTBagHandler(getProtocol());
         }
-
-//        if(m instanceof PBFTFetchMetaData){
-//            handler = new PBFTFetchMetaDataHandler(getProtocol());
-//        }
 
         if(m instanceof PBFTMetaData){
             handler = new PBFTMetaDataHandler(getProtocol());

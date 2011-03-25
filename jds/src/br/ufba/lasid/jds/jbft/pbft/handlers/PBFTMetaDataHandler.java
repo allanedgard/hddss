@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.jbft.pbft.handlers;
 
-import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
 
 /**
@@ -14,7 +14,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
  */
 public class PBFTMetaDataHandler extends PBFTServerMessageHandler {
 
-    public PBFTMetaDataHandler(PBFTServer protocol) {
+    public PBFTMetaDataHandler(IPBFTServer protocol) {
         super(protocol);
         lock = getLock("handle", PBFTMetaData.class);
     }

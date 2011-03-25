@@ -9,7 +9,7 @@ import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
-import br.ufba.lasid.jds.jbft.pbft.acceptors.PBFTBagAcceptor;
+import trash.br.ufba.lasid.jds.jbft.pbft.acceptors.PBFTBagAcceptor;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBag;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTExecutorBroker;

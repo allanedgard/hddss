@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.jbft.pbft.handlers;
 
-import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 
 /**
@@ -14,7 +14,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
  */
 public class PBFTCheckpointHandler extends PBFTServerMessageHandler{
 
-    public PBFTCheckpointHandler(PBFTServer protocol) {
+    public PBFTCheckpointHandler(IPBFTServer protocol) {
         super(protocol);
         lock = getLock("handle", PBFTCheckpoint.class);
     }

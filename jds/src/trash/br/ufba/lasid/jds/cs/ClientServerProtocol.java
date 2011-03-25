@@ -5,7 +5,7 @@
 
 package trash.br.ufba.lasid.jds.cs;
 
-import trash.br.ufba.lasid.jds.DistributedProtocol;
+import br.ufba.lasid.jds.DistributedProtocol;
 import trash.br.ufba.lasid.jds.factories.ClientServerActionFactory;
 import trash.br.ufba.lasid.jds.util.Wrapper;
 

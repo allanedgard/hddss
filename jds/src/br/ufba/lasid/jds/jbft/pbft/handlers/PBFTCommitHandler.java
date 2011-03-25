@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.jbft.pbft.handlers;
 
-import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
 
 /**
@@ -14,7 +14,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
  */
 public class PBFTCommitHandler extends PBFTServerMessageHandler {
 
-    public PBFTCommitHandler(PBFTServer protocol) {
+    public PBFTCommitHandler(IPBFTServer protocol) {
         super(protocol);
         lock = getLock("handle", PBFTCommit.class);
     }

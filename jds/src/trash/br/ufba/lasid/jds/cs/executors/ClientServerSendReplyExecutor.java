@@ -7,7 +7,7 @@ package trash.br.ufba.lasid.jds.cs.executors;
 
 import trash.br.ufba.lasid.jds.Action;
 import trash.br.ufba.lasid.jds.Executor;
-import trash.br.ufba.lasid.jds.DistributedProtocol;
+import br.ufba.lasid.jds.DistributedProtocol;
 import trash.br.ufba.lasid.jds.cs.comm.ClientServerMessage;
 
 /**

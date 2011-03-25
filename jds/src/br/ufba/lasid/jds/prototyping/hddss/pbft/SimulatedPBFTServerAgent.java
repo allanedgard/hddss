@@ -10,8 +10,10 @@ import br.ufba.lasid.jds.security.SHA1withDSASunMessageAuthenticator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import br.ufba.lasid.jds.cs.IServer;
+import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.architectures.PBFTServerArchitecture;
+import br.ufba.lasid.jds.jbft.pbft.fmm.PBFTServerMultiModeMachine;
 
 /**
  *
@@ -20,7 +22,7 @@ import br.ufba.lasid.jds.jbft.pbft.architectures.PBFTServerArchitecture;
 public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implements IServer<Integer>{
 
     public SimulatedPBFTServerAgent() {
-        setProtocol(new PBFTServer());
+        setProtocol(new PBFTServerMultiModeMachine(PBFTServer.create()));
     }
 
     @Override
@@ -30,13 +32,13 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
         SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.clock);
         scheduler.setAgent(this);
 
-        //((Simulator)this.infra.context).p[this.ID] = (Agent) Adapter.newInstance(this, scheduler);
+        //((Simulator)this.infra.context).p[this.ID] = (Agent) Adapter.create(this, scheduler);
 
         getProtocol().setCommunicator(new SimulatedPBFTCommunicator(this));
         getProtocol().setLocalProcess(this);
         getProtocol().setClock(this.infra.clock);
         getProtocol().setScheduler(scheduler);
-        ((PBFTServer)getProtocol()).setServer(this);
+        ((IPBFTServer)getProtocol()).setServer(this);
         getProtocol().setLocalGroup(getGroup());
 
         try {
@@ -48,7 +50,7 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
         }
 
         getProtocol().setArchitecture(
-            new PBFTServerArchitecture((PBFTServer)getProtocol())
+            new PBFTServerArchitecture((IPBFTServer)getProtocol())
         );
 
         getProtocol().getArchitecture().buildup();
@@ -58,56 +60,55 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
     }
 
     public void setCheckpointPeriod(String period){
-        ((PBFTServer)getProtocol()).setCheckpointPeriod(Long.valueOf(period));
+        ((IPBFTServer)getProtocol()).setCheckpointPeriod(Long.valueOf(period));
     }
 
     public void setCheckpointFactor(String factor){
-        ((PBFTServer)getProtocol()).setCheckpointFactor(Long.valueOf(factor));
+        ((IPBFTServer)getProtocol()).setCheckpointFactor(Long.valueOf(factor));
     }
 
     public void setBatchingSize(String size){
-     ((PBFTServer)getProtocol()).setBatchSize(Integer.valueOf(size));
+     ((IPBFTServer)getProtocol()).setBatchSize(Integer.valueOf(size));
     }
 
     public void setRejuvenationWindow(String timeout){
-        ((PBFTServer)getProtocol()).setRejuvenationWindow(Long.valueOf(timeout));
+        ((IPBFTServer)getProtocol()).setRejuvenationWindow(Long.valueOf(timeout));
     }
 
-
     public void setBatchingTimeout(String timeout){
-        ((PBFTServer)getProtocol()).setBatchTimeout(Long.valueOf(timeout));
+        ((IPBFTServer)getProtocol()).setBatchTimeout(Long.valueOf(timeout));
     }
 
     public void setViewChangeRetransmittionTimeout(String timeout){
-        ((PBFTServer)getProtocol()).setChangeViewRetransmissionTimeout(Long.valueOf(timeout));
+        ((IPBFTServer)getProtocol()).setChangeViewRetransmissionTimeout(Long.valueOf(timeout));
     }
-
+    
     public void setCurrentPrimary(String addr){
-        ((PBFTServer)getProtocol()).setCurrentPrimaryID(Integer.valueOf(addr));
+        ((IPBFTServer)getProtocol()).setCurrentPrimaryID(Integer.valueOf(addr));
     }
 
     public void setPrimaryFaultTimeout(String timeout){
-        ((PBFTServer)getProtocol()).setPrimaryFaultTimeout(Long.valueOf(timeout));
+        ((IPBFTServer)getProtocol()).setPrimaryFaultTimeout(Long.valueOf(timeout));
     }
 
     public void setCurrentView(String v){
-        ((PBFTServer)getProtocol()).setCurrentViewNumber(Integer.valueOf(v));
+        ((IPBFTServer)getProtocol()).setCurrentViewNumber(Integer.valueOf(v));
     }
 
     public void setSendStatusPeriod(String period){
-        ((PBFTServer)getProtocol()).setSendStatusPeriod(Long.valueOf(period));
+        ((IPBFTServer)getProtocol()).setSendStatusPeriod(Long.valueOf(period));
     }
 
     public void setSlidingWindowSize(String size){
-        ((PBFTServer)getProtocol()).setSlidingWindowSize(Long.valueOf(size));
+        ((IPBFTServer)getProtocol()).setSlidingWindowSize(Long.valueOf(size));
     }
 
     @Override
     public void startup() {
-        getProtocol().getArchitecture().buildup();
-        ((PBFTServer)getProtocol()).loadState();
-        ((PBFTServer)getProtocol()).doSchedulePeriodicStatusSend();
-        ((PBFTServer)getProtocol()).emitFetch();        
+        ((IPBFTServer)getProtocol()).getArchitecture().buildup();
+        ((IPBFTServer)getProtocol()).loadState();
+        ((IPBFTServer)getProtocol()).schedulePeriodicStatusSend();
+        ((IPBFTServer)getProtocol()).emitFetch();
     }
 
 

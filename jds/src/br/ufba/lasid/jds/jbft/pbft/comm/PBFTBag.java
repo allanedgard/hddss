@@ -6,7 +6,7 @@
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
 import br.ufba.lasid.jds.comm.IMessage;
-import br.ufba.lasid.jds.jbft.pbft.util.MessageCollection;
+import br.ufba.lasid.jds.comm.MessageCollection;
 
 /**
  *

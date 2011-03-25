@@ -10,8 +10,8 @@ import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
-import br.ufba.lasid.jds.jbft.pbft.acceptors.PBFTPrePrepareAcceptor;
-import br.ufba.lasid.jds.jbft.pbft.acceptors.PBFTPrepareAcceptor;
+import trash.br.ufba.lasid.jds.jbft.pbft.acceptors.PBFTPrePrepareAcceptor;
+import trash.br.ufba.lasid.jds.jbft.pbft.acceptors.PBFTPrepareAcceptor;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCollectorServant;
 
 /**

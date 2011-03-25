@@ -5,30 +5,29 @@
 
 package br.ufba.lasid.jds.jbft.pbft.handlers;
 
-import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.MessageHandler;
-import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
 
 /**
  *
  * @author aliriosa
  */
 public abstract class PBFTServerMessageHandler extends MessageHandler {
-    PBFTServer protocol;
+    IPBFTServer protocol;
 
     public Object getLock(String name, Class _class){
         return super.getLock(getProtocol(), name, _class);
     }
     
-    public PBFTServerMessageHandler(PBFTServer protocol){
+    public PBFTServerMessageHandler(IPBFTServer protocol){
         this.protocol = protocol;
     }
 
-    public PBFTServer getProtocol() {
+    public IPBFTServer getProtocol() {
         return protocol;
     }
 
-    public void setProtocol(PBFTServer protocol) {
+    public void setProtocol(IPBFTServer protocol) {
         this.protocol = protocol;
     }
 
