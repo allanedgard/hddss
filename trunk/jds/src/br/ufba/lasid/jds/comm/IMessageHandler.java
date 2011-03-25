@@ -5,8 +5,6 @@
 
 package br.ufba.lasid.jds.comm;
 
-import br.ufba.lasid.jds.comm.IMessage;
-
 /**
  *
  * @author aliriosa

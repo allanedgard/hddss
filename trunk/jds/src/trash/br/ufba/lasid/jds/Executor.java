@@ -5,6 +5,7 @@
 
 package trash.br.ufba.lasid.jds;
 
+import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.util.ITask;
 
 /**

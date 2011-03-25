@@ -1,0 +1,39 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package br.ufba.lasid.jds.fmm;
+
+/**
+ *
+ * @author aliriosa
+ */
+public class Mode {
+
+    protected MultiModeMachine machine = null;
+
+    public Mode(int imode, MultiModeMachine machine){
+        this.machine = machine;
+        this.machine.register(imode, this);
+    }
+    
+    public boolean able(){
+        return false;
+    }
+
+    public void enter(){
+        //do noting
+    }
+
+    public void exit(){
+        //do nothing
+    }
+
+    @Override
+    public String toString() {
+        return "NULL";
+    }
+
+    
+}

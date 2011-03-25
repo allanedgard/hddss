@@ -5,8 +5,11 @@
 
 package br.ufba.lasid.jds.jbft.pbft.architectures;
 
+import br.ufba.lasid.jds.adapters.EventHandler;
 import br.ufba.lasid.jds.architectures.Architecture;
+import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.fmm.PBFTServerMultiModeMachine;
 import br.ufba.lasid.jds.jbft.pbft.handlers.PBFTServerServant;
 
 /**
@@ -15,7 +18,7 @@ import br.ufba.lasid.jds.jbft.pbft.handlers.PBFTServerServant;
  */
 public class PBFTServerArchitecture extends Architecture{
 
-    PBFTServer pbft;
+    IPBFTServer pbft;
 //    protected static String requestCollector = "requestCollector";
 //    protected static String preprepareCollector = "preprepareCollector";
 //    protected static String prepareCollector = "prepareCollector";
@@ -28,15 +31,15 @@ public class PBFTServerArchitecture extends Architecture{
     protected static String PBFTCommunicatorTag = "__PBFTCommunicator";
     public static String PBFTServantTag = "__PBFTServant";
     
-    public PBFTServer getPBFTServer() {
+    public IPBFTServer getPBFTServer() {
         return pbft;
     }
 
-    public void setPBFTServer(PBFTServer pbftServer) {
+    public void setPBFTServer(IPBFTServer pbftServer) {
         this.pbft = pbftServer;
     }
 
-    public PBFTServerArchitecture(PBFTServer pbft){
+    public PBFTServerArchitecture(IPBFTServer pbft){
         this.pbft = pbft;
     }
 
@@ -47,7 +50,7 @@ public class PBFTServerArchitecture extends Architecture{
     @Override
     public void buildup() {
 
-        add(PBFTServantTag, new PBFTServerServant(pbft));
+        add(PBFTServantTag, new PBFTServerServant(new PBFTServerMultiModeMachine(pbft)));
         add(PBFTCommunicatorTag, pbft.getCommunicator());
         connect(PBFTCommunicatorTag, PBFTServantTag);
 

@@ -6,7 +6,6 @@
 package trash.br.ufba.lasid.jds.comm;
 
 import trash.br.ufba.lasid.jds.IData;
-import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.util.IPayload;
 import trash.br.ufba.lasid.jds.util.Wrapper;
 import java.io.Serializable;

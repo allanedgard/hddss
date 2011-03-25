@@ -8,7 +8,7 @@ package br.ufba.lasid.jds.jbft.pbft.executors.serverexecutors;
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
-import br.ufba.lasid.jds.jbft.pbft.acceptors.PBFTRequestAcceptor;
+import trash.br.ufba.lasid.jds.jbft.pbft.acceptors.PBFTRequestAcceptor;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.executors.PBFTCollectorServant;
 

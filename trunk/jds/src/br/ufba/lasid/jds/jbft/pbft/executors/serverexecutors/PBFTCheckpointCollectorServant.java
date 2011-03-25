@@ -12,7 +12,7 @@ import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.group.IGroup;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
-import br.ufba.lasid.jds.jbft.pbft.acceptors.PBFTCheckpointAcceptor;
+import trash.br.ufba.lasid.jds.jbft.pbft.acceptors.PBFTCheckpointAcceptor;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetch;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;

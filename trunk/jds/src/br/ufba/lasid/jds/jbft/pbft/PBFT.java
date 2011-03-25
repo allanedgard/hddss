@@ -6,7 +6,7 @@
 package br.ufba.lasid.jds.jbft.pbft;
 
 import br.ufba.lasid.jds.group.IGroup;
-import trash.br.ufba.lasid.jds.DistributedProtocol;
+import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.architectures.Architecture;
 import br.ufba.lasid.jds.security.IMessageAuthenticator;
 import br.ufba.lasid.jds.util.IClock;
@@ -14,13 +14,12 @@ import br.ufba.lasid.jds.util.IScheduler;
 import br.ufba.lasid.jds.util.TaskTable;
 import br.ufba.lasid.jds.util.TaskTableStore;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTStateLog;
-import br.ufba.lasid.jds.util.ITask;
 
 /**
  *
  * @author aliriosa
  */
-public class PBFT extends DistributedProtocol{
+public class PBFT extends DistributedProtocol implements IPBFT{
 
     /**
      * State a table with tasks related to PBFT, in special these ones which are
@@ -64,15 +63,15 @@ public class PBFT extends DistributedProtocol{
     
     protected  IScheduler scheduler;
 
-    public IScheduler getScheduler() {
-        return scheduler;
-    }
 
     public Object getLocalProcessID(){
         return getLocalProcess().getID();
     }
     public void setScheduler(IScheduler scheduler) {
         this.scheduler = scheduler;
+    }
+    public IScheduler getScheduler() {
+        return scheduler;
     }
 
     protected  IClock clock;
