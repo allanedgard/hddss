@@ -1153,7 +1153,7 @@ public class PBFT2 extends ClientServerProtocol{
             @Override
             public void cancel(){
                 IScheduler scheduler = (IScheduler) get("SCHEDULER");
-                scheduler.cancel(this);
+                //scheduler.cancel(this);
             }
             
         };
@@ -1507,7 +1507,7 @@ public class PBFT2 extends ClientServerProtocol{
             @Override
             public void cancel(){
                 IScheduler s = (IScheduler) get("SCHEDULER");
-                s.cancel(this);
+                //s.cancel(this);
             }
 
         };
@@ -1552,7 +1552,7 @@ public class PBFT2 extends ClientServerProtocol{
             @Override
             public void cancel(){
                 IScheduler scheduler = (IScheduler) get("SCHEDULER");
-                scheduler.cancel(this);
+                //scheduler.cancel(this);
             }
 
         };

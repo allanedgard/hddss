@@ -34,6 +34,8 @@ public interface IGroup<GroupID, ProcessID> extends Serializable, ISystemEntity{
 
     public IGroup<GroupID, ProcessID> minus(IProcess<ProcessID> p);
     public IGroup<GroupID, ProcessID> plus(IProcess<ProcessID> p);
+
+    public ProcessID next(ProcessID pid);
     
 
 }

@@ -58,13 +58,13 @@ public class PBFTPrepare extends PBFTServerMessage{
 
     @Override
     public final String toString() {
-
+        Object rid = getReplicaID();
         return (
                 "<PREPARE" + ", " +
-                 "VIEW = " + getViewNumber().toString()     + ", " +
-                 "SEQUENCE = " + getSequenceNumber().toString()  + ", " +
-                 "SERVER = " + getReplicaID().toString()    + ", " +
-                 "DIGESTS = {" + digestsToString()+ "}"         +
+                 "VIEW = " + getViewNumber().toString() + ", " +
+                 "SEQUENCE = " + getSequenceNumber().toString() + ", " +
+                 "SERVER = " + (rid == null ? "NULL" : rid) + ", " +
+                 "DIGESTS = {" + digestsToString()+ "}" +
                  ">"
         );
     }

@@ -1,7 +1,7 @@
 /***********************************************************/
  * GENERAL SIMULATION OPTIONS
  ***********************************************************/
-FinalTime = 10000
+FinalTime = 100000
 NumberOfAgents = 8
 MaximumDeviation = 4
 Mode = clock
@@ -42,9 +42,9 @@ agent.ServerGroupAddress = 8
 agent.GroupList = 4,5,6,7
 agent.CurrentPrimary  = 4
 agent.CurrentView = 0
-agent.PrimaryFaultTimeout = 400
+agent.PrimaryFaultTimeout = 250
 agent.BatchingSize = 1
-agent.BatchingTimeout = 100
+agent.BatchingTimeout = 150
 agent.CheckpointPeriod = 128
 agent.CheckpointFactor = 3
 agent.ViewChangeRetransmittionTimeout = 5000

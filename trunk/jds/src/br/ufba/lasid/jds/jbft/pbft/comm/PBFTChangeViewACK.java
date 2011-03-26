@@ -10,16 +10,35 @@ package br.ufba.lasid.jds.jbft.pbft.comm;
  * @author aliriosa
  */
 public class PBFTChangeViewACK extends PBFTServerMessage{
+    Object prompterID;
+
+    public PBFTChangeViewACK(int viewn, Object replicaID, Object prompterID, String digest) {
+        setViewNumber(viewn);
+        setReplicaID(replicaID);
+        setPrompterID(prompterID);
+        setDigest(digest);
+    }
+
+    
+    public Object getPrompterID() {
+        return prompterID;
+    }
+
+    public void setPrompterID(Object prompterID) {
+        this.prompterID = prompterID;
+    }
+
 
     @Override
     public final String toString() {
-
+        Object rid = getReplicaID();
+        Object pid = getPrompterID();
         return (
-                "<VIEW-CHANGE-ACK"                              + "," +
-                 "VIEW = " + getViewNumber().toString()         + ", " +
-                 "SENDER = " + getReplicaID().toString()        + ", " +
-                 "DESTINATION = " + getReplicaID().toString()   + ", " +
-                 "DIG = " + getDigest().toString()              +
+                "<VIEW-CHANGE-ACK" + ", " +
+                 "VIEW = " + getViewNumber() + ", " +
+                 "SENDER = " + (rid == null ? "NULL" : rid) + ", " +
+                 "PROMPTER = " + (pid == null ? "NULL" : pid) + ", " +
+                 "DIG = " + getDigest() +
                  ">"
         );
     }

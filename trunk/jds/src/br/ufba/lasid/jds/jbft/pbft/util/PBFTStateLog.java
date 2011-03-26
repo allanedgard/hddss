@@ -15,9 +15,9 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage.RequestState;
-import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
 import br.ufba.lasid.jds.util.DigestList;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
 
@@ -42,25 +42,25 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
 
     private  PBFTRequestTable rseqtable = new PBFTRequestTable();
     private  PBFTRequestTable rdigtable = new PBFTRequestTable();
-    private  PBFTCheckpointTable cptable = new PBFTCheckpointTable();
+//    private  PBFTCheckpointTable cptable = new PBFTCheckpointTable();
 
-    public void doCacheServerState(Long seqn, String digest, IState state, boolean updated){
-
-        PBFTCheckpointTuple ctuple = new PBFTCheckpointTuple(seqn, digest, state, updated);
-
-        cptable.put(seqn, ctuple);
-
-    }
-    
-    public void doCacheServerState(Long seqn, String digest, IState state){
-
-        doCacheServerState(seqn, digest, state, false);
-
-    }
-
-    public PBFTCheckpointTable getCachedState(){
-        return cptable;
-    }
+//    public void doCacheServerState(Long seqn, String digest, IState state, boolean updated){
+//
+//        PBFTCheckpointTuple ctuple = new PBFTCheckpointTuple(seqn, digest, state, updated);
+//
+//        cptable.put(seqn, ctuple);
+//
+//    }
+//
+//    public void doCacheServerState(Long seqn, String digest, IState state){
+//
+//        doCacheServerState(seqn, digest, state, false);
+//
+//    }
+//
+//    public PBFTCheckpointTable getCachedState(){
+//        return cptable;
+//    }
 
     protected  long nextPrePrepareSEQ =  0L;
     protected  long nextPrepareSEQ    =  0L;
@@ -111,45 +111,20 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
         }
     }
 
-    public void setNextCommitSEQ(long nextCommitSEQ) {
-        this.nextCommitSEQ = nextCommitSEQ;
-    }
+    public void setNextCommitSEQ(long nextCommitSEQ) { this.nextCommitSEQ = nextCommitSEQ;}
+    public void setNextExecuteSEQ(long nextExecuteSEQ) { this.nextExecuteSEQ = nextExecuteSEQ;}
+    public void setNextPrePrepareSEQ(long nextPrePrepareSEQ) { this.nextPrePrepareSEQ = nextPrePrepareSEQ;}
+    public void setNextPrepareSEQ(long nextPrepareSEQ) {this.nextPrepareSEQ = nextPrepareSEQ;}
 
-    public void setNextExecuteSEQ(long nextExecuteSEQ) {
-        this.nextExecuteSEQ = nextExecuteSEQ;
-    }
-
-    public void setNextPrePrepareSEQ(long nextPrePrepareSEQ) {
-        this.nextPrePrepareSEQ = nextPrePrepareSEQ;
-    }
-
-    public void setNextPrepareSEQ(long nextPrepareSEQ) {
-        this.nextPrepareSEQ = nextPrepareSEQ;
-    }
-
-
-    public long getNextCommitSEQ() {
-        return nextCommitSEQ;
-    }
-
-    public long getNextPrePrepareSEQ() {
-        return nextPrePrepareSEQ;
-    }
-
-    public long getNextPrepareSEQ() {
-        return nextPrepareSEQ;
-    }
-
-    public long getNextExecuteSEQ() {
-        return nextExecuteSEQ;
-    }
+    public long getNextCommitSEQ() {return nextCommitSEQ;}
+    public long getNextPrePrepareSEQ() {return nextPrePrepareSEQ;}
+    public long getNextPrepareSEQ() {return nextPrepareSEQ;}
+    public long getNextExecuteSEQ() {return nextExecuteSEQ;}
 
 
     public boolean wasPrePrepared(PBFTPrepare p){
         synchronized(this){
-            /**
-             * If not is a null prepare
-             */
+            /*If not is a null prepare*/
             if(p != null){
 
                 PBFTLogEntry entry = get(p.getSequenceNumber());
@@ -215,9 +190,7 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
 
     public boolean wasPrepared(PBFTCommit c){
         synchronized(this){
-            /**
-             * If not is a null prepare
-             */
+            /*If not is a null prepare             */
             if(c != null){
 
                 PBFTLogEntry entry = get(c.getSequenceNumber());
@@ -253,7 +226,7 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
         }
         return false;
     }
-    
+    Hashtable<String, StatedPBFTRequestMessage> _digtable = new Hashtable<String, StatedPBFTRequestMessage>();
     public void insertRequestInTables(String digest, PBFTRequest r, RequestState rstate){
         synchronized(this){
 
@@ -270,6 +243,7 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
                             new StatedPBFTRequestMessage(r, rstate, digest);
 
                     rtuple.put(r.getTimestamp(), m);
+                    _digtable.put(digest, m);
                 }
 
             }
@@ -278,6 +252,17 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
 
     public StatedPBFTRequestMessage getStatedRequest(String digest){
         return (StatedPBFTRequestMessage)rdigtable.get(digest).values().toArray()[0];
+    }
+
+    public boolean hasWaitingRequest(){
+        Collection<StatedPBFTRequestMessage> rsr = _digtable.values();
+
+        for(StatedPBFTRequestMessage srm : rsr){
+            if(srm.getState().equals(RequestState.WAITING))
+                return true;
+        }
+
+        return false;
     }
 
     public StatedPBFTRequestMessage getStatedRequest(PBFTRequest r){
@@ -612,9 +597,11 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
                         }
                         //Debugger.debug("\t removing messages for sequence number " + seq);
                         //Debugger.debug("\t\t cleaning up the related client requests" + seq);
-                        for(String digest : digests){
+                        for(String digest : digests){                            
                             rseqtable.remove(seq);
                             rdigtable.remove(digest);
+                            _digtable.remove(digest);
+
                         }
                     }
                     //Debugger.debug("\t\t cleaning up the prepare / commit / checkpoint message quorums ...");
@@ -625,10 +612,10 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
 
                     remove(seq);
 
-                    if(seq < finalSEQ){
-                        //Debugger.debug("\t\t cleaning up the cached checkpoints ...");
-                        cptable.remove(seq);
-                    }
+//                    if(seq < finalSEQ){
+//                        //Debugger.debug("\t\t cleaning up the cached checkpoints ...");
+//                        cptable.remove(seq);
+//                    }
 
                 }
             }

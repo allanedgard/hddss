@@ -40,12 +40,12 @@ public class PBFTPrePrepare extends PBFTServerMessage{
 
     @Override
     public final String toString() {
-        
+        Object rid = getReplicaID();
         return (
                 "<PRE-PREPARE" + ", " +
                  "VIEW = " + getViewNumber().toString()     + ", " +
                  "SEQUENCE = " + getSequenceNumber().toString()  + ", " +
-                 "SERVER = " + getReplicaID().toString()    + ", " +
+                 "SERVER = " + (rid == null ? "NULL" : rid)    + ", " +
                  "DIGESTS = {" + digestsToString()+ "}"         +
                  ">"
         );

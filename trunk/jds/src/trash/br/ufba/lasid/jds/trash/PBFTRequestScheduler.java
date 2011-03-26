@@ -81,9 +81,9 @@ public abstract class PBFTRequestScheduler implements IScheduler, ITask{
     public long getRequestTimestamp(PBFTMessage request){
         return -1L;//((Long)request.get(PBFTMessage.TIMESTAMPFIELD)).longValue();
     }
-    public void schedule(ITask task, long time) {
-        scheduler.schedule(task, time);
-    }
+//    public void schedule(ITask task, long time) {
+//        scheduler.schedule(task, time);
+//    }
 
     public boolean cancel(ITask task) {
         throw new UnsupportedOperationException("Not supported yet.");

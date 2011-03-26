@@ -24,12 +24,12 @@ public class PBFTCheckpoint extends PBFTServerMessage{
     }
     @Override
     public final String toString() {
-
+        Object rid = getReplicaID();
         return (
                 "<CHECKPOINT" + ", " +
                  "SEQ = " + getSequenceNumber().toString() + ", " +
                  "DIGEST = " + getDigest().toString() + ", " +
-                 "SENDER = " + getReplicaID().toString() +
+                 "SENDER = " + (rid == null ? "NULL" : rid) +
                  ">"
         );
     }

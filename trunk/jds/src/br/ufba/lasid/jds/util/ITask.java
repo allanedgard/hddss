@@ -10,5 +10,5 @@ package br.ufba.lasid.jds.util;
  * @author aliriosa
  */
 public interface ITask {
-    public void runMe();
+    public void    runMe();
 }

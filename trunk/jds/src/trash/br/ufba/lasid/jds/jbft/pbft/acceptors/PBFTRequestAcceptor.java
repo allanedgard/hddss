@@ -142,7 +142,7 @@ public class PBFTRequestAcceptor extends PBFTAcceptor<PBFTRequest>{
          * Schedule a timeout for the arriving of the pre-prepare message if
          * the server is a secundary replica.
          */
-        pbft.scheduleViewChange(digest);
+      //  pbft.scheduleViewChange(digest);
 
         return true;
 

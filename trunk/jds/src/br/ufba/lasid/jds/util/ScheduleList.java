@@ -5,13 +5,12 @@
 
 package br.ufba.lasid.jds.util;
 
-import br.ufba.lasid.jds.util.ITask;
 import java.util.ArrayList;
 
 /**
  *
  * @author aliriosa
  */
-public class TaskList extends ArrayList<ITask>{
+public class ScheduleList extends ArrayList<ISchedule>{
 
 }

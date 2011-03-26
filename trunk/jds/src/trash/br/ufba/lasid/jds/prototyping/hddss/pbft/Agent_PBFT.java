@@ -12,7 +12,7 @@ import br.ufba.lasid.jds.group.IGroup;
 import br.ufba.lasid.jds.group.Group;
 import trash.br.ufba.lasid.jds.jbft.pbft.PBFT2;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
-import br.ufba.lasid.jds.prototyping.hddss.SimulatedScheduler;
+import br.ufba.lasid.jds.prototyping.hddss.pbft.SimulatedScheduler;
 import trash.br.ufba.lasid.jds.prototyping.hddss.cs.Agent_ServiceComponent;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.comm.SimulatedPBFTCommunicator;
 import trash.br.ufba.lasid.jds.prototyping.hddss.pbft.security.PBFTSimulatedAuthenticator;
@@ -131,10 +131,10 @@ public class Agent_PBFT extends Agent_ServiceComponent implements IProcess<Integ
             new PBFTSimulatedAuthenticator(PBFT2.SERVER2SERVERAUTHENTICATOR)
         );
 
-        getProtocol().getContext().put(
-            PBFT2.SCHEDULER,
-            new SimulatedScheduler()
-        );
+//        getProtocol().getContext().put(
+//            PBFT2.SCHEDULER,
+//            new SimulatedScheduler()
+//        );
 /*
         getProtocol().getContext().put(
             PBFT2.PRIMARYFDSCHEDULER,

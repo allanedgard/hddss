@@ -5,6 +5,8 @@
 
 package trash.br.ufba.lasid.jds.trash;
 
+import br.ufba.lasid.jds.util.ISchedule;
+import br.ufba.lasid.jds.util.ITask;
 import trash.br.ufba.lasid.jds.jbft.pbft.PBFT2;
 import trash.br.ufba.lasid.jds.jbft.pbft.actions.RetransmiteChangeViewAction;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
@@ -50,6 +52,22 @@ public class PBFTViewChangeRetransmittionScheduler extends PBFTRequestScheduler{
     public boolean cancelAll() {
         buffer.clear();
         return true;
+    }
+
+    public ISchedule newSchedule() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void execute() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public ISchedule schedule(ITask task, long time) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void cancel(ISchedule schedule) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 

@@ -5,16 +5,23 @@
 
 package br.ufba.lasid.jds.util;
 
-import br.ufba.lasid.jds.util.ITask;
-
 /**
  *
  * @author aliriosa
  */
 public interface IScheduler {
 
-    public void schedule(ITask task, long time);
-    public boolean cancel(ITask task);
-    public boolean cancelAll();
+//    public void schedule(ITask task, long time);
+//    public boolean cancel(ITask task);
+//    public boolean cancelAll();
+
+    public ISchedule newSchedule();
+
+//    protected void schedule(ISchedule schedule);
+
+    public void execute();
+
+    public ISchedule schedule(ITask task, long time);
+    public void cancel(ISchedule schedule);
       
 }

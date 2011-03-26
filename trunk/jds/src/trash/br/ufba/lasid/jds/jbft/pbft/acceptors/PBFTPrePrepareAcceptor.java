@@ -74,7 +74,7 @@ public class PBFTPrePrepareAcceptor extends PBFTAcceptor<PBFTPrePrepare>{
                 statedRequest.setState(StatedPBFTRequestMessage.RequestState.PREPREPARED);
                 statedRequest.setSequenceNumber(preprepare.getSequenceNumber());
 
-                pbft.revokeViewChange(digest);
+             //   pbft.revokeViewChange(digest);
 
                 JDSUtility.debug(
                   "[PBFTPrePrepareAcceptor:accept(preprepare)] s"  + pbft.getLocalServerID() +
