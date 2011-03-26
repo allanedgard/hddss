@@ -26,7 +26,7 @@ public interface IPBFTClient{
     public long getRetransmissionTimeout();
     public void accept(IPayload payload);
     public void doSchedule(PBFTRequest request);
-    public void revokeSchedule(long timeout);
+    //public void revokeSchedule(long timeout);
 
     
 }

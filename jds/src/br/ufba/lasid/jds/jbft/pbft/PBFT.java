@@ -28,14 +28,18 @@ public class PBFT extends DistributedProtocol implements IPBFT{
      */
     protected  TaskTableStore ttstore = new TaskTableStore();
 
-    public static String REQUESTTASKS       = "REQUESTTASKS";
-    public static String VIEWCHANGETASKS    = "VIEWCHANGETASKS";
-    public static String BATCHTASKS         = "BATCHTASKS";
-    public static String PREPAREQUORUMSTORE = "__PREPAREQUORUMSTORE";
-    public static String COMMITQUORUMSTORE = "__COMMITQUORUMSTORE";
-    public static String CHECKPOINTQUORUMSTORE = "__CHECKPOINTQUORUMSTORE";
-    public static String METADATAQUORUMSTORE = "__METADATAQUORUMSTORE";
-    public static String BAGQUORUMSTORE = "__BAGQUORUMSTORE";
+    public static String    REQUESTTASKS = "REQUESTTASKS";
+    public static String VIEWCHANGETASKS = "VIEWCHANGETASKS";
+    public static String      BATCHTASKS = "BATCHTASKS";
+
+    /* Quorum stores */
+    public static String       PREPAREQUORUMSTORE = "__PREPAREQUORUMSTORE";
+    public static String        COMMITQUORUMSTORE = "__COMMITQUORUMSTORE";
+    public static String    CHECKPOINTQUORUMSTORE = "__CHECKPOINTQUORUMSTORE";
+    public static String    CHANGEVIEWQUORUMSTORE = "__CHANGEVIEWQUORUMSTORE";
+    public static String CHANGEVIEWACKQUORUMSTORE = "__CHANGEVIEWACKQUORUMSTORE";
+    public static String      METADATAQUORUMSTORE = "__METADATAQUORUMSTORE";
+    public static String           BAGQUORUMSTORE = "__BAGQUORUMSTORE";
 
 
     protected  PBFTStateLog stateLog = new PBFTStateLog();

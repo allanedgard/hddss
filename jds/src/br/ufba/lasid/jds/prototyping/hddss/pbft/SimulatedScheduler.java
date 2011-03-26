@@ -5,112 +5,115 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.pbft;
 
-import br.ufba.lasid.jds.prototyping.hddss.Agent;
-import br.ufba.lasid.jds.util.ITask;
 import br.ufba.lasid.jds.util.Agenda;
 import br.ufba.lasid.jds.util.IClock;
+import br.ufba.lasid.jds.util.ISchedule;
+import br.ufba.lasid.jds.util.ITask;
 import br.ufba.lasid.jds.util.IScheduler;
-import br.ufba.lasid.jds.util.TaskList;
+import br.ufba.lasid.jds.util.ScheduleList;
 
 /**
  *
  * @author aliriosa
  */
 public class SimulatedScheduler implements IScheduler{
+    Agenda agenda = new Agenda();
+    private int count = -1;
+    private IClock clock;
 
-    protected  Agenda agenda = new Agenda();
-    protected  final Object lock = this;
-    protected IClock clock;
-    protected Agent agent;
-
-    public Agent getAgent() {
-        return agent;
-    }
-
-    public void setAgent(Agent agent) {
-        this.agent = agent;
-    }    
-    
-    public SimulatedScheduler(IClock clock){
+    public SimulatedScheduler(IClock clock) {
         this.clock = clock;
     }
+
     
-    public void execute(){
-//        synchronized(this){
+    public ISchedule newSchedule() {
+        Schedule schedule = new Schedule();
+        schedule.scheduleID = count;
+        count ++;
 
-            Long time = clock.value();
-
-            TaskList tasks = agenda.get(time);
-
-            if(tasks != null){
-                TaskList _tasks = new TaskList();
-                _tasks.addAll(tasks);
-                for(ITask task: _tasks){
-                    task.runMe();
-                }
-
-                tasks.clear();
-                agenda.remove(time);
-            }
-  //      }
+        return schedule;
     }
 
-    public void schedule(ITask task, long time) {
-    //    synchronized(this){
-            TaskList tasks = agenda.get(time);
+    public void execute() {
+        long now = clock.value();
 
-            if(tasks == null){
-                tasks = new TaskList();
+        ScheduleList schedules = agenda.get(now);
+        if(schedules != null){
+            for(int i = schedules.size()-1; i >= 0; i--){
+                ISchedule schedule = schedules.get(i);
+                if(schedule.getTimestamp() == now){
+                    schedule.execute();
+                }
+                schedules.remove(i);
             }
-
-            if(!tasks.contains(task)){
-                tasks.add(task);
-                agenda.put(time, tasks);
-            }
-      //  }
+            agenda.remove(now);
+        }
     }
 
-    public boolean cancel(ITask task) {
-        //synchronized(this){
-
-            boolean cancelled = false;
-            Agenda _agenda = new Agenda();
-
-            _agenda.putAll(agenda);
-
-            for(Long _time : _agenda.keySet()){
-
-                TaskList tasks = _agenda.get(_time);
-
-                TaskList _tasks = new TaskList();
-
-                _tasks.addAll(tasks);
-
-                for(ITask _task : _tasks){
-                    if(_task.equals(task)){
-                        tasks.remove(_task);
-                        cancelled = true;
-                    }
-                }
-
-                if(tasks.isEmpty()){
-                    agenda.remove(_time);
-                }
-            }
-
-            return cancelled;
-        //}
+    public ISchedule schedule(ITask task, long timestamp) {
+        ISchedule schedule = newSchedule();
+        schedule.setTask(task);
+        schedule.schedule(timestamp);
+        return schedule;
     }
 
-    public boolean cancelAll() {
-//        synchronized(agent.lock){
-            for(TaskList tasks : agenda.values()){
-                tasks.clear();
-            }
+    public void cancel(ISchedule schedule) {
+        schedule.cancel();
+    }
 
-            agenda.clear();
-  //      }
-        return true;
-   }
+    class Schedule implements ISchedule{
+        protected ITask task;
+        protected int  scheduleID;
+        protected long timestamp;
+        
+        public void setTask(ITask task) {
+                this.task = task;
+        }
+
+        public ITask getTask() {
+            return this.task;
+        }
+
+        public void execute() {
+            if(task != null){
+                task.runMe();
+            }
+        }
+
+        public int getScheduleID() {
+            return this.scheduleID;
+        }
+
+        public long getTimestamp() {
+            return this.timestamp;
+        }
+
+        public void schedule(long timestamp){
+            this.timestamp = timestamp;
+            ScheduleList schedules = agenda.get(timestamp);
+            if(schedules == null){
+                schedules = new ScheduleList();
+                agenda.put(timestamp, schedules);
+            }
+            schedules.add(this);
+        }
+
+        public void cancel() {
+            this.timestamp = -1;
+        }
+
+        public void reschedule(long timestamp) {
+            schedule(timestamp);
+        }
+
+        public boolean working() {
+            return workingAt(clock.value());
+        }
+
+        public boolean workingAt(long time) {
+            return this.timestamp >= time;
+        }
+        
+    }
 
 }

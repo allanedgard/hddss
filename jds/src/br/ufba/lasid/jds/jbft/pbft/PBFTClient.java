@@ -16,6 +16,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTTimeoutDetector;
 import br.ufba.lasid.jds.util.IPayload;
+import br.ufba.lasid.jds.util.ISchedule;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.collections.Buffer;
@@ -33,6 +34,7 @@ public class PBFTClient extends PBFT implements IPBFTClient{
 
     protected  Buffer applicationBox = BufferUtils.blockingBuffer(new UnboundedFifoBuffer());
     protected Hashtable<Long, PBFTRequest> rtable = new Hashtable<Long, PBFTRequest>();
+    protected ISchedule timer;
 
     public Buffer getApplicationBox(){
         return applicationBox;
@@ -179,7 +181,8 @@ public class PBFTClient extends PBFT implements IPBFTClient{
                 );
 
                 if(quorum.complete()){
-                    revokeSchedule(r.getTimestamp());
+                    getTimer().cancel();
+                    //revokeSchedule(r.getTimestamp());
                     rtable.remove(r.getTimestamp());
                     qtable.remove(r.getTimestamp());
                     quorum.clear();
@@ -192,56 +195,44 @@ public class PBFTClient extends PBFT implements IPBFTClient{
 
         return false;
     }
+    protected ISchedule getTimer(){
+        if(timer == null){
+            PBFTTimeoutDetector ttask = new PBFTTimeoutDetector() {
+                @Override
+                public void onTimeout() {
+                    PBFTRequest r = (PBFTRequest) this.get("REQUEST");
+                    if(r != null){
+                        emit(r);
+                    }
+                    //r.setSent(shutdown);
+                }
+            };
+            timer = getScheduler().newSchedule();
+            timer.setTask(ttask);
+        }
+
+        return timer;
+    }
 
     /*
      * doSchedule the retransmition of a request.
      * @param request
      */
     public void doSchedule(PBFTRequest request){
+        PBFTTimeoutDetector ttask = (PBFTTimeoutDetector)getTimer().getTask();
 
-        PBFTTimeoutDetector ttask = new PBFTTimeoutDetector()
-        {
-
-            @Override
-            public void onTimeout() {
-
-                //getScheduler().cancel(this);
-                
-                PBFTRequest r = (PBFTRequest) this.get("REQUEST");
-                //revokeSchedule(r);
-
-                r.setSent(false);
-                
-                emit(r);
-
-                JDSUtility.debug(
-                  "[PBFTClient] c" + getLocalProcessID() + " re-sent " + r +
-                  " to " + getRemoteProcess() + " at time " + getClockValue()
-                );
-
-
-            }
-
-            @Override
-            public void cancel(){
-                PBFTRequest r = (PBFTRequest) this.get("REQUEST");
-                revokeSchedule(r);
-            }
-
-        };
+        long now = getClockValue();
+        long timeout = getRetransmissionTimeout();
+        long timestamp = now + timeout;
 
         ttask.put("REQUEST", request);
         
-        getTaskTable(PBFT.REQUESTTASKS).put(
-                request.getTimestamp(), ttask
-        );
+        getTimer().schedule(timestamp);
 
-        getScheduler().schedule(
-                
-           ttask, getClockValue() + getRetransmissionTimeout()
+        
 
-        );
-
+        getTimer().schedule(timestamp);
+        
     }
 
     public void handle(PBFTReply reply){
@@ -283,20 +274,20 @@ public class PBFTClient extends PBFT implements IPBFTClient{
         return getLocalProcessID().equals(clientID);
     }
 
-    public void revokeSchedule(PBFTRequest r){
-        revokeSchedule(r.getTimestamp());
-    }
-    
-    public void revokeSchedule(long timestamp){
-
-        PBFTTimeoutDetector timeoutTask =
-            (PBFTTimeoutDetector)getTaskTable(PBFT.REQUESTTASKS).get(timestamp);
-
-        getScheduler().cancel(timeoutTask);
-
-        getTaskTable(PBFT.REQUESTTASKS).remove(timestamp);
-        
-    }
+//    public void revokeSchedule(PBFTRequest r){
+//        revokeSchedule(r.getTimestamp());
+//    }
+//
+//    public void revokeSchedule(long timestamp){
+//
+//        PBFTTimeoutDetector timeoutTask =
+//            (PBFTTimeoutDetector)getTaskTable(PBFT.REQUESTTASKS).get(timestamp);
+//
+//        getScheduler().cancel(timeoutTask);
+//
+//        getTaskTable(PBFT.REQUESTTASKS).remove(timestamp);
+//
+//    }
 
     @Override
     public void shutdown() {

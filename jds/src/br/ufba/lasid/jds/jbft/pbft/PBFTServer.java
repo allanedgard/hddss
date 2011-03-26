@@ -56,7 +56,8 @@ import br.ufba.lasid.jds.management.memory.IMemory;
 import br.ufba.lasid.jds.management.memory.pages.IPage;
 import br.ufba.lasid.jds.management.memory.state.managers.IRecovarableStateManager;
 import br.ufba.lasid.jds.util.IPayload;
-import br.ufba.lasid.jds.util.ITask;
+import br.ufba.lasid.jds.util.ISchedule;
+import br.ufba.lasid.jds.util.XMath;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,6 +68,7 @@ import java.util.logging.Logger;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.buffer.UnboundedFifoBuffer;
+import trash.br.ufba.lasid.jds.trash.PBFTViewChangeRetransmittionScheduler;
 
 /**
  *
@@ -83,7 +85,9 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     protected Object currentPrimaryID = null;
     protected static long SEQ = -1;
     protected  IServer server;
-
+    
+    protected ISchedule vtimer = null;
+    protected ISchedule btimer = null;
 
     /**
      * Update the state of the PBFT. Insert the pre-prepare message in
@@ -410,7 +414,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
              * Schedule a timeout for the arriving of the pre-prepare message if
              * the server is a secundary replica.
              */
-            scheduleViewChange(digest);
+            scheduleViewChange(/*digest*/);
 
         }
     }
@@ -474,7 +478,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     public void batch(String digest){
         if(isPrimary()){
             batch.add(digest);
-            scheduleSendBatch(digest);
+            scheduleSendBatch(/*digest*/);
             if(isACompleteBatch()){
                 emitBatch();
                 return;
@@ -490,6 +494,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         synchronized(this){
             /* if there was batch request */
             if(!batch.isEmpty()){
+                getBatchTimer().cancel();
                 /* Create a new pre-prepare message */
                 PBFTPrePrepare preprepare = new PBFTPrePrepare(
                     getCurrentViewNumber(),
@@ -500,116 +505,106 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 preprepare.getDigests().addAll(batch);
 
                 for(String digest: preprepare.getDigests()){
-                    revokeSendBatch(digest);
+                    //revokeSendBatch(digest);
                     batch.remove(digest);
                 }
                 updateState(preprepare);
                 emit(preprepare, getLocalGroup().minus(getLocalProcess()));
+
+                if(getStateLog().hasWaitingRequest()){
+                    scheduleSendBatch();
+                }
             }
         }
     }
 
-    public void revokeSendBatch(String digest){
-        PBFTTimeoutDetector ttask = (PBFTTimeoutDetector)getTaskTable(PBFT.BATCHTASKS).get(digest);
+    public void revokeSendBatch(/*String digest*/){
+        getBatchTimer().cancel();
+    }
 
-        if(ttask != null){
-            getScheduler().cancel(ttask);
-            getTaskTable(PBFT.BATCHTASKS).remove(digest);
+    protected ISchedule getBatchTimer(){
+        if(btimer == null){
+            PBFTTimeoutDetector ttask = new PBFTTimeoutDetector() {
+                @Override
+                public void onTimeout() {
+                    JDSUtility.debug(
+                      "[PBFTServer::PBFTTimeoutDetector:onTimeout] s" + getLocalServerID() + " " +
+                      "had a batch timer expired at time " + getClockValue() + "."
+                    );
+                    if(hasBatch()) emitBatch();
+                }
+            };
+
+            btimer = getScheduler().newSchedule();
+            btimer.setTask(ttask);
+        }
+
+        return btimer;
+    }
+    public void scheduleSendBatch(/*String digest*/){
+
+        long now = getClockValue();
+        
+        if(!getBatchTimer().workingAt(now)){
+            long timeout = getBatchingTimeout();
+            long timestamp = now + timeout;
+
+            getBatchTimer().schedule(timestamp);
             JDSUtility.debug(
-              "[PBFTServer:doRevoke(digest)] s" + getLocalServerID() +  " " +
-              "revoked a batch timeout for (" + digest + ")."
+              "[PBFTServer:doSchedule(digest)] s" + getLocalServerID() + " " +
+              "scheduled a batch timeout for " + getBatchTimer().getTimestamp()// + "(" + digest + ")."
             );
+
         }
-    }
-
-    public void scheduleSendBatch(String digest){
-        PBFTTimeoutDetector ttask = new PBFTTimeoutDetector() {
-            @Override
-            public void onTimeout() {
-                JDSUtility.debug(
-                  "[PBFTServer::PBFTTimeoutDetector:onTimeout] s" + getLocalServerID() + " " +
-                  "had a batch timer expired at time " + getClockValue() + "."
-                );
-                if(hasBatch()) emitBatch();
-            }
-        };
-
-        long timestamp = getClockValue() + getBatchingTimeout();
-        ttask.put("DIGEST", digest);
-
-        getScheduler().schedule(ttask, timestamp);
-        getTaskTable(PBFT.BATCHTASKS).put(digest, (ITask)ttask);
-        JDSUtility.debug(
-          "[PBFTServer:doSchedule(digest)] s" + getLocalServerID() + " " +
-          "scheduled a batch timeout for " + timestamp + "(" + digest + ")."
-        );
     }
     
-    public void scheduleViewChange(String digest){
-        scheduleViewChange(digest, getPrimaryFaultTimeout());
-    }
+    protected ISchedule getViewTimer(){
+        if(vtimer == null){
+             PBFTTimeoutDetector ttask = new PBFTTimeoutDetector() {
+                @Override
+                public void onTimeout() {
+                    emitChangeView();
+                }
+            };
 
+            vtimer = getScheduler().newSchedule();
+            vtimer.setTask(ttask);
+            ttask.put("TIMEOUT", getPrimaryFaultTimeout());
+        }
+
+        return vtimer;
+        
+    }
     /**
      * Schedule a view change in case of late response for the primary.
      * @param request - the client request.
      * @param timeout - the view change timeout.
      */
-    public void scheduleViewChange(String digest, long timeout){
-        /* A new timeout task is created. */
-        PBFTTimeoutDetector ttask = new PBFTTimeoutDetector(){
-            /* On the expiration of the timeout, perform a change view. */
-            @Override
-            public void onTimeout() {
+    public void scheduleViewChange(/*String digest, long timeout*/){
+        long now = getClockValue();
+        
+        if(getViewTimer().workingAt(now)){
+            
+            long timeout = getPrimaryFaultTimeout();
+            PBFTTimeoutDetector ttask =
+                    (PBFTTimeoutDetector) getViewTimer().getTask();
 
-                long timeout = (Long) get("TIMEOUT");
-                String digest = (String) get("DIGEST");
-
-                StatedPBFTRequestMessage statedRequest = getStateLog().getStatedRequest(digest);
-
-                if(statedRequest != null){
-                    if(statedRequest.getState().equals(StatedPBFTRequestMessage.RequestState.WAITING)){
-                        JDSUtility.debug(
-                          "[PBFTServer:scheduleChangeView::PBFTTimeoutDetector:onTimeout()] s" + getLocalServerID() + ", " +
-                          "at time " + getClockValue() + ", is starting a change view (" + statedRequest.getDigest() + ")"
-                        );
-                        
-                        emitChangeView();
-                    }//endif request is waiting
-                }
+            if(ttask != null && ttask.get("TIMEOUT") != null){
+                timeout = (Long)ttask.get("TIMEOUT");
             }
-        };
-
-        ttask.put("TIMEOUT", timeout);
-        ttask.put("DIGEST", digest);
-
-        getTaskTable(PBFT.REQUESTTASKS).put(digest, ttask);
-
-        long timestamp = getClockValue() + timeout;
-
-        getScheduler().schedule(ttask, timestamp);
-
-        JDSUtility.debug(
-          "[PBFTServer:doScheduleChangeView(digest, timeout)] s" + getLocalServerID() + ", " +
-          "at time " + getClockValue() + ", scheduled a new view procedure for " +
-          "timestamp " + timestamp + "(" + digest + ")."
-        );
+            
+            long timestamp = now + timeout;
+            getViewTimer().schedule(timestamp);
+        }
+        
     }
 
     /**
      * revoke the timer assigned to a client request (i.e. the change view timer).
      * @param leafPartDigest
      */
-    public void revokeViewChange(String digest){
-        PBFTTimeoutDetector timeoutTask = (PBFTTimeoutDetector)getTaskTable(PBFT.REQUESTTASKS).get(digest);
-        if(timeoutTask != null){
-            getScheduler().cancel(timeoutTask);
-            getTaskTable(PBFT.REQUESTTASKS).remove(digest);
-
-            JDSUtility.debug(
-              "[PBFTServer:doRevokeViewChange()] s" + getLocalServerID() + ", at " +
-              "time " + getClockValue() +", revoked a change view timeout (" + digest + ")."
-            );
-        }
+    public void revokeViewChange(){
+        getViewTimer().cancel();
     }
 
  /*########################################################################
@@ -748,6 +743,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                     + "its log for " + preprepare
                     );
 
+                    revokeViewChange();
                     /**
                      * For each request in batch, check if such request was received.
                      */
@@ -758,10 +754,19 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                         statedRequest.setState(StatedPBFTRequestMessage.RequestState.PREPREPARED);
                         statedRequest.setSequenceNumber(preprepare.getSequenceNumber());
 
-                        if(!isPrimary()){
-                            revokeViewChange(digest);
-                        }
+//                        if(!isPrimary()){
+//                            if(vtimer != null){
+//                                boolean working = (Boolean) vtimer.get("WORKING");
+//                                if(working) vtimer.cancel();
+//
+//                            }
+//                            //revokeViewChange(digest);
+//                        }
 
+                    }
+
+                    if(getStateLog().hasWaitingRequest()){
+                        scheduleViewChange();
                     }
 
                     getStateLog().updateNextPrePrepareSEQ(preprepare);
@@ -2208,46 +2213,36 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     }
 
     PBFTTimeoutDetector periodStatusTimer = null;
+    ISchedule stimer;
 
-   public void schedulePeriodicStatusSend() {
-
-       if(periodStatusTimer == null){
-            periodStatusTimer = new PBFTTimeoutDetector() {
-
+    protected ISchedule getStatusTimer(){
+        if(stimer == null){
+            PBFTTimeoutDetector ttask = new PBFTTimeoutDetector() {
                     @Override
                     public void onTimeout() {
-//                        long nextPP = getStateLog().getNextPrePrepareSEQ();
-//                        long nextP  = getStateLog().getNextPrepareSEQ();
-//                        long nextC  = getStateLog().getNextCommitSEQ();
-
-//                        if(nextP < nextPP || nextC < nextP){
 
                             emit(
                                     createStatusActiveMessage(),
                                     getLocalGroup().minus(getLocalProcess())
                             );
-  //                      }
 
                         schedulePeriodicStatusSend();
 
                     }
             };
 
-//            if(!getLocalGroup().getMembers().isEmpty()){
-//                emit(
-//                        createStatusActiveMessage(),
-//                        getLocalGroup().minus(getLocalProcess())
-//                );
-//           }
-
+            stimer = getScheduler().newSchedule();
+            stimer.setTask(ttask);
         }
 
-        long timestamp = getClockValue();
+        return stimer;
+    }
+   public void schedulePeriodicStatusSend() {
+        long now = getClockValue();
         long period = getSendStatusPeriod();
-        long timeout = timestamp + period;
-
-        getScheduler().schedule(periodStatusTimer, timeout);
-
+        
+        getStatusTimer().schedule(now + period);
+        
    }
 
     public PBFTStatusActive createStatusActiveMessage(){
@@ -2482,9 +2477,124 @@ public class PBFTServer extends PBFT implements IPBFTServer{
   /*########################################################################
    # 11. Methods for handling change-view procedure.
    #########################################################################*/
+    ArrayList<Integer> views = new ArrayList<Integer>();
+    boolean uncertainty = false;
 
     public void handle(PBFTChangeView cv) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        JDSUtility.debug(
+           "[PBFTServer:handle(changeview)] s" + getLocalServerID() + ", " +
+           "at time " + getClockValue() + ", received " + cv 
+        );
+
+        if(canProceed(cv)){
+            Object   rpid    = cv.getReplicaID();        //cv sender id
+            IProcess rServer = new BaseProcess(rpid);
+            int rviewn = cv.getViewNumber();
+            int cviewn = getCurrentViewNumber();
+
+            /* if the change-view message was sent by the current primary and
+               such message has a view number greater than the current view
+               number then the replica will move to rview */
+            if(isPrimary(rServer) && rviewn > cviewn){
+                emitChangeView();
+            }
+            /*if the state was updated then it's a new view-change message*/
+            if(updateState(cv)){
+                int f = getServiceBFTResilience();
+                Integer mxview = kthMaxLoggedViewNumber(f+1);
+                
+                /*it has at least f+1 view-changes with a view number greater
+                  then or equals to mxview: change to view maxv */
+                if(mxview != null && mxview.compareTo(rviewn) > 0){
+                    setCurrentViewNumber(mxview-1);
+                    emitChangeView();
+                    return;
+                }
+
+                if(uncertainty && !isPrimary()){
+                    mxview = kthMaxLoggedViewNumber(2 * f + 1);
+
+                    /*if it has 2f+1 change-view messages with view greater than
+                      or equals rviewn then it'll start a timer to ensure it moves
+                      to another view if it doesn't receive the new-view message
+                      for rviewn*/
+                    if(mxview != null && mxview.compareTo(rviewn)==0){
+                          PBFTTimeoutDetector ttask =
+                             (PBFTTimeoutDetector) getViewTimer().getTask();
+                          
+                          /* an exponetial timeout has to be considered to
+                             guarantee liveness when the end-to-end delay is
+                             too long (it's prevent uncessary view-changes)*/
+                          long timeout = (Long) ttask.get("TIMEOUT");
+                          ttask.put("TIMEOUT", 2 * timeout);
+                          scheduleViewChange();
+                          uncertainty = false;                          
+                    }
+                    
+                }
+            }
+        }//end if it received a valid change-view message
+    }
+        
+    public PBFTChangeViewACK createChangeViewACKMessage(PBFTChangeView cv){
+        Object prompterID = cv.getReplicaID();
+        Object   senderID = getLocalServerID();
+        int         viewn = cv.getViewNumber();
+        String     digest = "";
+        try {
+            digest = getAuthenticator().getDigest(cv);
+        } catch (Exception ex) {
+            Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return new PBFTChangeViewACK(viewn, senderID, prompterID, digest);
+    }
+
+    public boolean canProceed(PBFTChangeView cv){
+        if(cv == null) return false;
+
+        MessageCollection mcpp = cv.getPrePrepareSet();
+        MessageCollection mcpr = cv.getPrepareSet();
+
+        int mcsize = mcpp.size();
+
+        if(mcpr.size() > mcsize) mcsize = mcpr.size();
+        int i = -1; int cview = getCurrentViewNumber();
+        while(++i < mcsize){
+
+            int viewn = -1;
+            
+            if(i < mcpp.size()){
+                
+                PBFTPrePrepare pp = (PBFTPrePrepare) mcpp.get(i);
+                
+                viewn = pp.getViewNumber();
+                if(viewn > cview){
+                    JDSUtility.debug(
+                        "[PBFTServer:canProceed(changeview] s" + getLocalServerID() + ", at " +
+                        "time " + getClockValue() + ", discarded " + cv + " because it has " +
+                        "a component with a invalid view number (VW{" + viewn + "} > CURRVW" +
+                        "{" + cview + "})."
+                    );
+                    return false;
+                }
+            }
+
+            if(i < mcpr.size()){
+                PBFTPrepare p = (PBFTPrepare) mcpr.get(i);
+                viewn = p.getViewNumber();
+                if(viewn > cview){
+                    JDSUtility.debug(
+                        "[PBFTServer:canProceed(changeview] s" + getLocalServerID() + ", at " +
+                        "time " + getClockValue() + ", discarded " + cv + " because it has " +
+                        "a component with a invalid view number (VW{" + viewn + "} > CURRVW" +
+                        "{" + cview + "})."
+                    );
+                    return false;
+                }
+            }
+        }
+        
+        return true;
     }
 
     public void handle(PBFTChangeViewACK cva) {
@@ -2505,8 +2615,98 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             "message for (v + 1 = "  +  (viewn + 1) + ")."
         );
 
+        if(vtimer != null){
+            vtimer.cancel();
+        }
         
+        setCurrentViewNumber(viewn +1);
+
+        PBFTChangeView cv = createChangeViewMessage();
+        
+        for(PBFTLogEntry lentry: getStateLog().values()){
+
+            Quorum pq = lentry.getPrepareQuorum();
+
+            if(pq.complete()){
+                PBFTPrepare p = (PBFTPrepare)pq.get(0);
+                cv.addPrepare(p.getSequenceNumber(), p.getDigests(), p.getViewNumber());
+            }else{
+                PBFTPrePrepare pp = lentry.getPrePrepare();
+                cv.addPrePrepare(pp.getSequenceNumber(), pp.getDigests(), pp.getViewNumber());
+            }            
+        }       
+
+        PartEntry centry;
+        try {
+            centry = rStateManager.getPart(0, 0);
+            cv.addCheckpoint(centry.getPartCheckpoint(), centry.getDigest());
+        } catch (Exception ex) {
+            Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
+            cv.addCheckpoint(0, "");
+        }
+        
+        getStateLog().clear();
+
+        emit(cv, getLocalGroup().minus(getLocalProcess()));
+        
+        updateState(cv);
+        uncertainty = true;
+
+        if(!isPrimary()){
+            /*if it isn't the primary then it must send a change-view-ack message
+             to the estimated primary*/
+            Object npid = getLocalGroup().next(getCurrentPrimaryID());
+            IProcess newPrimary = new BaseProcess(npid);
+            for(PBFTChangeView oldCV : digcvtable.values()){
+                int oldV = oldCV.getViewNumber();
+                Object rid = oldCV.getReplicaID();
+                if(oldV == getCurrentViewNumber() && !rid.equals(getLocalServerID())){
+
+                    emit(createChangeViewACKMessage(oldCV), newPrimary);
+                    
+                }
+
+            }
+            
+        }
     }
+
+    Hashtable<String, PBFTChangeView> digcvtable = new Hashtable<String, PBFTChangeView>();
+    
+    public boolean updateState(PBFTChangeView cv){
+        try {
+            /*stores the receive change view if it has been already stored*/
+            String digest = getAuthenticator().getDigest(cv);
+            if(!digcvtable.contains(digest)){
+                digcvtable.put(digest, cv);
+                int viewn = cv.getViewNumber();
+                /*if doesn't exist a entry in viewn collection for such view then
+                 it'll be added.*/
+//              if(!views.contains(viewn)){
+                    views.add(viewn);
+//              }
+                return true;
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+
+    public Integer kthMaxLoggedViewNumber(int k){
+        return XMath.kthmax(k, views);
+    }
+
+    public PBFTChangeView createChangeViewMessage(){
+        PBFTChangeView cv =
+             new PBFTChangeView(
+                    getCheckpointLowWaterMark(),
+                    getCurrentViewNumber(),
+                    getLocalServerID()
+            );
+        return cv;
+    }
+
 
     public void installNewView() {
         throw new UnsupportedOperationException("Not supported yet.");

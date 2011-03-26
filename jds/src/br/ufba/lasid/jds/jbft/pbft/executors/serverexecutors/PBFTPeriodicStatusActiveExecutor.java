@@ -48,25 +48,25 @@ public class PBFTPeriodicStatusActiveExecutor extends PBFTExecutor<PBFTStatusAct
 
     public void execute(){
         
-        if(task == null){
-            
-            task = new PBFTTimeoutDetector() {
-
-                @Override
-                public void onTimeout() {
-
-                    execute(createStatusActiveMessage());
-
-                    execute();
-
-                }
-            };
-            
-            execute(createStatusActiveMessage());
-            
-        }
-        
-        schedule(task);
+//        if(task == null){
+//
+//            task = new PBFTTimeoutDetector() {
+//
+//                @Override
+//                public void onTimeout() {
+//
+//                    execute(createStatusActiveMessage());
+//
+//                    execute();
+//
+//                }
+//            };
+//
+//            execute(createStatusActiveMessage());
+//
+//        }
+//
+//        schedule(task);
               
     }
 

@@ -11,6 +11,6 @@ import java.util.Hashtable;
  *
  * @author aliriosa
  */
-public class Agenda extends Hashtable<Long, TaskList>{
+public class Agenda extends Hashtable<Long, ScheduleList>{
 
 }
