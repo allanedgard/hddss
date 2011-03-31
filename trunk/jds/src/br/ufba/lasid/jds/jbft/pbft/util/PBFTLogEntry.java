@@ -26,20 +26,6 @@ public class PBFTLogEntry implements Serializable{
         
     }
 
-//    public void setQuorum(PBFTQuorum q){
-//        synchronized(this){
-////        if(check(q)){
-//            if(q.get(0) instanceof PBFTPrepare){
-//                setPrepareQuorum(q);
-//            }
-//
-//            if(q.get(0) instanceof PBFTCommit){
-//                setCommitQuorum(q);
-//            }
-//  //      }
-//        }
-//    }
-
     public Quorum getCommitQuorum() {
         return cmq;
     }
@@ -69,55 +55,4 @@ public class PBFTLogEntry implements Serializable{
         return getPrePrepare().getViewNumber();
     }
 
-//    public boolean isNOP(){
-//
-//        boolean nop = true;
-//
-//        if(getPrepareQuorum() == null){
-//            return false;
-//        }
-//
-//        for(IMessage m : getPrepareQuorum()){
-//            PBFTServerMessage m1 = (PBFTServerMessage) m;
-//            nop = nop && m1.isNop();
-//        }
-//
-//        if(getCommitQuorum() == null){
-//            return false;
-//        }
-//
-//        for(IMessage m : getCommitQuorum()){
-//            PBFTServerMessage m1 = (PBFTServerMessage) m;
-//            nop = nop && m1.isNop();
-//        }
-//
-//        return nop;
-//    }
-//    public void setNOP(){
-//        getPrePrepare().setNop(true);
-//        getPrepareQuorum().setNOP();
-//        getCommitQuorum().setNOP();
-//    }
-//
-//    public void setNOP(Object replicaID){
-//
-//        if(getPrePrepare().getReplicaID().equals(replicaID)){
-//            getPrePrepare().setNop(true);
-//        }
-//
-//        for(IMessage m : getPrepareQuorum()){
-//            PBFTServerMessage m1 = (PBFTServerMessage) m;
-//            if(m1.getReplicaID().equals(replicaID)){
-//                m1.setNop(true);
-//            }
-//        }
-//
-//        for(IMessage m : getCommitQuorum()){
-//            PBFTServerMessage m1 = (PBFTServerMessage) m;
-//            if(m1.getReplicaID().equals(replicaID)){
-//                m1.setNop(true);
-//            }
-//        }
-//
-//    }
 }

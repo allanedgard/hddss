@@ -16,7 +16,6 @@ import br.ufba.lasid.jds.adapters.IBeforeEventListener;
 import br.ufba.lasid.jds.adapters.IEventListener;
 import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.PDU;
-//import br.ufba.lasid.jds.comm.Quorum;
 import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.cs.IServer;
 import br.ufba.lasid.jds.ft.util.CheckpointLogEntry;
@@ -137,10 +136,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         long execSEQ = getStateLog().getNextExecuteSEQ() - 1;
 
         for(long currSEQ = startSEQ; currSEQ <= finalSEQ; currSEQ ++){
-            /**
-             * If the sequence number was executed by the replica then we'll be
-             * able to compute the checkpoint.
-             */
+            /* If the sequence number was executed by the replica then we'll be able to compute the checkpoint. */
             if(currSEQ <= execSEQ){
 
                 Quorum q = getStateLog().getQuorum(CHECKPOINTQUORUMSTORE, String.valueOf(currSEQ));
@@ -278,8 +274,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
       return true;
    }
-
-//    protected  DigestList batch = new DigestList();
     
    public void batch(){
       if(isPrimary()){
@@ -443,8 +437,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
     public boolean isValid(PBFTPrePrepare pp){
        Object lServerID = getLocalServerID();
-        /* If the preprepare hasn't a valid sequence / view number then it'll
-           force a change view. */
+        /* If the preprepare hasn't a valid sequence / view number then it'll force a change view. */
         if(!(checkSequenceNumber(pp) && checkViewNumber(pp))){
             long nxPP = getStateLog().getNextPrePrepareSEQ();  long viewn  = getCurrentViewNumber();
             JDSUtility.debug(
@@ -660,7 +653,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                   entry.setPrepareQuorum(q);
                   JDSUtility.debug("[PBFTServer:updateState(prepare)] s"  + lServerID + ", at time " + getClockValue() + ", created a new certificate for " + p);
                }
-
+               /*TODO: evaluate if "q.getCurrentDecision()" is a better implementation */
                PrepareSubject decision = (PrepareSubject)q.decide();
 
                if(decision != null){
@@ -686,18 +679,14 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                   rinfo.assign(seqn, StatedPBFTRequestMessage.RequestState.PREPARED);
 
                   JDSUtility.debug(
-                     "[PBFTServer:accept(prepare)] s" + lServerID + ", at time " + getClockValue() + ", completed " +
-                     "prepare phase for sequence number (" + seqn + ") and view number (" + viewn + ")."
+                     "[PBFTServer:accept(prepare)] s" + lServerID + ", at time " + getClockValue() + ", completed prepare phase for sequence number (" + seqn + ") " +
+                     "and view number (" + viewn + ")."
                   );
 
                   getStateLog().updateNextPrepareSEQ(p);
 
                   /* Update the entry in log. */
                   getStateLog().put(entryKey, entry);
-
-                  //entry.getPrePrepare().setNop(true);
-
-//                  JDSUtility.debug("[PBFTServer] s"  + lServerID + ", at time " + getClockValue() + ", update a entry in its log for " + p);
 
                   return decision;
                }
@@ -729,10 +718,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     }
 
     public boolean isValid(PBFTCommit c){
-        /**
-         * If the preprepare message wasn't sent by a group member then it will
-         * be discarded.
-         */
+        /* If the preprepare message wasn't sent by a group member then it will be discarded. */
         if(!wasSentByAGroupMember(c)){
             JDSUtility.debug(
               "[PBFTServer:canProceed(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + c + " because " +
@@ -753,10 +739,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             return false;
         }
 
-        /**
-         * If the preprepare hasn't a valid sequence or view number then force a
-         * change view.
-         */
+        /* If the preprepare hasn't a valid sequence or view number then force a change view. */
         if(!checkViewNumber(c)){
 
             JDSUtility.debug(
@@ -766,10 +749,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             return false;
         }
 
-        /**
-         * If the preprepare hasn't a valid sequence or view number then force a
-         * change view.
-         */
+        /* If the preprepare hasn't a valid sequence or view number then force a change view. */
         if(!inAValidSequenceRange(c)){
             long lcwm = getCheckpointLowWaterMark(); long hcwm = getCheckpointHighWaterMark();
             JDSUtility.debug(
@@ -813,13 +793,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                        return null;
                     }
 
-//                     for(IMessage m : pq){
-//                         PBFTPrepare p = (PBFTPrepare) m;
-//                         if(!(p.getSequenceNumber().equals(c.getSequenceNumber()) && p.getViewNumber().equals(c.getViewNumber()))){
-//                             return false;
-//                         }
-//                     }
-
                      Quorum q = entry.getCommitQuorum();
 
                      if(q == null){
@@ -831,6 +804,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                          entry.setCommitQuorum(q);
                      }
 
+                     /*TODO: evaluate if "q.getCurrentDecision()" is a better implementation */
                      CommitSubject decision = (CommitSubject) q.decide();
 
                      if(decision != null){
@@ -852,8 +826,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                      /* Update the entry in log. */
                      getStateLog().put(entryKey, entry);
 
-                     //Long seqn = c.getSequenceNumber();
-
                      if(!completed && decision != null){
 
                         long seqn = (Long) decision.getInfo(CommitSubject.SEQUENCENUMBER);
@@ -865,8 +837,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                         getStateLog().updateNextCommitSEQ(c);
 
                         JDSUtility.debug(
-                           "[PBFTServer:accept(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", completed " +
-                           "commit phase for sequence number (" + seqn + ") and view number (" + viewn + ")."
+                           "[PBFTServer:accept(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", completed commit phase " +
+                           "for sequence number (" + seqn + ") and view number (" + viewn + ")."
                         );
 
 
@@ -939,10 +911,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
           return false;
       }//end if wasSentByAGroupMember(checkpoint)
 
-      /**
-       * If the preprepare message wasn't sent by a group member then it will
-       * be discarded.
-       */
+      /* If the preprepare message wasn't sent by a group member then it will be discarded. */
       long lcwm = getCheckpointLowWaterMark();
       long seqn = checkpoint.getSequenceNumber();
 
@@ -959,8 +928,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     }//end getDecision(checkpoint)
 
     /**
-     * Update the state of the PBFT. Insert the pre-prepare message in
-     * the log entry.
+     * Update the state of the PBFT. Insert the pre-prepare message in the log entry.
      * @param m
      */
     public CheckpointSubject getDecision(PBFTCheckpoint c){
@@ -985,7 +953,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
                 getStateLog().getQuorumTable(CHECKPOINTQUORUMSTORE).put(entryKey.toString(), q);
             }
-
+            
+            /*TODO: evaluate if "q.getCurrentDecision()" is a better implementation */
             CheckpointSubject decision = (CheckpointSubject)q.decide();
 
             if(decision != null){
@@ -1016,38 +985,26 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     }
 
     protected Object getReplierID(){
-    //    synchronized(this){
+         /* Get the local group */
+         IGroup g = getLocalGroup();
 
-            /**
-             * Get the local group
-             */
-            IGroup g = getLocalGroup();
+         int range = g.getGroupSize();
 
-            int range = g.getGroupSize();
+         Object sortedReplierID = null;
+         /* While a replier has not been selected.*/
+         while(sortedReplierID == null){
 
-            Object sortedReplierID = null;
-            /**
-             * While a replier has not been selected.
-             */
-            while(sortedReplierID == null){
+             /* Sort a process */
+             int pindex = (int) (Math.random()* range);
 
-                /**
-                 * Sort a process
-                 */
-                int pindex = (int) (Math.random()* range);
+             IProcess p = (IProcess) g.getMembers().get(pindex);
 
-                IProcess p = (IProcess) g.getMembers().get(pindex);
-
-                /**
-                 * If the selected process isn't the primary and isn't the local replica
-                 * then it'll be selected.
-                 */
-                if(!isPrimary(p) && !p.getID().equals(getLocalServerID())){
-                    sortedReplierID = p.getID();
-                }
-            }
-            return sortedReplierID;
-      //  }
+             /* If the selected process isn't the primary and isn't the local replica then it'll be selected.*/
+             if(!isPrimary(p) && !p.getID().equals(getLocalServerID())){
+                 sortedReplierID = p.getID();
+             }
+         }
+         return sortedReplierID;
     }
 
 
@@ -1060,10 +1017,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         if(isValid(receivedMD)){
             MetaDataSubject mds = getDecision(receivedMD);
             if(mds != null){
-                /** 
-                 * update the partition table with all received and certified
-                 * subpartitions.
-                 */
+                /* update the partition table with all received and certified subpartitions. */
                 PartList subparts = (PartList) mds.getInfo(MetaDataSubject.SUBPARTS);
                 
                 updateParttable(subparts);
@@ -1094,7 +1048,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             }
         }
 
-
         /* get the part with the maximum record index (this is, in depthest level)*/
         PartEntry part = getPartWithMaximumPartindex(transferring);
 
@@ -1120,8 +1073,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                             transferred.put(lrectransfer, part);
                         }
                     }else{
-                        /* else this replica will select another reply and 
-                         retrive the part and its subparts */
+                        /* else this replica will select another reply and retrive the part and its subparts */
                         emitFetch(lpart, ipart, cpart, getReplierID());
                         return;
                     }
@@ -1207,10 +1159,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     
     public void handle(PBFTFetch f){
         
-        JDSUtility.debug(
-           "[PBFTServer:handle(fetch)] s" + getLocalServerID() + ", " +
-           "at time " + getClockValue() + ", received " + f
-        );
+        JDSUtility.debug("[PBFTServer:handle(fetch)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + f);
         
         if(isValid(f)){
             long rlcSEQ = f.getLastStableCheckpointSequenceNumber();
@@ -1221,7 +1170,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             int LEVELS = rStateManager.getParttreeLevels();
             
             Object rid = f.getReplicaID();
-            //IStore store = getCheckpointStore();
             try {
                 
                 PartList subparts = null;
@@ -1268,8 +1216,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     public boolean isValid(PBFTFetch f){
         if(!wasSentByAGroupMember(f)){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(fetch)] s" + getLocalServerID() + ", " +
-              "at time " + getClockValue() + ", discarded " + f + " " +
+              "[PBFTServer:canProceed(fetch)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + f + " " +
               "because it wasn't sent by a member of the group " + getLocalGroup()
             );
 
@@ -1329,10 +1276,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
     public void handle(PBFTData d){
         
-        JDSUtility.debug(
-         "[PBFTServer:handle(data)] s" + getLocalServerID() + ", " +
-         "at time " + getClockValue() + ", " + "received " + d + "."
-        );
+        JDSUtility.debug("[PBFTServer:handle(data)] s" + getLocalServerID() + ", at time " + getClockValue() + ", " + "received " + d + ".");
 
         if(isValid(d)){
                         
@@ -1353,10 +1297,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
                 String cdigest = PartTree.leafPartDigest(ipart, cpart , page);
 
-                /**
-                 * if the partDigest of the partition match with the data partDigest,
-                 * the it will processing the recovery of the page.
-                 */
+                /* if the partDigest of the partition match with the data partDigest, the it will processing the recovery of the page. */
                 if(part.getDigest().equals(cdigest)){
 
                     IMemory mem = rStateManager.getObjecStorage();                                        
@@ -1364,10 +1305,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                     mem.release();
                     doStepNextStateTransfer(d.getReplicaID(), recid);
                 }else{ 
-                    /**
-                     * else it will select another replier and fetch the missed 
-                     * page data.
-                     */
+                    /* else it will select another replier and fetch the missed page data. */
                     emitFetch(lpart, ipart, cpart, getReplierID());
                 }
                                              
@@ -1386,8 +1324,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
         if(!transferring.containsKey(recid)){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(data)] s"   + getLocalServerID()   +
-              ", at time " + getClockValue() + ", discarded " + d +
+              "[PBFTServer:canProceed(data)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + d +
               " because it there isn't in temporary part table."
             );
 
@@ -1401,8 +1338,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     public boolean isValid(PBFTMetaData md){
         if(!wasSentByAGroupMember(md)){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(metadata)] s"   + getLocalServerID()   +
-              ", at time " + getClockValue() + ", discarded " + md      +
+              "[PBFTServer:canProceed(metadata)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + md +
               " because it wasn't sent by a member of the group " + getLocalGroup()
             );
 
@@ -1414,8 +1350,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
         if(rcmd <  lcwm){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(metadata)] s" + getLocalServerID() + ", at " +
-              "time " + getClockValue() + ", discarded " + md + " because it has " +
+              "[PBFTServer:canProceed(metadata)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + md + " because it has " +
               "a LCWM (" + rcmd + ")" + "< s" + getLocalServerID() +":LCWM(" + lcwm + ")."
             );
 
@@ -1451,6 +1386,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             getStateLog().getQuorumTable(METADATAQUORUMSTORE).put(entryKey.toString(), q);
          }
 
+         /*TODO: evaluate if "q.getCurrentDecision()" is a better implementation */
          MetaDataSubject decision = (MetaDataSubject)q.decide();
 
          if(decision != null){
@@ -1501,7 +1437,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 MessageCollection commitList = new MessageCollection();
                 MessageCollection checkpointList = new MessageCollection();
                 for(IVote v : q.getVotes()){
-                  BagSubject bs = (BagSubject) q.getCurrentDecision();
+                  BagSubject bs = (BagSubject) v.getSubject();
                   MessageCollection messages  = (MessageCollection)bs.getInfo(BagSubject.MESSAGES);
                  for(IMessage m : messages){
                      if(m instanceof PBFTPrePrepare) preprepareList.add(m);
@@ -1554,10 +1490,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     }
 
     public boolean isValid(PBFTBag bag){
-        /**
-         * If the preprepare message wasn't sent by a group member then it will
-         * be discarded.
-         */
+        /* If the preprepare message wasn't sent by a group member then it will be discarded. */
         if(!wasSentByAGroupMember(bag)){
             JDSUtility.debug(
               "[PBFTServer:canProceed(bag)] s"   + getLocalServerID() +  ", at " +
@@ -1572,8 +1505,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     }
 
     /**
-     * Update the state of the PBFT. Insert the pre-prepare message in
-     * the log entry.
+     * Update the state of the PBFT. Insert the pre-prepare message in the log entry.
      * @param m
      */
    public BagSubject getDecision(PBFTBag bag){
@@ -1594,6 +1526,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             getStateLog().getQuorumTable(BAGQUORUMSTORE).put(entryKey.toString(), q);
          }
 
+         /*TODO: evaluate if "q.getCurrentDecision()" is a better implementation */
          BagSubject decision = (BagSubject) q.decide();
 
          if(decision != null){
@@ -1629,10 +1562,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         long llcwSEQ = getCheckpointLowWaterMark();
 
         JDSUtility.debug(
-           "[PBFTServer:handle(statusactive)] s" + getLocalServerID() + ", " +
-           "at time " + getClockValue() + ", received " + sa + " current " + 
-           "(LCWM = " + llcwSEQ + "; PPSEQ = " + lpprSEQ + "; PSEQ = " + lpreSEQ + "; " +
-           "CSEQ = " + lcmtSEQ + "; ESEQ = " + lexcSEQ + ")"
+           "[PBFTServer:handle(statusactive)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + sa + " current " + 
+           "(LCWM = " + llcwSEQ + "; PPSEQ = " + lpprSEQ + "; PSEQ = " + lpreSEQ + "; CSEQ = " + lcmtSEQ + "; ESEQ = " + lexcSEQ + ")"
         );
 
         if(isValid(sa)){
@@ -1654,8 +1585,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             if(minSEQ > rlcwSEQ) minSEQ = rlcwSEQ; if(maxSEQ < rlcwSEQ) maxSEQ = rlcwSEQ;
             
             if(maxSEQ < 0) maxSEQ = 0L;
-
-            long lhcwSEQ = getCheckpointHighWaterMark();
             
             PBFTBag bag = new PBFTBag(getLocalServerID());
 
@@ -1701,7 +1630,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             }
             
             long currSEQ = rlcwSEQ + 1;
-//            IStore store = getCheckpointStore();
             
             if(currSEQ < llcwSEQ){
                 try {
@@ -1799,21 +1727,13 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
     public PBFTStatusActive createStatusActiveMessage(){
 
-        long prepreparedSEQ = getStateLog().getNextPrePrepareSEQ() - 1L;
-        long preparedSEQ = getStateLog().getNextPrepareSEQ() - 1L;
-        long committedSEQ = getStateLog().getNextCommitSEQ()  - 1L;
-        long executedSEQ = getStateLog().getNextExecuteSEQ() - 1L;
-        long lowCheckpointWaterMark = getCheckpointLowWaterMark();
+        long ppSEQ = getStateLog().getNextPrePrepareSEQ() - 1L;
+        long prSEQ = getStateLog().getNextPrepareSEQ() - 1L;
+        long cmSEQ = getStateLog().getNextCommitSEQ()  - 1L;
+        long exSEQ = getStateLog().getNextExecuteSEQ() - 1L;
+        long lcwm = getCheckpointLowWaterMark();
 
-        return new PBFTStatusActive(
-                        getLocalServerID(),
-                        getCurrentViewNumber(),
-                        prepreparedSEQ,
-                        preparedSEQ,
-                        committedSEQ,
-                        executedSEQ,
-                        lowCheckpointWaterMark
-        );
+        return new PBFTStatusActive(getLocalServerID(), getCurrentViewNumber(), ppSEQ, prSEQ, cmSEQ, exSEQ, lcwm);
 
     }
 
@@ -1837,13 +1757,10 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 
                 IRecoverableServer lServer = (IRecoverableServer)getServer();
 
-//            currSEQ = proctoken.getSequenceNumber();
                 PBFTPrePrepare preprepare = getStateLog().getPrePrepare(currSEQ);
                 PBFTRequestInfo rinfo = getRequestInfo();
 
                 for(String digest : preprepare.getDigests()){
-
-                    //StatedPBFTRequestMessage statedReq = //getStateLog().getStatedRequest(digest);
 
                     PBFTRequest request = rinfo.getRequest(digest); //statedReq.getRequest();
                     
@@ -1853,8 +1770,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                     
                     rinfo.assign(digest, StatedPBFTRequestMessage.RequestState.SERVED);
                     rinfo.assign(digest, reply);
-                    //statedReq.setState(StatedPBFTRequestMessage.RequestState.SERVED);
-                    //statedReq.setReply(reply);
 
                     JDSUtility.debug(
                       "[PBFTServer:handle(token)] s"  + getLocalServerID() + ", at time " + getClockValue() + ", executed " + request +
@@ -1898,7 +1813,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                     }
                 }
 
-                //getStateLog().get(currSEQ).setNOP(getLocalServerID());
             }
         }
     }
@@ -1935,45 +1849,28 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     }
 
     public PBFTReply createReplyMessage(PBFTRequest r, IPayload result, Integer viewNumber){
-
-  //      synchronized(this){
-            PBFTReply reply = new PBFTReply(
-                r, result, getLocalServerID(), viewNumber
-            );
-
-            return reply;
-    //    }
-
+         PBFTReply reply = new PBFTReply(r, result, getLocalServerID(), viewNumber);
+         return reply;
     }
 
     public PBFTCheckpoint createCheckpointMessage(long seqn) throws Exception{
 
-      //  synchronized(this){
-            //IRecoverableServer lserver = (IRecoverableServer) getServer();
+         byte[] state = rStateManager.byteArray();
 
-            byte[] state = rStateManager.byteArray();
+         String digest = getAuthenticator().getDigest(state); //computeStateDigest(state, seqn);
 
-            //IState state = null;//lserver.getCurrentState().copy();
+         PBFTCheckpoint c = new PBFTCheckpoint(seqn, digest, getLocalServerID());
 
-            String digest = getAuthenticator().getDigest(state); //computeStateDigest(state, seqn);
-
-            PBFTCheckpoint c = new PBFTCheckpoint(seqn, digest, getLocalServerID());
-
-//            getStateLog().doCacheServerState(seqn, leafPartDigest, state);
-
-            return c;
-        //}
+         return c;
     }
 
     /**
-     * Send a message to a remote object (a process or a group). All emitted
-     * message are signed using the defined authenticator. After the protocol
-     * signing a message it creates a PDU a use it to carry out the signed message.
+     * Send a message to a remote object (a process or a group). All emitted message are signed using the defined authenticator.
+     * After the protocol signing a message it creates a PDU a use it to carry out the signed message.
      * @param msg -- the message that has to be sent.
      * @param remote -- Can be a instance of a process or a instance of a group.
      */
     public void emit(IMessage msg, ISystemEntity remote){
-        //synchronized(this){
         SignedMessage m;
 
         try {
@@ -2003,14 +1900,11 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
             ex.printStackTrace();
         }
-        //}
     }
 
-    public PBFTReply createNullReplyMessage(PBFTRequest request){
-        
+    public PBFTReply createNullReplyMessage(PBFTRequest request){        
         /* It must be corrected. */
         return  new PBFTReply(request, null, getLocalServerID(), getCurrentViewNumber());
-
     }
 
   /*########################################################################
@@ -2018,8 +1912,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
    #########################################################################*/
     ArrayList<Integer> views = new ArrayList<Integer>();
     boolean uncertainty = false;
-    /* (a) a change-view message is emitted because of a suspect of failure of 
-       the primary replica. */
+    /* (a) a change-view message is emitted because of a suspect of failure of the primary replica. */
     
     public void emitChangeView() {
 
@@ -2031,17 +1924,14 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             "message for (v + 1 = "  +  (viewn + 1) + ")."
         );
 
-        /* the replica makes sure that no timer is currently working. If the 
-         * view change was trigged by a suspect of failure of the primary then
+        /* the replica makes sure that no timer is currently working. If the view change was trigged by a suspect of failure of the primary then
          * probably it's been already true.
          */
         getViewTimer().cancel();
 
-        /* the replica moves to the next view. After that, this replica isn't
-         * accepting any message from view v < v+1. */
+        /* the replica moves to the next view. After that, this replica isn't accepting any message from view v < v+1. */
         setCurrentViewNumber(viewn +1);
 
-        /* */
         PBFTChangeView cv = createChangeViewMessage();
 
         for(PBFTLogEntry lentry: getStateLog().values()){
@@ -2079,8 +1969,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         uncertainty = true;
 
         if(!isPrimary()){
-            /*if it isn't the primary then it must send a change-view-ack message
-             to the estimated primary*/
+            /*if it isn't the primary then it must send a change-view-ack message to the estimated primary*/
             Object npid = getLocalGroup().next(getCurrentPrimaryID());
             IProcess newPrimary = new BaseProcess(npid);
             for(PBFTChangeView oldCV : digcvtable.values()){
@@ -2110,8 +1999,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             int rviewn = cv.getViewNumber();
             int cviewn = getCurrentViewNumber();
 
-            /* if the change-view message was sent by the current primary and
-               such message has a view number greater than the current view
+            /* if the change-view message was sent by the current primary and such message has a view number greater than the current view
                number then the replica will move to rview */
             if(isPrimary(rServer) && rviewn > cviewn){
                 emitChangeView();
@@ -2121,8 +2009,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 int f = getServiceBFTResilience();
                 Integer mxview = kthMaxLoggedViewNumber(f+1);
                 
-                /*it has at least f+1 view-changes with a view number greater
-                  then or equals to mxview: change to view maxv */
+                /*it has at least f+1 view-changes with a view number greater then or equals to mxview: change to view maxv */
                 if(mxview != null && mxview.compareTo(rviewn) > 0){
                     setCurrentViewNumber(mxview-1);
                     emitChangeView();
@@ -2132,17 +2019,14 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 if(uncertainty && !isPrimary()){
                     mxview = kthMaxLoggedViewNumber(2 * f + 1);
 
-                    /*if it has 2f+1 change-view messages with view greater than
-                      or equals rviewn then it'll start a timer to ensure it moves
-                      to another view if it doesn't receive the new-view message
-                      for rviewn*/
+                    /*if it has 2f+1 change-view messages with view greater than or equals rviewn then it'll start a timer to ensure it moves
+                      to another view if it doesn't receive the new-view message for rviewn*/
                     if(mxview != null && mxview.compareTo(rviewn)==0){
                           PBFTTimeoutDetector ttask =
                              (PBFTTimeoutDetector) getViewTimer().getTask();
                           
-                          /* an exponetial timeout has to be considered to
-                             guarantee liveness when the end-to-end delay is
-                             too long (it's prevent uncessary view-changes)*/
+                          /* an exponetial timeout has to be considered to guarantee liveness when the end-to-end delay is too long
+                             (it's prevent uncessary view-changes)*/
                           long timeout = (Long) ttask.get("TIMEOUT");
                           ttask.put("TIMEOUT", 2 * timeout);
                           scheduleViewChange();
@@ -2188,10 +2072,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 viewn = pp.getViewNumber();
                 if(viewn > cview){
                     JDSUtility.debug(
-                        "[PBFTServer:canProceed(changeview] s" + getLocalServerID() + ", at " +
-                        "time " + getClockValue() + ", discarded " + cv + " because it has " +
-                        "a component with a invalid view number (VW{" + viewn + "} > CURRVW" +
-                        "{" + cview + "})."
+                        "[PBFTServer:canProceed(changeview] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + cv + " because it has " +
+                        "a component with a invalid view number (VW{" + viewn + "} > CURRVW{" + cview + "})."
                     );
                     return false;
                 }
@@ -2202,10 +2084,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 viewn = p.getViewNumber();
                 if(viewn > cview){
                     JDSUtility.debug(
-                        "[PBFTServer:canProceed(changeview] s" + getLocalServerID() + ", at " +
-                        "time " + getClockValue() + ", discarded " + cv + " because it has " +
-                        "a component with a invalid view number (VW{" + viewn + "} > CURRVW" +
-                        "{" + cview + "})."
+                        "[PBFTServer:canProceed(changeview] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + cv + " because it has " +
+                        "a component with a invalid view number (VW{" + viewn + "} > CURRVW{" + cview + "})."
                     );
                     return false;
                 }
@@ -2232,11 +2112,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             if(!digcvtable.contains(digest)){
                 digcvtable.put(digest, cv);
                 int viewn = cv.getViewNumber();
-                /*if doesn't exist a entry in viewn collection for such view then
-                 it'll be added.*/
-//              if(!views.contains(viewn)){
-                    views.add(viewn);
-//              }
+                views.add(viewn);
                 return true;
             }
         } catch (Exception ex) {
@@ -2417,15 +2293,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
     public long getRejuvenationWindow() {return this.rejuvenationWindow;}
 
-//    protected  PBFTClientSessionTable clientSessionTable = new PBFTClientSessionTable();
-
-//    public boolean isNextRequest(PBFTRequest current){return clientSessionTable.isNext(current);}
-
-    //public void updateClientSession(PBFTRequest r){clientSessionTable.updateClientSession(r);}
-
     /**
-     * Checks if a message has a valid sequence number, this is: the sequence
-     * number doesn't has holes and is in a valid range.
+     * Checks if a message has a valid sequence number, this is: the sequence number doesn't has holes and is in a valid range.
      * @param m -- the message.
      * @return -- true if the message has a valid sequence number.
      */
@@ -2444,7 +2313,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
         long nextPrePrepareSEQ = getStateLog().getNextPrePrepareSEQ();
         long nextPrepareSEQ = getStateLog().getNextPrepareSEQ();
-        long nextCommitSEQ = getStateLog().getNextCommitSEQ();
+        //long nextCommitSEQ = getStateLog().getNextCommitSEQ();
 
         if(m != null && m.getSequenceNumber() != null){
 
@@ -2468,8 +2337,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     }
 
     /**
-     * Check if the view number of the message is equal to the current view
-     * number.
+     * Check if the view number of the message is equal to the current view number.
      * @param m -- the message.
      * @return -- true if the message belongs to the current view.
      */
@@ -2483,8 +2351,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
 
     /**
-     * Check if a message has a sequence number between the low and high water
-     * marks defined by the checkpoint.
+     * Check if a message has a sequence number between the low and high water marks defined by the checkpoint.
      * @param m -- the message.
      * @return -- true if the sequence number of the message is in the valid
      * range.
@@ -2496,7 +2363,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         long high = getCheckpointHighWaterMark();
 
         return seqn > low && seqn <= high;
-
 
     }
 
