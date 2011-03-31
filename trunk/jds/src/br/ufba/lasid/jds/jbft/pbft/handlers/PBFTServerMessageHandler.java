@@ -6,7 +6,7 @@
 package br.ufba.lasid.jds.jbft.pbft.handlers;
 
 import br.ufba.lasid.jds.comm.MessageHandler;
-import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 
 /**
  *

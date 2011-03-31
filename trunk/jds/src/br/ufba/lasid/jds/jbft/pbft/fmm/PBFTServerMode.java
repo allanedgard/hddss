@@ -14,7 +14,7 @@ import br.ufba.lasid.jds.comm.communicators.ICommunicator;
 import br.ufba.lasid.jds.cs.IServer;
 import br.ufba.lasid.jds.fmm.Mode;
 import br.ufba.lasid.jds.group.IGroup;
-import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.security.IMessageAuthenticator;
 import br.ufba.lasid.jds.util.IClock;
 import br.ufba.lasid.jds.util.IScheduler;

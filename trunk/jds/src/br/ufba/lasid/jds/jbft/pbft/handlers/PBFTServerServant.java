@@ -2,8 +2,8 @@ package br.ufba.lasid.jds.jbft.pbft.handlers;
 
 import br.ufba.lasid.hdf.IConsumer;
 import br.ufba.lasid.jds.comm.IMessage;
-import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
-import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.server.PBFTServer;
 import org.apache.commons.collections.Buffer;
 import org.apache.commons.collections.BufferUtils;
 import org.apache.commons.collections.buffer.UnboundedFifoBuffer;

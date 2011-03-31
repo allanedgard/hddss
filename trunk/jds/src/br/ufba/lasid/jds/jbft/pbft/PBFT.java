@@ -26,7 +26,7 @@ public class PBFT extends DistributedProtocol implements IPBFT{
      * associated to timers (such as, active-status period, primary response 
      * timeout, batching request timeout etc.).
      */
-    protected  TaskTableStore ttstore = new TaskTableStore();
+//    protected  TaskTableStore ttstore = new TaskTableStore();
 
     public static String    REQUESTTASKS = "REQUESTTASKS";
     public static String VIEWCHANGETASKS = "VIEWCHANGETASKS";
@@ -48,23 +48,7 @@ public class PBFT extends DistributedProtocol implements IPBFT{
     public PBFTStateLog getStateLog() {
         return stateLog;
     }
-    
-    public TaskTableStore getTaskTableStore(){
-        return ttstore;
-    }
-
-    public TaskTable getTaskTable(String ttname){
-        TaskTable ttable = ttstore.get(ttname);
-        synchronized(this){
-            if(ttable == null){
-                ttable = new TaskTable();
-                ttstore.put(ttname, ttable);
-            }
-        }
-        return ttable;
         
-    }
-    
     protected  IScheduler scheduler;
 
 

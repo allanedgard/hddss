@@ -17,47 +17,50 @@ public class PBFTRequest  extends PBFTMessage{
         
     }
 
-/*    public PBFTRequest(IPayload payload, Long timestamp, Object clientID, Long lastTimestamp){
-        setPayload(payload);
-        setTimestamp(timestamp);
-        setClientID(clientID);
-        setLastTimestamp(lastTimestamp);
-    }*/
-
     public PBFTRequest(IPayload payload, Long timestamp, Object clientID){
 
-//        this(payload, timestamp, clientID);//, new Long(-1));
         setPayload(payload);
         setTimestamp(timestamp);
         setClientID(clientID);
 
     }
-
-    public static PBFTRequest copy(PBFTRequest r){
-
-        return new PBFTRequest(
-                        r.getPayload(),
-                        r.getTimestamp(),
-                        r.getClientID()//,
-//                        r.getLastTimestamp()
-                    );
-    }
-
 
     @Override
     public final String toString() {
         
-        return (
-                "<REQUEST"                             + ", " +
-                 "CLIENT = " + getClientID().toString()     + ", " +
-                 "TIMESTAMP = " + getTimestamp().toString()   + ", " +
-                 "OPERATION = " + getPayload().toString()   +
-                 ">"
-        );
+      return (
+         "<REQUEST, " +
+            "CLIENT = " + getClientID().toString() + ", " +
+            "TIMESTAMP = " + getTimestamp().toString() + ", " +
+            "OPERATION = " + getPayload().toString() + ", " +
+            "READ-ONLY = " + isReadOnly() + ", " +
+            "SIZE = " + getSize() +
+         ">"
+      );
+      
+    }
+    
+    protected boolean readOnly = false;
 
+    public void setReadOnly(boolean readOnly){
+       this.readOnly = readOnly;
     }
 
+    public boolean isReadOnly(){
+       return this.readOnly;
+    }
 
+    /* mensuared in KB */
+    protected int size = 1;
+
+    public void setSize(int newSize){
+       this.size = newSize;
+    }
+
+    public int getSize(){
+       return this.size;
+    }
+    
     protected IPayload payload;
 
     public void setPayload(IPayload payload) {
@@ -88,24 +91,14 @@ public class PBFTRequest  extends PBFTMessage{
         this.timestamp  = timestamp;
     }
 
-    private boolean sent = false;
-
-    public boolean wasSent() {
-        return sent;
-    }
-
-    public void setSent(boolean sent) {
-        this.sent = sent;
-    }
-
-//    protected Long lastTimestamp;
+//    private boolean sent = false;
 //
-//    public void setLastTimestamp(Long timestamp){
-//        lastTimestamp = timestamp;//put("LASTTIMESTAMP", timestamp);
+//    public boolean wasSent() {
+//        return sent;
 //    }
-
-//    public Long getLastTimestamp(){
-//        return lastTimestamp; //(Long)get("LASTTIMESTAMP");
+//
+//    public void setSent(boolean sent) {
+//        this.sent = sent;
 //    }
 
     protected boolean synch = true;
@@ -117,6 +110,5 @@ public class PBFTRequest  extends PBFTMessage{
     public void setSynch(boolean synch) {
         this.synch = synch;
     }
-
     
 }

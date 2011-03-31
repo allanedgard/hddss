@@ -7,8 +7,8 @@ package br.ufba.lasid.jds.jbft.pbft.architectures;
 
 import br.ufba.lasid.jds.adapters.EventHandler;
 import br.ufba.lasid.jds.architectures.Architecture;
-import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
-import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.server.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.fmm.PBFTServerMultiModeMachine;
 import br.ufba.lasid.jds.jbft.pbft.handlers.PBFTServerServant;
 

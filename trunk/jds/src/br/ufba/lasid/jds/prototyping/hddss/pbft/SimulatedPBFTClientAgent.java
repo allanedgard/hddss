@@ -7,7 +7,7 @@ package br.ufba.lasid.jds.prototyping.hddss.pbft;
 
 import br.ufba.lasid.jds.cs.IClient;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.comm.SimulatedPBFTCommunicator;
-import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
+import br.ufba.lasid.jds.jbft.pbft.client.PBFTClient;
 import br.ufba.lasid.jds.jbft.pbft.architectures.PBFTClientArchitecture;
 import br.ufba.lasid.jds.security.SHA1withDSASunMessageAuthenticator;
 import java.util.logging.Level;

@@ -9,7 +9,7 @@ import br.ufba.lasid.hdf.IConsumer;
 import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.SignedMessage;
-import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
+import br.ufba.lasid.jds.jbft.pbft.client.PBFTClient;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import java.util.logging.Level;
 import java.util.logging.Logger;

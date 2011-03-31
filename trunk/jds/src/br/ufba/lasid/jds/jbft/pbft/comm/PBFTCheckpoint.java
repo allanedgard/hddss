@@ -5,8 +5,6 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
-import br.ufba.lasid.jds.jbft.pbft.util.CheckpointIndex;
-
 /**
  *
  * @author aliriosa
@@ -42,11 +40,6 @@ public class PBFTCheckpoint extends PBFTServerMessage{
 
     public void setDigest(String digest) {
         this.digest = digest;
-    }
-
-    
-    public String getEntryKey(){
-        return  new CheckpointIndex(getSequenceNumber(), getDigest()).getIndexPattern();
     }
 
 }

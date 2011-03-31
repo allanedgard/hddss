@@ -5,12 +5,12 @@
 
 package br.ufba.lasid.jds.util;
 
-import trash.br.ufba.lasid.jds.IData;
-import trash.br.ufba.lasid.jds.util.Wrapper;
+import br.ufba.lasid.jds.IData;
 /**
  *
  * @author aliriosa
  */
 public interface IPayload<K, V> extends Wrapper<K, V>, IData {
 
+   public int getSizeInBytes();
 }

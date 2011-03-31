@@ -8,7 +8,7 @@ package br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft;
 import br.ufba.lasid.jds.prototyping.hddss.Randomize;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.SimulatedPBFTClientAgent;
 import br.ufba.lasid.jds.util.IPayload;
-import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
+import br.ufba.lasid.jds.jbft.pbft.client.PBFTClient;
 
 /**
  *
@@ -85,11 +85,11 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
     }
 
     private double selectOperator1(){
-        return Math.round(Math.random() * 100)/10.0;
+        return Math.round(Math.random() * 100)/100.0;
     }
 
     private double selectOperator2(){
-        return Math.round(Math.random() * 100)/10.0;
+        return Math.round(Math.random() * 100)/100.0;
     }
 
 
