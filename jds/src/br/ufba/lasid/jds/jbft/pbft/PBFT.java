@@ -11,8 +11,6 @@ import br.ufba.lasid.jds.architectures.Architecture;
 import br.ufba.lasid.jds.security.IMessageAuthenticator;
 import br.ufba.lasid.jds.util.IClock;
 import br.ufba.lasid.jds.util.IScheduler;
-import br.ufba.lasid.jds.util.TaskTable;
-import br.ufba.lasid.jds.util.TaskTableStore;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTStateLog;
 
 /**
@@ -20,13 +18,6 @@ import br.ufba.lasid.jds.jbft.pbft.util.PBFTStateLog;
  * @author aliriosa
  */
 public class PBFT extends DistributedProtocol implements IPBFT{
-
-    /**
-     * State a table with tasks related to PBFT, in special these ones which are
-     * associated to timers (such as, active-status period, primary response 
-     * timeout, batching request timeout etc.).
-     */
-//    protected  TaskTableStore ttstore = new TaskTableStore();
 
     public static String    REQUESTTASKS = "REQUESTTASKS";
     public static String VIEWCHANGETASKS = "VIEWCHANGETASKS";

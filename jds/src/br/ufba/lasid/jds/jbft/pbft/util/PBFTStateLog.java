@@ -5,9 +5,6 @@
 
 package br.ufba.lasid.jds.jbft.pbft.util;
 
-//import br.ufba.lasid.jds.comm.Quorum;
-//import trash.br.ufba.lasid.jds.comm.QuorumTable;
-//import trash.br.ufba.lasid.jds.comm.QuorumTableStore;
 import br.ufba.lasid.jds.decision.Quorum;
 import br.ufba.lasid.jds.decision.QuorumStore;
 import br.ufba.lasid.jds.decision.Quorumtable;
@@ -31,7 +28,6 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
     private static final String PREPAREQUORUMTABLE = "__PREPAREQUORUMTABLE";
     private static final String COMMITQUORUMTABLE = "__COMMITQUORUMTABLE";
     private static final String CHECKPOINTQUORUMTABLE = "__CHECKPOINTQUORUMTABLE";
-    //private static final String REPLYQUORUMTABLE = "__REPLYQUORUMTABLE";
        
     private int lastChangeViewTimestamp = -1;
 
@@ -186,7 +182,7 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
 
     public void garbage(long seqn) {
         synchronized(this){
-            long finalSEQ = seqn; //getCheckpointLowWaterMark();
+            long finalSEQ = seqn; 
 
             ArrayList<Long> seqns = new ArrayList<Long>();
             seqns.addAll(keySet());
