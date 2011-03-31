@@ -1,6 +1,6 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
-import trash.br.ufba.lasid.jds.util.IDebugger;
+import br.ufba.lasid.jds.util.IDebugger;
 import java.util.ArrayList;
 import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 

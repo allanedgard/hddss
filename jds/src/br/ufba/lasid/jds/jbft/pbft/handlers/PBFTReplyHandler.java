@@ -5,8 +5,11 @@
 
 package br.ufba.lasid.jds.jbft.pbft.handlers;
 
-import br.ufba.lasid.jds.jbft.pbft.PBFTClient;
+import br.ufba.lasid.jds.jbft.pbft.client.PBFTClient;
+import br.ufba.lasid.jds.jbft.pbft.client.decision.ReplySubject;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
+import br.ufba.lasid.jds.management.trash.state.IReplicableState;
+import br.ufba.lasid.jds.util.IPayload;
 
 /**
  *
@@ -23,10 +26,11 @@ public class PBFTReplyHandler extends PBFTClientMessageHandler{
         PBFTReply reply =  (PBFTReply) this.input;
         
         if(getProtocol().canProceed(reply)){
-            
-            if(getProtocol().updateState(reply)){
-               getProtocol().getApplicationBox().add(reply.getPayload());
-            }//end if updateState(reply)
+            ReplySubject rs = (ReplySubject)getProtocol().getDecision(reply);
+            if(rs != null){
+               IPayload result = (IPayload)rs.getInfo(ReplySubject.PAYLOAD);
+               getProtocol().getApplicationBox().add(result);
+            }//end if getDecision(reply)
 
         }//end if wasAcceptedAsValidReply (reply)
     }

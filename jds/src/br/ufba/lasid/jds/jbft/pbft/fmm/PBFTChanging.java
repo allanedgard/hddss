@@ -7,8 +7,8 @@ package br.ufba.lasid.jds.jbft.pbft.fmm;
 
 import br.ufba.lasid.jds.adapters.IAfterEventListener;
 import br.ufba.lasid.jds.comm.MessageQueue;
-import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
-import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.server.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBag;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeViewACK;

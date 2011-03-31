@@ -5,11 +5,11 @@
 
 package br.ufba.lasid.jds.security.util;
 
-import trash.br.ufba.lasid.jds.comm.Message;
+//import trash.br.ufba.lasid.jds.comm.Message;
+import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.util.XObject;
 import java.io.IOException;
-import java.io.Serializable;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -169,7 +169,7 @@ public class XSecurity {
         return check(signedObj, key, ENCRYPT_SHA1withDSA);
     }
     
-    public static SignedMessage sign(Message m, KeyPair key)
+    public static SignedMessage sign(IMessage m, KeyPair key)
             throws  IOException,
                     InvalidKeyException,
                     SignatureException,
@@ -178,7 +178,7 @@ public class XSecurity {
     {
         return sign(m, key, ENCRYPT_SHA1withDSA);
     }
-    public static SignedMessage sign(Message m, KeyPair key, String algorithm) 
+    public static SignedMessage sign(IMessage m, KeyPair key, String algorithm)
             throws  IOException,
                     InvalidKeyException,
                     SignatureException,
@@ -210,7 +210,7 @@ public class XSecurity {
         }
     }
 
-    public static Message unsign(SignedMessage m){
+    public static IMessage unsign(SignedMessage m){
         return null;
     }
 

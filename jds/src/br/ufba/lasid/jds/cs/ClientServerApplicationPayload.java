@@ -22,4 +22,8 @@ public class ClientServerApplicationPayload extends Hashtable<String, Object> im
         //do nothing
     }
 
+   public int getSizeInBytes() {
+      throw new UnsupportedOperationException("Not supported yet.");
+   }
+
 }

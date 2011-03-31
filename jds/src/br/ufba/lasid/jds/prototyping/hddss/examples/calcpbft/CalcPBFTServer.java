@@ -6,7 +6,6 @@
 package br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft;
 
 import br.ufba.lasid.jds.ft.IRecoverableServer;
-import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IRecoverableProcess;
 //import br.ufba.lasid.jds.jbft.pbft.util.checkpoint.IState;
 import br.ufba.lasid.jds.management.memory.state.IState;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.SimulatedPBFTServerAgent;
@@ -44,7 +43,7 @@ public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecover
         Double r = round(calculator.solve(opcode, op1, op2));
         
         if(r != null){
-            result.put(Calculator.RESULT, round(calculator.solve(opcode, op1, op2)));
+            result.put(Calculator.RESULT, r);
         }else{
             result.put(Calculator.RESULT,"[ERROR]INVALID OPERATION");
         }
@@ -65,7 +64,7 @@ public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecover
     }
 
     public double round(double value){
-        return Math.round(value * 100)/10.0;
+        return Math.round(value * 100)/100.0;
     }
     public IState getCurrentState() {
         return _state;

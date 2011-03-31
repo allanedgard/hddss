@@ -10,8 +10,8 @@ import br.ufba.lasid.jds.security.SHA1withDSASunMessageAuthenticator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import br.ufba.lasid.jds.cs.IServer;
-import br.ufba.lasid.jds.jbft.pbft.IPBFTServer;
-import br.ufba.lasid.jds.jbft.pbft.PBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.server.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.architectures.PBFTServerArchitecture;
 import br.ufba.lasid.jds.jbft.pbft.fmm.PBFTServerMultiModeMachine;
 
