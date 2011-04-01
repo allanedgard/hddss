@@ -389,7 +389,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
       if(!isPrimary()){
          long now = getClockValue();
 
-         if(getViewTimer().workingAt(now)){
+         if(!getViewTimer().workingAt(now)){
 
             long timeout = getPrimaryFaultTimeout();
             PBFTTimeoutDetector ttask = (PBFTTimeoutDetector) getViewTimer().getTask();
@@ -1911,16 +1911,17 @@ public class PBFTServer extends PBFT implements IPBFTServer{
    # 11. Methods for handling change-view procedure.
    #########################################################################*/
     ArrayList<Integer> views = new ArrayList<Integer>();
-    boolean uncertainty = false;
-    /* (a) a change-view message is emitted because of a suspect of failure of the primary replica. */
+    boolean uncertanty = false;
+    boolean changing = false;
     
+    /* (a.1) a change-view message is emitted because of a suspect of failure of the primary replica.                   */
+    /* (a.2) change-view-ack are sent for each change-view message that was received and match with the new view number */
     public void emitChangeView() {
 
         int viewn = getCurrentViewNumber();
 
         JDSUtility.debug(
-            "[PBFTServer:emitChangeView()] s" + getLocalServerID() + ", at " +
-            "time " + getClockValue() + ", is going to emit a change view " +
+            "[PBFTServer:emitChangeView()] s" + getLocalServerID() + ", at time " + getClockValue() + ", is going to emit a change view " +
             "message for (v + 1 = "  +  (viewn + 1) + ")."
         );
 
@@ -1932,21 +1933,31 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         /* the replica moves to the next view. After that, this replica isn't accepting any message from view v < v+1. */
         setCurrentViewNumber(viewn +1);
 
+        /*creates a change-view message */
         PBFTChangeView cv = createChangeViewMessage();
 
+        /* for each entry in current pbft log */
         for(PBFTLogEntry lentry: getStateLog().values()){
 
+            /* gets the prepare quorum for current entry*/
             Quorum pq = lentry.getPrepareQuorum();
 
+            /* if is a valid prepare quorum (i.e. a quorum with a certificate)*/
             if(pq.getCurrentDecision() != null){
+
                 PrepareSubject ps = (PrepareSubject) pq.getCurrentDecision();
-                
+
+                /* gets the parameters (sequence number, view number and digests) which were certificate in current prepare quorum */
                 long seqn = ( Long  ) ps.getInfo(PrepareSubject.SEQUENCENUMBER);
                 int  vwn = (Integer) ps.getInfo(PrepareSubject.VIEWNUMBER);
                 DigestList digests = (DigestList) ps.getInfo(PrepareSubject.DIGESTLIST);
 
+                /* adds the parameters to change view message to compose the prepared set P */
                 cv.addPrepare(seqn, digests, vwn);
+                
             }else{
+                /* if there isn't a prepare quorum then it'll add the accepted pre-prepare to change view message to compose
+                   pre-prepared set Q*/
                 PBFTPrePrepare pp = lentry.getPrePrepare();
                 cv.addPrePrepare(pp.getSequenceNumber(), pp.getDigests(), pp.getViewNumber());
             }
@@ -1954,42 +1965,50 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
         PartEntry centry;
         try {
+            /* gets the root of the checkpoint partition tree */
             centry = rStateManager.getPart(0, 0);
+
+            /* adds the pair (last stable sequence number and state digest) to compose checkpoint set C */
             cv.addCheckpoint(centry.getPartCheckpoint(), centry.getDigest());
         } catch (Exception ex) {
             Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
             cv.addCheckpoint(0, "");
         }
 
+        /* clean up the current pbft log */
         getStateLog().clear();
 
+        /*emit the change view message to group of replicas */
         emit(cv, getLocalGroup().minus(getLocalProcess()));
 
+        /*updates the change-view message in log */
         updateState(cv);
-        uncertainty = true;
+        
+        uncertanty = true;
+        changing = true;
 
         if(!isPrimary()){
-            /*if it isn't the primary then it must send a change-view-ack message to the estimated primary*/
+            /* if it isn't the primary then it must send a change-view-ack message to the estimated primary */
             Object npid = getLocalGroup().next(getCurrentPrimaryID());
             IProcess newPrimary = new BaseProcess(npid);
+
+            /* for each change-view messsage that has accepted ... send view-change ack */
             for(PBFTChangeView oldCV : digcvtable.values()){
                 int oldV = oldCV.getViewNumber();
                 Object rid = oldCV.getReplicaID();
-                if(oldV == getCurrentViewNumber() && !rid.equals(getLocalServerID())){
-
+                
+                /* if the view change has the same view number and wasn't sent by the local replica then a change-view-ack
+                   will be sent*/
+                if(getCurrentViewNumber().equals(oldV) && !rid.equals(getLocalServerID())){
                     emit(createChangeViewACKMessage(oldCV), newPrimary);
-
                 }
-
             }
-
         }
     }
 
     public void handle(PBFTChangeView cv) {
         JDSUtility.debug(
-           "[PBFTServer:handle(changeview)] s" + getLocalServerID() + ", " +
-           "at time " + getClockValue() + ", received " + cv 
+           "[PBFTServer:handle(changeview)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + cv 
         );
 
         if(isValid(cv)){
@@ -2004,6 +2023,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             if(isPrimary(rServer) && rviewn > cviewn){
                 emitChangeView();
             }
+            
             /*if the state was updated then it's a new view-change message*/
             if(updateState(cv)){
                 int f = getServiceBFTResilience();
@@ -2016,7 +2036,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                     return;
                 }
 
-                if(uncertainty && !isPrimary()){
+                if(uncertanty && !isPrimary()){
                     mxview = kthMaxLoggedViewNumber(2 * f + 1);
 
                     /*if it has 2f+1 change-view messages with view greater than or equals rviewn then it'll start a timer to ensure it moves
@@ -2030,7 +2050,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                           long timeout = (Long) ttask.get("TIMEOUT");
                           ttask.put("TIMEOUT", 2 * timeout);
                           scheduleViewChange();
-                          uncertainty = false;                          
+                          uncertanty = false;
                     }
                     
                 }

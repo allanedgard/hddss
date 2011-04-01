@@ -12,11 +12,14 @@ import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.server.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBag;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeView;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeViewACK;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetch;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
@@ -111,6 +114,18 @@ public class PBFTServerMessageDispatcher extends PBFTServerMessageHandler {
 
         if(m instanceof PBFTData){
             handler = new PBFTDataHandler(getProtocol());
+        }
+
+        if(m instanceof PBFTChangeView){
+            handler = new PBFTChangeViewHandler(getProtocol());
+        }
+
+        if(m instanceof PBFTChangeViewACK){
+            handler = new PBFTChangeViewACKHandler(getProtocol());
+        }
+
+        if(m instanceof PBFTNewView){
+            handler = new PBFTNewViewHandler(getProtocol());
         }
 
         if(handler != null){

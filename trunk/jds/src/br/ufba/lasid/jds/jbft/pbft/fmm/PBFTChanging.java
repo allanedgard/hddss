@@ -35,12 +35,12 @@ public class PBFTChanging extends PBFTServerMode implements IAfterEventListener{
 
     public PBFTChanging(PBFTServerMultiModeMachine machine) {
         super(PBFTModes.CHANGING, machine);
-        try {
-            getMachine().getProtocol().addListener(this, getMachine().getProtocol().getClass().getMethod("emitChangeView"));
-            getMachine().getProtocol().addListener(this, getMachine().getProtocol().getClass().getMethod("installNewView"));
-        } catch (Exception ex) {
-            Logger.getLogger(PBFTChanging.class.getName()).log(Level.SEVERE, null, ex);
-        } 
+//        try {
+//            getMachine().getProtocol().addListener(this, getMachine().getProtocol().getClass().getMethod("emitChangeView"));
+//            getMachine().getProtocol().addListener(this, getMachine().getProtocol().getClass().getMethod("installNewView"));
+//        } catch (Exception ex) {
+//            Logger.getLogger(PBFTChanging.class.getName()).log(Level.SEVERE, null, ex);
+//        }
     }
 
     public void handle(PBFTRequest rq) {
