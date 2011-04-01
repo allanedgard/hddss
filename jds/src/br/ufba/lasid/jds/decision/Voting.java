@@ -40,6 +40,9 @@ public abstract class Voting implements IVoting{
          /* if the subject si is a valid subject and has not been computed yet */
          if(si != null && !counting.containsKey(si)){
             long count = 1;
+
+            counting.put(si, count);
+            
             for(int j = i; j < votes.size(); j++){
                IVote vj = votes.get(j);
                ISubject sj = vj.getSubject();
