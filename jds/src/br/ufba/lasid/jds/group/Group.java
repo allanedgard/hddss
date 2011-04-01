@@ -5,9 +5,9 @@
 
 package br.ufba.lasid.jds.group;
 
+import br.ufba.lasid.jds.BaseProcess;
 import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.util.ProcessList;
-import java.util.Arrays;
 
 /**
  *
@@ -62,24 +62,8 @@ public class Group<GroupID, ProcessID> implements IGroup<GroupID, ProcessID>{
 
     public void makeGroupFromIDs(ProcessID[] processIDVector) {
 
-        for(int i = 0; i < processIDVector.length; i++){
-            IProcess<ProcessID> process = new IProcess<ProcessID>() {
-
-                ProcessID processID;
-
-                public ProcessID getID() {
-                    return processID;
-                }
-
-                public void setID(ProcessID processID) {
-                    this.processID = processID;
-                }
-
-            };
-
-            process.setID(processIDVector[i]);
-            
-            addMember(process);
+        for(int i = 0; i < processIDVector.length; i++){            
+            addMember(new BaseProcess<ProcessID>(processIDVector[i]));
         }
 
     }
@@ -126,41 +110,45 @@ public class Group<GroupID, ProcessID> implements IGroup<GroupID, ProcessID>{
         return g;
     }
 
-    public ProcessID next(ProcessID pid) {
-        int msize = getMembers().size();
-        int[] hcodes = new int[msize];
-        int i = 0;
-
-        for(i = 0; i < msize; i++){
-            ProcessID cpid = getMembers().get(i).getID();
-            hcodes[i] = cpid.hashCode();
-        }
-
-        Arrays.sort(hcodes);
-
-        int hcpid = pid.hashCode();
-        i = 0;
-
-        while(i < msize) {
-            if(hcodes[i] == hcpid){
-                break;
-            }
-            i++;
-        }
-
-        i = (i+1) % msize;
-
-        hcpid = hcodes[i];
-
-        for(i = 0; i < msize; i++){
-            ProcessID cpid = getMembers().get(i).getID();
-            if(hcpid == cpid.hashCode())
-                return cpid;
-        }
-
-        return null;
-
+    public synchronized IProcess<ProcessID> getMember(int i){
+       return getMembers().get(i);
     }
+
+//    public ProcessID next(ProcessID pid) {
+//        int msize = getMembers().size();
+//        int[] hcodes = new int[msize];
+//        int i = 0;
+//
+//        for(i = 0; i < msize; i++){
+//            ProcessID cpid = getMembers().get(i).getID();
+//            hcodes[i] = cpid.hashCode();
+//        }
+//
+//        Arrays.sort(hcodes);
+//
+//        int hcpid = pid.hashCode();
+//        i = 0;
+//
+//        while(i < msize) {
+//            if(hcodes[i] == hcpid){
+//                break;
+//            }
+//            i++;
+//        }
+//
+//        i = (i+1) % msize;
+//
+//        hcpid = hcodes[i];
+//
+//        for(i = 0; i < msize; i++){
+//            ProcessID cpid = getMembers().get(i).getID();
+//            if(hcpid == cpid.hashCode())
+//                return cpid;
+//        }
+//
+//        return null;
+//
+//    }
 
     
 }
