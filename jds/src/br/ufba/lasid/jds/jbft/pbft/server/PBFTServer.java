@@ -54,6 +54,7 @@ import br.ufba.lasid.jds.group.decision.Vote;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequestInfo;
 import br.ufba.lasid.jds.jbft.pbft.server.decision.BagSubject;
+import br.ufba.lasid.jds.jbft.pbft.server.decision.ChangeViewACKSubject;
 import br.ufba.lasid.jds.jbft.pbft.server.decision.CheckpointSubject;
 import br.ufba.lasid.jds.jbft.pbft.server.decision.CommitSubject;
 import br.ufba.lasid.jds.jbft.pbft.server.decision.MetaDataSubject;
@@ -651,7 +652,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                   int f = getServiceBFTResilience(); 
                   q = new Quorum(2 * f);
                   entry.setPrepareQuorum(q);
-                  JDSUtility.debug("[PBFTServer:updateState(prepare)] s"  + lServerID + ", at time " + getClockValue() + ", created a new certificate for " + p);
+                  JDSUtility.debug("[PBFTServer:getDecision(prepare)] s"  + lServerID + ", at time " + getClockValue() + ", created a new certificate for " + p);
                }
                /*TODO: evaluate if "q.getCurrentDecision()" is a better implementation */
                PrepareSubject decision = (PrepareSubject)q.decide();
@@ -663,7 +664,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                q.add(new Vote(p.getReplicaID(), new PrepareSubject(p)));
 
                JDSUtility.debug(
-                  "[PBFTServer:updateState(prepare)] s" + lServerID + ", at time " + getClockValue() + ", inserted " + p + " in the local quorum certicate."
+                  "[PBFTServer:getDecision(prepare)] s" + lServerID + ", at time " + getClockValue() + ", inserted " + p + " in the local quorum certicate."
                );
 
                if(decision == null){
@@ -814,8 +815,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                      q.add(new Vote(c.getReplicaID(), new CommitSubject(c)));
                      
                      JDSUtility.debug(
-                       "[PBFTServer:updateState(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", inserted " + c +
-                       " in the local quorum certicate."
+                       "[PBFTServer:getDecision(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", inserted " + c + " in the local quorum certicate."
                      );
 
 
@@ -963,7 +963,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
             q.add(new Vote(c.getReplicaID(), new CheckpointSubject(c)));
             
-            JDSUtility.debug("[PBFTServer:updateState(checkpoint)] s"  + lServerID + ", at time " + getClockValue() + ", updated a entry in its log for " + c);
+            JDSUtility.debug("[PBFTServer:getDecision(checkpoint)] s"  + lServerID + ", at time " + getClockValue() + ", updated a entry in its log for " + c);
 
 
             if(decision == null){
@@ -973,7 +973,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             if(!completed && decision != null){
                 long seqn = (Long) decision.getInfo(CheckpointSubject.SEQUENCENUMBER);
                 
-                JDSUtility.debug("[PBFTServer:updateState(checkpoint)] s" + lServerID + ", at time " + getClockValue() + ", completed quorum for checkpoint (" + seqn + ").");
+                JDSUtility.debug("[PBFTServer:getDecision(checkpoint)] s" + lServerID + ", at time " + getClockValue() + ", completed quorum for checkpoint (" + seqn + ").");
 
                 return decision;
             }
@@ -1395,7 +1395,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
          q.add(new Vote(md.getReplicaID(), new MetaDataSubject(md)));
 
-         JDSUtility.debug("[PBFTServer:updateState(metadata)] s" + lServerID + ", at time " + getClockValue() + ", updated a entry in its log for " + md);
+         JDSUtility.debug("[PBFTServer:getDecision(metadata)] s" + lServerID + ", at time " + getClockValue() + ", updated a entry in its log for " + md);
 
 
          if(decision == null){
@@ -1404,7 +1404,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
          if(!completed && decision != null){
             long cseqn = (Long) decision.getInfo(MetaDataSubject.CHECKPOINT);
-            JDSUtility.debug("[PBFTServer:updateState(metadata)] s" + lServerID + ", at time " + getClockValue() + ", complete a quorum for metada with LCWM (" + cseqn + ").");
+            JDSUtility.debug("[PBFTServer:getDecision(metadata)] s" + lServerID + ", at time " + getClockValue() + ", complete a quorum for metada with LCWM (" + cseqn + ").");
             return decision;
          }
       }
@@ -1539,11 +1539,11 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             decision = (BagSubject) q.decide();
          }
 
-         JDSUtility.debug("[PBFTServer:updateState(bag)] s"  + lServerID +", at time " + getClockValue() + ", updated a entry in its log for " + bag);
+         JDSUtility.debug("[PBFTServer:getDecision(bag)] s"  + lServerID +", at time " + getClockValue() + ", updated a entry in its log for " + bag);
 
          if(!completed && decision != null){
             long seqn = (Long) decision.getInfo(BagSubject.SEQUENCENUMBER);
-            JDSUtility.debug("[PBFTServer:updateState(bag] s" + lServerID + ", at time " + getClockValue() + ", completed  quorum for bag with EXEC-SEQ (" + seqn + ").");
+            JDSUtility.debug("[PBFTServer:getDecision(bag] s" + lServerID + ", at time " + getClockValue() + ", completed  quorum for bag with EXEC-SEQ (" + seqn + ")");
             return decision;
          }
       }
@@ -1981,7 +1981,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         /*emit the change view message to group of replicas */
         emit(cv, getLocalGroup().minus(getLocalProcess()));
 
-        /*updates the change-view message in log */
+        /*store change-view message in log */
         storeChangeView(cv);
         
         uncertanty = true;
@@ -2000,7 +2000,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             IProcess newPrimary = getLocalGroup().getMember(iprocess);
 
             /* for each change-view messsage that has accepted ... send view-change ack */
-            for(PBFTChangeView oldCV : digcvtable.values()){
+            for(PBFTChangeView oldCV : cvtable.values()){
                 int oldV = oldCV.getViewNumber();
                 Object rid = oldCV.getReplicaID();
                 Object lid = getLocalServerID();
@@ -2008,10 +2008,15 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 /* if the view change has the same view number and wasn't sent by the local replica then a change-view-ack will be sent*/
                 if(getCurrentViewNumber().equals(oldV) && !rid.equals(lid)){
                    PBFTChangeViewACK ack = createChangeViewACKMessage(oldCV);
-                   if(!isLocalServer(newPrimary)){
-                     emit(ack, newPrimary);
-                  }
-                }
+                   if(ack != null){
+                      if(!isLocalServer(newPrimary)){
+                        emit(ack, newPrimary);
+                      }else{
+                        /* the primary store change-view ack including those from itself.*/
+                        storeChangeViewACK(ack);
+                      }//end if not is new primary
+                   }//end if ack is not null                  
+                }//end if current view number is equals to recently received change-view number and change-view replica is not equals to local replica
             }
         }
     }
@@ -2064,16 +2069,17 @@ public class PBFTServer extends PBFT implements IPBFTServer{
    }
         
     public PBFTChangeViewACK createChangeViewACKMessage(PBFTChangeView cv){
-        Object prompterID = cv.getReplicaID();
-        Object   senderID = getLocalServerID();
-        int         viewn = cv.getViewNumber();
-        String     digest = "";
         try {
-            digest = getAuthenticator().getDigest(cv);
+
+           Object prompterID = cv.getReplicaID();
+           Object   senderID = getLocalServerID();
+           int         viewn = cv.getViewNumber();
+           String     digest = getAuthenticator().getDigest(cv);
+           return new PBFTChangeViewACK(viewn, senderID, prompterID, digest);
         } catch (Exception ex) {
             Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return new PBFTChangeViewACK(viewn, senderID, prompterID, digest);
+        return null;
     }
 
     public boolean isValid(PBFTChangeView cv){
@@ -2121,20 +2127,84 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
     public void handle(PBFTChangeViewACK cva) {
         JDSUtility.debug("[PBFTServer:handle(changeviewack)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + cva);
+        /* cva is valid if there's a related change-view in change-view table */
+        if(isValid(cva)){
+           
+           int viewn = cva.getViewNumber();
+
+           /* if the current replica is primary of new view then it'll process the change-view message */
+           if(isPrimary(viewn)){
+              ChangeViewACKSubject cvas = getDecision(cva);
+              /* if it's got a decision then it'll put the related change-view in certificated change-view table  S*/
+              if(cvas != null){
+                 String digest = (String)cvas.getInfo(ChangeViewACKSubject.DIGEST);
+                 if(!ccvtable.containsKey(digest)){
+                    ccvtable.put(digest, cvtable.get(digest));
+                 }
+              }//end if it decide for change-view-ack
+           }//end if this replica is the primary of new view
+        }//end if is valid change-view-ack
+    }
+
+    public ChangeViewACKSubject getDecision(PBFTChangeViewACK cva){
+       boolean complete = false;
+       
+       Object lSrvID = getLocalServerID();
+
+       if(!(cva != null && cva.getPrompterID() != null && cva.getReplicaID() != null && !cva.getPrompterID().equals(cva.getReplicaID()))){
+          return null;
+       }
+
+       String qkey = cva.getPrompterID().toString();
+
+       Quorum q = getStateLog().getQuorum(CHANGEVIEWACKQUORUMSTORE, qkey);
+
+       if(q == null){
+          int f = getServiceBFTResilience();
+          q = new Quorum(2 * f - 1);
+       }
+       
+       /*TODO: evaluate if "q.getCurrentDecision()" is a better implementation */
+       ChangeViewACKSubject decision = (ChangeViewACKSubject) q.decide();
+
+       if(decision != null){
+          complete = true;
+       }
+
+       q.add(new Vote(cva.getReplicaID(), new ChangeViewACKSubject(cva)));
+
+       JDSUtility.debug("[PBFTServer:getDecision(changeViewACK)] s"  + lSrvID + ", at time " + getClockValue() + ", updated a entry in its log for " + cva);
+       
+       if(decision == null){
+          decision  = (ChangeViewACKSubject) q.decide();
+       }
+
+       if(!complete && decision != null){
+          JDSUtility.debug("[PBFTServer:getDecision(changeViewACK)] s" + lSrvID + ", at time " + getClockValue() + ", completed quorum for changeViewACK of (p" + qkey + ")");
+          return decision;
+       }
+       
+       return null;
+       
+    }
+    public boolean isValid(PBFTChangeViewACK cva){
+       return cvtable.containsKey(cva.getDigest());
     }
 
     public void handle(PBFTNewView nwv) {
         JDSUtility.debug("[PBFTServer:handle(newview)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + nwv);
     }
 
-    Hashtable<String, PBFTChangeView> digcvtable = new Hashtable<String, PBFTChangeView>();
+    Hashtable<String, PBFTChangeView>     cvtable = new Hashtable<String, PBFTChangeView>();
+    Hashtable<String, PBFTChangeViewACK> cvatable = new Hashtable<String, PBFTChangeViewACK>();
+    Hashtable<String, PBFTChangeView>    ccvtable = new Hashtable<String, PBFTChangeView>();
     
     public boolean storeChangeView(PBFTChangeView cv){
         try {
             /*stores the receive change view if it has been already stored*/
             String digest = getAuthenticator().getDigest(cv);
-            if(!digcvtable.contains(digest)){
-                digcvtable.put(digest, cv);
+            if(!cvtable.contains(digest)){
+                cvtable.put(digest, cv);
                 int viewn = cv.getViewNumber();
                 views.add(viewn);
                 return true;
@@ -2145,17 +2215,27 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         return false;
     }
 
+    public boolean storeChangeViewACK(PBFTChangeViewACK cva){
+        try {
+            /*stores the receive change view ack if it has been already stored*/
+            String digest = cva.getDigest();
+            if(!cvatable.contains(digest)){
+                cvatable.put(digest, cva);
+                return true;
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
+    }
+
+
     public Integer kthMaxLoggedViewNumber(int k){
         return XMath.kthmax(k, views);
     }
 
     public PBFTChangeView createChangeViewMessage(){
-        PBFTChangeView cv =
-             new PBFTChangeView(
-                    getCheckpointLowWaterMark(),
-                    getCurrentViewNumber(),
-                    getLocalServerID()
-            );
+        PBFTChangeView cv = new PBFTChangeView(getCheckpointLowWaterMark(), getCurrentViewNumber(), getLocalServerID() );
         return cv;
     }
 
@@ -2308,6 +2388,11 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     public boolean isPrimary(IProcess p){return isPrimary(p.getID());}
 
     public boolean isPrimary(Object serverID){return getCurrentPrimaryID().equals(serverID);}
+
+    public boolean isPrimary(int view){
+       IProcess p = getLocalGroup().getMember(view);
+       return isLocalServer(p);
+    }
 
     public Object getLocalServerID(){return getLocalProcessID();}
 
