@@ -1943,7 +1943,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             Quorum pq = lentry.getPrepareQuorum();
 
             /* if is a valid prepare quorum (i.e. a quorum with a certificate)*/
-            if(pq.getCurrentDecision() != null){
+            if(pq != null && pq.getCurrentDecision() != null){
 
                 PrepareSubject ps = (PrepareSubject) pq.getCurrentDecision();
 
@@ -1982,81 +1982,86 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         emit(cv, getLocalGroup().minus(getLocalProcess()));
 
         /*updates the change-view message in log */
-        updateState(cv);
+        storeChangeView(cv);
         
         uncertanty = true;
         changing = true;
+        
+        emitChangeViewACK();
+    }
 
+    public void emitChangeViewACK(){
         if(!isPrimary()){
+           int viewn = getCurrentViewNumber();
             /* if it isn't the primary then it must send a change-view-ack message to the estimated primary */
-            Object npid = getLocalGroup().next(getCurrentPrimaryID());
-            IProcess newPrimary = new BaseProcess(npid);
+           int iprocess = (viewn) % getLocalGroup().getGroupSize();
+
+            //Object npid = getLocalGroup().next(getCurrentPrimaryID());
+            IProcess newPrimary = getLocalGroup().getMember(iprocess);
 
             /* for each change-view messsage that has accepted ... send view-change ack */
             for(PBFTChangeView oldCV : digcvtable.values()){
                 int oldV = oldCV.getViewNumber();
                 Object rid = oldCV.getReplicaID();
-                
-                /* if the view change has the same view number and wasn't sent by the local replica then a change-view-ack
-                   will be sent*/
-                if(getCurrentViewNumber().equals(oldV) && !rid.equals(getLocalServerID())){
-                    emit(createChangeViewACKMessage(oldCV), newPrimary);
+                Object lid = getLocalServerID();
+
+                /* if the view change has the same view number and wasn't sent by the local replica then a change-view-ack will be sent*/
+                if(getCurrentViewNumber().equals(oldV) && !rid.equals(lid)){
+                   PBFTChangeViewACK ack = createChangeViewACKMessage(oldCV);
+                   if(!isLocalServer(newPrimary)){
+                     emit(ack, newPrimary);
+                  }
                 }
             }
         }
     }
+   public void handle(PBFTChangeView cv) {
+      JDSUtility.debug("[PBFTServer:handle(changeview)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + cv);
 
-    public void handle(PBFTChangeView cv) {
-        JDSUtility.debug(
-           "[PBFTServer:handle(changeview)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + cv 
-        );
-
-        if(isValid(cv)){
-
+      if(isValid(cv)){
+         if(storeChangeView(cv)){
             Object   rpid    = cv.getReplicaID();        //cv sender id
-            IProcess rServer = new BaseProcess(rpid);
             int rviewn = cv.getViewNumber();
             int cviewn = getCurrentViewNumber();
 
             /* if the change-view message was sent by the current primary and such message has a view number greater than the current view
-               number then the replica will move to rview */
-            if(isPrimary(rServer) && rviewn > cviewn){
-                emitChangeView();
+            number then the replica will move to rview */
+            if(isPrimary(rpid) && rviewn > cviewn){
+               emitChangeView();
+               return;
+            }//end if isPrimary(rpid) && rviewn > cviewn
+
+            int f = getServiceBFTResilience();
+            Integer mxview = kthMaxLoggedViewNumber(f+1);
+
+            /*it has at least f+1 view-changes with a view number greater then or equals to mxview: change to view maxv */
+            if(mxview != null && mxview.compareTo(cviewn) > 0){
+               setCurrentViewNumber(mxview-1);
+               emitChangeView();
+               return;
             }
+
+            emitChangeViewACK();
             
-            /*if the state was updated then it's a new view-change message*/
-            if(updateState(cv)){
-                int f = getServiceBFTResilience();
-                Integer mxview = kthMaxLoggedViewNumber(f+1);
-                
-                /*it has at least f+1 view-changes with a view number greater then or equals to mxview: change to view maxv */
-                if(mxview != null && mxview.compareTo(rviewn) > 0){
-                    setCurrentViewNumber(mxview-1);
-                    emitChangeView();
-                    return;
-                }
+            if(uncertanty && !isPrimary()){
+               mxview = kthMaxLoggedViewNumber(2 * f + 1);
 
-                if(uncertanty && !isPrimary()){
-                    mxview = kthMaxLoggedViewNumber(2 * f + 1);
-
-                    /*if it has 2f+1 change-view messages with view greater than or equals rviewn then it'll start a timer to ensure it moves
-                      to another view if it doesn't receive the new-view message for rviewn*/
-                    if(mxview != null && mxview.compareTo(rviewn)==0){
-                          PBFTTimeoutDetector ttask =
-                             (PBFTTimeoutDetector) getViewTimer().getTask();
-                          
-                          /* an exponetial timeout has to be considered to guarantee liveness when the end-to-end delay is too long
-                             (it's prevent uncessary view-changes)*/
-                          long timeout = (Long) ttask.get("TIMEOUT");
-                          ttask.put("TIMEOUT", 2 * timeout);
-                          scheduleViewChange();
-                          uncertanty = false;
-                    }
-                    
-                }
+               /*if it has 2f+1 change-view messages with view greater than or equals rviewn then it'll start a timer to ensure it moves
+               to another view if it doesn't receive the new-view message for rviewn*/
+               if(mxview != null && mxview.compareTo(cviewn)==0){
+                  PBFTTimeoutDetector ttask = (PBFTTimeoutDetector) getViewTimer().getTask();
+                  /* an exponetial timeout has to be considered to guarantee liveness when the end-to-end delay is too long
+                  (it's prevent uncessary view-changes)*/
+                  long timeout = (Long) ttask.get("TIMEOUT");
+                  ttask.put("TIMEOUT", 2 * timeout);
+                  scheduleViewChange();
+                  uncertanty = false;
+                  return;
+               }
             }
-        }//end if it received a valid change-view message
-    }
+         }//end if store change view
+      }//end if it received a valid change-view message
+   }
         
     public PBFTChangeViewACK createChangeViewACKMessage(PBFTChangeView cv){
         Object prompterID = cv.getReplicaID();
@@ -2111,21 +2116,20 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 }
             }
         }
-        
         return true;
     }
 
     public void handle(PBFTChangeViewACK cva) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        JDSUtility.debug("[PBFTServer:handle(changeviewack)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + cva);
     }
 
     public void handle(PBFTNewView nwv) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        JDSUtility.debug("[PBFTServer:handle(newview)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + nwv);
     }
 
     Hashtable<String, PBFTChangeView> digcvtable = new Hashtable<String, PBFTChangeView>();
     
-    public boolean updateState(PBFTChangeView cv){
+    public boolean storeChangeView(PBFTChangeView cv){
         try {
             /*stores the receive change view if it has been already stored*/
             String digest = getAuthenticator().getDigest(cv);
