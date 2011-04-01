@@ -1913,6 +1913,37 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     ArrayList<Integer> views = new ArrayList<Integer>();
     boolean uncertanty = false;
     boolean changing = false;
+    MessageCollection preprepareset = new MessageCollection();
+    MessageCollection prepareset = new MessageCollection();
+
+    protected void addPrePrepare(long seqn, DigestList digests, int viewn){
+        for(int i = preprepareset.size()-1 ;  i >= 0; i++){
+            PBFTPrePrepare pp = (PBFTPrePrepare) preprepareset.get(i);
+            long seqn1 = pp.getSequenceNumber();
+            if(seqn == seqn1){
+                preprepareset.remove(i);
+            }
+        }
+
+        PBFTPrePrepare pp = new PBFTPrePrepare(viewn, seqn, null);
+        pp.getDigests().addAll(digests);
+        preprepareset.add(pp);
+    }
+
+    protected void addPrepare(long seqn, DigestList digests, int viewn){
+        for(int i = prepareset.size()-1 ;  i >= 0; i++){
+            PBFTPrepare p = (PBFTPrepare) prepareset.get(i);
+            long seqn1 = p.getSequenceNumber();
+            if(seqn == seqn1){
+                prepareset.remove(i);
+            }
+        }
+
+        PBFTPrepare p = new PBFTPrepare(viewn, seqn, null);
+        p.getDigests().addAll(digests);
+        prepareset.add(p);
+    }
+
     
     /* (a.1) a change-view message is emitted because of a suspect of failure of the primary replica.                   */
     /* (a.2) change-view-ack are sent for each change-view message that was received and match with the new view number */
@@ -1933,9 +1964,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         /* the replica moves to the next view. After that, this replica isn't accepting any message from view v < v+1. */
         setCurrentViewNumber(viewn +1);
 
-        /*creates a change-view message */
-        PBFTChangeView cv = createChangeViewMessage();
-
         /* for each entry in current pbft log */
         for(PBFTLogEntry lentry: getStateLog().values()){
 
@@ -1953,30 +1981,40 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 DigestList digests = (DigestList) ps.getInfo(PrepareSubject.DIGESTLIST);
 
                 /* adds the parameters to change view message to compose the prepared set P */
-                cv.addPrepare(seqn, digests, vwn);
+                addPrepare(seqn, digests, vwn);
                 
             }else{
                 /* if there isn't a prepare quorum then it'll add the accepted pre-prepare to change view message to compose
                    pre-prepared set Q*/
                 PBFTPrePrepare pp = lentry.getPrePrepare();
-                cv.addPrePrepare(pp.getSequenceNumber(), pp.getDigests(), pp.getViewNumber());
+                addPrePrepare(pp.getSequenceNumber(), pp.getDigests(), pp.getViewNumber());
             }
         }
 
-        PartEntry centry;
+        /*creates a change-view message */
+        PBFTChangeView cv = createChangeViewMessage();
+        
         try {
             /* gets the root of the checkpoint partition tree */
-            centry = rStateManager.getPart(0, 0);
+            PartEntry centry = rStateManager.getPart(0, 0);
 
             /* adds the pair (last stable sequence number and state digest) to compose checkpoint set C */
             cv.addCheckpoint(centry.getPartCheckpoint(), centry.getDigest());
         } catch (Exception ex) {
             Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
-            cv.addCheckpoint(0, "");
+            cv.addCheckpoint(getCheckpointLowWaterMark(), "");
         }
 
         /* clean up the current pbft log */
         getStateLog().clear();
+
+        /* add the pre-prepare set to current change-view message*/
+        cv.getPrePrepareSet().clear();
+        cv.getPrePrepareSet().addAll(preprepareset);
+
+        /* add the prepare set to current change-view message*/
+        cv.getPrepareSet().clear();
+        cv.getPrepareSet().addAll(prepareset);
 
         /*emit the change view message to group of replicas */
         emit(cv, getLocalGroup().minus(getLocalProcess()));
@@ -2072,9 +2110,10 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         try {
 
            Object prompterID = cv.getReplicaID();
-           Object   senderID = getLocalServerID();
-           int         viewn = cv.getViewNumber();
-           String     digest = getAuthenticator().getDigest(cv);
+             Object senderID = getLocalServerID();
+                   int viewn = cv.getViewNumber();
+               String digest = getAuthenticator().getDigest(cv);
+           
            return new PBFTChangeViewACK(viewn, senderID, prompterID, digest);
         } catch (Exception ex) {
             Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -2126,7 +2165,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     }
 
     public void handle(PBFTChangeViewACK cva) {
-        JDSUtility.debug("[PBFTServer:handle(changeviewack)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + cva);
+        Object lSrvID = getLocalServerID();
+        JDSUtility.debug("[PBFTServer:handle(changeviewack)] s" + lSrvID + ", at time " + getClockValue() + ", received " + cva);
         /* cva is valid if there's a related change-view in change-view table */
         if(isValid(cva)){
            
@@ -2139,7 +2179,11 @@ public class PBFTServer extends PBFT implements IPBFTServer{
               if(cvas != null){
                  String digest = (String)cvas.getInfo(ChangeViewACKSubject.DIGEST);
                  if(!ccvtable.containsKey(digest)){
-                    ccvtable.put(digest, cvtable.get(digest));
+                    PBFTChangeView cv = cvtable.get(digest);
+                    if(cv != null){
+                        ccvtable.put(digest, cv);
+                        JDSUtility.debug("[PBFTServer:handle(changeviewack)] s"  + lSrvID + ", at time " + getClockValue() + ", certificated " + cv);
+                    }
                  }
               }//end if it decide for change-view-ack
            }//end if this replica is the primary of new view
@@ -2151,7 +2195,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
        
        Object lSrvID = getLocalServerID();
 
-       if(!(cva != null && cva.getPrompterID() != null && cva.getReplicaID() != null && !cva.getPrompterID().equals(cva.getReplicaID()))){
+       if(!(cva!=null && cva.getPrompterID()!=null && cva.getReplicaID()!=null && !cva.getPrompterID().equals(cva.getReplicaID()))){
           return null;
        }
 
@@ -2162,6 +2206,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
        if(q == null){
           int f = getServiceBFTResilience();
           q = new Quorum(2 * f - 1);
+          getStateLog().getQuorumTable(CHANGEVIEWACKQUORUMSTORE).put(qkey, q);
        }
        
        /*TODO: evaluate if "q.getCurrentDecision()" is a better implementation */
