@@ -43,11 +43,11 @@ agent.GroupList = 4,5,6,7
 agent.CurrentPrimary  = 4
 agent.CurrentView = 0
 agent.PrimaryFaultTimeout = 250
-agent.BatchingSize = 1024
-agent.BatchingTimeout = 150
+agent.BatchingSize = 4096
+agent.BatchingTimeout = 450
 agent.CheckpointPeriod = 128
 agent.CheckpointFactor = 3
-agent.ViewChangeRetransmittionTimeout = 5000
+agent.ViewChangeRetransmittionTimeout = 250
 agent.SendStatusPeriod = 300
 agent.SlidingWindowSize = 2
 

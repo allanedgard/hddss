@@ -52,7 +52,7 @@ public class EventHandler<T> implements InvocationHandler{
 
             throw new RuntimeException("unexpected invocation exception: " + e.getMessage());
         }finally{
-
+//               System.out.println(method.getName());
              ArrayList<IAfterEventListener> afters = aftertable.get(method);
              if(afters != null && !afters.isEmpty()){
                  for(IAfterEventListener after : afters){
