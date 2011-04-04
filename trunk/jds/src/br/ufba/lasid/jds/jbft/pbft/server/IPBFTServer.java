@@ -63,9 +63,10 @@ public interface IPBFTServer extends IPBFT{
     public Object getLocalServerID();
 
     public void emitChangeView();
-    public void installNewView();
+    public void installNewView(PBFTNewView nv);
 
-
+    public int getServiceBFTResilience();
+    
     public void setCheckpointPeriod(long period);
     public void setCheckpointFactor(Long factor);
     public void setBatchSize(int bsize);
@@ -77,6 +78,8 @@ public interface IPBFTServer extends IPBFT{
     public void setCurrentViewNumber(Integer viewn);
     public void setSendStatusPeriod(long ssperiod);
     public void setSlidingWindowSize(Long swsize);
+
+    public Integer getCurrentViewNumber();
 
     public void loadState();
     public void schedulePeriodicStatusSend();

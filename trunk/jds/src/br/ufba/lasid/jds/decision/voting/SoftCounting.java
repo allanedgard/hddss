@@ -3,33 +3,33 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.decision;
+package br.ufba.lasid.jds.decision.voting;
+
+import br.ufba.lasid.jds.decision.ISubject;
+import java.util.Hashtable;
+import java.util.Set;
 
 /**
- * A voting is a decision strategy where a subject is chosen based on votes.
+ *
  * @author aliriosa
  */
-public abstract class Voting implements IVoting{
+public class SoftCounting extends Hashtable<ISubject, Long> implements ICounting{
 
-   protected VoteList  votes   = new VoteList();
-   protected Counting counting = new Counting();
+   public Long get(ISubject subject) {
+      return super.get(subject);
+   }
 
-   /**
-    * Adds a vote for the list of votes if it is not null and has not been added yet.
-    * @param vote - the vote
-    */
-   public void add(IVote vote){
-      if(vote != null && !votes.contains(vote)){
-         votes.add(vote);
-      }
+   public Set<ISubject> getSubjects(){
+      return keySet();
    }
 
    /**
-    * Performs the counting of the votes.
+    * Performs the count of the votes.
+    * @param votes - the list of votes.
     */
-   public void counting(){
-      counting.clear();
-      
+   public void count(VoteList votes){
+      clear();
+
       /* for each vote collected */
       for(int i = 0; i < votes.size(); i++){
 
@@ -38,11 +38,11 @@ public abstract class Voting implements IVoting{
          IElector ei = vi.getElector();
 
          /* if the subject si is a valid subject and has not been computed yet */
-         if(si != null && !counting.containsKey(si)){
+         if(si != null && !containsKey(si)){
             long count = 1;
 
-            counting.put(si, count);
-            
+            put(si, count);
+
             for(int j = i; j < votes.size(); j++){
                IVote vj = votes.get(j);
                ISubject sj = vj.getSubject();
@@ -52,22 +52,14 @@ public abstract class Voting implements IVoting{
                if((ei != null && ej != null && !ei.equals(ej)) || (ei == null && ej == null)){
 
                   /* if sj is a valid subject and it is equal to si */
-                  if(sj != null && sj.equals(si)){
+                  if(sj != null && sj.equals(si)){ /*canditato.match(votadoi)*/
                      count ++;
-                     counting.put(si, count);
+                     put(si, count);
                   }
                }
             }
          }
       }
-   }
-
-   public VoteList getVotes() {
-      return votes;
-   }
-
-   public Counting getCounting() {
-      return counting;
    }
 
 }

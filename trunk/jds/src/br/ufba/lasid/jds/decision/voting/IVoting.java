@@ -3,7 +3,9 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.decision;
+package br.ufba.lasid.jds.decision.voting;
+
+import br.ufba.lasid.jds.decision.IDecisionStrategy;
 
 /**
  *
@@ -11,7 +13,7 @@ package br.ufba.lasid.jds.decision;
  */
 public interface IVoting extends IDecisionStrategy {
    public void add(IVote vote);
-   public void counting();
+   public void count();
    public VoteList getVotes();
-   public Counting getCounting();
+   public ICounting getCounting();
 }

@@ -6,9 +6,9 @@
 package br.ufba.lasid.jds.group.decision;
 
 import br.ufba.lasid.jds.IProcess;
-import br.ufba.lasid.jds.decision.IElector;
+import br.ufba.lasid.jds.decision.voting.IElector;
 import br.ufba.lasid.jds.decision.ISubject;
-import br.ufba.lasid.jds.decision.IVote;
+import br.ufba.lasid.jds.decision.voting.IVote;
 
 /**
  *

@@ -5,39 +5,45 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
+import br.ufba.lasid.jds.comm.IMessage;
+import br.ufba.lasid.jds.comm.MessageCollection;
+import java.util.Hashtable;
+
 /**
  *
  * @author aliriosa
  */
 public class PBFTNewView extends PBFTServerMessage{
-    Object digestSet;
-    public void setDigestSet(Object dset){
-        digestSet = dset;
-        //put(AbstractPBFTMessage.ACCEPTEDDIGESTSET, dset); /*S*/
-    }
+    MessageCollection preprepareSet = new MessageCollection();
+    Hashtable<String, PBFTChangeView> changeViewTable = new Hashtable<String, PBFTChangeView>();
 
-    public Object getDigestSet(){
-        return digestSet;
-        //return get(AbstractPBFTMessage.ACCEPTEDDIGESTSET); /*S*/
-    }
+   public Hashtable<String, PBFTChangeView> getChangeViewTable() {
+      return changeViewTable;
+   }
+    
+   public MessageCollection getPreprepareSet() {
+      return preprepareSet;
+   }
 
-    Object procSet;
-    public void setProcessingSet(Object dset){
-        procSet = dset; //put(AbstractPBFTMessage.TOPROCESSINGINNEWVIEWSET, dset); /*X*/
-    }
+   private String preprepareSetToString(){
+      String str = "";
+      String more = "";
 
-    public Object getProcessingSet(){
-        return procSet;//get(AbstractPBFTMessage.TOPROCESSINGINNEWVIEWSET); /*X*/
-    }
+      for(IMessage m : preprepareSet){
+         str += more + m.toString();
+         more = ",";
+      }
+      return str;
+   }
 
     @Override
     public final String toString() {
 
         return (
-                "<NEW-VIEW"                             + "," +
+                "<NEW-VIEW" + "," +
                  "VIEW = " + getViewNumber().toString() + ", " +
-                 "V = " + getDigestSet().toString()     + ", " +
-                 "X = " + getProcessingSet().toString() + ", " +
+                 "V = " + getChangeViewTable().toString() + ", " +
+                 "X = " + preprepareSetToString() + ", " +
                  "SENDER = " + getReplicaID().toString()+ 
                  ">"
         );

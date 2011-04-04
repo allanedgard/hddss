@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.decision;
+package br.ufba.lasid.jds.decision.voting;
 
 import java.util.Hashtable;
 

@@ -138,8 +138,8 @@ public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBF
         getProtocol().emitChangeView();
     }
 
-    public void installNewView() {
-        getProtocol().installNewView();
+    public void installNewView(PBFTNewView nv) {
+        getProtocol().installNewView(nv);
     }
 
     public Object getLocalServerID() {
@@ -293,4 +293,12 @@ public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBF
     public void addListener(IEventListener listener, Method m) {
         getProtocol().addListener(listener, m);
     }
+
+   public int getServiceBFTResilience() {
+      return getProtocol().getServiceBFTResilience();
+   }
+
+   public Integer getCurrentViewNumber() {
+      return getProtocol().getCurrentViewNumber();
+   }
 }

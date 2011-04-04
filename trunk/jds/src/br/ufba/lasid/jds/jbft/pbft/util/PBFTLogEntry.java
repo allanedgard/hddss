@@ -5,7 +5,7 @@
 
 package br.ufba.lasid.jds.jbft.pbft.util;
 
-import br.ufba.lasid.jds.decision.Quorum;
+import br.ufba.lasid.jds.decision.voting.Quorum;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import java.io.Serializable;
 

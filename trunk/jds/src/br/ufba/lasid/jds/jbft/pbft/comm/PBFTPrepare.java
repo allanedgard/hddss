@@ -11,10 +11,8 @@ import br.ufba.lasid.jds.util.DigestList;
  *
  * @author aliriosa
  */
-public class PBFTPrepare extends PBFTServerMessage{
+public class PBFTPrepare extends PBFTMessageOrdering{
     
-    DigestList digests = new DigestList();
-
     public PBFTPrepare(Integer viewNumber, Long sequenceNumber, Object replicaID){
 
         setViewNumber(viewNumber);
@@ -39,21 +37,6 @@ public class PBFTPrepare extends PBFTServerMessage{
         digests.addAll(digests);
         setReplicaID(replicaID);
         
-    }
-
-    public DigestList getDigests() {
-        return digests;
-    }
-
-    public String digestsToString(){
-        String str  = "";
-        String more = "";
-        for(String s : digests){
-            str += more + s;
-            more = ";";
-        }
-
-        return str;
     }
 
     @Override

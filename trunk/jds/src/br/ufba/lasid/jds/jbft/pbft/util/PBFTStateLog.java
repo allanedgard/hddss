@@ -5,9 +5,9 @@
 
 package br.ufba.lasid.jds.jbft.pbft.util;
 
-import br.ufba.lasid.jds.decision.Quorum;
-import br.ufba.lasid.jds.decision.QuorumStore;
-import br.ufba.lasid.jds.decision.Quorumtable;
+import br.ufba.lasid.jds.decision.voting.Quorum;
+import br.ufba.lasid.jds.decision.voting.QuorumStore;
+import br.ufba.lasid.jds.decision.voting.Quorumtable;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;

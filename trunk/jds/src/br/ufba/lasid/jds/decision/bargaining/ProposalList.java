@@ -3,13 +3,14 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.decision;
+package br.ufba.lasid.jds.decision.bargaining;
+
+import java.util.ArrayList;
 
 /**
  *
  * @author aliriosa
  */
-public interface IVote {
-   public ISubject getSubject();
-   public IElector getElector();
+public class ProposalList extends ArrayList<IProposal>{
+
 }

@@ -13,9 +13,9 @@ import br.ufba.lasid.jds.util.IPayload;
  */
 public class PBFTRequest  extends PBFTMessage{
 
-    protected PBFTRequest(){
-        
-    }
+//    protected PBFTRequest(){
+//
+//    }
 
     public PBFTRequest(IPayload payload, Long timestamp, Object clientID){
 
