@@ -3,7 +3,9 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.decision;
+package br.ufba.lasid.jds.decision.voting;
+
+import br.ufba.lasid.jds.decision.ISubject;
 
 /**
  * A Quorum is a decision strategy based on voting which a subject is decided according
@@ -15,15 +17,16 @@ public class Quorum extends Voting{
    int nvotes = 0;
    ISubject currentDecision = null;
    
-   public Quorum(int minimumNumberOfVotes) {
+   public Quorum(int minimumNumberOfVotes, ICounting conting) {
+      super(conting);
       this.nvotes = minimumNumberOfVotes;
    }   
 
    public ISubject decide(){
       
-      counting();
+      count();
 
-      for(ISubject subject : counting.keySet()){
+      for(ISubject subject : counting.getSubjects()){
          long count = counting.get(subject);
          if(count >= nvotes){
             currentDecision = subject;

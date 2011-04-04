@@ -8,7 +8,6 @@ package br.ufba.lasid.jds.jbft.pbft.fmm;
 import br.ufba.lasid.jds.adapters.IAfterEventListener;
 import br.ufba.lasid.jds.comm.MessageQueue;
 import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
-import br.ufba.lasid.jds.jbft.pbft.server.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBag;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeViewACK;
@@ -24,8 +23,6 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTProcessingToken;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
 import java.lang.reflect.Method;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -89,7 +86,8 @@ public class PBFTChanging extends PBFTServerMode implements IAfterEventListener{
     }
 
     public void handle(PBFTNewView nwv) {
-        getMachine().getProtocol().handle(nwv);
+       getMachine().switchTo(PBFTModes.RUNNING);
+       getMachine().getProtocol().handle(nwv);
     }
     public void handle(PBFTBag bg) {
         //do nothing

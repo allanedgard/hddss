@@ -38,7 +38,7 @@ public class PBFTChangeView extends PBFTServerMessage{
     }
 
     public void addPrePrepare(long seqn, DigestList digests, int viewn){
-        for(int i = preprepareset.size()-1 ;  i >= 0; i++){
+        for(int i = preprepareset.size()-1 ;  i >= 0; i--){
             PBFTPrePrepare pp = (PBFTPrePrepare) preprepareset.get(i);
             long seqn1 = pp.getSequenceNumber();
             if(seqn == seqn1){
@@ -52,7 +52,7 @@ public class PBFTChangeView extends PBFTServerMessage{
     }
 
     public void addPrepare(long seqn, DigestList digests, int viewn){
-        for(int i = prepareset.size()-1 ;  i >= 0; i++){
+        for(int i = prepareset.size()-1 ;  i >= 0; i--){
             PBFTPrepare p = (PBFTPrepare) prepareset.get(i);
             long seqn1 = p.getSequenceNumber();
             if(seqn == seqn1){
@@ -67,7 +67,7 @@ public class PBFTChangeView extends PBFTServerMessage{
 
 
     public void addCheckpoint(long seqn, String digest){
-        for(int i = checkpointset.size()-1 ;  i >= 0; i++){
+        for(int i = checkpointset.size()-1 ;  i >= 0; i--){
             PBFTCheckpoint c = (PBFTCheckpoint) checkpointset.get(i);
             long seqn1 = c.getSequenceNumber();
             if(seqn == seqn1){

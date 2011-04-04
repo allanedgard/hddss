@@ -3,14 +3,12 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.decision;
-
-import java.util.ArrayList;
+package br.ufba.lasid.jds.decision.voting;
 
 /**
  *
  * @author aliriosa
  */
-public class VoteList extends ArrayList<IVote>{
-
+public interface IElector<ElectorID> {
+      public ElectorID getID();
 }

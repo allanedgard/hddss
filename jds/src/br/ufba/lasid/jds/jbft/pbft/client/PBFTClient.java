@@ -11,8 +11,9 @@ import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.cs.IClient;
 import br.ufba.lasid.jds.decision.ISubject;
-import br.ufba.lasid.jds.decision.Quorum;
-import br.ufba.lasid.jds.decision.Quorumtable;
+import br.ufba.lasid.jds.decision.voting.Quorum;
+import br.ufba.lasid.jds.decision.voting.Quorumtable;
+import br.ufba.lasid.jds.decision.voting.SoftQuorum;
 import br.ufba.lasid.jds.group.IGroup;
 import br.ufba.lasid.jds.group.decision.Vote;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
@@ -155,7 +156,7 @@ public class PBFTClient extends PBFT implements IPBFTClient{
             int f = getServiceBFTResilience();
 
             if(q == null){
-                q = new Quorum(f + 1);
+                q = new SoftQuorum(f + 1);
                 qtable.put(r.getTimestamp(), q);
             }
 

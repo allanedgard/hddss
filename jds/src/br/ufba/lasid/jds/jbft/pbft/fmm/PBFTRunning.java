@@ -95,9 +95,10 @@ public class PBFTRunning extends PBFTServerMode{
     }
 
     public void handle(PBFTNewView nwv) {
-        MessageQueue queue = getQueue(PBFTChangeView.class.getName());
-        queue.enqueue(nwv);
-        getMachine().switchTo(PBFTModes.CHANGING);
+       getMachine().getProtocol().handle(nwv);
+//        MessageQueue queue = getQueue(PBFTChangeView.class.getName());
+//        queue.enqueue(nwv);
+//        getMachine().switchTo(PBFTModes.CHANGING);
     }
 
     @Override

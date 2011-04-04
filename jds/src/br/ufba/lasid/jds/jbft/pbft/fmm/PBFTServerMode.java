@@ -14,6 +14,7 @@ import br.ufba.lasid.jds.comm.communicators.ICommunicator;
 import br.ufba.lasid.jds.cs.IServer;
 import br.ufba.lasid.jds.fmm.Mode;
 import br.ufba.lasid.jds.group.IGroup;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewView;
 import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.security.IMessageAuthenticator;
 import br.ufba.lasid.jds.util.IClock;
@@ -66,8 +67,8 @@ public abstract class PBFTServerMode extends Mode implements IPBFTServer{
         return getMachine().getProtocol().getSlidingWindowSize();
     }
 
-    public void installNewView() {
-        getMachine().getProtocol().installNewView();
+    public void installNewView(PBFTNewView nv) {
+        getMachine().getProtocol().installNewView(nv);
     }
 
     public Architecture getArchitecture() {
@@ -175,6 +176,13 @@ public abstract class PBFTServerMode extends Mode implements IPBFTServer{
 
     }
 
+    public Integer getCurrentViewNumber(){
+       return getMachine().getProtocol().getCurrentViewNumber();
+    }
+
+    public int getServiceBFTResilience(){
+       return getMachine().getProtocol().getCurrentViewNumber();
+    }
     public void setPrimaryFaultTimeout(Long pftimeout) {
         getMachine().getProtocol().setPrimaryFaultTimeout(pftimeout);
     }
