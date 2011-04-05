@@ -5,9 +5,7 @@
 
 package br.ufba.lasid.jds.jbft.pbft.fmm;
 
-import br.ufba.lasid.jds.adapters.IAfterEventListener;
 import br.ufba.lasid.jds.comm.MessageQueue;
-import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBag;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeViewACK;
@@ -21,76 +19,116 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTProcessingToken;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
-import java.lang.reflect.Method;
 
 /**
  *
  * @author aliriosa
  */
-public class PBFTChanging extends PBFTServerMode implements IAfterEventListener{
+public class PBFTChanging extends PBFTServerMode{
 
     public PBFTChanging(PBFTServerMultiModeMachine machine) {
-        super(PBFTModes.CHANGING, machine);
-//        try {
-//            getMachine().getProtocol().addListener(this, getMachine().getProtocol().getClass().getMethod("emitChangeView"));
-//            getMachine().getProtocol().addListener(this, getMachine().getProtocol().getClass().getMethod("installNewView"));
-//        } catch (Exception ex) {
-//            Logger.getLogger(PBFTChanging.class.getName()).log(Level.SEVERE, null, ex);
-//        }
+        super(CHANGING, machine);
     }
 
     public void handle(PBFTRequest rq) {
         MessageQueue queue = getQueue(PBFTRequest.class.getName());
         if(queue != null) queue.enqueue(rq);
+        if(!able()){
+            swap();
+        }
     }
 
     public void handle(PBFTPrePrepare ppr) {
-        //do nothing
+        MessageQueue queue = getQueue(PBFTServerMessage.class.getName());
+        queue.enqueue(ppr);
+        if(!able()){
+           swap();
+        }
     }
 
     public void handle(PBFTPrepare pr) {
-        //do nothing
+        MessageQueue queue = getQueue(PBFTServerMessage.class.getName());
+        queue.enqueue(pr);
+        if(!able()){
+           swap();
+        }
     }
 
     public void handle(PBFTCommit cm) {
-        //do nothing
+        MessageQueue queue = getQueue(PBFTServerMessage.class.getName());
+        queue.enqueue(cm);
+
+        if(!able()){
+           swap();
+        }
     }
 
     public void handle(PBFTStatusActive sta) {
-        //do nothing
+        if(!able()){
+           MessageQueue queue = getQueue(PBFTServerMessage.class.getName());
+           queue.enqueue(sta);
+           swap();
+        }
     }
 
     public void handle(PBFTFetch ft) {
-        //do nothing
+       getMachine().getProtocol().handle(ft);
     }
 
     public void handle(PBFTMetaData mdt) {
-        //do nothing
+        getMachine().getProtocol().handle(mdt);
     }
 
     public void handle(PBFTData dt) {
-        //do nothing
+        getMachine().getProtocol().handle(dt);
     }
 
     public void handle(PBFTCheckpoint ck) {
-        //do nothing
+        getMachine().getProtocol().handle(ck);
     }
 
     public void handle(PBFTChangeView cv) {
+       if(able()){
         getMachine().getProtocol().handle(cv);
+        return;
+       }
+
+      MessageQueue queue = getQueue(PBFTChangeView.class.getName());
+      queue.enqueue(cv);
+      swap();
     }
 
     public void handle(PBFTChangeViewACK cva) {
+       if(able()){
         getMachine().getProtocol().handle(cva);
+        return;
+       }
+
+        MessageQueue queue = getQueue(PBFTChangeViewACK.class.getName());
+        queue.enqueue(cva);
+        swap();
+
     }
 
     public void handle(PBFTNewView nwv) {
-       getMachine().switchTo(PBFTModes.RUNNING);
-       getMachine().getProtocol().handle(nwv);
+       if(able()){
+           getMachine().getProtocol().handle(nwv);
+           return;
+       }
+        MessageQueue queue = getQueue(PBFTNewView.class.getName());
+        queue.enqueue(nwv);
+        swap();
+        
     }
     public void handle(PBFTBag bg) {
-        //do nothing
+        MessageQueue queue = getQueue(PBFTServerMessage.class.getName());
+        queue.enqueue(bg);
+
+        if(!able()){
+           swap();
+        }
     }
 
     public void handle(PBFTProcessingToken tk) {
@@ -99,7 +137,7 @@ public class PBFTChanging extends PBFTServerMode implements IAfterEventListener{
 
     @Override
     public boolean able() {
-        return true;
+        return changing();
     }
 
     @Override
@@ -124,17 +162,6 @@ public class PBFTChanging extends PBFTServerMode implements IAfterEventListener{
             handle(nwv);
         }
 
-    }
-
-    public void after(Method m, Object source, Object result, Object... args) {
-        if(source instanceof IPBFTServer){
-            if(m.getName().equals("emitChangeView")){
-                getMachine().switchTo(PBFTModes.CHANGING);
-            }
-            if(m.getName().equals("installNewView")){
-                getMachine().switchTo(PBFTModes.RUNNING);
-            }
-        }
     }
 
     @Override

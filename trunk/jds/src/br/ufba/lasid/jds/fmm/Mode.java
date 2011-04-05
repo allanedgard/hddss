@@ -35,5 +35,13 @@ public class Mode {
         return "NULL";
     }
 
+    public MultiModeMachine getMachine(){
+       return this.machine;
+    }
+
+    public void swap(){
+       getMachine().swap();
+    }
+
     
 }

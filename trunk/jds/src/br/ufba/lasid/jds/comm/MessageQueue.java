@@ -12,7 +12,9 @@ package br.ufba.lasid.jds.comm;
 public class MessageQueue extends MessageCollection{
 
     public void enqueue(IMessage m){
-        add(m);
+       if(!contains(m)){
+         add(m);
+       }
     }
 
     public IMessage remove(){

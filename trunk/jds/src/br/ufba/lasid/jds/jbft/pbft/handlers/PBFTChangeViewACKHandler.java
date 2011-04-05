@@ -20,8 +20,6 @@ class PBFTChangeViewACKHandler extends PBFTServerMessageHandler{
     }
 
     public void handle() {
-        // synchronized(lock){
-            getProtocol().handle((PBFTChangeViewACK) this.input);
-        //}
+      getProtocol().handle((PBFTChangeViewACK) this.input);
     }
 }

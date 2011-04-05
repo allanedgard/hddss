@@ -82,9 +82,9 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
         ((IPBFTServer)getProtocol()).setChangeViewRetransmissionTimeout(Long.valueOf(timeout));
     }
     
-    public void setCurrentPrimary(String addr){
-        ((IPBFTServer)getProtocol()).setCurrentPrimaryID(Integer.valueOf(addr));
-    }
+//    public void setCurrentPrimary(String addr){
+//        ((IPBFTServer)getProtocol()).setCurrentPrimaryID(Integer.valueOf(addr));
+//    }
 
     public void setPrimaryFaultTimeout(String timeout){
         ((IPBFTServer)getProtocol()).setPrimaryFaultTimeout(Long.valueOf(timeout));

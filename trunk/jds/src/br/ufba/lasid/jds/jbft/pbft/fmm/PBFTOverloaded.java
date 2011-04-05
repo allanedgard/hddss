@@ -19,6 +19,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTProcessingToken;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
 
 /**
@@ -28,7 +29,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
 public class PBFTOverloaded extends PBFTServerMode{
 
     public PBFTOverloaded(PBFTServerMultiModeMachine machine) {
-        super(PBFTModes.OVERLOADED, machine);
+        super(OVERLOADED, machine);
     }
 
     public void handle(PBFTRequest rq) {
@@ -37,9 +38,7 @@ public class PBFTOverloaded extends PBFTServerMode{
             if(queue != null) queue.enqueue(rq);
             return;
         }
-
-        getMachine().switchTo(PBFTModes.RUNNING);
-        
+        swap();        
     }
 
     public void handle(PBFTPrePrepare ppr) {
@@ -83,31 +82,74 @@ public class PBFTOverloaded extends PBFTServerMode{
     }
 
     public void handle(PBFTChangeView cv) {
+        if(able()){
+            getMachine().getProtocol().handle(cv);
+            return;
+        }
         MessageQueue queue = getQueue(PBFTChangeView.class.getName());
         queue.enqueue(cv);
-        getMachine().switchTo(PBFTModes.CHANGING);
+        swap();
     }
 
     public void handle(PBFTChangeViewACK cva) {
-        MessageQueue queue = getQueue(PBFTChangeView.class.getName());
+        if(able()){
+            getMachine().getProtocol().handle(cva);
+            return;
+        }
+
+        MessageQueue queue = getQueue(PBFTChangeViewACK.class.getName());
         queue.enqueue(cva);
-        getMachine().switchTo(PBFTModes.CHANGING);
+        swap();
     }
 
     public void handle(PBFTNewView nwv) {
-        MessageQueue queue = getQueue(PBFTChangeView.class.getName());
+        if(able()){
+            getMachine().getProtocol().handle(nwv);
+            return;
+        }
+
+        MessageQueue queue = getQueue(PBFTNewView.class.getName());
         queue.enqueue(nwv);
-        getMachine().switchTo(PBFTModes.CHANGING);
+        swap();
     }
+
+    @Override
+    public void enter() {
+        MessageQueue queue = null;
+
+        /* First, we execute the messeges related to change view procedure */
+        queue = getQueue(PBFTChangeView.class.getName());
+        while(!queue.isEmpty()){
+            PBFTChangeView cv = (PBFTChangeView) queue.remove();
+            handle(cv);
+        }
+
+        queue = getQueue(PBFTChangeViewACK.class.getName());
+        while(!queue.isEmpty()){
+            PBFTChangeViewACK cva = (PBFTChangeViewACK) queue.remove();
+            handle(cva);
+        }
+
+        queue = getQueue(PBFTNewView.class.getName());
+        while(!queue.isEmpty()){
+            PBFTNewView nwv = (PBFTNewView) queue.remove();
+            handle(nwv);
+        }
+
+        /* Second, we execute the messeges related to normal working of the pbft */
+        queue = getQueue(PBFTServerMessage.class.getName());
+        while(!queue.isEmpty()){
+            PBFTServerMessage svr = (PBFTServerMessage) queue.remove();
+            handle(svr);
+        }
+
+    }
+
 
 
     @Override
     public boolean able() {
-        long swsize = getMachine().getProtocol().getSlidingWindowSize();
-        long currPP = getCurrentPrePrepareSEQ();
-        long currEX = getCurrentExecuteSEQ();
-        return (currEX + swsize < currPP);
-        
+       return overloaded();
     }
 
     @Override
@@ -118,7 +160,4 @@ public class PBFTOverloaded extends PBFTServerMode{
             return "OVERLOADED";
         }
     }
-
-
-
 }
