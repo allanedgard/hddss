@@ -21,6 +21,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTProcessingToken;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusPending;
 
 /**
  *
@@ -33,11 +34,11 @@ public class PBFTChanging extends PBFTServerMode{
     }
 
     public void handle(PBFTRequest rq) {
-        MessageQueue queue = getQueue(PBFTRequest.class.getName());
-        if(queue != null) queue.enqueue(rq);
-        if(!able()){
-            swap();
-        }
+       if(able()){
+          handle(rq);
+          return;
+       }
+       swap();
     }
 
     public void handle(PBFTPrePrepare ppr) {
@@ -72,6 +73,11 @@ public class PBFTChanging extends PBFTServerMode{
            swap();
         }
     }
+
+   public void handle(PBFTStatusPending sp) {
+      getMachine().getProtocol().handle(sp);
+   }
+
 
     public void handle(PBFTFetch ft) {
        getMachine().getProtocol().handle(ft);
@@ -172,7 +178,5 @@ public class PBFTChanging extends PBFTServerMode{
             return "CHANGING";
         }
     }
-
-
 
 }

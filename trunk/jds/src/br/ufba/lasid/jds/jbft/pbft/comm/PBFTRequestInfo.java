@@ -25,19 +25,20 @@ public class PBFTRequestInfo {
       if(!dLog.containsKey(digest)){
          StatedPBFTRequestMessage statedREQ = new StatedPBFTRequestMessage(req, reqState, digest);
          dLog.put(digest, statedREQ);
-         
-         Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(req.getClientID());
 
-         if(requests == null){
-            requests = new Hashtable<Long, StatedPBFTRequestMessage>();
-            rLog.put(req.getClientID(), requests);
+         if(req != null){
+            Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(req.getClientID());
+
+            if(requests == null){
+               requests = new Hashtable<Long, StatedPBFTRequestMessage>();
+               rLog.put(req.getClientID(), requests);
+            }
+
+            if(!requests.containsKey(req.getTimestamp())){
+               requests.put(req.getTimestamp(), statedREQ);
+               timestamps.put(req.getClientID(), req.getTimestamp());
+            }
          }
-
-         if(!requests.containsKey(req.getTimestamp())){
-            requests.put(req.getTimestamp(), statedREQ);
-            timestamps.put(req.getClientID(), req.getTimestamp());            
-         }
-
          dQueue.add(digest);
 
          return true;
@@ -70,6 +71,9 @@ public class PBFTRequestInfo {
    }
 
    public boolean assign(PBFTRequest request, StatedPBFTRequestMessage.RequestState state){
+      if(!(request != null && request.getClientID() != null && request.getTimestamp() != null)){
+         return false;
+      }
       Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(request.getClientID());
       if(requests != null && !requests.isEmpty()){
          StatedPBFTRequestMessage statedREQ = requests.get(request.getTimestamp());
@@ -101,6 +105,14 @@ public class PBFTRequestInfo {
       return false;
    }
 
+   public void clear(){
+      dLog.clear();
+      nLog.clear();
+      rLog.clear();
+      timestamps.clear();
+      dQueue.clear();
+   }
+   
    public void garbage(Long seqn){
       if(seqn != null){
          ArrayList<Long> seqns = new ArrayList<Long>(nLog.keySet());         
@@ -129,13 +141,15 @@ public class PBFTRequestInfo {
       StatedPBFTRequestMessage statedREQ = dLog.get(digest);
       if(statedREQ != null){
          PBFTRequest req = statedREQ.getRequest();
-         
-         Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(req.getClientID());
 
-         if(requests != null && !requests.isEmpty()){
-            requests.remove(req.getTimestamp());
+         if(req != null && req.getClientID() != null && req.getTimestamp() != null){
+            Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(req.getClientID());
+
+            if(requests != null && !requests.isEmpty()){
+               requests.remove(req.getTimestamp());
+            }
          }
-
+         
          dQueue.remove(digest);
          
          dLog.remove(digest);
@@ -204,7 +218,9 @@ public class PBFTRequestInfo {
    }
 
    public boolean isOld(PBFTRequest r){
-      
+      if(!(r != null && r.getClientID() != null && r.getTimestamp() != null)){
+         return false;
+      }
       Long timestamp = timestamps.get(r.getClientID());
 
       return (timestamp != null && timestamp.longValue() > r.getTimestamp().longValue());
@@ -212,6 +228,9 @@ public class PBFTRequestInfo {
    }
 
    public boolean isNew(PBFTRequest r){
+      if(!(r != null && r.getClientID() != null && r.getTimestamp() != null)){
+         return false;
+      }
       Long timestamp = timestamps.get(r.getClientID());
 
       if(timestamp == null){
@@ -342,6 +361,14 @@ public class PBFTRequestInfo {
       return hasSomeInState(seqn, StatedPBFTRequestMessage.RequestState.SERVED);
    }
 
+   public boolean hasSomeMissed(){
+      return hasSomeInState(StatedPBFTRequestMessage.RequestState.MISSED);
+   }
+
+   public boolean hasSomeMissed(Long seqn){
+      return hasSomeInState(seqn, StatedPBFTRequestMessage.RequestState.MISSED);
+   }
+
    public int getSizeInBytes(){
       int size = 0;
 
@@ -355,7 +382,7 @@ public class PBFTRequestInfo {
 
    public int getRequestSize(String digest){
       PBFTRequest r = getRequest(digest);
-      return r.getSize();
+      return r == null ? 0 : r.getSize();
    }
 
    public String getDigestFromQueue(){

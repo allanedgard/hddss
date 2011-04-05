@@ -12,7 +12,7 @@ package br.ufba.lasid.jds.jbft.pbft.comm;
 public class StatedPBFTRequestMessage extends PBFTMessage{
 
     public enum RequestState{
-        NONE, WAITING, PREPREPARED, PREPARED, COMMITTED, SERVED
+        NONE, WAITING, PREPREPARED, PREPARED, COMMITTED, SERVED, MISSED
     }
 
     
