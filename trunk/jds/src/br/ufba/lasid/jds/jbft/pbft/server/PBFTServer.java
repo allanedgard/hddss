@@ -1460,6 +1460,10 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 MessageCollection commitList = new MessageCollection();
                 MessageCollection checkpointList = new MessageCollection();
                 MessageCollection requestList = new MessageCollection();
+               MessageCollection newviewList = new MessageCollection();
+               MessageCollection changeviewList = new MessageCollection();
+               MessageCollection changeviewackList = new MessageCollection();
+
                 for(IVote v : q.getVotes()){
                   BagSubject bs = (BagSubject) v.getSubject();
                   MessageCollection messages  = (MessageCollection)bs.getInfo(BagSubject.MESSAGES);
@@ -1472,6 +1476,11 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                      if(m instanceof PBFTCommit) commitList.add(m);
 
                      if(m instanceof PBFTCheckpoint) checkpointList.add(m);
+
+                     if(m instanceof PBFTNewView) newviewList.add(m);
+                     if(m instanceof PBFTChangeView) changeviewList.add(m);
+                     if(m instanceof PBFTChangeViewACK) changeviewackList.add(m);
+
                  }
 
                 }
@@ -1522,6 +1531,21 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                     long lastSEQ = getStateLog().getCheckpointLowWaterMark();
                     long currSEQ = m1.getSequenceNumber();
                     if(currSEQ > lastSEQ) handle(m1);
+                }
+                
+                for(IMessage m : changeviewList){
+                    PBFTChangeView m1 = (PBFTChangeView)m;
+                    handle(m1);
+                }
+
+                for(IMessage m : changeviewackList){
+                    PBFTChangeViewACK m1 = (PBFTChangeViewACK)m;
+                    handle(m1);
+                }
+
+                for(IMessage m : newviewList){
+                    PBFTNewView m1 = (PBFTNewView)m;
+                    handle(m1);
                 }
 
                 PBFTTimeoutDetector ttask = (PBFTTimeoutDetector)getStatusTimer().getTask();
@@ -1814,7 +1838,14 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                   bseqn, viewn, getCurrentExecuteSEQ(), getCheckpointLowWaterMark(), getLocalServerID(), nv != null
             );
 
-       sp.getMissedRequests().addAll(getMissedRequests());       
+       sp.getMissedRequests().addAll(getMissedRequests());
+
+       for(PBFTChangeView cv : cvtable.values()){
+          Object rid = cv.getReplicaID();
+          if(!sp.getChangeViewReplicas().contains(rid)){
+            sp.getChangeViewReplicas().add(rid);
+          }
+       }
 
        return sp;
        
@@ -1849,6 +1880,37 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 }
             }//end while currSEQ < _lwSEQ, if currSEQ_0 = lwSEQ
 
+            boolean hasNewView = sp.hasNewView();
+
+            if(!hasNewView){
+               int viewn = sp.getViewNumber();
+               PBFTNewView nv = getStateLog().getNewViewTable().get(viewn);
+
+               if(nv != null){
+                  bag.addMessage(nv);
+               }               
+            }
+            Hashtable<String, PBFTChangeView> cvt = new Hashtable<String, PBFTChangeView>();
+            cvt.putAll(cvtable);
+            for(String digest : cvtable.keySet()){
+               PBFTChangeView cv = cvtable.get(digest);
+               Object rid = cv.getReplicaID();
+               for(Object id : sp.getChangeViewReplicas()){
+                  if(rid.equals(id)){
+                     cvt.remove(digest);
+                  }
+               }
+            }
+
+            if(!cvt.isEmpty()){
+               for(String digest  : cvt.keySet()){
+                  PBFTChangeView cv = cvt.get(digest);
+                  PBFTChangeViewACK cva = cvatable.get(digest);
+                  bag.addMessage(cv);
+                  bag.addMessage(cva);
+               }
+            }
+            
             DigestList mr = sp.getMissedRequests();
 
             if(mr != null && !mr.isEmpty()){
