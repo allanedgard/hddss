@@ -14,7 +14,19 @@ import br.ufba.lasid.jds.comm.communicators.ICommunicator;
 import br.ufba.lasid.jds.cs.IServer;
 import br.ufba.lasid.jds.fmm.Mode;
 import br.ufba.lasid.jds.group.IGroup;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBag;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeView;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeViewACK;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTData;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetch;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewView;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
 import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.security.IMessageAuthenticator;
 import br.ufba.lasid.jds.util.IClock;
@@ -31,6 +43,7 @@ public abstract class PBFTServerMode extends Mode implements IPBFTServer{
         super(imode, machine);
     }
 
+   @Override
     public PBFTServerMultiModeMachine getMachine(){
         return (PBFTServerMultiModeMachine)this.machine;
     }
@@ -167,9 +180,9 @@ public abstract class PBFTServerMode extends Mode implements IPBFTServer{
         getMachine().getProtocol().setCheckpointPeriod(period);
     }
 
-    public void setCurrentPrimaryID(Object pid) {
-        getMachine().getProtocol().setCurrentPrimaryID(pid);
-    }
+//    public void setCurrentPrimaryID(Object pid) {
+//        getMachine().getProtocol().setCurrentPrimaryID(pid);
+//    }
 
     public void setCurrentViewNumber(Integer viewn) {
         getMachine().getProtocol().setCurrentViewNumber(viewn);
@@ -223,4 +236,70 @@ public abstract class PBFTServerMode extends Mode implements IPBFTServer{
         getMachine().getProtocol().addListener(listener, m);
     }
 
+   public boolean changing() {
+      return getMachine().getProtocol().changing();
+   }
+
+   public boolean overloaded() {
+      return getMachine().getProtocol().overloaded();
+   }
+
+   public boolean running() {
+      return getMachine().getProtocol().running();
+   }
+
+   public boolean starting() {
+      return getMachine().getProtocol().starting();
+   }
+
+    protected void handle(PBFTServerMessage m){
+       if(m instanceof PBFTPrePrepare){
+          handle((PBFTPrePrepare)m);
+       }
+
+       if(m instanceof PBFTPrepare){
+          handle((PBFTPrepare)m);
+       }
+
+       if(m instanceof PBFTCommit){
+          handle((PBFTCommit)m);
+       }
+
+       if(m instanceof PBFTCheckpoint){
+          handle((PBFTCheckpoint)m);
+       }
+
+       if(m instanceof PBFTFetch){
+          handle((PBFTFetch)m);
+       }
+
+       if(m instanceof PBFTMetaData){
+          handle((PBFTMetaData)m);
+       }
+
+       if(m instanceof PBFTData){
+          handle((PBFTData)m);
+       }
+
+       if(m instanceof PBFTChangeView){
+          handle((PBFTChangeView)m);
+       }
+
+       if(m instanceof PBFTChangeViewACK){
+          handle((PBFTChangeViewACK)m);
+       }
+
+       if(m instanceof PBFTNewView){
+          handle((PBFTNewView)m);
+       }
+
+       if(m instanceof PBFTStatusActive){
+          handle((PBFTStatusActive)m);
+       }
+
+       if(m instanceof PBFTBag){
+          handle((PBFTBag)m);
+       }
+
+    }
 }

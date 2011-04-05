@@ -17,7 +17,6 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetch;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetchMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
@@ -25,7 +24,9 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusPending;
 import br.ufba.lasid.jds.jbft.pbft.comm.communicators.PBFTCommunicator;
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.prototyping.hddss.Agent;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -96,7 +97,6 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
     @Override
     public void receive(IMessage m) {
         synchronized(agent.lock){
-            //Debugger.debug("[p"+agent.ID +"] received " + m + " at time " +agent.infra.clock.value());
             super.receive(m);
             agent.lock.notify();
         }
@@ -116,20 +116,21 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
             } 
         }
 
-        if(m instanceof PBFTRequest)        return  0;
-        if(m instanceof PBFTPrePrepare)     return  1;
-        if(m instanceof PBFTPrepare)        return  2;
-        if(m instanceof PBFTCommit)         return  3;
-        if(m instanceof PBFTCheckpoint)     return  4;
-        if(m instanceof PBFTFetch)          return  5;
-        if(m instanceof PBFTMetaData)       return  6;
-        if(m instanceof PBFTData)           return  7;
-        if(m instanceof PBFTBag)            return  8;
-        if(m instanceof PBFTStatusActive)   return  9;
-        if(m instanceof PBFTReply)          return 10;
-        if(m instanceof PBFTChangeView)     return 11;
-        if(m instanceof PBFTChangeViewACK)  return 12;
-        if(m instanceof PBFTNewView)        return 13;
+        if(m instanceof PBFTRequest)        return IPBFTServer.REQUEST;
+        if(m instanceof PBFTPrePrepare)     return IPBFTServer.PREPREPARE;
+        if(m instanceof PBFTPrepare)        return IPBFTServer.PREPARE;
+        if(m instanceof PBFTCommit)         return IPBFTServer.COMMIT;
+        if(m instanceof PBFTCheckpoint)     return IPBFTServer.CHECKPOINT;
+        if(m instanceof PBFTFetch)          return IPBFTServer.FETCH;
+        if(m instanceof PBFTMetaData)       return IPBFTServer.METADATA;
+        if(m instanceof PBFTData)           return IPBFTServer.DATA;
+        if(m instanceof PBFTBag)            return IPBFTServer.BAG;
+        if(m instanceof PBFTStatusActive)   return IPBFTServer.STATUSACTIVE;
+        if(m instanceof PBFTReply)          return IPBFTServer.REPLY;
+        if(m instanceof PBFTChangeView)     return IPBFTServer.CHANGEVIEW;
+        if(m instanceof PBFTChangeViewACK)  return IPBFTServer.CHANGEVIEWACK;
+        if(m instanceof PBFTNewView)        return IPBFTServer.NEWVIEW;
+        if(m instanceof PBFTStatusPending)  return IPBFTServer.STATUSPENDING;
 
 
         return -1;

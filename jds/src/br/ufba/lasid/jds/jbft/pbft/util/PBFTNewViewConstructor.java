@@ -8,10 +8,8 @@ package br.ufba.lasid.jds.jbft.pbft.util;
 import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.MessageCollection;
 import br.ufba.lasid.jds.decision.bargaining.IProposal;
-import br.ufba.lasid.jds.decision.bargaining.auction.AuctionResult;
 import br.ufba.lasid.jds.decision.bargaining.auction.IAuctionResult;
 import br.ufba.lasid.jds.decision.bargaining.auction.ILotResult;
-import br.ufba.lasid.jds.decision.bargaining.auction.LotList;
 import br.ufba.lasid.jds.decision.voting.Quorumtable;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
@@ -37,8 +35,11 @@ public class PBFTNewViewConstructor {
    protected Quorumtable<Long> qtable = new Quorumtable<Long>();
    protected IPBFTServer pbft;
 
-   public PBFTNewViewConstructor(IPBFTServer pbft) {
+   public PBFTNewViewConstructor(IPBFTServer pbft, long checkpointFactor, long checkpointPeriod, int resilience) {
       this.pbft = pbft;
+      this.checkpointFactor = checkpointFactor;
+      this.checkpointPeriod = checkpointPeriod;
+      this.resilience = resilience;
    }
 
 
@@ -48,6 +49,13 @@ public class PBFTNewViewConstructor {
       }
    }
 
+   public int size(){
+      return cvtable.size();
+   }
+
+   public void clear(){
+      cvtable.clear();
+   }
    protected long lcwm = -1;
    protected long hcwm = -1;
    protected long checkpointPeriod = 0;

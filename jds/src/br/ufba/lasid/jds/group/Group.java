@@ -114,41 +114,5 @@ public class Group<GroupID, ProcessID> implements IGroup<GroupID, ProcessID>{
        return getMembers().get(i);
     }
 
-//    public ProcessID next(ProcessID pid) {
-//        int msize = getMembers().size();
-//        int[] hcodes = new int[msize];
-//        int i = 0;
-//
-//        for(i = 0; i < msize; i++){
-//            ProcessID cpid = getMembers().get(i).getID();
-//            hcodes[i] = cpid.hashCode();
-//        }
-//
-//        Arrays.sort(hcodes);
-//
-//        int hcpid = pid.hashCode();
-//        i = 0;
-//
-//        while(i < msize) {
-//            if(hcodes[i] == hcpid){
-//                break;
-//            }
-//            i++;
-//        }
-//
-//        i = (i+1) % msize;
-//
-//        hcpid = hcodes[i];
-//
-//        for(i = 0; i < msize; i++){
-//            ProcessID cpid = getMembers().get(i).getID();
-//            if(hcpid == cpid.hashCode())
-//                return cpid;
-//        }
-//
-//        return null;
-//
-//    }
-
     
 }

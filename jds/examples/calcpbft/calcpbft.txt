@@ -40,15 +40,14 @@ agent[3].RequestGenerationProbability = 0.1
 agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
 agent.ServerGroupAddress = 8
 agent.GroupList = 4,5,6,7
-agent.CurrentPrimary  = 4
 agent.CurrentView = 0
 agent.PrimaryFaultTimeout = 250
 agent.BatchingSize = 4096
-agent.BatchingTimeout = 450
+agent.BatchingTimeout = 300
 agent.CheckpointPeriod = 128
 agent.CheckpointFactor = 3
 agent.ViewChangeRetransmittionTimeout = 250
-agent.SendStatusPeriod = 300
+agent.SendStatusPeriod = 800
 agent.SlidingWindowSize = 2
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelDeterministicInterval

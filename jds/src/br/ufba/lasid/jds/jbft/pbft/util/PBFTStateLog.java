@@ -37,7 +37,9 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
     protected  long nextPrepareSEQ    =  0L;
     protected  long nextCommitSEQ     =  0L;
     protected  long nextExecuteSEQ    =  0L;
-    
+
+    protected PBFTNewViewtable nvtable = new PBFTNewViewtable();
+
     public void updateNextPrePrepareSEQ(PBFTPrePrepare m){
         synchronized(this){
             if(m != null && m.getSequenceNumber() != null){
@@ -91,6 +93,10 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
     public long getNextPrePrepareSEQ() {return nextPrePrepareSEQ;}
     public long getNextPrepareSEQ() {return nextPrepareSEQ;}
     public long getNextExecuteSEQ() {return nextExecuteSEQ;}
+
+    protected int nextViewNumber = 1;
+    public void setNextViewNumber(int viewn){ this.nextViewNumber = viewn;}
+    public int getNextViewNumber(){return this.nextViewNumber;}
 
 
 
@@ -171,6 +177,10 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
     }
     
 
+    public PBFTNewViewtable getNewViewTable(){
+       return nvtable;
+    }
+    
     public void setLastChangeViewTimestamp(int lastChangeViewTimestamp) {
         this.lastChangeViewTimestamp = lastChangeViewTimestamp;
     }

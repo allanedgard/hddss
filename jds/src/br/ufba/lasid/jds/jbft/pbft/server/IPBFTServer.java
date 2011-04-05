@@ -31,7 +31,43 @@ import java.lang.reflect.Method;
  */
 public interface IPBFTServer extends IPBFT{
   /*##############################################################
-   * 0. Methods for handling pbft server messages.
+   * 0. Server Modes.
+   ###############################################################*/
+
+    public static final int   STARTING = 0;
+    public static final int    RUNNING = 1;
+    public static final int OVERLOADED = 2;
+    public static final int   CHANGING = 3;
+
+  /*##############################################################
+   * 1. Execution Types.
+   ###############################################################*/
+    
+   public static final int       REQUEST = 0;
+   public static final int    PREPREPARE = 1;
+   public static final int       PREPARE = 2;
+   public static final int        COMMIT = 3;
+   public static final int         REPLY = 4;
+   public static final int  STATUSACTIVE = 5;
+   public static final int           BAG = 6;
+   public static final int    CHECKPOINT = 7;
+   public static final int         FETCH = 8;
+   public static final int      METADATA = 9;
+   public static final int          DATA = 10;
+   public static final int    CHANGEVIEW = 11;
+   public static final int CHANGEVIEWACK = 12;
+   public static final int       NEWVIEW = 13;
+   public static final int STATUSPENDING = 14;
+   public static final int         TOKEN = 15;
+
+  /*##############################################################
+   * 2. Event Types.
+   ###############################################################*/
+   public static final int    ARRIVE = 0;
+   public static final int DEPARTURE = 1;
+
+  /*##############################################################
+   * 3. Methods for handling pbft server messages.
    ###############################################################*/
     public void handle(PBFTRequest        rq );
     public void handle(PBFTPrePrepare     ppr);
@@ -49,7 +85,7 @@ public interface IPBFTServer extends IPBFT{
     public void handle(PBFTProcessingToken tk);
 
   /*##############################################################
-   * 1. Utility Methods.
+   * 4. Utility Methods.
    ###############################################################*/
 
     public MessageQueue getQueue(String name);
@@ -73,7 +109,7 @@ public interface IPBFTServer extends IPBFT{
     public void setRejuvenationWindow(long rwindow);
     public void setBatchTimeout(Long btimeout);
     public void setChangeViewRetransmissionTimeout(long cvtimeout);
-    public void setCurrentPrimaryID(Object pid);
+    //public void setCurrentPrimaryID(Object pid);
     public void setPrimaryFaultTimeout(Long pftimeout);
     public void setCurrentViewNumber(Integer viewn);
     public void setSendStatusPeriod(long ssperiod);
@@ -89,5 +125,9 @@ public interface IPBFTServer extends IPBFT{
     public IServer getServer();
     public void addListener(IEventListener listener, Method m);
 
+    public boolean changing();
+    public boolean running();
+    public boolean overloaded();
+    public boolean starting();
 
 }

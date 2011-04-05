@@ -40,13 +40,23 @@ import java.lang.reflect.Method;
  */
 public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBFTServer{
     IPBFTServer pbft;
+    
     @SuppressWarnings("ResultOfObjectAllocationIgnored")
     public PBFTServerMultiModeMachine(IPBFTServer pbft) {
         this.pbft = pbft;
+        new PBFTStarting(this);
         new PBFTRunning(this);
         new PBFTOverloaded(this);
-        new PBFTChanging(this);        
-        switchTo(PBFTModes.RUNNING);
+        new PBFTChanging(this);
+        
+        addTransition( STARTING    , RUNNING );
+        addTransition( RUNNING    , OVERLOADED );
+        addTransition( RUNNING    , CHANGING   );
+        addTransition( OVERLOADED , RUNNING    );
+        addTransition( OVERLOADED , CHANGING   );
+        addTransition( CHANGING   , RUNNING    );
+
+        swap(STARTING);
     }
 
     public IPBFTServer getProtocol(){
@@ -250,9 +260,9 @@ public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBF
         getProtocol().setChangeViewRetransmissionTimeout(cvtimeout);
     }
 
-    public void setCurrentPrimaryID(Object pid) {
-        getProtocol().setCurrentPrimaryID(pid);
-    }
+//    public void setCurrentPrimaryID(Object pid) {
+//        getProtocol().setCurrentPrimaryID(pid);
+//    }
 
     public void setPrimaryFaultTimeout(Long pftimeout) {
         getProtocol().setPrimaryFaultTimeout(pftimeout);
@@ -301,4 +311,24 @@ public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBF
    public Integer getCurrentViewNumber() {
       return getProtocol().getCurrentViewNumber();
    }
+
+   public boolean changing() {
+      return getProtocol().changing();
+   }
+
+   public boolean overloaded() {
+      return getProtocol().overloaded();
+   }
+
+   public boolean running() {
+      return getProtocol().running();
+   }
+
+   public boolean starting() {
+      return getProtocol().starting();
+   }
+
+
+
+
 }

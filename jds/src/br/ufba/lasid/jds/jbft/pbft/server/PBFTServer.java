@@ -10,7 +10,6 @@ import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.ISystemEntity;
 import br.ufba.lasid.jds.adapters.AfterEventtable;
 import br.ufba.lasid.jds.adapters.BeforeEventtable;
-import br.ufba.lasid.jds.adapters.EventHandler;
 import br.ufba.lasid.jds.adapters.IAfterEventListener;
 import br.ufba.lasid.jds.adapters.IBeforeEventListener;
 import br.ufba.lasid.jds.adapters.IEventListener;
@@ -71,9 +70,11 @@ import br.ufba.lasid.jds.util.ISchedule;
 import br.ufba.lasid.jds.util.XMath;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -253,21 +254,21 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
          /* checks if was served . */
          if(rinfo.wasServed(r)){
-            JDSUtility.debug("[PBFTServer:canProceed(request)] s" + lsid + " has already served " + r);
+            JDSUtility.debug("[PBFTServer:isValid(request)] s" + lsid + " has already served " + r);
             
             /* retransmite the reply when the request was already served */
             emit(rinfo.getReply(r), new BaseProcess(r.getClientID()));
             return false;
          }
          /* if it was logged but it hasn't been server yet then it'll be discarded because it has been processed. */
-         JDSUtility.debug("[PBFTServer:canProceed(request)] s" + lsid + " has already accepted " + r + " so this was discarded.");
+         JDSUtility.debug("[PBFTServer:isValid(request)] s" + lsid + " has already accepted " + r + " so this was discarded.");
          return false;
       }
 
       /* if it isn't logged but it is older than some logged requests then it was discarded by the garbage collector. Thus, the
       replica must sent a null reply */
       if(rinfo.isOld(r)){
-         JDSUtility.debug("[PBFTServer:canProceed(request)] s" + lsid + " hasn't a response for  " + r + " any more.");
+         JDSUtility.debug("[PBFTServer:isValid(request)] s" + lsid + " hasn't a response for  " + r + " any more.");
          emit(createNullReplyMessage(r), new BaseProcess(r.getClientID()));
          return false;
       }
@@ -396,6 +397,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
             if(ttask != null && ttask.get("TIMEOUT") != null){
                timeout = (Long)ttask.get("TIMEOUT");
+               JDSUtility.debug("[PBFTServer:scheduleViewChange] s" + getLocalServerID() + " computed changeview timeout equal to " + timeout);
             }
 
             long timestamp = now + timeout;
@@ -441,7 +443,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         if(!(checkSequenceNumber(pp) && checkViewNumber(pp))){
             long nxPP = getStateLog().getNextPrePrepareSEQ();  long viewn  = getCurrentViewNumber();
             JDSUtility.debug(
-              "[PBFTServer:canProceed(preprepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + pp + " because it hasn't " +
+              "[PBFTServer:isValid(preprepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + pp + " because it hasn't " +
               "a valid sequence/view number. (current(viewn) = " + viewn + ") [nextSEQN(pre-prepare) = " + nxPP + "]"
             );
 
@@ -451,7 +453,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         /* If the preprepare message wasn't sent by the primary replica then it will be discarded. */
         if(!wasSentByPrimary(pp)){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(preprepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + pp + " " +
+              "[PBFTServer:isValid(preprepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + pp + " " +
               "because it wasn't sent by primary server s" + getCurrentPrimaryID()
             );
             
@@ -565,7 +567,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         /* If the prepare message was sent by the primary then it will be discarded. */
         if(wasSentByPrimary(p)){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because it was sent by the primary " + curPID
+              "[PBFTServer:isValid(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because it was sent by the primary " + curPID
             );
 
             return false;
@@ -574,7 +576,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         /* If the preprepare message wasn't sent by a group member then it will be discarded. */
         if(!wasSentByAGroupMember(p)){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because " +
+              "[PBFTServer:isValid(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because " +
               "it wasn't sent by a member of the group " + getLocalGroup()
             );
 
@@ -584,7 +586,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         /* If the preprepare hasn't a valid sequence or view number then force a change view. */
         if(!checkViewNumber(p)){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because " +
+              "[PBFTServer:isValid(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because " +
               "it hasn't a valid view number. (CURRENT-VIEW = " + getCurrentViewNumber() + ")."
             );
             return false;
@@ -594,7 +596,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         if(!inAValidSequenceRange(p)){
             long lcwm = getCheckpointLowWaterMark(); long hcwm = getCheckpointHighWaterMark();
             JDSUtility.debug(
-              "[PBFTServer:canProceed(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because " +
+              "[PBFTServer:isValid(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because " +
               "it hasn't a valid sequence (LCWM = " + lcwm + ", HCWM = " + hcwm + ")."
             );            
             return false;
@@ -604,7 +606,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
         if(!rinfo.wasPrePrepared(p.getSequenceNumber())){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because " +
+              "[PBFTServer:isValid(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because " +
               "it hasn't received a related pre-prepare."
             );
             return false;
@@ -717,7 +719,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         /* If the preprepare message wasn't sent by a group member then it will be discarded. */
         if(!wasSentByAGroupMember(c)){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + c + " because " +
+              "[PBFTServer:isValid(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + c + " because " +
               "it wasn't sent by a member of the group " + getLocalGroup()
             );
 
@@ -728,7 +730,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         
         if(!rinfo.wasPrepared(c.getSequenceNumber())){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + c + " because " +
+              "[PBFTServer:isValid(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + c + " because " +
               "it hasn't received a related prepare."
             );
 
@@ -739,7 +741,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         if(!checkViewNumber(c)){
 
             JDSUtility.debug(
-              "[PBFTServer:canProceed(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + c + " because " +
+              "[PBFTServer:isValid(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + c + " because " +
               "it hasn't a valid view number (CURRENT-VIEW = " + getCurrentViewNumber() + ")."
             );
             return false;
@@ -749,7 +751,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         if(!inAValidSequenceRange(c)){
             long lcwm = getCheckpointLowWaterMark(); long hcwm = getCheckpointHighWaterMark();
             JDSUtility.debug(
-              "[PBFTServer:canProceed(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + c + " because it " +
+              "[PBFTServer:isValid(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + c + " because it " +
               "hasn't a valid sequence number (LCWM = " + lcwm + ", HCWM = " + hcwm + ")."
             );
 
@@ -893,7 +895,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
       /* If the preprepare message wasn't sent by a group member then it will be discarded. */
       if(!wasSentByAGroupMember(checkpoint)){
           JDSUtility.debug(
-            "[PBFTServer:canProceed(checkpoint)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + checkpoint + " because " +
+            "[PBFTServer:isValid(checkpoint)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + checkpoint + " because " +
             "it wasn't sent by a member of the group " + getLocalGroup()
           );
 
@@ -906,7 +908,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
       if(lcwm > seqn){
           JDSUtility.debug(
-            "[PBFTServer:canProceed(checkpoint)] s" + getLocalServerID() + ", at  time " + getClockValue() + ", discarded " + checkpoint + " because " +
+            "[PBFTServer:isValid(checkpoint)] s" + getLocalServerID() + ", at  time " + getClockValue() + ", discarded " + checkpoint + " because " +
             "it has a sequence number < current LCWM = " + lcwm + "). "
           );
 
@@ -1197,7 +1199,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     public boolean isValid(PBFTFetch f){
         if(!wasSentByAGroupMember(f)){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(fetch)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + f + " " +
+              "[PBFTServer:isValid(fetch)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + f + " " +
               "because it wasn't sent by a member of the group " + getLocalGroup()
             );
 
@@ -1305,7 +1307,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
         if(!transferring.containsKey(recid)){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(data)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + d +
+              "[PBFTServer:isValid(data)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + d +
               " because it there isn't in temporary part table."
             );
 
@@ -1319,7 +1321,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     public boolean isValid(PBFTMetaData md){
         if(!wasSentByAGroupMember(md)){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(metadata)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + md +
+              "[PBFTServer:isValid(metadata)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + md +
               " because it wasn't sent by a member of the group " + getLocalGroup()
             );
 
@@ -1331,7 +1333,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
         if(rcmd <  lcwm){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(metadata)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + md + " because it has " +
+              "[PBFTServer:isValid(metadata)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + md + " because it has " +
               "a LCWM (" + rcmd + ")" + "< s" + getLocalServerID() +":LCWM(" + lcwm + ")."
             );
 
@@ -1474,8 +1476,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         /* If the preprepare message wasn't sent by a group member then it will be discarded. */
         if(!wasSentByAGroupMember(bag)){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(bag)] s"   + getLocalServerID() +  ", at " +
-              "time " + getClockValue() + ", discarded " + bag +" because it " +
+              "[PBFTServer:isValid(bag)] s"   + getLocalServerID() +  ", at time " + getClockValue() + ", discarded " + bag +" because it " +
               "wasn't sent by a member of the group " + getLocalGroup()
             );
 
@@ -1638,7 +1639,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         IProcess rServer = new BaseProcess(sa.getReplicaID());
         if(getLocalServerID().equals(rServer.getID())){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(activeStatus)] s" + getLocalServerID() + ", at time " + getClockValue() + ", " +
+              "[PBFTServer:isValid(activeStatus)] s" + getLocalServerID() + ", at time " + getClockValue() + ", " +
               "discarded " + sa + " because it was sent by the local replica."
             );
             return false;
@@ -1652,8 +1653,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             long lcwm  = getCheckpointLowWaterMark();
 
             JDSUtility.debug(
-              "[PBFTServer:canProceed(activeStatus)] s" + getLocalServerID() + ", at " +
-              "time " + getClockValue() + ", " + "discarded " + sa + " because it " +
+              "[PBFTServer:isValid(activeStatus)] s" + getLocalServerID() + ", at time " + getClockValue() + ", " + "discarded " + sa + " because it " +
               "hasn't a valid view number. (viewn = " + getCurrentViewNumber() + ") " +
               "[PP = " + nxPP + ", PR = " + nxPR + ", CM =" + nxCM + " , EX = " + nxEX + ", LCWM = " + lcwm + "]"
             );
@@ -1663,7 +1663,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
         if(!wasSentByAGroupMember(sa)){
             JDSUtility.debug(
-              "[PBFTServer:canProceed(activeStatus)] s" + getLocalServerID() + ", at time " + getClockValue() + ", " +
+              "[PBFTServer:isValid(activeStatus)] s" + getLocalServerID() + ", at time " + getClockValue() + ", " +
               "discarded " + sa + " because it wasn't sent by a member of the group " + getLocalGroup() + "."
             );
 
@@ -1681,12 +1681,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             PBFTTimeoutDetector ttask = new PBFTTimeoutDetector() {
                     @Override
                     public void onTimeout() {
-
-                            emit(
-                                    createStatusActiveMessage(),
-                                    getLocalGroup().minus(getLocalProcess())
-                            );
-
+                        emitStatusActive(getLocalGroup().minus(getLocalProcess()));
                         schedulePeriodicStatusSend();
 
                     }
@@ -1697,6 +1692,10 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         }
 
         return stimer;
+    }
+
+    public void emitStatusActive(IGroup g){
+       emit(createStatusActiveMessage(), g);       
     }
    public void schedulePeriodicStatusSend() {
         long now = getClockValue();
@@ -1894,6 +1893,32 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     ArrayList<Integer> views = new ArrayList<Integer>();
     boolean uncertanty = false;
     boolean changing = false;
+    protected int mode;
+
+    public boolean running(){
+        long swsize = getSlidingWindowSize();
+        long currPP = getCurrentPrePrepareSEQ();
+        long currEX = getCurrentExecuteSEQ();
+        return (currEX + swsize >= currPP) && !changing();
+    }
+
+    public boolean overloaded(){
+        long swsize = getSlidingWindowSize();
+        long currPP = getCurrentPrePrepareSEQ();
+        long currEX = getCurrentExecuteSEQ();
+        return (currEX + swsize < currPP) && !changing();
+    }
+
+    public boolean changing(){
+       return (getCurrentViewNumber() != null && getNextViewNumber() <= getCurrentViewNumber().intValue());
+    }
+
+    public boolean starting(){
+       Object primaryID = getCurrentPrimaryID();
+
+       return primaryID == null;
+       
+    }
     MessageCollection preprepareset = new MessageCollection();
     MessageCollection prepareset = new MessageCollection();
 
@@ -2002,6 +2027,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
          * probably it's been already true.
          */
         getViewTimer().cancel();
+        revokeSendBatch();
 
         /* the replica moves to the next view. After that, this replica isn't accepting any message from view v < v+1. */
         setCurrentViewNumber(viewn +1);
@@ -2040,7 +2066,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         storeChangeView(cv);
         
         uncertanty = true;
-        changing = true;
         /* emit the view change ack for each view change message that match with new view */
         emitChangeViewACK();
         
@@ -2140,7 +2165,19 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     }
 
     public boolean isValid(PBFTChangeView cv){
-        if(cv == null) return false;
+        if(!(cv != null && getCurrentViewNumber() != null)) return false;
+
+        int nxtViewNumber = getNextViewNumber();
+        int newViewNumber = cv.getViewNumber();
+        int curViewNumber = getCurrentViewNumber();
+
+        if(newViewNumber < nxtViewNumber) {
+           JDSUtility.debug(
+               "[PBFTServer:isValid(changeview] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + cv + " because it has " +
+               "this one has a view number (VW{" + newViewNumber + "} < NEXTVW{" + curViewNumber + "}). VW must be >= NEXTVW."
+           );
+           return false;
+        }
 
         MessageCollection mcpp = cv.getPrePrepareSet();
         MessageCollection mcpr = cv.getPrepareSet();
@@ -2148,20 +2185,20 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         int mcsize = mcpp.size();
 
         if(mcpr.size() > mcsize) mcsize = mcpr.size();
-        int i = -1; int cview = getCurrentViewNumber();
+        int i = -1; 
         while(++i < mcsize){
 
-            int viewn = -1;
+            int msgViewNumber = -1;
             
             if(i < mcpp.size()){
                 
                 PBFTPrePrepare pp = (PBFTPrePrepare) mcpp.get(i);
                 
-                viewn = pp.getViewNumber();
-                if(viewn > cview){
+                msgViewNumber = pp.getViewNumber();
+                if(msgViewNumber > curViewNumber){
                     JDSUtility.debug(
-                        "[PBFTServer:canProceed(changeview] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + cv + " because it has " +
-                        "a component with a invalid view number (VW{" + viewn + "} > CURRVW{" + cview + "})."
+                        "[PBFTServer:isValid(changeview] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + cv + " because it has " +
+                        "a component with a invalid view number (VW{" + msgViewNumber + "} > CURRVW{" + curViewNumber + "})."
                     );
                     return false;
                 }
@@ -2169,11 +2206,11 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
             if(i < mcpr.size()){
                 PBFTPrepare p = (PBFTPrepare) mcpr.get(i);
-                viewn = p.getViewNumber();
-                if(viewn > cview){
+                msgViewNumber = p.getViewNumber();
+                if(msgViewNumber > curViewNumber){
                     JDSUtility.debug(
-                        "[PBFTServer:canProceed(changeview] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + cv + " because it has " +
-                        "a component with a invalid view number (VW{" + viewn + "} > CURRVW{" + cview + "})."
+                        "[PBFTServer:isValid(changeview] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + cv + " because it has " +
+                        "a component with a invalid view number (VW{" + msgViewNumber + "} > CURRVW{" + curViewNumber + "})."
                     );
                     return false;
                 }
@@ -2181,8 +2218,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         }
         return true;
     }
-
-    PBFTNewViewConstructor nvc = new PBFTNewViewConstructor(this);
+    PBFTNewViewConstructor nvc;
     public void handle(PBFTChangeViewACK cva) {
         Object lSrvID = getLocalServerID();
         JDSUtility.debug("[PBFTServer:handle(changeviewack)] s" + lSrvID + ", at time " + getClockValue() + ", received " + cva);
@@ -2193,49 +2229,42 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
            /* if the current replica is primary of new view then it'll process the change-view message */
            if(isPrimary(viewn)){
+              
               ChangeViewACKSubject cvas = getDecision(cva);
               /* if it's got a decision then it'll put the related change-view in certificated change-view table  S*/
               if(cvas != null){
                  String digest = (String)cvas.getInfo(ChangeViewACKSubject.DIGEST);
-                 if(!ccvtable.containsKey(digest)){
-                    PBFTChangeView cv = cvtable.get(digest);
-                    if(cv != null){
-                        //ccvtable.put(digest, cv);
-                       nvc.addChangeView(digest, cv);
-                        JDSUtility.debug("[PBFTServer:handle(changeviewack)] s"  + lSrvID + ", at time " + getClockValue() + ", certificated " + cv);
-                        PBFTNewView nv = nvc.buildNewView();
-                        emit(nv, getLocalGroup().minus(getLocalProcess()));
-                        installNewView(nv);
+                 //if(!ccvtable.containsKey(digest)){
+                 PBFTChangeView cv = cvtable.get(digest);
+                 if(cv != null){
+                    if(nvc == null){
+                        nvc = new PBFTNewViewConstructor(this, getCheckpointFactor(), getCheckpointPeriod(), getServiceBFTResilience());
+                    }
+                    nvc.addChangeView(digest, cv);
+                    JDSUtility.debug("[PBFTServer:handle(changeviewack)] s"  + lSrvID + ", at time " + getClockValue() + ", certificated " + cv);
+                    if(canProceed(nvc)){
+                       PBFTNewView nv = nvc.buildNewView();
+                       emit(nv, getLocalGroup().minus(getLocalProcess()));
+                       installNewView(nv);
+                       emitBatch();
+                       nvc.clear();
+                       cvtable.clear();
+                       cvatable.clear();
+                       nvc = null;
                     }
                  }
+                 //}
               }//end if it decide for change-view-ack
            }//end if this replica is the primary of new view
         }//end if is valid change-view-ack
     }
 
-    protected void buildNewView(){
-       long lcwm = -1;
+    public boolean canProceed(PBFTNewViewConstructor nvc){
+      int f = getServiceBFTResilience();
+      int n = getLocalGroup().getGroupSize();
 
-       for(PBFTChangeView cv : ccvtable.values()){
-           MessageCollection checkpoints  = cv.getCheckpointSet();
-           if(checkpoints != null && checkpoints.isEmpty()){
-              for(IMessage m : checkpoints){
-                 PBFTCheckpoint checkpoint = (PBFTCheckpoint) m;
-                 if(checkpoint != null && checkpoint.getSequenceNumber() != null){
-                     long seqn = checkpoint.getSequenceNumber();
-                     if(seqn > lcwm){
-                        lcwm = seqn;
-                     }//end if checkpoint.sequenceNumber > lcwm
-                 }//end if is a valid checkpoint message
-              }//end for each checkpoint message
-           }//end if is a valid checkpoint set
-       }//end for each change-view message
-
-       long hcwm = lcwm + getCheckpointFactor() * getCheckpointPeriod();
-
-
+       return nvc.size() == (n - f);
     }
-
     public ChangeViewACKSubject getDecision(PBFTChangeViewACK cva){
        boolean complete = false;
        
@@ -2279,12 +2308,66 @@ public class PBFTServer extends PBFT implements IPBFTServer{
        
     }
     public boolean isValid(PBFTChangeViewACK cva){
-       return cvtable.containsKey(cva.getDigest());
+       int newViewNumber = cva.getViewNumber();
+       int nxtViewNumber = getNextViewNumber();
+       int curViewNumber = getCurrentViewNumber();
+       return cvtable.containsKey(cva.getDigest()) && newViewNumber >= nxtViewNumber && curViewNumber == newViewNumber;
     }
 
     public void handle(PBFTNewView nv) {
         JDSUtility.debug("[PBFTServer:handle(newview)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + nv);
-        installNewView(nv);
+        if(isValid(nv)){
+            installNewView(nv);
+            int nviewn = nv.getViewNumber();
+
+            for(int i = 0; i < nviewn;  i++){
+               getStateLog().getNewViewTable().remove(i);
+            }
+
+            getStateLog().getNewViewTable().put(nviewn, nv);
+
+        }
+    }
+
+    public boolean isValid(PBFTNewView nv){
+       int nxtViewNumber = getNextViewNumber();
+       int newViewNumber = nv.getViewNumber();
+       int curViewNumber = getCurrentViewNumber();
+
+       if(newViewNumber < nxtViewNumber){
+          return false;
+       }
+
+       if(newViewNumber != curViewNumber){
+          return false;
+       }
+
+       int index = newViewNumber % getLocalGroup().getGroupSize();
+       Object replicaID = nv.getReplicaID();
+       IProcess primary = getLocalGroup().getMember(index);
+
+       if(!(replicaID != null && primary != null && primary.getID() != null && replicaID.equals(primary.getID()))){
+          return false;
+       }
+       
+       int f = getServiceBFTResilience();
+       int cvcount = 0;
+
+       Set<String> digests = nv.getChangeViewTable().keySet();
+       
+       for(String digest : digests){
+                    
+          if(cvtable.containsKey(digest)){
+             cvcount ++;
+          }
+          
+       }
+
+       if(cvcount < f + 1){
+          return false;
+       }
+       
+       return true;
     }
 
     Hashtable<String, PBFTChangeView>     cvtable = new Hashtable<String, PBFTChangeView>();
@@ -2336,14 +2419,15 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
       if(nv != null && nv.getReplicaID() != null){
          int viewn = getCurrentViewNumber();
-         IProcess p = getLocalGroup().getMember(viewn);
+         int index = viewn % getLocalGroup().getGroupSize();
+         IProcess p = getLocalGroup().getMember(index);
 
          Object rSrvID = nv.getReplicaID();
          
          if(p.getID().equals(rSrvID)){
             JDSUtility.debug("[PBFTServer:handle(newview)] s" + getLocalServerID() + ", at time " + getClockValue() + ", is going to install " + nv);
             getViewTimer().cancel();
-            setCurrentPrimaryID(rSrvID);
+            //setCurrentPrimaryID(rSrvID);
 
             Hashtable<String, PBFTChangeView> cvt = nv.getChangeViewTable();
 
@@ -2370,6 +2454,14 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                   handle(pp);
                }
             }
+
+            setNextViewNumber(getCurrentViewNumber() + 1);
+            preprepareSet.clear();
+            prepareset.clear();
+            //emitStatusActive(getLocalGroup());
+            
+
+            uncertanty = false;            
          }
        }
        
@@ -2434,7 +2526,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     }
 
     /* current view number */
-    protected int currentViewNumber = 0;
+    protected Integer currentViewNumber = 0;
 
     public Integer getCurrentViewNumber() {
         return currentViewNumber;
@@ -2448,12 +2540,24 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     protected Object currentPrimaryID = null;
 
     public Object getCurrentPrimaryID(){
-        return currentPrimaryID;
+
+       int curViewNumber = 0;
+
+       if(getCurrentViewNumber() != null){
+          curViewNumber = getCurrentViewNumber();
+       }
+       int index = curViewNumber % getLocalGroup().getGroupSize();
+       IProcess p = getLocalGroup().getMember(index);
+       if(p !=null){
+          return p.getID();
+       }
+
+       return null;
     }
 
-    public  void setCurrentPrimaryID(Object newServerID){
-        currentPrimaryID = newServerID;
-    }
+//    public  void setCurrentPrimaryID(Object newServerID){
+//        currentPrimaryID = newServerID;
+//    }
     /* current sequence number (review it late) */
     protected static long SEQ = -1;
 
@@ -2516,12 +2620,15 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     }
     public boolean isPrimary(){return isPrimary(getLocalProcess());}
 
-    public boolean isPrimary(IProcess p){return isPrimary(p.getID());}
+    public boolean isPrimary(IProcess p){return isPrimary((Object)p.getID());}
 
-    public boolean isPrimary(Object serverID){return getCurrentPrimaryID().equals(serverID);}
+    public boolean isPrimary(Object serverID){
+       return getCurrentPrimaryID() != null && getCurrentPrimaryID().equals(serverID);
+    }
 
     public boolean isPrimary(int view){
-       IProcess p = getLocalGroup().getMember(view);
+       int index = view % getLocalGroup().getGroupSize();
+       IProcess p = getLocalGroup().getMember(index);
        return isLocalServer(p);
     }
 
@@ -2669,7 +2776,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
     public static IPBFTServer create(){
             PBFTServer pbft = new PBFTServer();
-            return (IPBFTServer)EventHandler.newInstance(pbft, pbft.beforeEventtable, pbft.afterEventtable);
+            return pbft;//(IPBFTServer)EventHandler.newInstance(pbft, pbft.beforeEventtable, pbft.afterEventtable);
     }
 
     private PBFTServer(){}
@@ -2682,5 +2789,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
     public long getCurrentCommitSEQ() { return getStateLog().getNextCommitSEQ() - 1;}
 
+    public int getNextViewNumber(){ return getStateLog().getNextViewNumber();}
+    public void setNextViewNumber(int view){ getStateLog().setNextViewNumber(view);}
 
 }

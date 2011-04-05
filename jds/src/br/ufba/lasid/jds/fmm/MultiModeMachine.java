@@ -15,6 +15,7 @@ public class MultiModeMachine {
 
     protected Modetable modetable = new Modetable();
     protected int currentMODE = -1;
+    protected TransitionList transitions = new TransitionList();
 
     public void register(int imode, Mode mode){
         modetable.put(imode, mode);
@@ -24,7 +25,25 @@ public class MultiModeMachine {
         modetable.remove(imode);
     }
 
-    public void switchTo(int imode){
+    public void addTransition(int from, int to){
+       if(!transitions.contains(from, to)){
+          transitions.add(new Transition(this, from, to));
+          Mode mto = getMode(to);
+          Mode mfrom = getMode(from);
+          JDSUtility.debug("[MultiModeMachine:swap(mode)] it has add a new transision (" + (mfrom  == null ? "NULL" : mfrom) + " ==> " + (mto == null ? "NULL" : mto) + ")");
+       }
+    }
+
+    public void swap(){
+       for(Transition t : transitions){
+          if(t.able()){
+             t.swap();
+             break;
+          }
+       }
+    }
+
+    public void swap(int imode){
        Mode from = null;
        Mode to   = null;
         Mode mode = modetable.get(currentMODE);
@@ -41,11 +60,11 @@ public class MultiModeMachine {
             to = mode;
         }
 
-        JDSUtility.debug(
-          "[MultiModeMachine:switchTo(mode)] it has switched " +
-          "from " + (from  == null ? "NULL" : from) + " " +
-          "state to " + (to == null ? "NULL" : to) + " state."
-        );
+        JDSUtility.debug("[MultiModeMachine:swap(mode)] it has switched from " + (from  == null ? "NULL" : from) + " state to " + (to == null ? "NULL" : to) + " state.");
+    }
+
+    public Mode getMode(int i){
+       return modetable.get(i);
     }
 
 }
