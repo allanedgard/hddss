@@ -5,6 +5,8 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
+import br.ufba.lasid.jds.util.DigestList;
+
 /**
  *
  * @author aliriosa
@@ -37,6 +39,8 @@ public class PBFTStatusActive extends PBFTServerMessage{
      * client request.
      */
     protected Long lastExecutedSEQ;
+
+    protected DigestList missedRequests = new DigestList();
 
     public Long getLastStableCheckpointSEQ() {
         return lastStableCheckpointSEQ;
@@ -77,8 +81,23 @@ public class PBFTStatusActive extends PBFTServerMessage{
         this.lastPrePreparedSEQ = lastPrePreparedSEQ;
     }
 
+   public DigestList getMissedRequests() {
+      return missedRequests;
+   }
 
-    public PBFTStatusActive(Object replicaID, Integer viewNumber, Long prepreparedSEQ, Long preparedSEQ, Long committedSEQ, Long executedSEQ, Long checkpointSEQ){
+   private String missedRequestsToString(){
+      String str = "";
+      String more = "";
+
+      for(String digest : getMissedRequests()){
+         str += more + digest;
+         more = ",";
+      }
+      return str;
+   }
+
+
+    public PBFTStatusActive(Long bseqn, Object replicaID, Integer viewNumber, Long prepreparedSEQ, Long preparedSEQ, Long committedSEQ, Long executedSEQ, Long checkpointSEQ){
         setViewNumber(viewNumber);
         setLastPrePreparedSEQ(prepreparedSEQ);
         setLastPreparedSEQ(preparedSEQ);
@@ -86,19 +105,22 @@ public class PBFTStatusActive extends PBFTServerMessage{
         setLastExecutedSEQ(executedSEQ);
         setLastStableCheckpointSEQ(checkpointSEQ);
         setReplicaID(replicaID);
+        setSequenceNumber(bseqn);
     }
     
     @Override
     public String toString() {
         return (
                 "<STATUS-ACTIVE" + ", " +
+                 "BSEQN = " + getSequenceNumber() + ", " + 
                  "VIEW = " + getViewNumber().toString()     + ", " +
                  "STABLECHECKPOINTSEQ = " + getLastStableCheckpointSEQ().toString()  + ", " +
                  "PREPREPAREDSEQ = " + getLastPrePreparedSEQ().toString()  + ", " +
                  "PREPAREDSEQ = " + getLastPreparedSEQ().toString()  + ", " +
                  "COMMITEDSEQ = " + getLastCommittedSEQ().toString()  + ", " +
                  "EXECUTEDSEQ = " + getLastExecutedSEQ().toString()  + ", " +
-                 "SERVER = " + getReplicaID().toString()    + 
+                 "MISSED-REQUESTS = {" + missedRequestsToString() + "}, " +
+                 "SERVER = " + getReplicaID().toString() +
                  ">"
         );
     }

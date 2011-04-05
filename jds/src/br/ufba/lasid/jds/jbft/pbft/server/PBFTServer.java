@@ -53,6 +53,7 @@ import br.ufba.lasid.jds.decision.voting.VoteList;
 import br.ufba.lasid.jds.group.decision.Vote;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequestInfo;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusPending;
 import br.ufba.lasid.jds.jbft.pbft.server.decision.BagSubject;
 import br.ufba.lasid.jds.jbft.pbft.server.decision.ChangeViewACKSubject;
 import br.ufba.lasid.jds.jbft.pbft.server.decision.CheckpointSubject;
@@ -70,7 +71,6 @@ import br.ufba.lasid.jds.util.ISchedule;
 import br.ufba.lasid.jds.util.XMath;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.Properties;
@@ -216,12 +216,16 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             
             JDSUtility.debug("[PBFTServer:handle(request)] s" + lServerID + ", at time " + getClockValue() + ", accepted " + r + " as a new request.");
 
-            String digest = getAuthenticator().getDigest(r);
+            String digest = getRequestDigest(r);
 
             /* it's a new request, so it'll be accepted and put it in backlog state. */
             getRequestInfo().add(digest, r, StatedPBFTRequestMessage.RequestState.WAITING);
 
             JDSUtility.debug("[PBFTServer:handle(request)] s" + lServerID + " inserted " + r + " in waiting state.");
+
+            if(changing() || overloaded()){
+               return;
+            }
 
             /* performs the batch procedure if the server is the primary replica. */
             if(isPrimary()){
@@ -237,6 +241,10 @@ public class PBFTServer extends PBFT implements IPBFTServer{
          }//end try/catch         
       }//end if can proceed (request)
     }//end handle(request)
+
+    protected String getRequestDigest(PBFTRequest r) throws Exception{
+         return getAuthenticator().getDigest(r);
+    }
 
     /**
      * Checks if the client request r is new it returns true, otherwise: (a) If r is old, belongs to log and was served 
@@ -387,7 +395,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     * @param timeout - the view change timeout.
     */
    public void scheduleViewChange(){
-      if(!isPrimary()){
+      PBFTRequestInfo rinfo = getRequestInfo();
+      if(!isPrimary() && rinfo.hasSomeWaiting()){
          long now = getClockValue();
 
          if(!getViewTimer().workingAt(now)){
@@ -433,8 +442,11 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                emit(p, getLocalGroup().minus(getLocalProcess()));
                getDecision(p);
             }
-         }
+         }         
       }
+
+      scheduleViewChange();
+
    }
 
     public boolean isValid(PBFTPrePrepare pp){
@@ -459,6 +471,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             
             return false;
         }
+        
         return true;
     }
 
@@ -483,8 +496,9 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                if(!rinfo.isWaiting(digest)){
                   JDSUtility.debug(
                   "[PBFTServer:updateStatus(preprepare)] s" +lSrvID + ",  at time " + getClockValue() + ", couldn't update " +
-                  "pre-prepare " + pp + " because it has a digest (" + digest + ") that hasn't been in waiting state anymore."
+                  "pre-prepare " + pp + " because it has a digest (" + digest + ") that hasn't been in waiting state anymore or has missed."
                   );
+
                   return null;
                }
             }//end for each request in pre-prepare
@@ -609,12 +623,40 @@ public class PBFTServer extends PBFT implements IPBFTServer{
               "[PBFTServer:isValid(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because " +
               "it hasn't received a related pre-prepare."
             );
+            checkMissedRequests(p);
             return false;
         }
 
         return true;
     }
 
+   protected void checkMissedRequests(PBFTPrepare p){
+      String qkey = p.getSequenceNumber().toString();
+
+      Quorum q = getStateLog().getQuorum(REQUESTQUORUMSTORE, qkey);
+
+      if(q == null){
+         int f = getServiceBFTResilience();
+         q = new SoftQuorum(2 * f);
+      }
+
+      q.add(new Vote(p.getReplicaID(), new PrepareSubject(p)));
+
+      PrepareSubject ps = (PrepareSubject)q.decide();
+
+      if(ps != null){
+         PBFTPrepare cp = ps.getPrepare();
+         DigestList digests = cp.getDigests();
+         PBFTRequestInfo rinfo = getRequestInfo();
+         for(String digest : digests){
+            if(rinfo.getRequest(digest) == null){
+               if(!getMissedRequests().contains(digest)){
+                  getMissedRequests().add(digest);
+               }
+            }
+         }
+      }
+   }
     public PBFTCommit createCommitMessage(int viewn, long seqn){
        return new PBFTCommit(viewn, seqn, getLocalServerID());
     }
@@ -1404,10 +1446,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
     public void handle(PBFTBag bag){
 
-        JDSUtility.debug(
-           "[PBFTServer:handle(bag)] s" + getLocalServerID() + ", " +
-           "at time " + getClockValue() + ", received " + bag
-        );
+        JDSUtility.debug("[PBFTServer:handle(bag)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + bag);
+
         if(isValid(bag)){
             BagSubject bd = getDecision(bag);
             if(bd != null){
@@ -1419,10 +1459,12 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 MessageCollection prepareList = new MessageCollection();
                 MessageCollection commitList = new MessageCollection();
                 MessageCollection checkpointList = new MessageCollection();
+                MessageCollection requestList = new MessageCollection();
                 for(IVote v : q.getVotes()){
                   BagSubject bs = (BagSubject) v.getSubject();
                   MessageCollection messages  = (MessageCollection)bs.getInfo(BagSubject.MESSAGES);
                  for(IMessage m : messages){
+                     if(m instanceof PBFTRequest) requestList.add(m);
                      if(m instanceof PBFTPrePrepare) preprepareList.add(m);
 
                      if(m instanceof PBFTPrepare)  prepareList.add(m);
@@ -1441,6 +1483,19 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 Collections.sort(prepareList, comparator);
                 Collections.sort(commitList, comparator);
                 Collections.sort(checkpointList, comparator);
+                PBFTRequestInfo rinfo = getRequestInfo();
+                for(IMessage m : requestList){
+                   try{
+                     PBFTRequest r = (PBFTRequest) m;
+                     String digest = getRequestDigest(r);
+                     if(rinfo.getRequest(digest) == null){
+                        rinfo.add(digest, r, StatedPBFTRequestMessage.RequestState.WAITING);
+                        getMissedRequests().remove(digest);
+                     }
+                   }catch(Exception e){
+                      
+                   }
+                }
 
                 for(IMessage m : preprepareList){
                     PBFTPrePrepare m1 = (PBFTPrePrepare)m;
@@ -1467,7 +1522,14 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                     long lastSEQ = getStateLog().getCheckpointLowWaterMark();
                     long currSEQ = m1.getSequenceNumber();
                     if(currSEQ > lastSEQ) handle(m1);
-                }                
+                }
+
+                PBFTTimeoutDetector ttask = (PBFTTimeoutDetector)getStatusTimer().getTask();
+                Long bseqn = (Long)ttask.get("BSEQN");
+                if(bseqn != null && bseqn < bag.getSequenceNumber()){
+                   bseqn = bag.getSequenceNumber();
+                   ttask.put("BSEQN", bseqn);
+                }
             }
         }
     }
@@ -1570,7 +1632,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             
             PBFTBag bag = new PBFTBag(getLocalServerID());
 
-            bag.setSequenceNumber(rexcSEQ);
+            bag.setSequenceNumber(sa.getSequenceNumber());
             
             if(llcwSEQ <= rpprSEQ ){
                 for(long i = minSEQ; i < maxSEQ; i++){
@@ -1628,11 +1690,23 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                     ex.printStackTrace();
                 }
             }//end while currSEQ < _lwSEQ, if currSEQ_0 = lwSEQ
+
+            DigestList mr = sa.getMissedRequests();
             
+            if(mr != null && !mr.isEmpty()){
+               PBFTRequestInfo rinfo = getRequestInfo();
+               for(String digest : mr){
+                  PBFTRequest rq = rinfo.getRequest(digest);
+                  if(rq != null){
+                     bag.addMessage(rq);
+                  }
+               }
+            }
+
             if(!bag.isEmpty()){
                 emit(bag, new BaseProcess(sa.getReplicaID()));
             }            
-        }
+        }//end is valid status-active
     }
 
     public boolean isValid(PBFTStatusActive sa){
@@ -1679,10 +1753,18 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     protected ISchedule getStatusTimer(){
         if(stimer == null){
             PBFTTimeoutDetector ttask = new PBFTTimeoutDetector() {
+                    static final String BSEQN = "BSEQN";
                     @Override
                     public void onTimeout() {
-                        emitStatusActive(getLocalGroup().minus(getLocalProcess()));
+                        Long bseqn = (Long)get(BSEQN);
+                        if(bseqn == null){
+                           bseqn = -1L;
+                        }
+                        bseqn = bseqn + 1L;
+                        emitStatus(getLocalGroup().minus(getLocalProcess()), bseqn);
                         schedulePeriodicStatusSend();
+
+                        put(BSEQN, bseqn);
 
                     }
             };
@@ -1694,8 +1776,14 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         return stimer;
     }
 
-    public void emitStatusActive(IGroup g){
-       emit(createStatusActiveMessage(), g);       
+    public void emitStatus(IGroup g, long bseqn){
+       if(!changing()){
+         emit(createStatusActiveMessage(bseqn), g);
+         return;
+       }
+
+       emit(createStatusPendingMessage(bseqn), g);
+       
     }
    public void schedulePeriodicStatusSend() {
         long now = getClockValue();
@@ -1705,17 +1793,84 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         
    }
 
-    public PBFTStatusActive createStatusActiveMessage(){
+    public PBFTStatusActive createStatusActiveMessage(long bseqn){
 
         long ppSEQ = getStateLog().getNextPrePrepareSEQ() - 1L;
         long prSEQ = getStateLog().getNextPrepareSEQ() - 1L;
         long cmSEQ = getStateLog().getNextCommitSEQ()  - 1L;
         long exSEQ = getStateLog().getNextExecuteSEQ() - 1L;
         long lcwm = getCheckpointLowWaterMark();
-
-        return new PBFTStatusActive(getLocalServerID(), getCurrentViewNumber(), ppSEQ, prSEQ, cmSEQ, exSEQ, lcwm);
+        PBFTStatusActive sa = new PBFTStatusActive(bseqn, getLocalServerID(), getCurrentViewNumber(), ppSEQ, prSEQ, cmSEQ, exSEQ, lcwm);
+        sa.getMissedRequests().addAll(getMissedRequests());
+        return sa;
 
     }
+
+    public PBFTStatusPending createStatusPendingMessage(long bseqn){
+       int viewn = getCurrentViewNumber();
+       PBFTNewView nv = getStateLog().getNewViewTable().get(viewn);
+       PBFTStatusPending sp =
+            new PBFTStatusPending(
+                  bseqn, viewn, getCurrentExecuteSEQ(), getCheckpointLowWaterMark(), getLocalServerID(), nv != null
+            );
+
+       sp.getMissedRequests().addAll(getMissedRequests());       
+
+       return sp;
+       
+    }
+
+   public void handle(PBFTStatusPending sp) {
+      JDSUtility.debug("[PBFTSever:handle(statusPending)] s" + getLocalServerID() + ",  at time " + getClockValue() + ", received " + sp);
+      
+      if(isValid(sp)){
+            
+            PBFTBag bag = new PBFTBag(getLocalServerID());
+
+            bag.setSequenceNumber(sp.getSequenceNumber());
+
+
+            long llcwm = getCheckpointLowWaterMark();
+            long rlcwm = sp.getLastStableCheckpointSequenceNumber();
+
+            if(rlcwm < llcwm){
+                try {
+                    CheckpointLogEntry clogEntry = rStateManager.getBiggestLogEntry();
+                    if(clogEntry != null){
+                        long seqn = clogEntry.getCheckpointID();
+                        String digest = clogEntry.getDigest();
+                        PBFTCheckpoint checkpoint = new PBFTCheckpoint(seqn, digest, getLocalServerID());
+                        bag.addMessage(checkpoint);
+                    }
+
+                } catch (Exception ex) {
+                    Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
+                    ex.printStackTrace();
+                }
+            }//end while currSEQ < _lwSEQ, if currSEQ_0 = lwSEQ
+
+            DigestList mr = sp.getMissedRequests();
+
+            if(mr != null && !mr.isEmpty()){
+               PBFTRequestInfo rinfo = getRequestInfo();
+               for(String digest : mr){
+                  PBFTRequest rq = rinfo.getRequest(digest);
+                  if(rq != null){
+                     bag.addMessage(rq);
+                  }
+               }
+            }
+
+            if(!bag.isEmpty()){
+                emit(bag, new BaseProcess(sp.getReplicaID()));
+            }
+        }//end is valid status-active
+   }
+
+   public boolean isValid(PBFTStatusPending sp){
+      return sp != null;
+   }
+
 
    /*########################################################################
      # 9. Execute sequence number.
@@ -1739,7 +1894,9 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
                 PBFTPrePrepare preprepare = getStateLog().getPrePrepare(currSEQ);
                 PBFTRequestInfo rinfo = getRequestInfo();
-
+                if(rinfo.hasSomeMissed(currSEQ)){
+                   return;
+                }
                 for(String digest : preprepare.getDigests()){
 
                     PBFTRequest request = rinfo.getRequest(digest); //statedReq.getRequest();
@@ -2058,6 +2215,11 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         /* add the prepare set to current change-view message*/
         cv.getPrepareSet().clear();
         cv.getPrepareSet().addAll(prepareset);
+        
+        long seqn = getCurrentExecuteSEQ() + 1;
+        getStateLog().setNextPrePrepareSEQ(seqn);
+        getStateLog().setNextPrepareSEQ(seqn);
+        getStateLog().setNextCommitSEQ(seqn);
 
         /*emit the change view message to group of replicas */
         emit(cv, getLocalGroup().minus(getLocalProcess()));
@@ -2245,7 +2407,9 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                     if(canProceed(nvc)){
                        PBFTNewView nv = nvc.buildNewView();
                        emit(nv, getLocalGroup().minus(getLocalProcess()));
+                       checkRequest(nv);
                        installNewView(nv);
+                       adjustView(nv);
                        emitBatch();
                        nvc.clear();
                        cvtable.clear();
@@ -2314,18 +2478,46 @@ public class PBFTServer extends PBFT implements IPBFTServer{
        return cvtable.containsKey(cva.getDigest()) && newViewNumber >= nxtViewNumber && curViewNumber == newViewNumber;
     }
 
+    public void checkRequest(PBFTNewView nv){
+     /*check for missing requests */
+      MessageCollection preprepareSet = nv.getPreprepareSet();
+      PBFTRequestInfo rinfo = getRequestInfo();
+
+      getMissedRequests().clear();
+
+      for(IMessage m : preprepareSet){
+         PBFTPrePrepare pp = (PBFTPrePrepare) m;
+         //long seqn = pp.getSequenceNumber();
+         DigestList digests = pp.getDigests();
+
+         if(!digests.isEmpty()){
+            for(String digest : digests){
+               if(rinfo.getRequest(digest) == null){
+                  getMissedRequests().add(digest);
+                  break;
+               }
+            }
+         }
+      }       
+    }
+
+    public void adjustView(PBFTNewView nv){
+      int nviewn = nv.getViewNumber();
+
+      for(int i = 0; i < nviewn;  i++){
+         getStateLog().getNewViewTable().remove(i);
+      }
+
+      getStateLog().getNewViewTable().put(nviewn, nv);
+//         }
+       
+    }
     public void handle(PBFTNewView nv) {
         JDSUtility.debug("[PBFTServer:handle(newview)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + nv);
         if(isValid(nv)){
+            checkRequest(nv);
             installNewView(nv);
-            int nviewn = nv.getViewNumber();
-
-            for(int i = 0; i < nviewn;  i++){
-               getStateLog().getNewViewTable().remove(i);
-            }
-
-            getStateLog().getNewViewTable().put(nviewn, nv);
-
+            adjustView(nv);
         }
     }
 
@@ -2458,7 +2650,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             setNextViewNumber(getCurrentViewNumber() + 1);
             preprepareSet.clear();
             prepareset.clear();
-            //emitStatusActive(getLocalGroup());
+            //emitStatus(getLocalGroup());
             
 
             uncertanty = false;            
@@ -2597,6 +2789,12 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
     public PBFTRequestInfo getRequestInfo(){
        return ri;
+    }
+
+    protected DigestList missedRequests = new DigestList();
+    
+    public DigestList getMissedRequests(){
+       return missedRequests;
     }
 
     Hashtable<String, MessageQueue> queuetable = new Hashtable<String, MessageQueue>();

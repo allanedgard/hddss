@@ -21,6 +21,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTProcessingToken;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusPending;
 
 /**
  *
@@ -80,6 +81,16 @@ public class PBFTStarting extends PBFTServerMode{
 
         swap();
     }
+
+   public void handle(PBFTStatusPending sp) {
+        if(able()){
+            MessageQueue queue = getQueue(PBFTServerMessage.class.getName());
+            if(queue != null) queue.enqueue(sp);
+            return;
+        }
+
+        swap();
+   }
 
     public void handle(PBFTFetch ft) {
         if(able()){
@@ -178,4 +189,5 @@ public class PBFTStarting extends PBFTServerMode{
             return "STARTING   ";
         }
     }
+
 }

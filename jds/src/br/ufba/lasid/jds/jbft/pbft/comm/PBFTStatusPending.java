@@ -5,11 +5,8 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
-import br.ufba.lasid.jds.comm.IMessage;
-import br.ufba.lasid.jds.comm.MessageCollection;
-import br.ufba.lasid.jds.jbft.pbft.server.decision.auction.PrePrepareProposal;
+import br.ufba.lasid.jds.util.DigestList;
 import java.util.ArrayList;
-import java.util.BitSet;
 
 /**
  *
@@ -22,14 +19,15 @@ public class PBFTStatusPending extends PBFTServerMessage{
    protected boolean newView;
    protected long lastExecutedSequenceNumber;
    protected long lastStableCheckpointSequenceNumber;
-   protected MessageCollection missedPrepares = new MessageCollection();
+   protected DigestList missedRequests = new DigestList();
    
-   public PBFTStatusPending(int viewn, long lastExecuted, long lastStableCheckpointSEQ, Object replicaID, boolean hasNewView) {
+   public PBFTStatusPending(long bseqn, int viewn, long lastExecuted, long lastStableCheckpointSEQ, Object replicaID, boolean hasNewView) {
       setViewNumber(viewn);
       setReplicaID(replicaID);
       setLastExecutedSequenceNumber(lastExecuted);
       setLastStableCheckpointSequenceNumber(lastStableCheckpointSEQ);
       setNewView(hasNewView);
+      setSequenceNumber(bseqn);
    }
 
 
@@ -45,8 +43,8 @@ public class PBFTStatusPending extends PBFTServerMessage{
       return changeViewReplicas;
    }
 
-   public MessageCollection getMissedPrepares() {
-      return missedPrepares;
+   public DigestList getMissedRequests() {
+      return missedRequests;
    }
 
    public long getLastExecutedSequenceNumber() {
@@ -75,13 +73,12 @@ public class PBFTStatusPending extends PBFTServerMessage{
 
       return str;
    }
-   private String missedPreparesToString(){
+   private String missedRequestsToString(){
       String str = "";
       String more = "";
 
-      for(IMessage m : missedPrepares){
-         PBFTPrePrepare pp = (PBFTPrePrepare) m;
-         str += more + "< SEQN = " + pp.getSequenceNumber() + ", VIEW = " + pp.getViewNumber() + ">";
+      for(String digest : missedRequests){
+         str += more + digest;
          more = "; ";
       }
       return str;
@@ -90,12 +87,13 @@ public class PBFTStatusPending extends PBFTServerMessage{
    public final String toString() {
       Object rid = getReplicaID();
       return "<STATUS-PENDING," +
+                  "BSEQN = " + getSequenceNumber() + ", " +
                   "VIEW = " + getViewNumber() + ", " +
                   "LCWM = " + getLastStableCheckpointSequenceNumber() + ", " +
                   "LAST-EXECUTED = " + getLastExecutedSequenceNumber() + ", " +
                   "HAS-NEWVIEW = " + hasNewView() + ", " +
                   "REPLICAID = " + (rid == null ? "NULL" : rid) + ", " +
-                  "MISSED-PREPARES = {" + missedPreparesToString() + "}, " +
+                  "MISSED-PREPARES = {" + missedRequestsToString() + "}, " +
                   "VIEW-CHANGE-REPLICAS = {"  + replicasToString() + "}" +
              ">";
    }

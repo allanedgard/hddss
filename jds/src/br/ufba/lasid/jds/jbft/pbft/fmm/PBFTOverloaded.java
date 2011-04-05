@@ -21,6 +21,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTProcessingToken;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusPending;
 
 /**
  *
@@ -56,6 +57,10 @@ public class PBFTOverloaded extends PBFTServerMode{
     public void handle(PBFTStatusActive sta) {
         getMachine().getProtocol().handle(sta);
     }
+
+   public void handle(PBFTStatusPending sp) {
+      getMachine().getProtocol().handle(sp);
+   }
 
     public void handle(PBFTFetch ft) {
         getMachine().getProtocol().handle(ft);

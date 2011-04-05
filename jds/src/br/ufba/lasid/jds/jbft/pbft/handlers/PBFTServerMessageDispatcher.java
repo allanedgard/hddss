@@ -10,7 +10,6 @@ import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
-import br.ufba.lasid.jds.jbft.pbft.server.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBag;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeViewACK;
@@ -24,6 +23,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusPending;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -98,6 +98,10 @@ public class PBFTServerMessageDispatcher extends PBFTServerMessageHandler {
 
         if(m instanceof PBFTStatusActive){
            handler = new PBFTStatusActiveHandler(getProtocol());
+        }
+
+        if(m instanceof PBFTStatusPending){
+           handler = new PBFTStatusPendingHandler(getProtocol());
         }
 
         if(m instanceof PBFTBag){

@@ -23,6 +23,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTProcessingToken;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusPending;
 import java.lang.reflect.Method;
 
 /**
@@ -83,6 +84,7 @@ public interface IPBFTServer extends IPBFT{
     public void handle(PBFTNewView        nwv);
     public void handle(PBFTBag            bg );
     public void handle(PBFTProcessingToken tk);
+    public void handle(PBFTStatusPending   sp);
 
   /*##############################################################
    * 4. Utility Methods.

@@ -32,6 +32,7 @@ public class PBFT extends DistributedProtocol implements IPBFT{
     public static String       NEWVIEWQUORUMSTORE = "__NEWVIEWQUORUMSTORE";
     public static String      METADATAQUORUMSTORE = "__METADATAQUORUMSTORE";
     public static String           BAGQUORUMSTORE = "__BAGQUORUMSTORE";
+    public static String       REQUESTQUORUMSTORE = "__REQUESTQUORUMSTORE";
 
 
     protected  PBFTStateLog stateLog = new PBFTStateLog();
