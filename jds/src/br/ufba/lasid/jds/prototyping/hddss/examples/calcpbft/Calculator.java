@@ -5,11 +5,13 @@
 
 package br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft;
 
+import java.io.Serializable;
+
 /**
  *
  * @author aliriosa
  */
-public class Calculator {
+public class Calculator implements Serializable{
     public static String OPCODE = "opcode";
     public static String OP1 = "op1";
     public static String OP2 = "op2";

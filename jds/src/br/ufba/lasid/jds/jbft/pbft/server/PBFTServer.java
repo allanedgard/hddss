@@ -223,7 +223,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
             JDSUtility.debug("[PBFTServer:handle(request)] s" + lServerID + " inserted " + r + " in waiting state.");
 
-            if(changing() || overloaded()){
+            if(changing()){
                return;
             }
 
@@ -295,7 +295,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
    }//end batch(digest)
 
     protected boolean hasACompleteBatch(){
-       return getBatchSize() < getRequestInfo().getSizeInBytes();
+       //we must decide if we are going to use the number or size of requests in queue.
+       return getBatchSize() < getRequestInfo().getQueueSize();//getRequestInfo().getSizeInBytes();
     }//is a complete batch
 
    protected void emitBatch(){
@@ -317,7 +318,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
          while(size < getBatchSize() && !rinfo.digestQueueIsEmpty()){
             String digest = rinfo.getDigestFromQueue();
             pp.getDigests().add(digest);
-            size += rinfo.getRequestSize(digest);
+            size += 1;//rinfo.getRequestSize(digest);
          }
 
          /* emits pre-prepare */
@@ -657,9 +658,11 @@ public class PBFTServer extends PBFT implements IPBFTServer{
          }
       }
    }
+   
     public PBFTCommit createCommitMessage(int viewn, long seqn){
        return new PBFTCommit(viewn, seqn, getLocalServerID());
     }
+    
     public PBFTCommit createCommitMessage(PBFTPrepare p){
         PBFTCommit c = new PBFTCommit(p, getLocalServerID());
         return c;

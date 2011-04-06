@@ -58,18 +58,18 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
             int source = agent.ID;
             int now   = (int)agent.infra.clock.value();
             
-            for(Object p : g.getMembers()){
-                int dest = (Integer) ((IProcess)p).getID();
+            //for(Object p : g.getMembers()){
+                int dest = (Integer) g.getID();
                 int destin = dest;
                 int type  = getMSGTYPE(m);
 
                 agent.send(
                  new br.ufba.lasid.jds.prototyping.hddss.Message(
-                    source, destin, type, 0, now, m
+                    source, destin, type, 0, now, m, true
                  )
                 );
                 
-            }
+            //}
             
             agent.lock.notify();
 

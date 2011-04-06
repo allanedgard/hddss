@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  */
 public class SignedMessage implements IMessage{
 
-    protected PublicKey key;
+    protected transient PublicKey key;
     protected SignedObject signedObject;
 
     public SignedMessage(){

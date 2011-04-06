@@ -9,16 +9,17 @@ import br.ufba.lasid.jds.prototyping.hddss.Randomize;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.SimulatedPBFTClientAgent;
 import br.ufba.lasid.jds.util.IPayload;
 import br.ufba.lasid.jds.jbft.pbft.client.PBFTClient;
+import br.ufba.lasid.jds.util.JDSUtility;
 
 /**
  *
  * @author aliriosa
  */
 public class CalcPBFTClient extends SimulatedPBFTClientAgent{
-    private double rgp = 0.0;
-    private Randomize r = new Randomize();
-    private  boolean cansend = false;
-    private ClientCaller caller = null;
+    private transient double rgp = 0.0;
+    private transient Randomize r = new Randomize();
+    private transient boolean cansend = false;
+    private transient ClientCaller caller = null;
 
 
     public void setRequestGenerationProbability(String prob){
@@ -54,10 +55,7 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
 
         CalculatorPayload calc = (CalculatorPayload) content;
 
-        System.out.println(
-            "client [p" + getAgentID()+"] has obtained result = " + calc +
-            "at time = " + getProtocol().getClock().value()
-        );
+        JDSUtility.debug("client [p" + getAgentID()+"] has obtained result = " + calc + "at time = " + getProtocol().getClock().value());
         
     }
 
@@ -102,10 +100,7 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
             CalculatorPayload calc =
                     (CalculatorPayload)((PBFTClient)getProtocol()).syncCall(operation);
 
-            System.out.println(
-                "client [p" + getAgentID()+"] has obtained result = " + calc +
-                " at time = " + getProtocol().getClock().value()
-            );
+            JDSUtility.debug("client [p" + getAgentID()+"] has obtained result = " + calc +" at time = " + getProtocol().getClock().value());
             
         
     }
