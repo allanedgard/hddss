@@ -12,34 +12,42 @@ import java.util.Hashtable;
  * @author aliriosa
  */
 public class PDU extends Hashtable<String, Object> implements IMessage{
-    public static String SOURCE = "__PDU_SOURCE";
-    public static String DESTINATION = "__PDU_DESTINATION";
-    public static String PAYLOAD = "PDU_PAYLOAD";
-    public static String CONTROL = "PDU_CONTROL";
-
+    public static transient String SOURCE = "__PDU_SOURCE";
+    public static transient String DESTINATION = "__PDU_DESTINATION";
+    public static transient String PAYLOAD = "PDU_PAYLOAD";
+    public static transient String CONTROL = "PDU_CONTROL";
+    protected transient Object source;
+    protected transient Object destination;
+    protected Object payload;
     public void setSource(Object src){
-        put(SOURCE, src);
+       source = src;
+        //put(SOURCE, src);
     }
 
     public Object getSource(){
-        return get(SOURCE);
+       return source;
+        //return get(SOURCE);
     }
 
     public void setDestination(Object dest){
-        put(DESTINATION, dest);
+       destination = dest;
+        //put(DESTINATION, dest);
     }
 
 
     public Object getDestination(){
-        return get(DESTINATION);
+       return destination;
+        //return get(DESTINATION);
     }
 
     public void setPayload(Object payload){
-        put(PAYLOAD, payload);
+        //put(PAYLOAD, payload);
+       this.payload = payload;
     }
 
     public Object getPayload(){
-        return get(PAYLOAD);
+       return payload;
+        //return get(PAYLOAD);
     }
 
 }

@@ -369,6 +369,9 @@ public class PBFTRequestInfo {
       return hasSomeInState(seqn, StatedPBFTRequestMessage.RequestState.MISSED);
    }
 
+   public int getQueueSize(){
+      return dQueue.size();
+   }
    public int getSizeInBytes(){
       int size = 0;
 

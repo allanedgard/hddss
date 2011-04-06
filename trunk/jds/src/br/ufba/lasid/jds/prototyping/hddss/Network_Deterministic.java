@@ -12,7 +12,7 @@ package br.ufba.lasid.jds.prototyping.hddss;
 public class Network_Deterministic extends Network{
 
     @Override
-    double delay() {
+    double delay(Message m) {
         return processingTime;
     }
 

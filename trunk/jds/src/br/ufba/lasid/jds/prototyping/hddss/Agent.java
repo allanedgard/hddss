@@ -6,13 +6,13 @@ import br.ufba.lasid.jds.util.IScheduler;
 public class Agent extends Thread implements IAgent{
     public int ID;
     public char tipo;
-    public Context contexto;
+    public transient Context contexto;
     public boolean done;
     public long exectime = 0;
     protected boolean shutdown = false;
-    public static final String TAG = "agent";
-    public RuntimeContainer infra;
-    public final Object lock = this;
+    public static transient final String TAG = "agent";
+    public transient RuntimeContainer infra;
+    public transient final Object lock = this;
 
     public int getAgentID() {
         return ID;

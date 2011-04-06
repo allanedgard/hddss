@@ -11,7 +11,7 @@ package br.ufba.lasid.jds.prototyping.hddss;
 
 /**
  *
- * @author root
+ * @author allan
  */
 
 public class Message  implements Comparable<Message> {
@@ -27,6 +27,7 @@ public class Message  implements Comparable<Message> {
     int hops;
     Object content;
     boolean payload;
+    boolean multicast = false;
 
     public Object getContent() {
         return content;
@@ -42,6 +43,13 @@ public class Message  implements Comparable<Message> {
         destination = d;
         content =c ;
     }
+    public Message(int r, int d, Object c, boolean m){
+        sender = r;
+        destination = d;
+        content =c ;
+        multicast = m;
+    }
+
     /** Creates a new instance of Mensagem */
     public Message(int r, int d, int t, int rL, int rF, Object c) {
         sender = r;
@@ -54,6 +62,20 @@ public class Message  implements Comparable<Message> {
         relayFrom = -1;
         relayTo = -1;
         payload = false;
+    }
+
+    public Message(int r, int d, int t, int rL, int rF, Object c, boolean m) {
+        sender = r;
+        destination = d;
+        type = t;
+        hops =0;
+        logicalClock = rL;
+        physicalClock = rF;
+        content = c;
+        relayFrom = -1;
+        relayTo = -1;
+        payload = false;
+        multicast = m;
     }
     
     public String getId() {

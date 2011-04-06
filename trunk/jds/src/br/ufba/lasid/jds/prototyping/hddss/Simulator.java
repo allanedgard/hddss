@@ -91,7 +91,7 @@ public class Simulator  extends Thread implements RuntimeSupport
                     done = done && ((p[i].getInfra().clock.value() >= finalTime) || !p[i].status());
                 }
 
-                network.avancaTick();
+                network.incTick();
 
                 //scheduler.infra.increaseTick();
 
@@ -224,6 +224,10 @@ public class Simulator  extends Thread implements RuntimeSupport
             if (network.broadcasts[i] != 0) {
                 System.out.println("total de broadcast classe "+i+" = "+network.broadcasts[i]);
             }
+            if (network.multicasts[i] != 0) {
+                System.out.println("total de broadcast classe "+i+" = "+network.multicasts[i]);
+            }
+
         }
         System.out.println("media atraso fim-a-fim = "+deliveryDelay.getMean()+", std dev atraso fim-a-fim = "+deliveryDelay.getStandardDeviation()
                            +", maximo atraso fim-a-fim = "+deliveryDelay.getMax()+", min atraso fim-a-fim = "+deliveryDelay.getMin()
