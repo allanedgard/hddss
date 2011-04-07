@@ -19,7 +19,8 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
     private transient double rgp = 0.0;
     private transient Randomize r = new Randomize();
     private transient boolean cansend = false;
-    private transient ClientCaller caller = null;
+    private transient int send = 0;
+    private transient int recv = 0;
 
 
     public void setRequestGenerationProbability(String prob){
@@ -38,15 +39,9 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
     @Override
     public void execute() {
         super.execute();
-        if(hasRequest()){
-            if(caller == null){
-                caller = new ClientCaller();
-                caller.setName("Caller[" + this.ID +"]");
-                caller.start();
-            }
-            synchronized(caller.lock){
-                cansend = true;
-            }
+        if(hasRequest() && send == recv){
+           send++;
+           doCall();
         }            
     }
 
@@ -55,8 +50,8 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
 
         CalculatorPayload calc = (CalculatorPayload) content;
 
-        JDSUtility.debug("client [p" + getAgentID()+"] has obtained result = " + calc + "at time = " + getProtocol().getClock().value());
-        
+        JDSUtility.debug("client [p" + getAgentID()+"] has obtained result = " + calc + " at time " + getProtocol().getClockValue());
+         recv++;       
     }
 
     private CalculatorPayload newContent(){
@@ -94,34 +89,12 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
     /**
      * It adapts to the simulator.
      */
-    public void doCall(){
-            CalculatorPayload operation = newContent();
+    public   void doCall(){
+      CalculatorPayload operation = newContent();
 
-            CalculatorPayload calc =
-                    (CalculatorPayload)((PBFTClient)getProtocol()).syncCall(operation);
-
-            JDSUtility.debug("client [p" + getAgentID()+"] has obtained result = " + calc +" at time = " + getProtocol().getClock().value());
-            
-        
+      ((PBFTClient)getProtocol()).syncCall(operation);
     }
 
-    class ClientCaller extends Thread{
-        public final Object lock = this;
-
-        @Override
-        public void run() {
-            while(true){
-                if(cansend) doCall();
-                synchronized(lock){
-                    cansend = true;
-                    notify();
-                }
-            }
-            
-
-        }
-        
-    }
 
     @Override
     public void shutdown() {

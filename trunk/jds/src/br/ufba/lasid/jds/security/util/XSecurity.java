@@ -85,29 +85,30 @@ public class XSecurity {
      * @return the message digest.
      * @throws NoSuchAlgorithmException
      */
-    public static byte[] getDigest(String algname, byte[] ibytes) 
+    public static synchronized byte[] getDigest(String algname, byte[] ibytes)
             throws NoSuchAlgorithmException
     {
         MessageDigest md =
                 MessageDigest.getInstance(algname);
 
+        //md.reset();
         md.update(ibytes);
 
         return md.digest();
     }
     
     /**
-     * Gerenates a message digest from a specified array of bytes, using DIGEST_MD5
+     * Gerenates a message digest from a specified array of bytes, using DIGEST_SHA1
      * algorithm.
      * @param ibytes -- the specified array of bytes
      * @return the message digest.
      * @throws NoSuchAlgorithmException
      */
-    public static byte[] getDigest(byte[] ibytes)
+    public static synchronized byte[] getDigest(byte[] ibytes)
             throws NoSuchAlgorithmException
     {
 
-        return getDigest(DIGEST_MD5, ibytes);
+        return getDigest(DIGEST_SHA1, ibytes);
         
     }
     
@@ -119,14 +120,21 @@ public class XSecurity {
      * @return the message digest in hex format.
      * @throws NoSuchAlgorithmException
      */
-    public static String getDigest(String algname, Object obj)
+    public static synchronized String getDigest(String algname, Object obj)
             throws NoSuchAlgorithmException, ClassNotFoundException, IOException
     {       
 
         byte[] ibytes = XObject.objectToByteArray(obj);
         byte[] obytes = getDigest(algname, ibytes);
 
-        return XObject.byteArrayToHexString(obytes);
+        String digest = XObject.byteArrayToHexString(obytes);
+//        String sbytes = ""; String more = "";
+//        for(int i = 0; i < obytes.length; i++){
+//           sbytes += more + obytes[i];
+//           more = ",";
+//        }
+//        System.out.println("digest = " + digest + " => obytes = [" + sbytes + "]");
+        return digest;
         
     }
 
@@ -137,13 +145,13 @@ public class XSecurity {
      * @return the message digest in hex format.
      * @throws NoSuchAlgorithmException
      */
-    public static String getDigest(Object obj)
+    public static synchronized String getDigest(Object obj)
             throws NoSuchAlgorithmException, ClassNotFoundException, IOException
     {
         return getDigest(DIGEST_MD5, obj);
     }
 
-    public static boolean check(SignedObject signedObj, PublicKey key, String algorithm){
+    public static synchronized boolean check(SignedObject signedObj, PublicKey key, String algorithm){
         try {
 
             return signedObj.verify(key, getSignature(algorithm));
@@ -157,19 +165,19 @@ public class XSecurity {
         
     }
 
-    public static Signature getSignature(String algorithm) throws NoSuchAlgorithmException, NoSuchProviderException{
+    public static synchronized Signature getSignature(String algorithm) throws NoSuchAlgorithmException, NoSuchProviderException{
         return Signature.getInstance(algorithm);
     }
 
-    public static Signature getSignature(String algorithm, String provider) throws NoSuchAlgorithmException, NoSuchProviderException{
+    public static synchronized Signature getSignature(String algorithm, String provider) throws NoSuchAlgorithmException, NoSuchProviderException{
         return Signature.getInstance(algorithm, provider);
     }
-    public static boolean check(SignedObject signedObj, PublicKey key){
+    public static synchronized boolean check(SignedObject signedObj, PublicKey key){
 
         return check(signedObj, key, ENCRYPT_SHA1withDSA);
     }
     
-    public static SignedMessage sign(IMessage m, KeyPair key)
+    public static synchronized SignedMessage sign(IMessage m, KeyPair key)
             throws  IOException,
                     InvalidKeyException,
                     SignatureException,
@@ -178,7 +186,7 @@ public class XSecurity {
     {
         return sign(m, key, ENCRYPT_SHA1withDSA);
     }
-    public static SignedMessage sign(IMessage m, KeyPair key, String algorithm)
+    public static synchronized SignedMessage sign(IMessage m, KeyPair key, String algorithm)
             throws  IOException,
                     InvalidKeyException,
                     SignatureException,
@@ -197,12 +205,12 @@ public class XSecurity {
             return sm;
     }
 
-    public static boolean check(SignedMessage m){
+    public static synchronized boolean check(SignedMessage m){
 
         return check(m, ENCRYPT_SHA1withDSA);
     }
     
-    public static boolean check(SignedMessage m, String algorithm){
+    public static synchronized boolean check(SignedMessage m, String algorithm){
         try{
             return check(m.getSignedObject(), (PublicKey)m.getPublicKey(), algorithm);
         }finally{
@@ -210,16 +218,16 @@ public class XSecurity {
         }
     }
 
-    public static IMessage unsign(SignedMessage m){
+    public static synchronized IMessage unsign(SignedMessage m){
         return null;
     }
 
- public static KeyPair generateKeyPair()
+ public static synchronized KeyPair generateKeyPair()
          throws NoSuchAlgorithmException, NoSuchProviderException
  {
      return generateKeyPair(KEYPAIRGEN_DSA, NUMGEN_SHA1PRNG, "SUN");
  }
- public static KeyPair generateKeyPair(String kgen, String ngen, String provider)
+ public static synchronized KeyPair generateKeyPair(String kgen, String ngen, String provider)
          throws NoSuchAlgorithmException, NoSuchProviderException
  {
         final KeyPairGenerator keyGen;

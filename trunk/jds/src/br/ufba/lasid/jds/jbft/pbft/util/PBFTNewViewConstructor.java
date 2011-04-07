@@ -66,7 +66,7 @@ public class PBFTNewViewConstructor {
 
        for(PBFTChangeView cv : cvtable.values()){
            MessageCollection checkpoints  = cv.getCheckpointSet();
-           if(checkpoints != null && checkpoints.isEmpty()){
+           if(checkpoints != null && !checkpoints.isEmpty()){
               for(IMessage m : checkpoints){
                  PBFTCheckpoint checkpoint = (PBFTCheckpoint) m;
                  if(checkpoint != null && checkpoint.getSequenceNumber() != null){
@@ -80,6 +80,8 @@ public class PBFTNewViewConstructor {
        }//end for each change-view message
 
        hcwm = lcwm + checkpointFactor * checkpointPeriod;
+
+       System.out.println("LCWM = " + lcwm + ", HCWM = " + hcwm);
    }
 
    public PBFTNewView buildNewView(){
@@ -148,7 +150,8 @@ public class PBFTNewViewConstructor {
       /* we shouldn't execute this test but if these conditions was true then something bad probabily happened */
       if(minSEQ <= lcwm    ) minSEQ = lcwm + 1;
       if(minSEQ >  lcwm + 1) minSEQ = lcwm + 1;
-      if(maxSEQ >  hcwm    ) maxSEQ = hcwm + 0;
+      if(maxSEQ <= lcwm    ) maxSEQ = lcwm + 1;
+      if(maxSEQ >  hcwm    ) maxSEQ = hcwm;
 
       int f = pbft.getServiceBFTResilience();
       
@@ -160,8 +163,7 @@ public class PBFTNewViewConstructor {
 
             Sequence sequence = sequences.get(seqn);
             ILotResult lpresult = presult.get(sequence);
-
-            for(int p = 0; p < lpresult.size(); p++){
+            for(int p = 0; lpresult != null && p < lpresult.size(); p++){
 
                int pcount = lpresult.getCount(p);
                IProposal pproposal = lpresult.getProposal(p);
@@ -170,7 +172,7 @@ public class PBFTNewViewConstructor {
 
                   ILotResult lqresult = qresult.get(sequence);
 
-                  for(int q = 0; q < lqresult.size(); q ++){
+                  for(int q = 0; lqresult != null && q < lqresult.size(); q ++){
                      int qcount = lqresult.getCount(q);
                      IProposal qproposal = lqresult.getProposal(q);
 

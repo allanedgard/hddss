@@ -34,6 +34,7 @@ import br.ufba.lasid.jds.security.IMessageAuthenticator;
 import br.ufba.lasid.jds.util.IClock;
 import br.ufba.lasid.jds.util.IScheduler;
 import java.lang.reflect.Method;
+import java.util.Hashtable;
 
 /**
  *
@@ -125,8 +126,18 @@ public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBF
         getCurrentMode().handle(nwv);
     }
 
-    public MessageQueue getQueue(String name) {
-        return getCurrentMode().getQueue(name);
+    Hashtable<String, MessageQueue> queuetable = new Hashtable<String, MessageQueue>();
+    public MessageQueue getQueue(String name){
+        MessageQueue queue = queuetable.get(name);
+        if(queue == null){
+            queue = new MessageQueue();
+            queuetable.put(name, queue);
+        }
+        return queue;
+    }
+
+    public Hashtable<String, MessageQueue> getQueuetable(){
+       return queuetable;
     }
 
     public long getCurrentPrePrepareSEQ() {
@@ -260,10 +271,6 @@ public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBF
     public void setChangeViewRetransmissionTimeout(long cvtimeout) {
         getProtocol().setChangeViewRetransmissionTimeout(cvtimeout);
     }
-
-//    public void setCurrentPrimaryID(Object pid) {
-//        getProtocol().setCurrentPrimaryID(pid);
-//    }
 
     public void setPrimaryFaultTimeout(Long pftimeout) {
         getProtocol().setPrimaryFaultTimeout(pftimeout);

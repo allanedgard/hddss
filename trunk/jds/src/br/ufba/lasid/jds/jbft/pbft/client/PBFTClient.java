@@ -92,7 +92,7 @@ public class PBFTClient extends PBFT implements IPBFTClient{
             emit(r);
             rtable.put(r.getTimestamp(), r);
             
-            return (IPayload) getApplicationBox().remove();
+            return null; //(IPayload) getApplicationBox().remove();
     }
 
     /**
@@ -243,7 +243,8 @@ public class PBFTClient extends PBFT implements IPBFTClient{
 
             if(rs != null){
                IPayload result = (IPayload)rs.getInfo(ReplySubject.PAYLOAD);
-               getApplicationBox().add(result);
+               getClient().receiveResult(result);
+               //getApplicationBox().add(result);
 
             }//end if getDecision(reply)
 

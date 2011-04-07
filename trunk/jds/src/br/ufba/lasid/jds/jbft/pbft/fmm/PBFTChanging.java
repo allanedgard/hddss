@@ -35,7 +35,7 @@ public class PBFTChanging extends PBFTServerMode{
 
     public void handle(PBFTRequest rq) {
        if(able()){
-          handle(rq);
+          getMachine().getProtocol().handle(rq);
           return;
        }
        swap();
@@ -150,23 +150,38 @@ public class PBFTChanging extends PBFTServerMode{
     public void enter() {
         MessageQueue queue = null;
 
-        queue = getQueue(PBFTChangeView.class.getName());
+        /* First, we execute the client requests */
+        queue = getMachine().getQueue(PBFTRequest.class.getName());
+        while(!queue.isEmpty()){
+            PBFTRequest r = (PBFTRequest) queue.remove();
+            handle(r);
+        }
+
+        queue = getMachine().getQueue(PBFTChangeView.class.getName());
         while(!queue.isEmpty()){
             PBFTChangeView cv = (PBFTChangeView) queue.remove();
             handle(cv);
         }
 
-        queue = getQueue(PBFTChangeViewACK.class.getName());
+        queue = getMachine().getQueue(PBFTChangeViewACK.class.getName());
         while(!queue.isEmpty()){
             PBFTChangeViewACK cva = (PBFTChangeViewACK) queue.remove();
             handle(cva);
         }
 
-        queue = getQueue(PBFTNewView.class.getName());
+        queue = getMachine().getQueue(PBFTNewView.class.getName());
         while(!queue.isEmpty()){
             PBFTNewView nwv = (PBFTNewView) queue.remove();
             handle(nwv);
         }
+
+        /* Second, we execute the messeges related to normal working of the pbft */
+        queue = getMachine().getQueue(PBFTServerMessage.class.getName());
+        while(!queue.isEmpty()){
+            PBFTServerMessage svr = (PBFTServerMessage) queue.remove();
+            handle(svr);
+        }
+
 
     }
 

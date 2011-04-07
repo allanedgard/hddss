@@ -208,41 +208,41 @@ public class Simulator  extends Thread implements RuntimeSupport
     }
 
     public void estatisticas() {
-        System.out.println("execucao terminada:");
+        System.out.println("simulation finished: ");
         java.util.Date data = new java.util.Date();
         System.out.println(data.toString());
 
         DescriptiveStatistics deliveryDelay = get(Variable.DlvDelayTrace).<DescriptiveStatistics>value();
         DescriptiveStatistics receptionDelay = get(Variable.RxDelayTrace).<DescriptiveStatistics>value();
-        DescriptiveStatistics tempo_transmissao = get(Variable.TxDelayTrace).<DescriptiveStatistics>value();
-        DescriptiveStatistics atraso_fila = get(Variable.QueueDelayTrace).<DescriptiveStatistics>value();
+        DescriptiveStatistics transmitionDelay = get(Variable.TxDelayTrace).<DescriptiveStatistics>value();
+        DescriptiveStatistics queueDelay = get(Variable.QueueDelayTrace).<DescriptiveStatistics>value();
         
         for (int i = 0; i< 256; i++){
             if (network.unicasts[i] != 0) {
-                System.out.println("total de unicast classe "+i+" = "+network.unicasts[i]);
+                System.out.println("total of unicast class "+i+" = "+network.unicasts[i]);
             }
             if (network.broadcasts[i] != 0) {
-                System.out.println("total de broadcast classe "+i+" = "+network.broadcasts[i]);
+                System.out.println("total of broadcast class "+i+" = "+network.broadcasts[i]);
             }
             if (network.multicasts[i] != 0) {
-                System.out.println("total de broadcast classe "+i+" = "+network.multicasts[i]);
+                System.out.println("total of multicast class "+i+" = "+network.multicasts[i]);
             }
 
         }
-        System.out.println("media atraso fim-a-fim = "+deliveryDelay.getMean()+", std dev atraso fim-a-fim = "+deliveryDelay.getStandardDeviation()
-                           +", maximo atraso fim-a-fim = "+deliveryDelay.getMax()+", min atraso fim-a-fim = "+deliveryDelay.getMin()
+        System.out.println("mean end-to-end delay = " + deliveryDelay.getMean() + ", end-to-end std dev delay = " + deliveryDelay.getStandardDeviation()
+                           +", maximum end-to-end delay = " + deliveryDelay.getMax() + ", minimun end-to-end delay = " + deliveryDelay.getMin()
                            );
-        System.out.println("media atraso recepcao-entrega = "+receptionDelay.getMean()+", std dev atraso recepcao-entrega = "+receptionDelay.getStandardDeviation()
-                           +", maximo atraso recepcao-entrega = "+receptionDelay.getMax()+", min atraso recepcao-entrega = "+receptionDelay.getMin()
+        System.out.println("mean reception-delivery delay = "+receptionDelay.getMean()+", repection-delivery std dev delay = "+receptionDelay.getStandardDeviation()
+                           +", maximum repcetion-delivery delay = "+receptionDelay.getMax()+", minimum repcetion-delivery delay = "+receptionDelay.getMin()
                            );  
-        System.out.println("media atraso envio-recepcao = "+tempo_transmissao.getMean()+", std dev atraso envio-recepcao = "+tempo_transmissao.getStandardDeviation()
-                           +", maximo atraso envio-recepcao = "+tempo_transmissao.getMax()+", min atraso envio-recepcao = "+tempo_transmissao.getMin() 
+        System.out.println("mean send-reception delay = "+transmitionDelay.getMean()+", send-reception std dev delay = "+transmitionDelay.getStandardDeviation()
+                           +", maximum send-reception delay = "+transmitionDelay.getMax()+", minimum send-reception = "+transmitionDelay.getMin()
                            );
-        System.out.println("media atraso fila= "+atraso_fila.getMean()+", std dev atraso fila = "+atraso_fila.getStandardDeviation()
-                           +", maximo atraso fila = "+atraso_fila.getMax()+", min atraso fila = "+atraso_fila.getMin()
+        System.out.println("mean queue delay = "+queueDelay.getMean()+", queue std dev delay = "+queueDelay.getStandardDeviation()
+                           +", maximum queue delay = "+queueDelay.getMax()+", minimum queue delay = "+queueDelay.getMin()
                            );
 
-        System.out.println("total: "+tempo_transmissao.getN());
+        System.out.println("total: " + transmitionDelay.getN());
         out.close();
     }
 
@@ -383,10 +383,6 @@ public class Simulator  extends Thread implements RuntimeSupport
 
     Simulator(String filename)
     {
-//        receptionDelay =  new DescriptiveStatistics();
-//        deliveryDelay = new DescriptiveStatistics();
-//        tempo_transmissao = new DescriptiveStatistics();
-//        atraso_fila = new DescriptiveStatistics();
         clock = 0;
         fim = false;
 
@@ -413,6 +409,7 @@ public class Simulator  extends Thread implements RuntimeSupport
         //set(Variable.Scheduler, scheduler);
         
     }
+    
     public Value get(Variable variable) {
         return variables.get(variable);
     }

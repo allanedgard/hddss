@@ -9,7 +9,7 @@ package br.ufba.lasid.jds.fmm;
  *
  * @author aliriosa
  */
-public class Mode {
+public abstract class Mode {
 
     protected MultiModeMachine machine = null;
 
@@ -22,13 +22,9 @@ public class Mode {
         return false;
     }
 
-    public void enter(){
-        //do noting
-    }
+    public abstract void enter();
 
-    public void exit(){
-        //do nothing
-    }
+    public abstract void exit();
 
     @Override
     public String toString() {

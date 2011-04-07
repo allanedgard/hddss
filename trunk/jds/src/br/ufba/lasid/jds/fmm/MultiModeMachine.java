@@ -44,23 +44,19 @@ public class MultiModeMachine {
     }
 
     public void swap(int imode){
-       Mode from = null;
-       Mode to   = null;
         Mode mode = modetable.get(currentMODE);
         if(mode != null){
             mode.exit();
-            from = mode;
         }
+
+        currentMODE = imode;
         
-        mode = modetable.get(imode);
+        mode = modetable.get(currentMODE);
 
         if(mode != null){
-            currentMODE = imode;
             mode.enter();
-            to = mode;
         }
-
-        JDSUtility.debug("[MultiModeMachine:swap(mode)] it has switched from " + (from  == null ? "NULL" : from) + " state to " + (to == null ? "NULL" : to) + " state.");
+        
     }
 
     public Mode getMode(int i){

@@ -570,7 +570,7 @@ public class Agent_TimedCB extends SimulatedAgent {
                             LCB[msg.sender] = ((Content_TimedCB) msg.content).LCB;
                         }
 
-                    acks[msg.sender].rrecvTime = msg.tempoRecepcao;
+                    acks[msg.sender].rrecvTime = msg.receptionTime;
                     acks[msg.sender].lsendTime = msg.physicalClock;
 
                     //ultimaMsgTimeStamp[msg.remetente] = msg.relogioFisico;

@@ -17,6 +17,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetch;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
@@ -85,6 +86,8 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
             int now   = (int) agent.infra.clock.value();
             int type  = getMSGTYPE(m);
 
+            setSendTime(m);
+            
             agent.send(
              new br.ufba.lasid.jds.prototyping.hddss.Message(
                 source, destin, type, 0, now, m
@@ -101,7 +104,28 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
             agent.lock.notify();
         }
     }
+    public void setSendTime(IMessage m){
+        if(m instanceof PDU){
+            setSendTime((IMessage)((PDU)m).getPayload());
+            return;
+        }
 
+        if(m instanceof SignedMessage){
+            try {
+                setSendTime((IMessage) ((SignedMessage)m).getSignedObject().getObject());
+                return;
+            } catch (Exception ex) {
+                Logger.getLogger(SimulatedPBFTCommunicator.class.getName()).log(Level.SEVERE, null, ex);
+                ex.printStackTrace();
+            }
+        }
+
+        if(m instanceof PBFTMessage){
+           ((PBFTMessage)m).setSendTime(agent.infra.clock.value());
+        }
+
+       
+    }
     public int getMSGTYPE(IMessage m){
         if(m instanceof PDU){
             return getMSGTYPE((IMessage)((PDU)m).getPayload());

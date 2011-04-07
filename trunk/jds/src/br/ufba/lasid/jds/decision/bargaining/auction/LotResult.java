@@ -31,7 +31,7 @@ public class LotResult implements ILotResult{
       int i = -1;
       for(int j = 0; j < size(); j++){
          LotResultItem item = items.get(i);
-         if(item.proposal.compareTo(proposal) == IProposal.EQUAL){
+         if(item != null && item.proposal.compareTo(proposal) == IProposal.EQUAL){
             i = j;
             break;
          }

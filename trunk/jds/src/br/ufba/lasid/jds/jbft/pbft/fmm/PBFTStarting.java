@@ -190,4 +190,9 @@ public class PBFTStarting extends PBFTServerMode{
         }
     }
 
+   @Override
+   public void enter() {
+      //throw new UnsupportedOperationException("Not supported yet.");
+   }
+
 }

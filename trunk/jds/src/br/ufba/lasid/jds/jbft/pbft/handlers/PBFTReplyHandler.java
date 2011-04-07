@@ -22,17 +22,18 @@ public class PBFTReplyHandler extends PBFTClientMessageHandler{
     }
 
     public void handle() {
-
         PBFTReply reply =  (PBFTReply) this.input;
-        
-        if(getProtocol().canProceed(reply)){
-            ReplySubject rs = (ReplySubject)getProtocol().getDecision(reply);
-            if(rs != null){
-               IPayload result = (IPayload)rs.getInfo(ReplySubject.PAYLOAD);
-               getProtocol().getApplicationBox().add(result);
-            }//end if getDecision(reply)
+       getProtocol().handle(reply);
 
-        }//end if wasAcceptedAsValidReply (reply)
+//
+//        if(getProtocol().canProceed(reply)){
+//            ReplySubject rs = (ReplySubject)getProtocol().getDecision(reply);
+//            if(rs != null){
+//               IPayload result = (IPayload)rs.getInfo(ReplySubject.PAYLOAD);
+//               //getProtocol().getApplicationBox().add(result);
+//            }//end if getDecision(reply)
+
+//        }//end if wasAcceptedAsValidReply (reply)
     }
 
 

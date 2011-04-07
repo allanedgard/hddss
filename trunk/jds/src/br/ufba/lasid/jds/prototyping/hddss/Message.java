@@ -23,7 +23,7 @@ public class Message  implements Comparable<Message> {
     int type;
     int logicalClock;
     int physicalClock;
-    int tempoRecepcao;
+    int receptionTime;
     int hops;
     Object content;
     boolean payload;

@@ -9,6 +9,7 @@ import br.ufba.lasid.jds.util.Queue;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
+import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage.RequestState;
 
 /**
  *
@@ -21,33 +22,48 @@ public class PBFTRequestInfo {
    Hashtable<Object, Long>                                timestamps = new Hashtable<Object, Long>();
    Queue<String>                                              dQueue = new Queue<String>();
    
-   public boolean add(String digest, PBFTRequest req, StatedPBFTRequestMessage.RequestState reqState){
+   public boolean add(String digest, PBFTRequest req, RequestState reqState){
       if(!dLog.containsKey(digest)){
          StatedPBFTRequestMessage statedREQ = new StatedPBFTRequestMessage(req, reqState, digest);
          dLog.put(digest, statedREQ);
-
-         if(req != null){
-            Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(req.getClientID());
-
-            if(requests == null){
-               requests = new Hashtable<Long, StatedPBFTRequestMessage>();
-               rLog.put(req.getClientID(), requests);
-            }
-
-            if(!requests.containsKey(req.getTimestamp())){
-               requests.put(req.getTimestamp(), statedREQ);
-               timestamps.put(req.getClientID(), req.getTimestamp());
-            }
-         }
          dQueue.add(digest);
 
          return true;
+      }else{
+         if(getRequest(digest) == null){
+            dLog.get(digest).setRequest(req);
+         }
       }
+
+      StatedPBFTRequestMessage statedREQ = dLog.get(digest);
+
+      if(req != null){
+         Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(req.getClientID());
+
+         if(requests == null){
+            requests = new Hashtable<Long, StatedPBFTRequestMessage>();
+            rLog.put(req.getClientID(), requests);
+         }
+
+         if(!requests.containsKey(req.getTimestamp())){
+            requests.put(req.getTimestamp(), statedREQ);
+            timestamps.put(req.getClientID(), req.getTimestamp());
+         }
+      }
+
       return false;
    }
    
    public boolean add(String digest, PBFTRequest req){
-      return add(digest, req, StatedPBFTRequestMessage.RequestState.WAITING);
+      return add(digest, req, RequestState.WAITING);
+   }
+
+   public Long getSequenceNumber(String digest){
+      StatedPBFTRequestMessage statedREQ = dLog.get(digest);
+      if(statedREQ != null){
+         return statedREQ.getSequenceNumber();
+      }
+      return null;
    }
 
    public PBFTRequest getRequest(String digest){
@@ -70,7 +86,7 @@ public class PBFTRequestInfo {
       return null;
    }
 
-   public boolean assign(PBFTRequest request, StatedPBFTRequestMessage.RequestState state){
+   public boolean assign(PBFTRequest request, RequestState state){
       if(!(request != null && request.getClientID() != null && request.getTimestamp() != null)){
          return false;
       }
@@ -83,7 +99,7 @@ public class PBFTRequestInfo {
       return false;
    }
 
-   public boolean assign(String digest, StatedPBFTRequestMessage.RequestState state){
+   public boolean assign(String digest, RequestState state){
       StatedPBFTRequestMessage statedREQ = dLog.get(digest);
       if(statedREQ != null){
          statedREQ.setState(state);
@@ -92,7 +108,7 @@ public class PBFTRequestInfo {
       return false;
    }
 
-   public boolean assign(Long seqn, StatedPBFTRequestMessage.RequestState state){
+   public boolean assign(Long seqn, RequestState state){
       ArrayList<String> digests = nLog.get(seqn);
       if(digests != null && !digests.isEmpty()){
          for(String digest : digests){
@@ -186,12 +202,12 @@ public class PBFTRequestInfo {
       return false;
    }
 
-   public boolean is(String digest, StatedPBFTRequestMessage.RequestState state){
+   public boolean is(String digest, RequestState state){
       StatedPBFTRequestMessage statedREQ = dLog.get(digest);
       return (statedREQ != null && statedREQ.getState().equals(state));
    }
 
-   public boolean is(PBFTRequest request, StatedPBFTRequestMessage.RequestState state){
+   public boolean is(PBFTRequest request, RequestState state){
       Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(request.getClientID());
       if(requests != null && !requests.isEmpty()){
          StatedPBFTRequestMessage statedREQ = requests.get(request.getTimestamp());
@@ -201,7 +217,7 @@ public class PBFTRequestInfo {
       return false;
    }
 
-   public boolean is(Long seqn,  StatedPBFTRequestMessage.RequestState state){
+   public boolean is(Long seqn,  RequestState state){
       ArrayList<String> digests = nLog.get(seqn);
       if(digests != null){
          for(String digest : digests){
@@ -242,66 +258,66 @@ public class PBFTRequestInfo {
    
    
    public boolean isWaiting(String digest){
-      return is(digest, StatedPBFTRequestMessage.RequestState.WAITING);
+      return is(digest, RequestState.WAITING);
    }
 
    public boolean isWaiting(PBFTRequest r){
-      return is(r, StatedPBFTRequestMessage.RequestState.WAITING);
+      return is(r, RequestState.WAITING);
    }
 
    public boolean isWaiting(Long seqn){
-      return is(seqn, StatedPBFTRequestMessage.RequestState.WAITING);
+      return is(seqn, RequestState.WAITING);
    }
 
    public boolean wasPrePrepared(String digest){
-      return is(digest, StatedPBFTRequestMessage.RequestState.PREPREPARED) || wasPrepared(digest);
+      return is(digest, RequestState.PREPREPARED) || wasPrepared(digest);
    }
 
    public boolean wasPrePrepared(PBFTRequest r){
-      return is(r, StatedPBFTRequestMessage.RequestState.PREPREPARED) || wasPrepared(r);
+      return is(r, RequestState.PREPREPARED) || wasPrepared(r);
    }
 
    public boolean wasPrePrepared(Long seqn){
-      return is(seqn, StatedPBFTRequestMessage.RequestState.PREPREPARED) || wasPrepared(seqn);
+      return is(seqn, RequestState.PREPREPARED) || wasPrepared(seqn);
    }
 
    public boolean wasPrepared(String digest){
-      return is(digest, StatedPBFTRequestMessage.RequestState.PREPARED) || wasCommitted(digest);
+      return is(digest, RequestState.PREPARED) || wasCommitted(digest);
    }
 
    public boolean wasPrepared(PBFTRequest r){
-      return is(r, StatedPBFTRequestMessage.RequestState.PREPARED) || wasCommitted(r);
+      return is(r, RequestState.PREPARED) || wasCommitted(r);
    }
 
    public boolean wasPrepared(Long seqn){
-      return is(seqn, StatedPBFTRequestMessage.RequestState.PREPARED) || wasCommitted(seqn);
+      return is(seqn, RequestState.PREPARED) || wasCommitted(seqn);
    }
 
   public boolean wasCommitted(String digest){
-      return is(digest, StatedPBFTRequestMessage.RequestState.COMMITTED) || wasServed(digest);
+      return is(digest, RequestState.COMMITTED) || wasServed(digest);
   }
 
   public boolean wasCommitted(PBFTRequest r){
-      return is(r, StatedPBFTRequestMessage.RequestState.COMMITTED) || wasServed(r);
+      return is(r, RequestState.COMMITTED) || wasServed(r);
   }
 
   public boolean wasCommitted(Long seqn){
-      return is(seqn, StatedPBFTRequestMessage.RequestState.COMMITTED) || wasServed(seqn);
+      return is(seqn, RequestState.COMMITTED) || wasServed(seqn);
   }
 
   public boolean wasServed(String digest){
-      return is(digest, StatedPBFTRequestMessage.RequestState.SERVED);
+      return is(digest, RequestState.SERVED);
   }
 
   public boolean wasServed(PBFTRequest r){
-      return is(r, StatedPBFTRequestMessage.RequestState.SERVED);
+      return is(r, RequestState.SERVED);
   }
 
   public boolean wasServed(Long seqn){
-      return is(seqn, StatedPBFTRequestMessage.RequestState.SERVED);
+      return is(seqn, RequestState.SERVED);
   }
 
-  public boolean hasSomeInState(StatedPBFTRequestMessage.RequestState state){
+  public boolean hasSomeInState(RequestState state){
       Collection<StatedPBFTRequestMessage> requests =  dLog.values();
       for(StatedPBFTRequestMessage statedREQ : requests){
          if(statedREQ.getState().equals(state)){
@@ -311,7 +327,7 @@ public class PBFTRequestInfo {
       return false;
    }
 
-  public boolean hasSomeInState(Long seqn, StatedPBFTRequestMessage.RequestState state){
+  public boolean hasSomeInState(Long seqn, RequestState state){
       ArrayList<String> digests =  nLog.get(seqn);
       for(String digest : digests){
          if(is(digest, state)){
@@ -322,51 +338,51 @@ public class PBFTRequestInfo {
    }
 
    public boolean hasSomeWaiting(){
-      return hasSomeInState(StatedPBFTRequestMessage.RequestState.WAITING);
+      return hasSomeInState(RequestState.WAITING);
    }
 
    public boolean hasSomeWaiting(Long seqn){
-      return hasSomeInState(seqn, StatedPBFTRequestMessage.RequestState.WAITING);
+      return hasSomeInState(seqn, RequestState.WAITING);
    }
 
    public boolean hasSomePrePrepared(){
-      return hasSomeInState(StatedPBFTRequestMessage.RequestState.PREPREPARED);
+      return hasSomeInState(RequestState.PREPREPARED);
    }
 
    public boolean hasSomePrePrepared(Long seqn){
-      return hasSomeInState(seqn, StatedPBFTRequestMessage.RequestState.PREPREPARED);
+      return hasSomeInState(seqn, RequestState.PREPREPARED);
    }
    
    public boolean hasSomePrepared(){
-      return hasSomeInState(StatedPBFTRequestMessage.RequestState.PREPARED);
+      return hasSomeInState(RequestState.PREPARED);
    }
 
    public boolean hasSomePrepared(Long seqn){
-      return hasSomeInState(seqn, StatedPBFTRequestMessage.RequestState.PREPARED);
+      return hasSomeInState(seqn, RequestState.PREPARED);
    }
 
    public boolean hasSomeCommitted(){
-      return hasSomeInState(StatedPBFTRequestMessage.RequestState.COMMITTED);
+      return hasSomeInState(RequestState.COMMITTED);
    }
 
    public boolean hasSomeCommitted(Long seqn){
-      return hasSomeInState(seqn, StatedPBFTRequestMessage.RequestState.COMMITTED);
+      return hasSomeInState(seqn, RequestState.COMMITTED);
    }
 
    public boolean hasSomeServed(){
-      return hasSomeInState(StatedPBFTRequestMessage.RequestState.SERVED);
+      return hasSomeInState(RequestState.SERVED);
    }
 
    public boolean hasSomeServed(Long seqn){
-      return hasSomeInState(seqn, StatedPBFTRequestMessage.RequestState.SERVED);
+      return hasSomeInState(seqn, RequestState.SERVED);
    }
 
    public boolean hasSomeMissed(){
-      return hasSomeInState(StatedPBFTRequestMessage.RequestState.MISSED);
+      return hasSomeInState(RequestState.MISSED);
    }
 
    public boolean hasSomeMissed(Long seqn){
-      return hasSomeInState(seqn, StatedPBFTRequestMessage.RequestState.MISSED);
+      return hasSomeInState(seqn, RequestState.MISSED);
    }
 
    public int getQueueSize(){

@@ -50,7 +50,8 @@ public class PBFTServerArchitecture extends Architecture{
     @Override
     public void buildup() {
 
-        add(PBFTServantTag, new PBFTServerServant(new PBFTServerMultiModeMachine(pbft)));
+        //add(PBFTServantTag, new PBFTServerServant(new PBFTServerMultiModeMachine(pbft)));
+        add(PBFTServantTag, new PBFTServerServant(pbft));
         add(PBFTCommunicatorTag, pbft.getCommunicator());
         connect(PBFTCommunicatorTag, PBFTServantTag);
 

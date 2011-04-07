@@ -23,11 +23,11 @@ public class NewViewProposalValitor implements IProposalValidator{
    }
    
    public boolean validate(IProposal proposal) {
-      if(!(proposal != null && proposal instanceof PrepareProposal)){
+      if(!(proposal != null && proposal instanceof OrderingProposal)){
          return false;
       }
 
-      PrepareProposal mop = (PrepareProposal) proposal;
+      OrderingProposal mop = (OrderingProposal) proposal;
 
       if(mop.message == null){
          return false;

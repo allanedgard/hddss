@@ -17,6 +17,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommit;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTFetch;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
@@ -74,7 +75,9 @@ public class PBFTServerMessageDispatcher extends PBFTServerMessageHandler {
         IMessageHandler handler = null;
 
         IMessage m = getMessage();
-        
+        if(m instanceof PBFTMessage){
+           ((PBFTMessage)m).setRecvTime(getProtocol().getClockValue());
+        }
         if(m instanceof PBFTRequest){
             handler = new PBFTRequestHandler(getProtocol());
 
