@@ -78,7 +78,7 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
             Content_Acknowledge ack = content.vack[msg.destination];
 
             //compute the round-trip-time
-            double rtt = msg.tempoRecepcao - ack.lsendTime;
+            double rtt = msg.receptionTime - ack.lsendTime;
             
             //compute the remote proc time
             double ptime = (ack.rsendTime - ack.rrecvTime) * (1 - maxro * ro);

@@ -111,10 +111,8 @@ public class Authenticator implements IAuthenticator{
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public String getDigest(Object data) throws Exception{
-        synchronized(this){
-            return XSecurity.getDigest(data);
-        }
+    public synchronized String getDigest(Object data) throws Exception{
+         return XSecurity.getDigest(data);
     }
 
     public boolean checkDisgest(Object data) {

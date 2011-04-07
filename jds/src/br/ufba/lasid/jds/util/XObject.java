@@ -39,6 +39,9 @@ public final class XObject {
         byte[] obyte = bas.toByteArray();
         bas.close();
 
+        oos = null;
+        bas = null;
+
         return obyte;
     }
 

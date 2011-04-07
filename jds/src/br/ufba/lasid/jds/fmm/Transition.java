@@ -5,6 +5,8 @@
 
 package br.ufba.lasid.jds.fmm;
 
+import br.ufba.lasid.jds.util.JDSUtility;
+
 /**
  *
  * @author aliriosa
@@ -32,6 +34,9 @@ public class Transition {
 
    public void swap(){
       if(able()){
+         Mode from = machine.getMode(ifrom);
+         Mode to = machine.getMode(ito);
+         JDSUtility.debug("[MultiModeMachine:swap(mode)] it has switched from " + (from  == null ? "NULL" : from) + " state to " + (to == null ? "NULL" : to) + " state.");
          machine.swap(ito);
       }
    }

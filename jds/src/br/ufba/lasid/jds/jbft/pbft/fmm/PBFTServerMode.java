@@ -9,6 +9,7 @@ import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.ISystemEntity;
 import br.ufba.lasid.jds.adapters.IEventListener;
 import br.ufba.lasid.jds.architectures.Architecture;
+import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.MessageQueue;
 import br.ufba.lasid.jds.comm.communicators.ICommunicator;
 import br.ufba.lasid.jds.cs.IServer;
@@ -32,6 +33,7 @@ import br.ufba.lasid.jds.security.IMessageAuthenticator;
 import br.ufba.lasid.jds.util.IClock;
 import br.ufba.lasid.jds.util.IScheduler;
 import java.lang.reflect.Method;
+import java.util.Hashtable;
 
 /**
  *
@@ -156,8 +158,14 @@ public abstract class PBFTServerMode extends Mode implements IPBFTServer{
         getMachine().getProtocol().setCommunicator(comm);
     }
 
-    public MessageQueue getQueue(String name) {
-        return getMachine().getProtocol().getQueue(name);
+    Hashtable<String, MessageQueue> queuetable = new Hashtable<String, MessageQueue>();
+    public MessageQueue getQueue(String name){
+        MessageQueue queue = queuetable.get(name);
+        if(queue == null){
+            queue = new MessageQueue();
+            queuetable.put(name, queue);
+        }
+        return queue;
     }
 
     public void setBatchSize(int bsize) {
@@ -300,6 +308,41 @@ public abstract class PBFTServerMode extends Mode implements IPBFTServer{
        if(m instanceof PBFTBag){
           handle((PBFTBag)m);
        }
-
     }
+
+   @Override
+   public void exit() {
+      for(String qkey : queuetable.keySet()){
+         MessageQueue oQueue = queuetable.get(qkey);
+         MessageQueue iQueue = getMachine().getQueue(qkey);
+
+         IMessage m = oQueue.remove();
+         if(!iQueue.contains(m)){
+            iQueue.enqueue(m);
+         }
+
+      }
+   }
+
+   @Override
+   public void enter() {
+
+      Hashtable<String, MessageQueue> oQueuetable = getMachine().getQueuetable();
+
+      for(String qkey : oQueuetable.keySet()){
+
+         MessageQueue oQueue = oQueuetable.get(qkey);
+         MessageQueue iQueue = getQueue(qkey);
+
+         IMessage m = oQueue.remove();
+         if(!iQueue.contains(m)){
+            iQueue.enqueue(m);
+         }
+
+      }
+   }
+
+
+
+
 }

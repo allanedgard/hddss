@@ -2,7 +2,7 @@
  * GENERAL SIMULATION OPTIONS
  ***********************************************************/
 FinalTime = 100000
-NumberOfAgents = 54
+NumberOfAgents = 10
 MaximumDeviation = 4
 Mode = clock
 Debug = false
@@ -15,7 +15,7 @@ clock.Mode = s
  ***********************************************************/
 agent[0] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
 agent[0].ServerGroupAddress = 0
-agent[0].GroupList = 4,5,6,7
+agent[0].GroupList = 0,1,2,3
 agent[0].CurrentView = 0
 agent[0].PrimaryFaultTimeout = 250
 agent[0].BatchingSize = 6
@@ -26,9 +26,13 @@ agent[0].ViewChangeRetransmittionTimeout = 250
 agent[0].SendStatusPeriod = 800
 agent[0].SlidingWindowSize = 2
 
+/* time by bit (tbb) if tbb = 1 picosencond and then simulation time in millisenconds then 0.000000001 */
+agent[0].EncryptionCost = 0.000000001
+
+
 agent[1] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
 agent[1].ServerGroupAddress = 0
-agent[1].GroupList = 4,5,6,7
+agent[1].GroupList = 0,1,2,3
 agent[1].CurrentView = 0
 agent[1].PrimaryFaultTimeout = 250
 agent[1].BatchingSize = 6
@@ -39,9 +43,13 @@ agent[1].ViewChangeRetransmittionTimeout = 250
 agent[1].SendStatusPeriod = 800
 agent[1].SlidingWindowSize = 2
 
+/* time by bit (tbb) if tbb = 1 picosencond and then simulation time in millisenconds then 0.000000001 */
+agent[1].EncryptionCost = 0.000000001
+
+
 agent[2] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
 agent[2].ServerGroupAddress = 0
-agent[2].GroupList = 4,5,6,7
+agent[2].GroupList = 0,1,2,3
 agent[2].CurrentView = 0
 agent[2].PrimaryFaultTimeout = 250
 agent[2].BatchingSize = 6
@@ -52,9 +60,12 @@ agent[2].ViewChangeRetransmittionTimeout = 250
 agent[2].SendStatusPeriod = 800
 agent[2].SlidingWindowSize = 2
 
+/* time by bit (tbb) if tbb = 1 picosencond and then simulation time in millisenconds then 0.000000001 */
+agent[2].EncryptionCost = 0.000000001
+
 agent[3] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
 agent[3].ServerGroupAddress = 0
-agent[3].GroupList = 4,5,6,7
+agent[3].GroupList = 0,1,2,3
 agent[3].CurrentView = 0
 agent[3].PrimaryFaultTimeout = 250
 agent[3].BatchingSize = 6
@@ -65,29 +76,37 @@ agent[3].ViewChangeRetransmittionTimeout = 250
 agent[3].SendStatusPeriod = 800
 agent[3].SlidingWindowSize = 2
 
+/* time by bit (tbb) if tbb = 1 picosencond and then simulation time in millisenconds then 0.000000001 */
+agent[3].EncryptionCost = 0.000000001
+
 agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
 agent.ServerGroupAddress = 0
 agent.GroupSize = 4
-agent.RetransmissionTimeout = 300
+agent.RetransmissionTimeout = 500
 agent.RequestGenerationProbability = 0.1
+
+/* time by bit (tbb) if tbb = 1 picosencond and then simulation time in millisenconds then 0.000000001 */
+agent.EncryptionCost = 0.000000001
+
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelDeterministicInterval
 channel.Contention = false
-channel.DeltaMaximo = 2
-channel.DeltaMinimo = 2
+channel.DeltaMaximo = 1
+channel.DeltaMinimo = 0
+
 network = br.ufba.lasid.jds.prototyping.hddss.PayloadAwareNetwork
 
-/* transferRate in  bps  (e.g. 10Mbps is equal to 10000000 bps */
-network.TransferRate = 10000000
+/* transferRate in  bps  (e.g. 10Mbps is equal to 10000000 bps, if simulation time in miliseconds then use 10Mbps / 1000  = 10Kb/ms*/
+network.TransferRate = 100000
 
 /* MTU = bits (e.g. 64 KB is equal to 524288 bits) */
 network.MTU = 524288
 
-/* SegmentationCost in seconds (e.g. 0.000001 is equal to 1 microsecond */
-network.SegmentationCost = 0.000001
+/* SegmentationCost in seconds (e.g. 0.000000001 seconds is equal to 1 nanosecond) if simulation time in millisenconds then use 0.000001 ms*/
+network.SegmentationCost = 0.000000001
 
 /* Use Groups = G(gid1){pid1, pid2, pid3,pid4}; G(gid2){pid2, pid8, pid4,pid1} */
-network.Groups = G(0){4,5,6,7}
+network.Groups = G(0){0,1,2,3}
 
 /***********************************************************/
  * JDS FRAMEWORK OPTIONS

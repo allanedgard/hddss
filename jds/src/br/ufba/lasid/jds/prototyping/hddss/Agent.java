@@ -1,6 +1,10 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 //
 
+import br.ufba.lasid.jds.comm.IMessage;
+import br.ufba.lasid.jds.comm.PDU;
+import br.ufba.lasid.jds.comm.SignedMessage;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.util.IScheduler;
 
 public class Agent extends Thread implements IAgent{
@@ -98,10 +102,15 @@ public class Agent extends Thread implements IAgent{
     
    public void send(Message m){
        synchronized(lock){
-            infra.nic_out.add((int)(infra.clock.value()), m);
+            long pt = getProcessingTime(m);
+            infra.nic_out.add((int)(infra.clock.value() + pt), m);
             //Debugger.debug("[p"+this.ID+"] send buffer =>" + infra.nic_out);
        }
 
+   }
+
+   public long getProcessingTime(Object m){
+      return 0;
    }
    
     public void startup(){

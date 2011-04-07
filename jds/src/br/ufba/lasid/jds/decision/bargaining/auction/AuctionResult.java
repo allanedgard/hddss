@@ -62,6 +62,10 @@ public class AuctionResult extends Hashtable<ILot,  ILotResult> implements IAuct
 
    public synchronized void put(ILot key, IProposal proposal, int count) {
          ILotResult lresult = get(key);
+         if(lresult == null){
+            lresult = new LotResult();
+            put(key, lresult);
+         }
          lresult.add(proposal, count);
 
    }

@@ -210,9 +210,8 @@ public abstract class Network extends Thread{
             int p_i = msg.sender;
             
             for(int p_j : g){
-               if (!isLoopback(p_i, p_j)) {
-                  if (verifyChannel(p_i, p_j))
-                     transfer(p_i, p_j, msg, delay);
+               if (p_i != p_j && verifyChannel(p_i, p_j)){
+                  transfer(p_i, p_j, msg, delay);
                }
             }
          }
