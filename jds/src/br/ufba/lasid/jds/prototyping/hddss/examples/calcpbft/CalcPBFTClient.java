@@ -18,7 +18,6 @@ import br.ufba.lasid.jds.util.JDSUtility;
 public class CalcPBFTClient extends SimulatedPBFTClientAgent{
     private transient double rgp = 0.0;
     private transient Randomize r = new Randomize();
-    private transient boolean cansend = false;
     private transient int send = 0;
     private transient int recv = 0;
 

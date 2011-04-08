@@ -5,6 +5,7 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.management.memory.pages.IPage;
 
 /**
@@ -49,5 +50,13 @@ public class PBFTData extends PBFTServerMessage{
                  ">"
         );
     }
+
+   public int getTAG() {
+      return IPBFTServer.DATA;
+   }
+
+   public String getTAGString() {
+      return "DATA";
+   }
 
 }

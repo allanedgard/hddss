@@ -5,6 +5,8 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
+
 /**
  *
  * @author aliriosa
@@ -27,4 +29,12 @@ public class PBFTFetchMetaData extends PBFTServerMessage{
                  ">"
         );
     }
+
+   public int getTAG() {
+      return -1;
+   }
+
+   public String getTAGString() {
+      return "FETCHMETADATA";
+   }
 }

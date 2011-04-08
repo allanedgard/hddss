@@ -20,6 +20,7 @@ public class Simulator  extends Thread implements RuntimeSupport
     //SimulatedScheduler scheduler = new SimulatedScheduler();
 
     Network network;
+    CPU cpu;
 //    DescriptiveStatistics receptionDelay;
 //    DescriptiveStatistics tempo_transmissao;
 //    DescriptiveStatistics deliveryDelay;
@@ -40,6 +41,10 @@ public class Simulator  extends Thread implements RuntimeSupport
     {
                 return (int) (network.Channels[i][j].delay());
          
+    }
+
+    public final int obtemAtraso(int i, IProcessable data){
+       return (int) p[i].infra.cpu.exec(data);
     }
      
     public final void ok() {
@@ -69,6 +74,7 @@ public class Simulator  extends Thread implements RuntimeSupport
 
             for (int i=0;i<n;i++) {
                 p[i].startup();
+                p[i].infra.cpu.start();
             }
 
             //scheduler.startup();
@@ -93,10 +99,10 @@ public class Simulator  extends Thread implements RuntimeSupport
 
                 network.incTick();
 
+
                 //scheduler.infra.increaseTick();
 
             }
-
             network.done = true;
         }
     } 
@@ -114,6 +120,7 @@ public class Simulator  extends Thread implements RuntimeSupport
             }
 
             network.start();
+            cpu.start();
 
             //scheduler.start();
 
@@ -134,7 +141,9 @@ public class Simulator  extends Thread implements RuntimeSupport
 
             //scheduler.shutdown();
 
+            cpu.stop();
             network.stop();
+
         }
     } 
     
@@ -227,8 +236,14 @@ public class Simulator  extends Thread implements RuntimeSupport
             if (network.multicasts[i] != 0) {
                 System.out.println("total of multicast class "+i+" = "+network.multicasts[i]);
             }
-
         }
+
+//        for (int i = 0; i< 256; i++){
+//            if (cpu.objects[i] != 0) {
+//                System.out.println("total of " + cpu.objectsTAGs[i] + " objects = " + cpu.objects[i]);
+//            }
+//        }
+
         System.out.println("mean end-to-end delay = " + deliveryDelay.getMean() + ", end-to-end std dev delay = " + deliveryDelay.getStandardDeviation()
                            +", maximum end-to-end delay = " + deliveryDelay.getMax() + ", minimun end-to-end delay = " + deliveryDelay.getMin()
                            );
@@ -241,6 +256,10 @@ public class Simulator  extends Thread implements RuntimeSupport
         System.out.println("mean queue delay = "+queueDelay.getMean()+", queue std dev delay = "+queueDelay.getStandardDeviation()
                            +", maximum queue delay = "+queueDelay.getMax()+", minimum queue delay = "+queueDelay.getMin()
                            );
+
+//        System.out.println("mean cpu delay = "+cpuDelay.getMean()+", cpu std dev delay = "+cpuDelay.getStandardDeviation()
+//                           +", maximum cpu delay = "+cpuDelay.getMax()+", minimum cpu delay = "+cpuDelay.getMin()
+//                           );
 
         System.out.println("total: " + transmitionDelay.getN());
         out.close();
@@ -330,6 +349,12 @@ public class Simulator  extends Thread implements RuntimeSupport
             ((Clock_Virtual)(a.infra.clock)).rho =
                     ((new Randomize()).irandom(-maxro,maxro));
         }
+
+         a.infra.cpu = (CPU) Factory.create(CPU.TAG, CPU.class.getName());
+         
+         Factory.setup(a.infra.cpu, CPU.TAG);
+
+         a.infra.cpu.setClock(_clock);
 
         //a.infra.scheduler = scheduler;
 

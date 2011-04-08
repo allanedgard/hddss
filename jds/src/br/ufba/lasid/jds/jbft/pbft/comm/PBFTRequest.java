@@ -5,6 +5,7 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.util.IPayload;
 
 /**
@@ -110,5 +111,13 @@ public class PBFTRequest  extends PBFTMessage{
     public void setSynch(boolean synch) {
         this.synch = synch;
     }
+
+   public int getTAG() {
+      return IPBFTServer.REQUEST;
+   }
+
+   public String getTAGString() {
+      return "REQUEST";
+   }
     
 }

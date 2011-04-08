@@ -6,12 +6,13 @@
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
 import br.ufba.lasid.jds.comm.IMessage;
+import br.ufba.lasid.jds.prototyping.hddss.IProcessable;
 
 /**
  *
  * @author aliriosa
  */
-public abstract class PBFTMessage implements IMessage{
+public abstract class PBFTMessage implements IMessage, IProcessable{
     @Override
     public abstract String toString();
 

@@ -29,13 +29,10 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
     public void setup() {
 
         super.setup();
-        SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.clock);
-        //scheduler.setAgent(this);
-        //((Simulator)this.infra.context).p[this.ID] = (Agent) Adapter.create(this, scheduler);
-
+        SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.cpu);
         getProtocol().setCommunicator(new SimulatedPBFTCommunicator(this));
         getProtocol().setLocalProcess(this);
-        getProtocol().setClock(this.infra.clock);
+        getProtocol().setClock(this.infra.cpu);
         getProtocol().setScheduler(scheduler);
         ((IPBFTServer)getProtocol()).setServer(this);
         getProtocol().setLocalGroup(getGroup());

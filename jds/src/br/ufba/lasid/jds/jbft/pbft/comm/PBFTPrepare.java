@@ -5,6 +5,7 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.util.DigestList;
 
 /**
@@ -51,5 +52,13 @@ public class PBFTPrepare extends PBFTMessageOrdering{
                  ">"
         );
     }
+
+   public int getTAG() {
+      return IPBFTServer.PREPARE;
+   }
+
+   public String getTAGString() {
+      return "PREPARE";
+   }
 
 }

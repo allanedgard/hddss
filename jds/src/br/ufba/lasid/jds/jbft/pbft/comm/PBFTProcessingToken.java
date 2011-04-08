@@ -5,6 +5,8 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
+
 /**
  *
  * @author aliriosa
@@ -26,4 +28,12 @@ public class PBFTProcessingToken extends PBFTServerMessage{
                  ">"
         );
     }
+
+   public int getTAG() {
+      return IPBFTServer.TOKEN;
+   }
+
+   public String getTAGString() {
+      return "TOKEN";
+   }
 }

@@ -58,21 +58,75 @@ public class PBFTClient extends PBFT implements IPBFTClient{
 
     
     protected  long retransmissionTimeout = Long.valueOf(120000);
+    protected long tsend = 0;
+    protected long trecv = 0;
+
+    protected double maxTimeout = 12000;
+    protected double minTimeout = 200;
+    protected double computed = 0;
+    protected double variancy = 0;
+    protected long delay = -1;
+    
+    protected double calcTimeout(double mensuared){
+         double alpha = 0.1;
+         double beta = 1;
+         double phi = 4;
+         
+         double error = mensuared - computed;
+         computed = computed + alpha * error;
+         variancy = variancy + alpha * (Math.abs(error) - variancy);
+
+         if(variancy < 0){
+            variancy = 0;
+         }
+
+         double timeout = beta * computed + phi * variancy;
+
+         if(timeout < minTimeout) timeout = minTimeout;
+         if(timeout > maxTimeout) timeout = maxTimeout;
+         
+         return timeout;
+    }
+
     /**
      * Get the request retransmission timeout.
      * @return - the timeout.
      */
     public long getRetransmissionTimeout() {
-        return retransmissionTimeout;
+       long mensuared = delay;
+       if(delay < 0){
+           mensuared = (long)((maxTimeout - minTimeout)/2.0);
+           computed = mensuared;
+       }
+       long timeout = (long)calcTimeout(mensuared);
+       JDSUtility.debug("[c" + getLocalProcessID() + "] computed retransmition timeout equal to " + timeout);
+       return timeout;
     }
 
-    /**
-     * Define the request retransmission timeout.
-     * @param retransmissionTimeout
-     */
-    public void setRetransmissionTimeout(long retransmissionTimeout) {
-        this.retransmissionTimeout = retransmissionTimeout;
-    }
+   public double getMaxTimeout() {
+      return maxTimeout;
+   }
+
+   public void setMaxTimeout(double maxTimeout) {
+      this.maxTimeout = maxTimeout;
+   }
+
+   public double getMinTimeout() {
+      return minTimeout;
+   }
+
+   public void setMinTimeout(double minTimeout) {
+      this.minTimeout = minTimeout;
+   }
+
+
+//    /**
+//     * Define the request retransmission timeout.
+//     * @param retransmissionTimeout
+//     */
+//    public void setRetransmissionTimeout(long retransmissionTimeout) {
+//        this.retransmissionTimeout = retransmissionTimeout;
+//    }
 
     //protected  QuorumTable qtable = new QuorumTable();
     protected Quorumtable<Long> qtable = new Quorumtable<Long>();
@@ -118,6 +172,8 @@ public class PBFTClient extends PBFT implements IPBFTClient{
         if(request!= null){
            if(rtable.containsKey(request.getTimestamp())){
                re = "re-";
+           }else{
+              tsend = getClockValue();
            }
 
             try{
@@ -205,6 +261,7 @@ public class PBFTClient extends PBFT implements IPBFTClient{
                 public void onTimeout() {
                     PBFTRequest r = (PBFTRequest) this.get("REQUEST");
                     if(r != null){
+                        delay = getClockValue() - tsend;
                         emit(r);
                     }
                     //r.setSent(shutdown);
@@ -244,6 +301,8 @@ public class PBFTClient extends PBFT implements IPBFTClient{
             if(rs != null){
                IPayload result = (IPayload)rs.getInfo(ReplySubject.PAYLOAD);
                getClient().receiveResult(result);
+               trecv = getClockValue();
+               delay = trecv - tsend;
                //getApplicationBox().add(result);
 
             }//end if getDecision(reply)

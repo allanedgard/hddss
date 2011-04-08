@@ -5,6 +5,8 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
+
 /**
  *
  * @author aliriosa
@@ -41,5 +43,13 @@ public class PBFTCheckpoint extends PBFTServerMessage{
     public void setDigest(String digest) {
         this.digest = digest;
     }
+
+   public int getTAG() {
+      return IPBFTServer.CHECKPOINT;
+   }
+
+   public String getTAGString() {
+      return "CHECKPOINT";
+   }
 
 }

@@ -27,14 +27,11 @@ public abstract class SimulatedPBFTClientAgent extends SimulatedPBFTAgent implem
     public void setup() {
         super.setup();
 
-        SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.clock);
-        //scheduler.setAgent(this);
-
-        //((Simulator)this.infra.context).p[this.ID] = (Agent) Adapter.newInstance(this, scheduler);
+        SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.cpu);
         
         getProtocol().setCommunicator(new SimulatedPBFTCommunicator(this));
         getProtocol().setLocalProcess(this);
-        getProtocol().setClock(this.infra.clock);
+        getProtocol().setClock(this.infra.cpu);
         getProtocol().setScheduler(scheduler);
         getProtocol().setLocalGroup(getGroup());
         getProtocol().setRemoteProcess(getGroup());
@@ -57,8 +54,16 @@ public abstract class SimulatedPBFTClientAgent extends SimulatedPBFTAgent implem
                 
     }
 
-    public void setRetransmissionTimeout(String timeout) {
-        ((PBFTClient)getProtocol()).setRetransmissionTimeout(new Long(timeout));
+//    public void setRetransmissionTimeout(String timeout) {
+//        ((PBFTClient)getProtocol()).setRetransmissionTimeout(new Long(timeout));
+//    }
+
+    public void setMaxTimeout(String timeout) {
+        ((PBFTClient)getProtocol()).setMaxTimeout(Double.valueOf(timeout));
+    }
+
+    public void setMinTimeout(String timeout) {
+        ((PBFTClient)getProtocol()).setMinTimeout(Double.valueOf(timeout));
     }
 
     @Override
