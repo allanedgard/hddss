@@ -228,12 +228,12 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             PBFTRequestInfo rinfo = getRequestInfo();
 
             if(!isPrimary()){
-               if(rinfo.wasPrePrepared(digest)){
+               if(!rinfo.hasRequest(digest) && rinfo.is(digest, RequestState.PREPREPARED)){
                   rinfo.add(digest, r, RequestState.PREPREPARED);
                   Long seqn = rinfo.getSequenceNumber(digest);
-                  if(rinfo.wasPrePrepared(seqn)){
+                  if(!rinfo.hasSomeRequestMissed(seqn)){
                      PBFTPrePrepare pp = getStateLog().getPrePrepare(seqn);
-                     emit(createPrepareMessage(pp), getLocalGroup().minus(getLocalProcess()));
+                     emitPrepare(pp);
                   }
                   return;
                }
@@ -474,9 +474,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
          
          if(pp != null){
             if(!isPrimary()){
-               PBFTPrepare p = createPrepareMessage(pp);
-               emit(p, getLocalGroup().minus(getLocalProcess()));
-               getDecision(p);
+               emitPrepare(pp);
             }
          }         
       }
@@ -485,6 +483,12 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
    }
 
+   public void emitPrepare(PBFTPrePrepare pp){
+      PBFTPrepare p = createPrepareMessage(pp);
+      emit(p, getLocalGroup().minus(getLocalProcess()));
+      getDecision(p);
+   }
+   
     public boolean isValid(PBFTPrePrepare pp){
        Object lSrvID = getLocalServerID();
         /* If the preprepare hasn't a valid sequence / view number then it'll force a change view. */
@@ -519,16 +523,18 @@ public class PBFTServer extends PBFT implements IPBFTServer{
          PBFTRequestInfo rinfo = getRequestInfo();
 
          /* Get composite key of the prepare. */
-         Long entryKey = pp.getSequenceNumber();
+         Long ekey = pp.getSequenceNumber();
 
          /* If the entry key is diferent of null then update state. Otherwise do nothing. */
-         if(entryKey != null) {
+         if(ekey != null) {
+
+            long seqn = ekey;
 
             /* Get the batch in the preprepare. */
             DigestList digests = pp.getDigests();
 
             /* get a log  entry for current preprepare. */
-            PBFTLogEntry entry = getStateLog().get(entryKey);
+            PBFTLogEntry entry = getStateLog().get(ekey);
 
             /* if there isn't a entry then create one. */
             if(entry == null){
@@ -536,42 +542,33 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                entry = new PBFTLogEntry(pp);
 
                /* Update the entry in log. */
-               getStateLog().put(entryKey, entry);
+               getStateLog().put(ekey, entry);
 
-               JDSUtility.debug(
-                  "[PBFTServer:updateStatus(preprepare)] s"  + lSrvID + ", at time " + getClockValue() + ", " +
-                  "created a new entry in its log for " + pp
-               );
-                              
-               
+               JDSUtility.debug("[PBFTServer:updateStatus(preprepare)] s"  + lSrvID + ", at time " + getClockValue() + ", created a new entry in its log for " + pp);
+                                             
                /* For each request in batch, check if such request was received. */
                for(String digest : digests){
                   if(rinfo.getRequest(digest)!= null){
                      rinfo.assign(digest, RequestState.PREPREPARED);
-                     rinfo.assign(digest, pp.getSequenceNumber());
-                  }/*else{
+                     rinfo.assign(digest, seqn);
+                  }else{
                      rinfo.add(digest, null, RequestState.PREPREPARED);
-                  }*/
+                     rinfo.assign(digest, seqn);
+                  }
                }//end if for each digest
 
                getStateLog().updateNextPrePrepareSEQ(pp);
 
-               /* For each request in batch, check if such request was received. */
-               for(String digest : digests){
-                  if(rinfo.getRequest(digest) == null){
-                     JDSUtility.debug(
-                     "[PBFTServer:updateStatus(preprepare)] s" +lSrvID + ",  at time " + getClockValue() + ", couldn't update " +
-                     "pre-prepare " + pp + " because it has a digest (" + digest + ") that hasn't been in waiting state anymore or has missed."
-                     );
-                     if(rinfo.hasSomeWaiting()){
-                        scheduleViewChange();
-                     }
-                     return null;
-                  }
-               }//end for each request in pre-prepare
-
+               if(rinfo.hasSomeRequestMissed(seqn)){
+                  JDSUtility.debug(
+                  "[PBFTServer:updateStatus(preprepare)] s" +lSrvID + ",  at time " + getClockValue() + ", couldn't update " +
+                  "pre-prepare " + pp + " because it has some request missed."
+                  );
+                  return null;
+               }
+               
                revokeViewChange();
-
+               
                if(rinfo.hasSomeWaiting()){
                   scheduleViewChange();
                }
@@ -1687,30 +1684,37 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
         if(isValid(sa)){
             
-            Long maxSEQ = getStateLog().getNextPrePrepareSEQ();
-            Long minSEQ = getStateLog().getNextExecuteSEQ()-1;
+            long maxSEQ = -1;
+            long minSEQ = Long.MAX_VALUE;
             
             //remote active state variables
-            long rexcSEQ = sa.getLastExecutedSEQ();         
             long rcmtSEQ = sa.getLastCommittedSEQ();        
             long rpreSEQ = sa.getLastPreparedSEQ();         
             long rpprSEQ = sa.getLastPrePreparedSEQ();      
             long rlcwSEQ = sa.getLastStableCheckpointSEQ();
 
-            if(minSEQ > rexcSEQ) minSEQ = rexcSEQ; if(maxSEQ < rexcSEQ) maxSEQ = rexcSEQ;
-            if(minSEQ > rcmtSEQ) minSEQ = rcmtSEQ; if(maxSEQ < rcmtSEQ) maxSEQ = rcmtSEQ;
-            if(minSEQ > rpreSEQ) minSEQ = rpreSEQ; if(maxSEQ < rpreSEQ) maxSEQ = rpreSEQ;
-            if(minSEQ > rpprSEQ) minSEQ = rpprSEQ; if(maxSEQ < rpprSEQ) maxSEQ = rpprSEQ;
-            if(minSEQ > rlcwSEQ) minSEQ = rlcwSEQ; if(maxSEQ < rlcwSEQ) maxSEQ = rlcwSEQ;
+            if(lcmtSEQ > rcmtSEQ){
+               if(minSEQ > rcmtSEQ) minSEQ = rcmtSEQ + 1; if(maxSEQ < lcmtSEQ) maxSEQ = lcmtSEQ;
+            }
+
+            if(lpreSEQ > rpreSEQ){
+               if(minSEQ > rpreSEQ) minSEQ = rpreSEQ + 1; if(maxSEQ < lpreSEQ) maxSEQ = lpreSEQ;
+            }
+
+            if(lpprSEQ > rpprSEQ){
+               if(minSEQ > rpprSEQ) minSEQ = rpprSEQ + 1; if(maxSEQ < lpprSEQ) maxSEQ = lpprSEQ;
+            }
+
             
             if(maxSEQ < 0) maxSEQ = 0L;
+            if(minSEQ < 0) minSEQ = 0L;
             
             PBFTBag bag = new PBFTBag(getLocalServerID());
 
             bag.setSequenceNumber(sa.getSequenceNumber());
             
-            if(llcwSEQ <= rpprSEQ ){
-                for(long i = minSEQ; i < maxSEQ; i++){
+            if(lpprSEQ > rpprSEQ || lpreSEQ > rpreSEQ || lcmtSEQ > rcmtSEQ){
+                for(long i = minSEQ; i <= maxSEQ; i++){
 
                     PBFTLogEntry entry = getStateLog().get(i);
                     if(entry != null){
@@ -1718,12 +1722,12 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                         SoftQuorum cq = (SoftQuorum)entry.getCommitQuorum();
 
 
-                        if(rpreSEQ < i && rpprSEQ < i && isPrimary() && entry.getPrePrepare() != null && lpprSEQ >= i){
+                        if(i <= lpprSEQ && rpprSEQ < lpprSEQ && rpprSEQ < i && isPrimary() && entry.getPrePrepare() != null){
                             PBFTPrePrepare pp = entry.getPrePrepare();
                             bag.addMessage(pp);
                         }
 
-                        if(rpreSEQ < i && pq != null && lpprSEQ >= i){
+                        if(i <= lpreSEQ && rpreSEQ < lpreSEQ && rpreSEQ < i && pq != null){
                            VoteList votes = pq.getVotes();
                            for(IVote v : votes){
                               Object rid = v.getElector().getID();
@@ -1734,7 +1738,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                            }
                         }
 
-                        if(rlcwSEQ < i && rcmtSEQ < i && cq != null && lcmtSEQ >=i){
+                        if(i <= lcmtSEQ && rcmtSEQ < lcmtSEQ && rcmtSEQ < i && cq != null){
                            VoteList votes = cq.getVotes();
                            for(IVote v : votes){
                               Object rid = v.getElector().getID();
@@ -1748,9 +1752,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 }//end for
             }
             
-            long currSEQ = rlcwSEQ + 1;
             
-            if(currSEQ < llcwSEQ){
+            if(rlcwSEQ < llcwSEQ){
                 try {
                     CheckpointLogEntry clogEntry = rStateManager.getBiggestLogEntry();
                     if(clogEntry != null){
@@ -1819,7 +1822,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             return false;
         }
 
-        return getStateLog().getNextPrepareSEQ() >=0;
+        return true;
     }
 
     PBFTTimeoutDetector periodStatusTimer = null;
@@ -2007,9 +2010,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
                 PBFTPrePrepare preprepare = getStateLog().getPrePrepare(currSEQ);
                 PBFTRequestInfo rinfo = getRequestInfo();
-                if(rinfo.hasSomeMissed(currSEQ)){
-                   return;
-                }
                 for(String digest : preprepare.getDigests()){
 
                     PBFTRequest request = rinfo.getRequest(digest); //statedReq.getRequest();
@@ -2321,7 +2321,11 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             PartEntry centry = rStateManager.getPart(0, 0);
 
             /* adds the pair (last stable sequence number and state digest) to compose checkpoint set C */
-            cv.addCheckpoint(centry.getPartCheckpoint(), centry.getDigest());
+            if(centry != null){
+               cv.addCheckpoint(centry.getPartCheckpoint(), centry.getDigest());
+            }else{
+               cv.addCheckpoint(-1, "");
+            }
         } catch (Exception ex) {
             Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
             cv.addCheckpoint(getCheckpointLowWaterMark(), "");

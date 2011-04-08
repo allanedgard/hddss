@@ -7,6 +7,7 @@ package br.ufba.lasid.jds.jbft.pbft.comm;
 
 import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.MessageCollection;
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.util.DigestList;
 
 /**
@@ -114,5 +115,13 @@ public class PBFTChangeView extends PBFTServerMessage{
              ">"
         );
     }
+
+   public int getTAG() {
+      return IPBFTServer.CHANGEVIEW;
+   }
+
+   public String getTAGString() {
+      return "CHANGEVIEW";
+   }
 
 }

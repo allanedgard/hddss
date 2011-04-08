@@ -1,10 +1,6 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 //
 
-import br.ufba.lasid.jds.comm.IMessage;
-import br.ufba.lasid.jds.comm.PDU;
-import br.ufba.lasid.jds.comm.SignedMessage;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMessage;
 import br.ufba.lasid.jds.util.IScheduler;
 
 public class Agent extends Thread implements IAgent{

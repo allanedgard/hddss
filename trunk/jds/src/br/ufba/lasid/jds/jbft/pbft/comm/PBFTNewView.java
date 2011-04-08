@@ -7,6 +7,8 @@ package br.ufba.lasid.jds.jbft.pbft.comm;
 
 import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.MessageCollection;
+import br.ufba.lasid.jds.jbft.pbft.IPBFT;
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import java.util.Hashtable;
 
 /**
@@ -48,5 +50,13 @@ public class PBFTNewView extends PBFTServerMessage{
                  ">"
         );
     }
+
+   public int getTAG() {
+      return IPBFTServer.NEWVIEW;
+   }
+
+   public String getTAGString() {
+      return "NEWVIEW";
+   }
     
 }

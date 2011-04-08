@@ -5,6 +5,8 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
+
 /**
  *
  * @author aliriosa
@@ -34,4 +36,12 @@ public class PBFTCommit extends PBFTServerMessage{
                  ">"
         );
     }
+
+   public int getTAG() {
+      return IPBFTServer.COMMIT;
+   }
+
+   public String getTAGString() {
+      return "COMMIT";
+   }
 }

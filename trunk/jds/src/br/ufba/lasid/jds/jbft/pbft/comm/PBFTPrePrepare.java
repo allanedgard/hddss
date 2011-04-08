@@ -5,6 +5,8 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
+
 /**
  *
  * @author aliriosa
@@ -29,6 +31,14 @@ public class PBFTPrePrepare extends PBFTMessageOrdering{
                  ">"
         );
     }
+
+   public int getTAG() {
+      return IPBFTServer.PREPREPARE;
+   }
+
+   public String getTAGString() {
+      return "PREPREPARE";
+   }
 
 
 }

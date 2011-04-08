@@ -11,6 +11,14 @@ package br.ufba.lasid.jds.jbft.pbft.comm;
  */
 public class StatedPBFTRequestMessage extends PBFTMessage{
 
+   public int getTAG() {
+      return -1;
+   }
+
+   public String getTAGString() {
+      return "StatedPBFTRequest";
+   }
+
     public enum RequestState{
         NONE, WAITING, PREPREPARED, PREPARED, COMMITTED, SERVED, MISSED
     }

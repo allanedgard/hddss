@@ -7,6 +7,7 @@ package br.ufba.lasid.jds.jbft.pbft.comm;
 
 import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.MessageCollection;
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 
 /**
  *
@@ -43,4 +44,12 @@ public class PBFTBag extends PBFTServerMessage{
     public boolean isEmpty() {
         return messages.isEmpty();
     }
+
+   public int getTAG() {
+      return IPBFTServer.BAG;
+   }
+
+   public String getTAGString() {
+      return "BAG";
+   }
 }

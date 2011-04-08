@@ -7,6 +7,7 @@ package br.ufba.lasid.jds.jbft.pbft.comm;
 
 import br.ufba.lasid.jds.ft.util.PartList;
 import br.ufba.lasid.jds.ft.util.PartTree.PartEntry;
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 
 /**
  *
@@ -120,4 +121,12 @@ public class PBFTMetaData extends PBFTServerMessage{
                  ">"
         );
     }
+
+   public int getTAG() {
+      return IPBFTServer.METADATA;
+   }
+
+   public String getTAGString() {
+      return "METADATA";
+   }
 }

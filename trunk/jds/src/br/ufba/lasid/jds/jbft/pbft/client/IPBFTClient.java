@@ -22,11 +22,16 @@ public interface IPBFTClient{
     public void asyncCall(IPayload payload);
 
     public void setClient(IClient client);
-    public void setRetransmissionTimeout(long timeout);
+    //public void setRetransmissionTimeout(long timeout);
     public long getRetransmissionTimeout();
     //public void accept(IPayload payload);
     public void schedule(PBFTRequest request);
     //public void revokeSchedule(long timeout);
+   public double getMaxTimeout();
+   public void setMaxTimeout(double maxTimeout);
+
+   public double getMinTimeout();
+   public void setMinTimeout(double minTimeout);
 
     
 }

@@ -281,6 +281,24 @@ public class PBFTRequestInfo {
       return is(seqn, RequestState.PREPREPARED) || wasPrepared(seqn);
    }
 
+   public boolean hasRequest(String digest){
+      return getRequest(digest) != null;
+   }
+
+   public boolean hasSomeRequestMissed(Long seqn){
+
+      ArrayList<String> digests =  nLog.get(seqn);
+      if(digests != null){
+         for(String digest : digests){
+            if(getRequest(digest) == null){
+               return true;
+            }
+         }
+      }
+      return false;
+
+      
+   }
    public boolean wasPrepared(String digest){
       return is(digest, RequestState.PREPARED) || wasCommitted(digest);
    }
@@ -329,9 +347,11 @@ public class PBFTRequestInfo {
 
   public boolean hasSomeInState(Long seqn, RequestState state){
       ArrayList<String> digests =  nLog.get(seqn);
-      for(String digest : digests){
-         if(is(digest, state)){
-            return true;
+      if(digests != null){
+         for(String digest : digests){
+            if(is(digest, state)){
+               return true;
+            }
          }
       }
       return false;

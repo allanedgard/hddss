@@ -5,6 +5,7 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
+import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.util.DigestList;
 import java.util.ArrayList;
 
@@ -96,6 +97,14 @@ public class PBFTStatusPending extends PBFTServerMessage{
                   "MISSED-PREPARES = {" + missedRequestsToString() + "}, " +
                   "VIEW-CHANGE-REPLICAS = {"  + replicasToString() + "}" +
              ">";
+   }
+
+   public int getTAG() {
+      return IPBFTServer.STATUSPENDING;
+   }
+
+   public String getTAGString() {
+      return "STATUSPENDING";
    }
 
 }

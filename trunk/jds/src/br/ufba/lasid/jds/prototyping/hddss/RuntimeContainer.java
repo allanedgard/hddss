@@ -11,6 +11,7 @@ import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
  */
 public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugger{
     public AbstractClock clock;
+    public CPU cpu;
     public RuntimeSupport context;
     
     Buffer nic_out; //send buffer
@@ -49,7 +50,8 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
             while(receive());
             while(deliver());
 
-            ((Clock_Virtual)clock).tick();
+            ((Clock_Virtual)clock).tick();            
+           
 
             if(((Clock_Virtual)clock).tickValue() == 1 && agent.status()) {
             //synchronized(agent.lock){
