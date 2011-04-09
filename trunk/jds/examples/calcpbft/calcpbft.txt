@@ -75,11 +75,11 @@ agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
 agent.ServerGroupAddress = 0
 agent.GroupSize = 4
 agent.MaxTimeout = 5000
-agent.MinTimeout = 5
+agent.MinTimeout = 1
 agent.RequestGenerationProbability = 0.1
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelDeterministicInterval
-channel.Contention = false
+channel.Contention = true
 channel.DeltaMaximo = 5
 channel.DeltaMinimo = 1
 

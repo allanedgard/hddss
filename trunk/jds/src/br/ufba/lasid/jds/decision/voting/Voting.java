@@ -14,6 +14,13 @@ public abstract class Voting implements IVoting{
    protected VoteList  votes   = new VoteList();
    protected ICounting counting;
 
+   Electortable forbidden = new Electortable();
+
+   public Electortable getForbidden() {
+      return forbidden;
+   }
+
+
    public Voting(ICounting counting) {
       this.counting = counting;
    }
@@ -32,7 +39,7 @@ public abstract class Voting implements IVoting{
     * Performs the count of the votes.
     */
    public void count(){
-      counting.count(votes);
+      counting.count(votes, forbidden);
    }
 
    public VoteList getVotes() {

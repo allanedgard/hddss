@@ -27,8 +27,6 @@ public class PBFTRequestInfo {
          StatedPBFTRequestMessage statedREQ = new StatedPBFTRequestMessage(req, reqState, digest);
          dLog.put(digest, statedREQ);
          dQueue.add(digest);
-
-         return true;
       }else{
          if(getRequest(digest) == null){
             dLog.get(digest).setRequest(req);
@@ -47,11 +45,38 @@ public class PBFTRequestInfo {
 
          if(!requests.containsKey(req.getTimestamp())){
             requests.put(req.getTimestamp(), statedREQ);
-            timestamps.put(req.getClientID(), req.getTimestamp());
+            Long t = timestamps.get(req.getClientID());
+            Long _new = req.getTimestamp();
+            if(t != null){
+               long _old = t;
+               if(_new != null){
+                  if(_new < _old){
+                     _new = _old;
+                  }
+               }               
+            }
+            
+            timestamps.put(req.getClientID(), _new);
          }
       }
 
       return false;
+   }
+   public boolean isNewest(PBFTRequest req){
+      if(!(req != null && req.getClientID() != null && req.getTimestamp() != null)){
+         return false;
+      }
+
+      Long old = timestamps.get(req.getClientID());
+
+      if(old != null){
+         long _old = old;
+         long _new = req.getTimestamp();
+
+         return _new >= _old;
+      }
+      
+      return true;
    }
    
    public boolean add(String digest, PBFTRequest req){
@@ -221,12 +246,13 @@ public class PBFTRequestInfo {
       ArrayList<String> digests = nLog.get(seqn);
       if(digests != null){
          for(String digest : digests){
-            if(!is(digest, state)){
+            if(!is(digest, state)) {
                return false;
             }
          }
+         return true;
       }
-      return true;
+      return false;
    }
 
    public boolean logged(PBFTRequest r){
@@ -288,7 +314,7 @@ public class PBFTRequestInfo {
    public boolean hasSomeRequestMissed(Long seqn){
 
       ArrayList<String> digests =  nLog.get(seqn);
-      if(digests != null){
+      if(digests != null && !digests.isEmpty()){
          for(String digest : digests){
             if(getRequest(digest) == null){
                return true;
@@ -296,7 +322,6 @@ public class PBFTRequestInfo {
          }
       }
       return false;
-
       
    }
    public boolean wasPrepared(String digest){

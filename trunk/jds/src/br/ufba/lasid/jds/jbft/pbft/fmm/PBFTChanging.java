@@ -137,8 +137,8 @@ public class PBFTChanging extends PBFTServerMode{
         }
     }
 
-    public void handle(PBFTProcessingToken tk) {
-        getMachine().getProtocol().handle(tk);
+    public void execute() {
+        getMachine().getProtocol().execute();
     }
 
     @Override

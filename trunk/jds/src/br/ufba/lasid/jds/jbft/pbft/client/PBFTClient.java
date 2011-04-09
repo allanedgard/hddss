@@ -5,8 +5,6 @@
 
 package br.ufba.lasid.jds.jbft.pbft.client;
 
-import br.ufba.lasid.jds.BaseProcess;
-import br.ufba.lasid.jds.IProcess;
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.cs.IClient;

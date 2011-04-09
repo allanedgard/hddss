@@ -27,7 +27,6 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTProcessingToken;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
 import br.ufba.lasid.jds.security.IMessageAuthenticator;
@@ -109,8 +108,8 @@ public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBF
         getCurrentMode().handle(bg);
     }
 
-    public void handle(PBFTProcessingToken tk) {
-        getCurrentMode().handle(tk);
+    public void execute() {
+        getCurrentMode().execute();
     }
 
 
@@ -148,13 +147,13 @@ public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBF
         return getProtocol().getCurrentExecuteSEQ();
     }
 
-    public long getCurrentPrepareSEQ() {
-        return getProtocol().getCurrentPrepareSEQ();
-    }
-
-    public long getCurrentCommitSEQ() {
-        return getProtocol().getCurrentCommitSEQ();
-    }
+//    public long getCurrentPrepareSEQ() {
+//        return getProtocol().getCurrentPrepareSEQ();
+//    }
+//
+//    public long getCurrentCommitSEQ() {
+//        return getProtocol().getCurrentCommitSEQ();
+//    }
 
     public void emitChangeView() {
         getProtocol().emitChangeView();
