@@ -83,7 +83,7 @@ public interface IPBFTServer extends IPBFT{
     public void handle(PBFTChangeViewACK  cva);
     public void handle(PBFTNewView        nwv);
     public void handle(PBFTBag            bg );
-    public void handle(PBFTProcessingToken tk);
+    public void execute();
     public void handle(PBFTStatusPending   sp);
 
   /*##############################################################
@@ -94,8 +94,8 @@ public interface IPBFTServer extends IPBFT{
 
     public long getCurrentPrePrepareSEQ();
     public long getCurrentExecuteSEQ();
-    public long getCurrentPrepareSEQ();
-    public long getCurrentCommitSEQ();
+//    public long getCurrentPrepareSEQ();
+//    public long getCurrentCommitSEQ();
     public long getSlidingWindowSize();
 
     public Object getLocalServerID();

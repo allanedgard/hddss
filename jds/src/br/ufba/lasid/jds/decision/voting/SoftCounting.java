@@ -27,7 +27,7 @@ public class SoftCounting extends Hashtable<ISubject, Long> implements ICounting
     * Performs the count of the votes.
     * @param votes - the list of votes.
     */
-   public void count(VoteList votes){
+   public void count(VoteList votes, Electortable forbidden){
       clear();
 
       /* for each vote collected */
@@ -36,6 +36,10 @@ public class SoftCounting extends Hashtable<ISubject, Long> implements ICounting
          IVote vi = votes.get(i);
          ISubject si = vi.getSubject();
          IElector ei = vi.getElector();
+
+         if(ei != null && ei.getID() != null && forbidden.containsKey(ei.getID())){
+            continue;
+         }
 
          /* if the subject si is a valid subject and has not been computed yet */
          if(si != null && !containsKey(si)){

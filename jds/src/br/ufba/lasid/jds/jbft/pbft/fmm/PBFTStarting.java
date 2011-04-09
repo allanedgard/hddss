@@ -142,8 +142,8 @@ public class PBFTStarting extends PBFTServerMode{
         swap();
     }
 
-    public void handle(PBFTProcessingToken tk) {
-        //getMachine().getProtocol().handle(tk);
+    public void execute() {
+        //getMachine().getProtocol().execute(tk);
     }
 
     public void handle(PBFTChangeView cv) {

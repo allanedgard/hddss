@@ -86,8 +86,8 @@ public class PBFTRunning extends PBFTServerMode{
         getMachine().getProtocol().handle(bg);
     }
 
-    public void handle(PBFTProcessingToken tk) {
-        getMachine().getProtocol().handle(tk);
+    public void execute() {
+        getMachine().getProtocol().execute();
     }
 
     public void handle(PBFTChangeView cv) {

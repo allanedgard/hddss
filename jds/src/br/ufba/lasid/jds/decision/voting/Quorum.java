@@ -16,12 +16,12 @@ public class Quorum extends Voting{
 
    int nvotes = 0;
    ISubject currentDecision = null;
-   
+
    public Quorum(int minimumNumberOfVotes, ICounting conting) {
       super(conting);
       this.nvotes = minimumNumberOfVotes;
-   }   
-
+   }
+   
    public ISubject decide(){
       
       count();

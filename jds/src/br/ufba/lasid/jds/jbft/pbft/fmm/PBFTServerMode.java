@@ -58,9 +58,9 @@ public abstract class PBFTServerMode extends Mode implements IPBFTServer{
         return getMachine().getProtocol().getAuthenticator();
     }
 
-    public long getCurrentCommitSEQ() {
-        return getMachine().getProtocol().getCurrentCommitSEQ();
-    }
+//    public long getCurrentCommitSEQ() {
+//        return getMachine().getProtocol().getCurrentCommitSEQ();
+//    }
 
     public long getCurrentExecuteSEQ() {
         return getMachine().getProtocol().getCurrentExecuteSEQ();
@@ -70,9 +70,9 @@ public abstract class PBFTServerMode extends Mode implements IPBFTServer{
         return getMachine().getProtocol().getCurrentPrePrepareSEQ();
     }
 
-    public long getCurrentPrepareSEQ() {
-        return getMachine().getProtocol().getCurrentPrepareSEQ();
-    }
+//    public long getCurrentPrepareSEQ() {
+//        return getMachine().getProtocol().getCurrentPrepareSEQ();
+//    }
 
     public Object getLocalServerID() {
         return getMachine().getProtocol().getLocalServerID();

@@ -7,6 +7,7 @@ package br.ufba.lasid.jds.jbft.pbft.comm;
 
 import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.util.DigestList;
+import java.util.BitSet;
 
 /**
  *
@@ -43,6 +44,17 @@ public class PBFTStatusActive extends PBFTServerMessage{
 
     protected DigestList missedRequests = new DigestList();
 
+    protected BitSet prepared = new BitSet();
+    protected BitSet commited = new BitSet();
+
+   public BitSet getCommited() {
+      return commited;
+   }
+
+   public BitSet getPrepared() {
+      return prepared;
+   }
+
     public Long getLastStableCheckpointSEQ() {
         return lastStableCheckpointSEQ;
     }
@@ -51,13 +63,13 @@ public class PBFTStatusActive extends PBFTServerMessage{
         this.lastStableCheckpointSEQ = lastStableCheckpointSEQ;
     }
 
-    public Long getLastCommittedSEQ() {
-        return lastCommittedSEQ;
-    }
-
-    public void setLastCommittedSEQ(Long lastCommittedSEQ) {
-        this.lastCommittedSEQ = lastCommittedSEQ;
-    }
+//    public Long getLastCommittedSEQ() {
+//        return lastCommittedSEQ;
+//    }
+//
+//    public void setLastCommittedSEQ(Long lastCommittedSEQ) {
+//        this.lastCommittedSEQ = lastCommittedSEQ;
+//    }
 
     public Long getLastExecutedSEQ() {
         return lastExecutedSEQ;
@@ -67,20 +79,20 @@ public class PBFTStatusActive extends PBFTServerMessage{
         this.lastExecutedSEQ = lastExecutedSEQ;
     }
 
-    public Long getLastPreparedSEQ() {
-        return lastPreparedSEQ;
-    }
-
-    public void setLastPreparedSEQ(Long lastPreparedSEQ) {
-        this.lastPreparedSEQ = lastPreparedSEQ;
-    }
-    public Long getLastPrePreparedSEQ() {
-        return lastPrePreparedSEQ;
-    }
-
-    public void setLastPrePreparedSEQ(Long lastPrePreparedSEQ) {
-        this.lastPrePreparedSEQ = lastPrePreparedSEQ;
-    }
+//    public Long getLastPreparedSEQ() {
+//        return lastPreparedSEQ;
+//    }
+//
+//    public void setLastPreparedSEQ(Long lastPreparedSEQ) {
+//        this.lastPreparedSEQ = lastPreparedSEQ;
+//    }
+//    public Long getLastPrePreparedSEQ() {
+//        return lastPrePreparedSEQ;
+//    }
+//
+//    public void setLastPrePreparedSEQ(Long lastPrePreparedSEQ) {
+//        this.lastPrePreparedSEQ = lastPrePreparedSEQ;
+//    }
 
    public DigestList getMissedRequests() {
       return missedRequests;
@@ -98,17 +110,37 @@ public class PBFTStatusActive extends PBFTServerMessage{
    }
 
 
-    public PBFTStatusActive(Long bseqn, Object replicaID, Integer viewNumber, Long prepreparedSEQ, Long preparedSEQ, Long committedSEQ, Long executedSEQ, Long checkpointSEQ){
+    public PBFTStatusActive(Long bseqn, Object replicaID, Integer viewNumber, Long executedSEQ, Long checkpointSEQ){
         setViewNumber(viewNumber);
-        setLastPrePreparedSEQ(prepreparedSEQ);
-        setLastPreparedSEQ(preparedSEQ);
-        setLastCommittedSEQ(committedSEQ);
+//        setLastPrePreparedSEQ(prepreparedSEQ);
+//        setLastPreparedSEQ(preparedSEQ);
+//        setLastCommittedSEQ(committedSEQ);
         setLastExecutedSEQ(executedSEQ);
         setLastStableCheckpointSEQ(checkpointSEQ);
         setReplicaID(replicaID);
         setSequenceNumber(bseqn);
     }
-    
+
+    private String preparedToString(){
+       String str = "";
+
+       for(int b = 0; b < prepared.length(); b++){
+          boolean bit = prepared.get(b);
+          str += bit ? "1" : "0";
+       }
+       return str;
+    }
+
+    private String commitedToString(){
+       String str = "";
+
+       for(int b = 0; b < commited.length(); b++){
+          boolean bit = commited.get(b);
+          str += bit ? "1" : "0";
+       }
+       return str;
+    }
+
     @Override
     public String toString() {
         return (
@@ -116,10 +148,9 @@ public class PBFTStatusActive extends PBFTServerMessage{
                  "BSEQN = " + getSequenceNumber() + ", " + 
                  "VIEW = " + getViewNumber().toString()     + ", " +
                  "STABLECHECKPOINTSEQ = " + getLastStableCheckpointSEQ().toString()  + ", " +
-                 "PREPREPAREDSEQ = " + getLastPrePreparedSEQ().toString()  + ", " +
-                 "PREPAREDSEQ = " + getLastPreparedSEQ().toString()  + ", " +
-                 "COMMITEDSEQ = " + getLastCommittedSEQ().toString()  + ", " +
                  "EXECUTEDSEQ = " + getLastExecutedSEQ().toString()  + ", " +
+                 "PREPARED = " + preparedToString() + ", " +
+                 "COMMITED = " + commitedToString() + ", " + 
                  "MISSED-REQUESTS = {" + missedRequestsToString() + "}, " +
                  "SERVER = " + getReplicaID().toString() +
                  ">"

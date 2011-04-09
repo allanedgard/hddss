@@ -34,8 +34,8 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
     private long cpLowWaterMark = -1;
 
     protected  long nextPrePrepareSEQ =  0L;
-    protected  long nextPrepareSEQ    =  0L;
-    protected  long nextCommitSEQ     =  0L;
+//    protected  long nextPrepareSEQ    =  0L;
+//    protected  long nextCommitSEQ     =  0L;
     protected  long nextExecuteSEQ    =  0L;
 
     protected PBFTNewViewtable nvtable = new PBFTNewViewtable();
@@ -51,47 +51,47 @@ public class PBFTStateLog extends Hashtable<Long, PBFTLogEntry>{
         }
     }
 
-    public void updateNextPrepareSEQ(PBFTPrepare m){
-        synchronized(this){
-            if(m != null && m.getSequenceNumber() != null){
-                long seqn = m.getSequenceNumber();
-                if(seqn < nextPrePrepareSEQ && seqn == nextPrepareSEQ){
-                    nextPrepareSEQ++;
-                }
-            }
-        }
-    }
+//    public void updateNextPrepareSEQ(PBFTPrepare m){
+//        synchronized(this){
+//            if(m != null && m.getSequenceNumber() != null){
+////                long seqn = m.getSequenceNumber();
+////                if(seqn < nextPrePrepareSEQ && seqn == nextPrepareSEQ){
+////                    nextPrepareSEQ++;
+////                }
+//            }
+//        }
+//    }
 
-    public void updateNextCommitSEQ(PBFTCommit m){
-        synchronized(this){
-            if(m != null && m.getSequenceNumber() != null){
-                long seqn = m.getSequenceNumber();
-                if(seqn < nextPrePrepareSEQ && seqn < nextPrepareSEQ && seqn == nextCommitSEQ){
-                    nextCommitSEQ++;
-                }
-            }
-        }
-    }
+//    public void updateNextCommitSEQ(PBFTCommit m){
+//        synchronized(this){
+//            if(m != null && m.getSequenceNumber() != null){
+////                long seqn = m.getSequenceNumber();
+////                if(seqn < nextPrePrepareSEQ /*&& seqn < nextPrepareSEQ*/ && seqn == nextCommitSEQ){
+////                    nextCommitSEQ++;
+////                }
+//            }
+//        }
+//    }
 
     public void updateNextExecuteSEQ(Long theSEQ){
         synchronized(this){
             if(theSEQ != null){
                 long seqn = theSEQ;
-                if(seqn < nextPrePrepareSEQ && seqn < nextPrepareSEQ && seqn < nextCommitSEQ && seqn == nextExecuteSEQ){
+                if(seqn < nextPrePrepareSEQ && seqn == nextExecuteSEQ){
                     nextExecuteSEQ++;
                 }
             }
         }
     }
 
-    public void setNextCommitSEQ(long nextCommitSEQ) { this.nextCommitSEQ = nextCommitSEQ;}
+//    public void setNextCommitSEQ(long nextCommitSEQ) { this.nextCommitSEQ = nextCommitSEQ;}
     public void setNextExecuteSEQ(long nextExecuteSEQ) { this.nextExecuteSEQ = nextExecuteSEQ;}
     public void setNextPrePrepareSEQ(long nextPrePrepareSEQ) { this.nextPrePrepareSEQ = nextPrePrepareSEQ;}
-    public void setNextPrepareSEQ(long nextPrepareSEQ) {this.nextPrepareSEQ = nextPrepareSEQ;}
+  //  public void setNextPrepareSEQ(long nextPrepareSEQ) {this.nextPrepareSEQ = nextPrepareSEQ;}
 
-    public long getNextCommitSEQ() {return nextCommitSEQ;}
+    //public long getNextCommitSEQ() {return nextCommitSEQ;}
     public long getNextPrePrepareSEQ() {return nextPrePrepareSEQ;}
-    public long getNextPrepareSEQ() {return nextPrepareSEQ;}
+    //public long getNextPrepareSEQ() {return nextPrepareSEQ;}
     public long getNextExecuteSEQ() {return nextExecuteSEQ;}
 
     protected int nextViewNumber = 1;

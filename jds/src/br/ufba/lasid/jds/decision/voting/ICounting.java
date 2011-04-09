@@ -14,6 +14,6 @@ import java.util.Set;
  */
 public interface ICounting {
       public Long get(ISubject subject);
-      public void count(VoteList votes);
+      public void count(VoteList votes, Electortable forbidden);
       public Set<ISubject> getSubjects();
 }
