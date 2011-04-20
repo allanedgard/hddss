@@ -57,8 +57,16 @@ public class SignedMessage implements IMessage{
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(SignedMessage.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return "SignedMessage{" + obj + '}';
+        return "" + obj + ""; //"SignedMessage{" + obj + '}';
     }
+
+   public int getTAG() {
+      return -1;
+   }
+
+   public String getTAGString() {
+      return "SIGNEDMESSAGE";
+   }
 
 
 }

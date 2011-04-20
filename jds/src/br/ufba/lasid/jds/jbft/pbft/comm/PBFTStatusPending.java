@@ -13,22 +13,18 @@ import java.util.ArrayList;
  *
  * @author aliriosa
  */
-public class PBFTStatusPending extends PBFTServerMessage{
+public class PBFTStatusPending extends PBFTStatusActive{
    
    protected ArrayList changeViewReplicas = new ArrayList();
    
    protected boolean newView;
    protected long lastExecutedSequenceNumber;
-   protected long lastStableCheckpointSequenceNumber;
-   protected DigestList missedRequests = new DigestList();
+   protected long lastStableCheckpointSequenceNumber;   
    
    public PBFTStatusPending(long bseqn, int viewn, long lastExecuted, long lastStableCheckpointSEQ, Object replicaID, boolean hasNewView) {
-      setViewNumber(viewn);
-      setReplicaID(replicaID);
-      setLastExecutedSequenceNumber(lastExecuted);
-      setLastStableCheckpointSequenceNumber(lastStableCheckpointSEQ);
+      super(bseqn, replicaID, viewn, lastExecuted, lastStableCheckpointSEQ);
       setNewView(hasNewView);
-      setSequenceNumber(bseqn);
+
    }
 
 
@@ -44,65 +40,38 @@ public class PBFTStatusPending extends PBFTServerMessage{
       return changeViewReplicas;
    }
 
-   public DigestList getMissedRequests() {
-      return missedRequests;
-   }
-
-   public long getLastExecutedSequenceNumber() {
-      return lastExecutedSequenceNumber;
-   }
-
-   public void setLastExecutedSequenceNumber(long lastExecutedSequenceNumber) {
-      this.lastExecutedSequenceNumber = lastExecutedSequenceNumber;
-   }
-
-   public long getLastStableCheckpointSequenceNumber() {
-      return lastStableCheckpointSequenceNumber;
-   }
-
-   public void setLastStableCheckpointSequenceNumber(long lastStableCheckpointSequenceNumber) {
-      this.lastStableCheckpointSequenceNumber = lastStableCheckpointSequenceNumber;
-   }
-
    private String replicasToString(){
       String str = "";
       String more = "";
       for(Object rid : changeViewReplicas){
          str += more + rid;
-         more = ",";
+         more = ", ";
       }
 
       return str;
    }
-   private String missedRequestsToString(){
-      String str = "";
-      String more = "";
 
-      for(String digest : missedRequests){
-         str += more + digest;
-         more = "; ";
-      }
-      return str;
-   }
    @Override
    public final String toString() {
       Object rid = getReplicaID();
       return "<STATUS-PENDING," +
                   "BSEQN = " + getSequenceNumber() + ", " +
                   "VIEW = " + getViewNumber() + ", " +
-                  "LCWM = " + getLastStableCheckpointSequenceNumber() + ", " +
-                  "LAST-EXECUTED = " + getLastExecutedSequenceNumber() + ", " +
+                  "LCWM = " + getLastExecutedSEQ() + ", " +
+                  "LAST-EXECUTED = " + getLastExecutedSEQ() + ", " +
                   "HAS-NEWVIEW = " + hasNewView() + ", " +
                   "REPLICAID = " + (rid == null ? "NULL" : rid) + ", " +
-                  "MISSED-PREPARES = {" + missedRequestsToString() + "}, " +
-                  "VIEW-CHANGE-REPLICAS = {"  + replicasToString() + "}" +
+                  "VIEW-CHANGE-REPLICAS = {"  + replicasToString() + "}, " +
+                  "MISSED-REQUESTS = {" + digestsToString() + "} " +
              ">";
    }
 
+   @Override
    public int getTAG() {
       return IPBFTServer.STATUSPENDING;
    }
 
+   @Override
    public String getTAGString() {
       return "STATUSPENDING";
    }

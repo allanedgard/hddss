@@ -82,10 +82,6 @@ public abstract class PBFTServerMode extends Mode implements IPBFTServer{
         return getMachine().getProtocol().getSlidingWindowSize();
     }
 
-    public void installNewView(PBFTNewView nv) {
-        getMachine().getProtocol().installNewView(nv);
-    }
-
     public Architecture getArchitecture() {
         return getMachine().getProtocol().getArchitecture();
     }
@@ -174,10 +170,6 @@ public abstract class PBFTServerMode extends Mode implements IPBFTServer{
 
     public void setBatchTimeout(Long btimeout) {
         getMachine().getProtocol().setBatchTimeout(btimeout);
-    }
-
-    public void setChangeViewRetransmissionTimeout(long cvtimeout) {
-        getMachine().getProtocol().setChangeViewRetransmissionTimeout(cvtimeout);
     }
 
     public void setCheckpointFactor(Long factor) {

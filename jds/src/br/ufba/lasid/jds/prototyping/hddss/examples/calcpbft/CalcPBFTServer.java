@@ -18,9 +18,9 @@ import br.ufba.lasid.jds.util.IPayload;
 public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecoverableServer<Integer>{//IRecoverableServer<Integer>{
 
     
-    public Calculator calculator = new Calculator();
-    protected int ncalcs = 0;
-    protected CalculatorState _state = new CalculatorState();
+    transient public Calculator calculator = new Calculator();
+    transient protected int ncalcs = 0;
+    transient protected CalculatorState _state = new CalculatorState();
 
     @Override
     public IPayload executeCommand(IPayload arg) {
@@ -71,7 +71,12 @@ public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecover
     }
 
     public void setCurrentState(IState state) {
+       if(state != null){
         _state = (CalculatorState)state;
+        return;
+       }
+
+       _state = new CalculatorState();
     }
 
 }

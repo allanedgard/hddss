@@ -38,4 +38,8 @@ public class RuntimeVariables implements RuntimeSupport{
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+   public boolean advance() {
+      throw new UnsupportedOperationException("Not supported yet.");
+   }
+
 }

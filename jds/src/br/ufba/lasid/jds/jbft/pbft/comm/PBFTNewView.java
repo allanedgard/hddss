@@ -7,7 +7,6 @@ package br.ufba.lasid.jds.jbft.pbft.comm;
 
 import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.MessageCollection;
-import br.ufba.lasid.jds.jbft.pbft.IPBFT;
 import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import java.util.Hashtable;
 
@@ -17,13 +16,14 @@ import java.util.Hashtable;
  */
 public class PBFTNewView extends PBFTServerMessage{
     MessageCollection preprepareSet = new MessageCollection();
-    Hashtable<String, PBFTChangeView> changeViewTable = new Hashtable<String, PBFTChangeView>();
+    Hashtable<Object, String> changeViewTable = new Hashtable<Object, String>();
+    String digest;
 
-   public Hashtable<String, PBFTChangeView> getChangeViewTable() {
+   public Hashtable<Object, String> getChangeViewtable() {
       return changeViewTable;
    }
     
-   public MessageCollection getPreprepareSet() {
+   public MessageCollection getPrePrepareSet() {
       return preprepareSet;
    }
 
@@ -38,15 +38,25 @@ public class PBFTNewView extends PBFTServerMessage{
       return str;
    }
 
+   public String getDigest() {
+      return digest;
+   }
+
+   public void setDigest(String digest) {
+      this.digest = digest;
+   }
+
+   
+   
     @Override
     public final String toString() {
 
         return (
-                "<NEW-VIEW" + "," +
+                "<NEW-VIEW" + ", " +
                  "VIEW = " + getViewNumber().toString() + ", " +
-                 "V = " + getChangeViewTable().toString() + ", " +
-                 "X = " + preprepareSetToString() + ", " +
-                 "SENDER = " + getReplicaID().toString()+ 
+                 "V = " + getChangeViewtable().toString() + ", " +
+                 "X = {" + "<CHECKPOINT SEQN = " + getSequenceNumber()+ ", DIGEST = " + digest + ">; " + preprepareSetToString() + "}, " +
+                 "SENDER = " + getReplicaID().toString() +
                  ">"
         );
     }

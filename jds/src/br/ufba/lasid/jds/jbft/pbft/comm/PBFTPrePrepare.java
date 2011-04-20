@@ -19,6 +19,10 @@ public class PBFTPrePrepare extends PBFTMessageOrdering{
         this.replicaID = replicaID;
     }
 
+    public PBFTPrePrepare(PBFTPrePrepare pp){
+       this(pp.getViewNumber(), pp.getSequenceNumber(), pp.getReplicaID());
+       digests.addAll(pp.digests);
+    }
     @Override
     public final String toString() {
         Object rid = getReplicaID();

@@ -10,6 +10,7 @@ package br.ufba.lasid.jds.prototyping.hddss;
  * @author allan
  */
 import java.util.*;
+import java.util.ArrayList;
 
 public  class Buffer {
     
@@ -82,9 +83,42 @@ public  class Buffer {
          }
          return j;
      }
+
+     synchronized void forward(int dtime){
+
+        if(!inside.isEmpty()){
+           ArrayList<Integer> times = new ArrayList<Integer>(inside.keySet());
+           TreeMap temp = new TreeMap(inside);
+
+           inside.clear();
+
+           for(int time : times){
+              Object obj = temp.get(time);
+              inside.put(time + dtime, obj);
+           }
+
+           times.clear();
+           temp.clear();
+
+           times = null;
+           temp = null;
+        }
+     }
      
      synchronized int getLast() {
+        try{
          return ((Integer) inside.lastKey()).intValue();
+        }catch(Exception e){
+           return -1;
+        }
+     }
+
+     synchronized int getFist() {
+        try{
+         return ((Integer) inside.firstKey()).intValue();
+        }catch(Exception e){
+           return -1;
+        }
      }
 
     @Override

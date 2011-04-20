@@ -20,6 +20,7 @@ public class SimulatedScheduler implements IScheduler{
     Agenda agenda = new Agenda();
     private int count = -1;
     private IClock clock;
+    private long lastExecution = -1;
 
     public SimulatedScheduler(IClock clock) {
         this.clock = clock;
@@ -35,19 +36,24 @@ public class SimulatedScheduler implements IScheduler{
     }
 
     public void execute() {
-        long now = clock.value();
 
-        ScheduleList schedules = agenda.get(now);
-        if(schedules != null){
-            for(int i = schedules.size()-1; i >= 0; i--){
-                ISchedule schedule = schedules.get(i);
-                if(schedule.getTimestamp() == now){
-                    schedule.execute();
-                }
-                schedules.remove(i);
-            }
-            agenda.remove(now);
+        long finalExecution = clock.value();
+        long startExecution = lastExecution + 1;
+        for(long now = startExecution; now <= finalExecution; now++){
+           ScheduleList schedules = agenda.get(now);
+           if(schedules != null){
+               for(int i = schedules.size()-1; i >= 0; i--){
+                   ISchedule schedule = schedules.get(i);
+                   if(schedule.getTimestamp() == now){
+                       schedule.execute();
+                       //schedule.cancel();
+                   }
+                   schedules.remove(i);
+               }
+               agenda.remove(now);
+           }
         }
+        lastExecution = finalExecution;
     }
 
     public ISchedule schedule(ITask task, long timestamp) {

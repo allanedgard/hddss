@@ -21,7 +21,7 @@ public class PBFTProcessingHandler extends PBFTServerMessageHandler {
 
     public void handle() {
         // synchronized(lock){
-            getProtocol().execute();
+            getProtocol().tryExecuteRequests();
         //}
     }
 

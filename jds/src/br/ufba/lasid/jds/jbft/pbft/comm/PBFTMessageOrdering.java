@@ -24,7 +24,7 @@ public abstract class PBFTMessageOrdering extends PBFTServerMessage{
         String more = "";
         for(String s : digests){
             str += more + s;
-            more = ";";
+            more = "; ";
         }
 
         return str;

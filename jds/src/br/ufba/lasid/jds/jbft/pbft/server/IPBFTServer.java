@@ -20,10 +20,8 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTProcessingToken;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusPending;
 import java.lang.reflect.Method;
 
 /**
@@ -83,8 +81,7 @@ public interface IPBFTServer extends IPBFT{
     public void handle(PBFTChangeViewACK  cva);
     public void handle(PBFTNewView        nwv);
     public void handle(PBFTBag            bg );
-    public void execute();
-    public void handle(PBFTStatusPending   sp);
+    public void tryExecuteRequests();
 
   /*##############################################################
    * 4. Utility Methods.
@@ -101,7 +98,6 @@ public interface IPBFTServer extends IPBFT{
     public Object getLocalServerID();
 
     public void emitChangeView();
-    public void installNewView(PBFTNewView nv);
 
     public int getServiceBFTResilience();
     
@@ -110,7 +106,7 @@ public interface IPBFTServer extends IPBFT{
     public void setBatchSize(int bsize);
     public void setRejuvenationWindow(long rwindow);
     public void setBatchTimeout(Long btimeout);
-    public void setChangeViewRetransmissionTimeout(long cvtimeout);
+//    public void setChangeViewRetransmissionTimeout(long cvtimeout);
     //public void setCurrentPrimaryID(Object pid);
     public void setPrimaryFaultTimeout(Long pftimeout);
     public void setCurrentViewNumber(Integer viewn);

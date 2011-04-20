@@ -17,11 +17,9 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTProcessingToken;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusPending;
 
 /**
  *
@@ -62,10 +60,6 @@ public class PBFTRunning extends PBFTServerMode{
         getMachine().getProtocol().handle(sta);
     }
 
-   public void handle(PBFTStatusPending sp) {
-      getMachine().getProtocol().handle(sp);
-   }
-
     public void handle(PBFTFetch ft) {
         getMachine().getProtocol().handle(ft);
     }
@@ -86,8 +80,8 @@ public class PBFTRunning extends PBFTServerMode{
         getMachine().getProtocol().handle(bg);
     }
 
-    public void execute() {
-        getMachine().getProtocol().execute();
+    public void tryExecuteRequests() {
+        getMachine().getProtocol().tryExecuteRequests();
     }
 
     public void handle(PBFTChangeView cv) {
@@ -131,7 +125,7 @@ public class PBFTRunning extends PBFTServerMode{
     public void enter() {
         MessageQueue queue = null;
 
-        /* First, we execute the messeges related to change view procedure */        
+        /* First, we tryExecuteRequests the messeges related to change view procedure */
         queue = getMachine().getQueue(PBFTChangeView.class.getName());
         while(!queue.isEmpty()){
             PBFTChangeView cv = (PBFTChangeView) queue.remove();
@@ -150,14 +144,14 @@ public class PBFTRunning extends PBFTServerMode{
             handle(nwv);
         }
 
-        /* Second, we execute the messeges related to normal working of the pbft */
+        /* Second, we tryExecuteRequests the messeges related to normal working of the pbft */
         queue = getMachine().getQueue(PBFTServerMessage.class.getName());
         while(!queue.isEmpty()){
             PBFTServerMessage svr = (PBFTServerMessage) queue.remove();            
             handle(svr);
         }
 
-        /* Third, we execute the client requests */
+        /* Third, we tryExecuteRequests the client requests */
         queue = getMachine().getQueue(PBFTRequest.class.getName());
         while(!queue.isEmpty()){
             PBFTRequest r = (PBFTRequest) queue.remove();

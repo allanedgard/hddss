@@ -14,7 +14,6 @@ import br.ufba.lasid.jds.comm.communicators.ICommunicator;
 import br.ufba.lasid.jds.cs.IServer;
 import br.ufba.lasid.jds.fmm.MultiModeMachine;
 import br.ufba.lasid.jds.group.IGroup;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusPending;
 import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBag;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeView;
@@ -108,8 +107,8 @@ public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBF
         getCurrentMode().handle(bg);
     }
 
-    public void execute() {
-        getCurrentMode().execute();
+    public void tryExecuteRequests() {
+        getCurrentMode().tryExecuteRequests();
     }
 
 
@@ -147,20 +146,8 @@ public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBF
         return getProtocol().getCurrentExecuteSEQ();
     }
 
-//    public long getCurrentPrepareSEQ() {
-//        return getProtocol().getCurrentPrepareSEQ();
-//    }
-//
-//    public long getCurrentCommitSEQ() {
-//        return getProtocol().getCurrentCommitSEQ();
-//    }
-
     public void emitChangeView() {
         getProtocol().emitChangeView();
-    }
-
-    public void installNewView(PBFTNewView nv) {
-        getProtocol().installNewView(nv);
     }
 
     public Object getLocalServerID() {
@@ -267,10 +254,6 @@ public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBF
         getProtocol().setBatchTimeout(btimeout);
     }
 
-    public void setChangeViewRetransmissionTimeout(long cvtimeout) {
-        getProtocol().setChangeViewRetransmissionTimeout(cvtimeout);
-    }
-
     public void setPrimaryFaultTimeout(Long pftimeout) {
         getProtocol().setPrimaryFaultTimeout(pftimeout);
     }
@@ -334,12 +317,4 @@ public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBF
    public boolean starting() {
       return getProtocol().starting();
    }
-
-   public void handle(PBFTStatusPending sp) {
-      getCurrentMode().handle(sp);
-   }
-
-
-
-
 }

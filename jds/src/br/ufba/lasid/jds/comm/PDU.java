@@ -19,6 +19,7 @@ public class PDU extends Hashtable<String, Object> implements IMessage{
     protected transient Object source;
     protected transient Object destination;
     protected Object payload;
+
     public void setSource(Object src){
        source = src;
         //put(SOURCE, src);
@@ -49,5 +50,18 @@ public class PDU extends Hashtable<String, Object> implements IMessage{
        return payload;
         //return get(PAYLOAD);
     }
+
+   public int getTAG() {
+      return -1;
+   }
+
+   public String getTAGString() {
+      return "PDU";
+   }
+
+   @Override
+   public String toString() {
+      return "" + payload + "";//"PDU{" + "source=" + source + "; destination=" + destination + "; payload=" + payload + '}';
+   }
 
 }

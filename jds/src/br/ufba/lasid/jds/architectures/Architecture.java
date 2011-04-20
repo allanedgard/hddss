@@ -106,11 +106,11 @@ public class Architecture {
 
     public void startup(){
         buildup();
-        connectors.start();
+        //connectors.start();
 
         for(Thread t : thtable.values()){
             if(!t.isAlive()){
-                t.start();
+                //t.start();
                 
             }
         }

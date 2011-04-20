@@ -20,7 +20,7 @@ public class LoadAwareCPU extends CPU{
       
       try{
          int dsize = XObject.objectToByteArray(data).length * 8;
-         delay = dsize / getProcessingRate();
+         delay = ((double)dsize / (double)getProcessingRate());
       }catch(Exception e){
          
       }

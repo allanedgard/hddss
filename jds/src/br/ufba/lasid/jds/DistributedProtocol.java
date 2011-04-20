@@ -17,7 +17,7 @@ public class DistributedProtocol extends Protocol implements IDistributedProtoco
     protected IProcess local;
     protected ISystemEntity remote;
     
-    public synchronized IProcess getLocalProcess() {
+    public IProcess getLocalProcess() {
         return local;
     }
 

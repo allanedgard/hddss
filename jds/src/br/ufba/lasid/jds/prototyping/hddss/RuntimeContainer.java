@@ -11,12 +11,14 @@ import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
  */
 public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugger{
     public AbstractClock clock;
+    //public AbstractClock globalClock;
     public CPU cpu;
     public RuntimeSupport context;
     
     Buffer nic_out; //send buffer
     Buffer nic_in;  //receive buffer
     Buffer app_in;  //deliver buffer
+    Buffer exc_in;  //execute buffer;
 
     FaultModelAgent faultModel;
 
@@ -35,6 +37,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
         nic_in = new Buffer();
         nic_out = new Buffer();
         app_in = new Buffer();
+        exc_in = new Buffer();
         
     }
 
@@ -43,25 +46,31 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
         return true;
     }
     
-    public void execute(){
-        
+    public synchronized void execute(){
+//         nic_in.toString();
+//         nic_out.toString();
+//         app_in.toString();
+//         exc_in.toString();
+
          if(agent.status()){
+               while(receive());
+               while(deliver());
 
-            while(receive());
-            while(deliver());
-
-            ((Clock_Virtual)clock).tick();            
+            ((Clock_Virtual)clock).tick();
            
-
             if(((Clock_Virtual)clock).tickValue() == 1 && agent.status()) {
-            //synchronized(agent.lock){
                agent.execute();
-            //}
             }
-            
+           
             while(send());
+//            long ftime = cpu.value();
+
+//            for(long curr = clock.value(); curr <= ftime; curr ++){
+//               while(send(curr));
+//            }
 
 
+            
          }
         
     }
@@ -109,79 +118,119 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
 
 
     public boolean deliver(){
-            ArrayList a = app_in.getMsgs((int)clock.value());
-            if (a.isEmpty()) {
-                return false;
-            }
+       Message m = deliver(clock.value());
+       if(m != null){
+            agent.deliver(m);
 
-            Message msg;
-            msg = (Message) a.get(0);
+            reportEvent(m, 'd');
 
-            reportEvent(msg, 'd');
-
-            if (msg.payload) {
+            if (m.payload) {
                 context.get(Variable.DlvDelayTrace).<DescriptiveStatistics>value().addValue(
-                        (int)clock.value() - msg.physicalClock
+                        (int)clock.value() - m.physicalClock
                 );
 
                 context.get(Variable.RxDelayTrace).<DescriptiveStatistics>value().addValue(
-                        (int)clock.value() - msg.receptionTime
+                        (int)clock.value() - m.receptionTime
                 );
-//
-//                context.get(Variable.TxDelayTrace).<DescriptiveStatistics>value().addValue(
-//                        msg.receptionTime - msg.physicalClock
-//                );
 
             }
-            agent.deliver(msg);
-            return true;
-        
+
+          return true;
+       }
+
+       return false;
+    }
+
+    public Message deliver(long now){
+               ArrayList a = null;
+               a = app_in.getMsgs((int)now);
+               if (a.isEmpty()) {
+                   return null;
+               }
+
+            Message msg;
+            msg = (Message) a.get(0);
+
+            return msg;
+
     }
 
     public boolean receive(){
-            ArrayList a = nic_in.getMsgs((int)clock.value());
-            if (a.isEmpty()) {
-                return false;
+
+       Message m = receive(clock.value());
+       if(m != null){
+            agent.receive(m);
+             context.get(Variable.TxDelayTrace).<DescriptiveStatistics>value().addValue(
+                     (double)(m.receptionTime - m.physicalClock)
+             );
+
+            reportEvent(m, 'r');
+
+            return true;
+       }
+
+       return false;
+          
+    }
+
+    public Message receive(long now){
+
+            ArrayList a = null;
+
+               a = nic_in.getMsgs((int)now);
+               if (a.isEmpty()) {
+                   return null;
+               }
+
+            Message msg;
+            msg = (Message) a.get(0);
+
+            msg.receptionTime = (int)now;
+
+            return msg;
+
+    }
+
+    public Message pending(){
+       return pending(clock.value());
+    }
+    
+    public Message pending(long now){
+
+            ArrayList a = exc_in.getMsgs((int)now);
+
+            if (!(a != null && !a.isEmpty())) {
+               return null;
             }
 
             Message msg;
             msg = (Message) a.get(0);
-            
-            reportEvent(msg, 'r');
-            msg.receptionTime = (int)clock.value();
-            
-//             context.get(Variable.RxDelayTrace).<DescriptiveStatistics>value().addValue(
-//                     (int)clock.value() - msg.receptionTime
-//             );
 
-             context.get(Variable.TxDelayTrace).<DescriptiveStatistics>value().addValue(
-                     (double)(msg.receptionTime - msg.physicalClock)
-             );
-
-            agent.receive(msg);
-            return true;
-          
+            return msg;
+       
+    }
+    
+    public boolean send(){
+       return send(clock.value());
     }
 
-
-    public boolean send(){
-//        synchronized(agent.lock){
-            ArrayList a = nic_out.getMsgs((int)clock.value());
+    public boolean send(long now){
+            ArrayList a = nic_out.getMsgs((int)now);
             if (a.isEmpty()) {
                 return false;
             }
 
             Message msg;
             Network network = context.get(Variable.Network).<Network>value();
-            
+
             msg = (Message) a.get(0);
             network.send(msg);
             reportEvent(msg, 's');
-            return true;
-        //}
-                    
-    }
 
+            return true;
+       
+    }
+    
     public final void reportEvent(Message msg, char ev) {
         try{
                 String saida = ""+
@@ -189,7 +238,8 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
                 ev+"; "+
                 msg.sender+"; "+
                 msg.destination+"; "+
-                (int)clock.value()+"; "+
+                (int)cpu.value()+"; "+
+                //(int)clock.value()+"; "+
                 msg.physicalClock+"; "+
                 msg.logicalClock+"; "+
                 msg.type+"; "+
@@ -215,7 +265,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
 
     public final void debug(String d) {
 
-        boolean _debug = context.get(Variable.Debug).<Boolean>value();
+        boolean _debug = (Boolean)context.get(Variable.Debug).value();
         java.io.PrintStream out = context.get(Variable.StdOutput).<java.io.PrintStream>value();
         
         if (_debug) out.println(d);
@@ -250,8 +300,24 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
 
     public void nicout(Message m){
 //        synchronized(this){
+            //nic_out.add((int)(clock.value()), m);
             nic_out.add((int)(clock.value()), m);
 //        }
     }
 
+   public boolean advance() {
+      return this.context.advance();
+   }
+
+   public void exec(Object data){
+      
+       long btime = cpu.exec(data);
+       long stime = clock.value();
+       long ftime = stime + btime;
+
+//       for(long i = stime; i < ftime; i++){
+//          while(send(i));
+//       }
+
+   }
 }

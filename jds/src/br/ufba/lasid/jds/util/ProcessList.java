@@ -12,7 +12,7 @@ import java.util.ArrayList;
  *
  * @author aliriosa
  */
-public class ProcessList<T> extends ArrayList<br.ufba.lasid.jds.IProcess<T>>{
+public class ProcessList<T> extends ArrayList<IProcess<T>>{
 
     public IProcess<T> getProcessByID(T ID){
         for(IProcess<T> process : this){

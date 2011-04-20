@@ -7,12 +7,13 @@ public class Agent extends Thread implements IAgent{
     public int ID;
     public char tipo;
     public transient Context contexto;
-    public boolean done;
-    public long exectime = 0;
+    public transient boolean done;
+    public transient long exectime = 0;
     protected boolean shutdown = false;
     public static transient final String TAG = "agent";
     public transient RuntimeContainer infra;
     public transient final Object lock = this;
+    private long lastExecution = 0;
 
     public int getAgentID() {
         return ID;
@@ -95,13 +96,13 @@ public class Agent extends Thread implements IAgent{
         infra.start();
         
     }
-    
-   public void send(Message m){
-       synchronized(lock){
-            long pt = getProcessingTime(m);
-            infra.nic_out.add((int)(infra.clock.value() + pt), m);
-            //Debugger.debug("[p"+this.ID+"] send buffer =>" + infra.nic_out);
-       }
+   
+   public void send(Message msg){
+      long at;
+      
+      //infra.nic_out.add((int)(infra.clock.value()), m);
+      infra.nic_out.add((int)(at = infra.cpu.value()), msg);
+      System.out.println("(p" + ID + ") sent at " + at  + " " + msg.content);
 
    }
 
@@ -130,17 +131,42 @@ public class Agent extends Thread implements IAgent{
          *   Este evento pode ser sobrecarregado pela ação específica 
          *   do protocolo
          */
-        synchronized(lock){
-            infra.app_in.add((int)this.infra.clock.value(), msg);
-        }
+       long at = 0;
+//        synchronized(lock){
+            infra.app_in.add((int)(at = this.infra.cpu.value()), msg);
+            System.out.println("(p" + ID + ") received at " + at + " " + msg.content);
+
+            //infra.app_in.add((int)this.infra.cpu.value(), msg);
+  //      }
     }
     
     
     public void deliver(Message msg) {
-        /*
-         *   Este evento pode ser sobrecarregado pela ação específica
-         *   do protocolo
-         */
+         long at = 0;
+         infra.exc_in.add((int)(at = this.infra.cpu.value()), msg);
+         System.out.println("(p" + ID + ") delivered at " + at + " " + msg.content);
+
+    }
+    long cur = 0;
+    public Message getMessage(){
+         Message msg = null;
+         long now = infra.cpu.value();
+         cur = infra.clock.value();
+         long t = 0;
+         while(cur <= now){
+            t = cur;
+            msg = infra.pending(cur);
+            if(msg != null){
+               break;
+            }
+
+            cur +=1;
+         }
+         if(msg != null){
+            System.out.println("(p" + ID + ") retrieve to execute at " + t + " " + msg.content);
+         }
+         return msg;
+         
     }
 
     public long getExecutionTime() {
@@ -165,5 +191,11 @@ public class Agent extends Thread implements IAgent{
         return "Agent{" + "ID=" + ID + '}';
     }
 
+
+    public final void exec(Object data){
+
+       this.infra.exec(lock);
+       
+    }
 
 }

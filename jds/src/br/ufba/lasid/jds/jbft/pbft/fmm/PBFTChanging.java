@@ -17,11 +17,9 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTProcessingToken;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusPending;
 
 /**
  *
@@ -73,11 +71,6 @@ public class PBFTChanging extends PBFTServerMode{
            swap();
         }
     }
-
-   public void handle(PBFTStatusPending sp) {
-      getMachine().getProtocol().handle(sp);
-   }
-
 
     public void handle(PBFTFetch ft) {
        getMachine().getProtocol().handle(ft);
@@ -137,8 +130,8 @@ public class PBFTChanging extends PBFTServerMode{
         }
     }
 
-    public void execute() {
-        getMachine().getProtocol().execute();
+    public void tryExecuteRequests() {
+        getMachine().getProtocol().tryExecuteRequests();
     }
 
     @Override
@@ -150,7 +143,7 @@ public class PBFTChanging extends PBFTServerMode{
     public void enter() {
         MessageQueue queue = null;
 
-        /* First, we execute the client requests */
+        /* First, we tryExecuteRequests the client requests */
         queue = getMachine().getQueue(PBFTRequest.class.getName());
         while(!queue.isEmpty()){
             PBFTRequest r = (PBFTRequest) queue.remove();
@@ -175,7 +168,7 @@ public class PBFTChanging extends PBFTServerMode{
             handle(nwv);
         }
 
-        /* Second, we execute the messeges related to normal working of the pbft */
+        /* Second, we tryExecuteRequests the messeges related to normal working of the pbft */
         queue = getMachine().getQueue(PBFTServerMessage.class.getName());
         while(!queue.isEmpty()){
             PBFTServerMessage svr = (PBFTServerMessage) queue.remove();

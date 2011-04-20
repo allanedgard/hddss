@@ -6,7 +6,6 @@
 package br.ufba.lasid.jds.jbft.pbft.server.decision.auction;
 
 import br.ufba.lasid.jds.decision.bargaining.IProposal;
-import br.ufba.lasid.jds.decision.bargaining.auction.ILot;
 import br.ufba.lasid.jds.decision.bargaining.auction.SoftAuction;
 
 /**

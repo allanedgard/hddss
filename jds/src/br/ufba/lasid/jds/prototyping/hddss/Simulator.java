@@ -39,7 +39,7 @@ public class Simulator  extends Thread implements RuntimeSupport
     
     public final int obtemAtraso(int i, int j)
     {
-                return (int) (network.Channels[i][j].delay());
+                return (int) (network.channels[i][j].delay());
          
     }
 
@@ -64,7 +64,7 @@ public class Simulator  extends Thread implements RuntimeSupport
     public final void iniciaModoHwClock() {
         synchronized(this){
             int n = get(Variable.NumberOfAgents).<Integer>value();
-            int finalTime = get(Variable.FinalTime).<Integer>value();
+            //int finalTime = get(Variable.FinalTime).<Integer>value();
 
             try {
                 out.println("[*** Clock emulation mode ***]");
@@ -74,39 +74,38 @@ public class Simulator  extends Thread implements RuntimeSupport
 
             for (int i=0;i<n;i++) {
                 p[i].startup();
-                p[i].infra.cpu.start();
             }
 
             //scheduler.startup();
 
             boolean done = false;
 
-            while(!done){
-
-                done = true;
-
-                for(int i = 0; i < n; i++){
-                    synchronized(p[i].lock){
-                        p[i].getInfra().increaseTick();
-                    }
-                    /*
-                      if simulation time isn't over and p is not crashed then
-                      it hasn't been done yet.
-                     */
-
-                    done = done && ((p[i].getInfra().clock.value() >= finalTime) || !p[i].status());
-                }
-
-                network.incTick();
-
-
-                //scheduler.infra.increaseTick();
-
-            }
+            while(!(done = advance()));
+            
             network.done = true;
         }
     } 
-    
+
+    public boolean advance(){
+      int n = get(Variable.NumberOfAgents).<Integer>value();
+      int finalTime = get(Variable.FinalTime).<Integer>value();
+
+      boolean done = true;
+
+      for(int i = 0; i < n; i++){
+         
+         synchronized(p[i].lock){
+            p[i].getInfra().increaseTick();
+         }
+         
+         /* if simulation time isn't over and p is not crashed then it hasn't been done yet. */
+         done = done && ((p[i].getInfra().clock.value() >= finalTime) || !p[i].status());
+      }
+
+      network.incTick();
+
+      return done;
+    }
     public final void inicia() {
 
         synchronized(this){
@@ -118,9 +117,7 @@ public class Simulator  extends Thread implements RuntimeSupport
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
             network.start();
-            cpu.start();
 
             //scheduler.start();
 
@@ -134,6 +131,8 @@ public class Simulator  extends Thread implements RuntimeSupport
     public final void finaliza() {
         synchronized(this){
             int n = get(Variable.NumberOfAgents).<Integer>value();
+
+
             for(int i = 0; i < n; i++)
             {
                 p[i].shutdown();
@@ -141,7 +140,6 @@ public class Simulator  extends Thread implements RuntimeSupport
 
             //scheduler.shutdown();
 
-            cpu.stop();
             network.stop();
 
         }
