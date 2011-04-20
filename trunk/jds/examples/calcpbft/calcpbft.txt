@@ -3,7 +3,7 @@
  ***********************************************************/
 FinalTime = 100000
 NumberOfAgents = 10
-MaximumDeviation = 4
+MaximumDeviation = 0
 Mode = clock
 Debug = false
 
@@ -12,8 +12,11 @@ clock.Mode = s
 
 cpu = br.ufba.lasid.jds.prototyping.hddss.LoadAwareCPU
 
-/* transferRate in  bps  (e.g. 64Gbps is equal to 64000000000 bps, if simulation time in miliseconds then use 64Gbps / 1000  = 64Mb/ms*/
-cpu.ProcessingRate = 64000000
+/* transferRate in  bps  (e.g. 9Gbps is equal to 9000000000 bps, if simulation time in miliseconds then use 9Gbps / 1000  = 9Mb/ms */
+/*  ProcessingRate = 9446400 ~ i7 3.3GHz | 64 bits/instruction | PW = 147,6 MIPS */
+cpu.ProcessingRate = 6400
+/* LoadCost in seconds (e.g. 0.000000000001 seconds is equal to 1 picosecond) if simulation time in millisenconds then use 0.000000001 ms*/
+cpu.LoadCost = 0.000000001
 
 /***********************************************************/
  * SPECIFIC DISTRIBUTED SYSTEM SIMULATION OPTIONS
@@ -27,8 +30,7 @@ agent[0].BatchingSize = 6
 agent[0].BatchingTimeout = 150
 agent[0].CheckpointPeriod = 128
 agent[0].CheckpointFactor = 3
-agent[0].ViewChangeRetransmittionTimeout = 250
-agent[0].SendStatusPeriod = 800
+agent[0].SendStatusPeriod = 200
 agent[0].SlidingWindowSize = 8
 
 agent[1] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
@@ -40,8 +42,7 @@ agent[1].BatchingSize = 6
 agent[1].BatchingTimeout = 150
 agent[1].CheckpointPeriod = 128
 agent[1].CheckpointFactor = 3
-agent[1].ViewChangeRetransmittionTimeout = 250
-agent[1].SendStatusPeriod = 800
+agent[1].SendStatusPeriod = 200
 agent[1].SlidingWindowSize = 8
 
 agent[2] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
@@ -53,8 +54,7 @@ agent[2].BatchingSize = 6
 agent[2].BatchingTimeout = 150
 agent[2].CheckpointPeriod = 128
 agent[2].CheckpointFactor = 3
-agent[2].ViewChangeRetransmittionTimeout = 250
-agent[2].SendStatusPeriod = 800
+agent[2].SendStatusPeriod = 200
 agent[2].SlidingWindowSize = 8
 
 
@@ -67,26 +67,25 @@ agent[3].BatchingSize = 6
 agent[3].BatchingTimeout = 150
 agent[3].CheckpointPeriod = 128
 agent[3].CheckpointFactor = 3
-agent[3].ViewChangeRetransmittionTimeout = 250
-agent[3].SendStatusPeriod = 800
+agent[3].SendStatusPeriod = 200
 agent[3].SlidingWindowSize = 8
 
 agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
 agent.ServerGroupAddress = 0
 agent.GroupSize = 4
 agent.MaxTimeout = 5000
-agent.MinTimeout = 1
+agent.MinTimeout = 20
 agent.RequestGenerationProbability = 0.1
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelDeterministicInterval
-channel.Contention = true
+channel.Contention = true	
 channel.DeltaMaximo = 5
 channel.DeltaMinimo = 1
 
 network = br.ufba.lasid.jds.prototyping.hddss.PayloadAwareNetwork
 
 /* transferRate in  bps  (e.g. 10Mbps is equal to 10000000 bps, if simulation time in miliseconds then use 10Mbps / 1000  = 10Kb/ms*/
-network.TransferRate = 100000000
+network.TransferRate =  10000000
 
 /* MTU = bits (e.g. 64 KB is equal to 524288 bits) */
 network.MTU = 524288

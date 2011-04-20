@@ -6,24 +6,23 @@
 package br.ufba.lasid.jds.jbft.pbft.util;
 
 import br.ufba.lasid.jds.comm.IMessage;
-import br.ufba.lasid.jds.comm.MessageCollection;
-import br.ufba.lasid.jds.decision.bargaining.IProposal;
-import br.ufba.lasid.jds.decision.bargaining.auction.IAuctionResult;
-import br.ufba.lasid.jds.decision.bargaining.auction.ILotResult;
+import br.ufba.lasid.jds.decision.ISubject;
+import br.ufba.lasid.jds.decision.voting.Quorum;
 import br.ufba.lasid.jds.decision.voting.Quorumtable;
+import br.ufba.lasid.jds.decision.voting.SoftQuorum;
+import br.ufba.lasid.jds.group.decision.Vote;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeView;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeViewACK;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpoint;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
 import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
-import br.ufba.lasid.jds.jbft.pbft.server.decision.auction.PrepareProposal;
-import br.ufba.lasid.jds.jbft.pbft.server.decision.auction.NewViewAuction;
-import br.ufba.lasid.jds.jbft.pbft.server.decision.auction.OrderingProposal;
-import br.ufba.lasid.jds.jbft.pbft.server.decision.auction.PrePrepareProposal;
-import br.ufba.lasid.jds.jbft.pbft.server.decision.auction.Sequence;
-import br.ufba.lasid.jds.jbft.pbft.server.decision.auction.SequenceList;
+import br.ufba.lasid.jds.jbft.pbft.server.decision.PrePrepareSubject;
+import br.ufba.lasid.jds.jbft.pbft.server.decision.PrepareSubject;
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.TreeMap;
 
 /**
  *
@@ -31,9 +30,15 @@ import java.util.Hashtable;
  */
 public class PBFTNewViewConstructor {
 
-   protected Hashtable<String, PBFTChangeView> cvtable = new Hashtable<String, PBFTChangeView>();
-   protected Quorumtable<Long> qtable = new Quorumtable<Long>();
+   private Hashtable<Integer, ChangeViewtable> cvdatabase = new Hashtable<Integer, ChangeViewtable>();
+   private CheckpointDatabase chdatabase = new CheckpointDatabase();
+   
+   protected Quorumtable<Long> ppqtable = new Quorumtable<Long>();
+   protected Quorumtable<Long> prqtable = new Quorumtable<Long>();
    protected IPBFTServer pbft;
+
+   protected long     LCWM;
+   protected String DIGEST;
 
    public PBFTNewViewConstructor(IPBFTServer pbft, long checkpointFactor, long checkpointPeriod, int resilience) {
       this.pbft = pbft;
@@ -42,158 +47,356 @@ public class PBFTNewViewConstructor {
       this.resilience = resilience;
    }
 
-
-   public void addChangeView(String digest, PBFTChangeView cv){
-      if(cv!= null && digest != null && !cvtable.containsKey(digest)){
-         cvtable.put(digest, cv);
+   public void gc(int view){
+      if(!cvdatabase.isEmpty()){
+         if(cvdatabase.containsKey(view)){
+            ArrayList<Integer> views = new ArrayList<Integer>(cvdatabase.keySet());
+            for(Integer lookup : views){
+               if(lookup <= view){
+                  cvdatabase.remove(lookup);
+                  chdatabase.remove(lookup);                  
+               }
+            }
+         }
       }
+   }
+
+
+   public boolean isValid(PBFTChangeView cv){
+      if(!(cv!=null && cv.getCheckpointSet()!=null && cv.getPrePrepareSet()!=null && cv.getPrepareSet()!=null && cv.getReplicaID()!=null && cv.getViewNumber()!=null)){
+         return false;
+      }
+      return true;
+   }
+
+   public boolean hasAtLeastMessages(int view, int n){
+      return count(view) >= n;
+   }
+
+   public int count(int view){
+      int count = 0;
+
+      if(!cvdatabase.isEmpty()){
+         if(cvdatabase.containsKey(view)){
+            count = cvdatabase.get(view).size();
+         }
+      }
+
+      return count;
+      
+   }
+
+   public boolean addChangeViewACK(PBFTChangeViewACK ack){
+      if(!(ack != null && ack.getDigest() != null && ack.getPrompterID() != null && ack.getReplicaID() != null)){
+         return false;
+      }
+
+      if(!cvdatabase.isEmpty()){
+         int view = ack.getViewNumber();
+         if(cvdatabase.containsKey(view)){
+            ChangeViewtable table = cvdatabase.get(view);
+            if(table != null && !table.isEmpty()){
+               if(table.containsKey(ack.getPrompterID())){
+                  ChangeViewEntry entry = table.get(ack.getPrompterID());
+                  entry.changeViewACK = ack;
+                  return true;
+               }
+            }
+         }
+      }
+      return false;
+   }
+   
+   public boolean addChangeView(PBFTChangeView cv){
+
+      if(isValid(cv)){
+         
+         int view = cv.getViewNumber();
+         ChangeViewtable table = cvdatabase.get(view);
+
+         if(table == null){
+            table = new ChangeViewtable();
+            cvdatabase.put(view, table);
+         }
+         
+         table.put(cv.getReplicaID(), new ChangeViewEntry(cv, null));
+         
+         for(IMessage im : cv.getCheckpointSet()){
+            PBFTCheckpoint checkpoint = (PBFTCheckpoint) im;
+            chdatabase.put(view, cv.getReplicaID(), checkpoint);            
+         }
+
+         int f = resilience;
+         
+         for(IMessage im : cv.getPrePrepareSet()){
+
+            PBFTPrePrepare pp = (PBFTPrePrepare) im;
+            long seqn = pp.getSequenceNumber();
+            
+            //pp.setReplicaID(cv.getReplicaID());
+
+            Quorum q = ppqtable.get(seqn);
+
+            if(q == null){
+               q = new SoftQuorum(f + 1);
+               ppqtable.put(seqn, q);
+            }
+
+            q.add(new Vote(cv.getReplicaID(), new PrePrepareSubject(pp) ));
+         }
+
+         for(IMessage im : cv.getPrepareSet()){
+
+            PBFTPrepare pr = (PBFTPrepare) im;
+            long seqn = pr.getSequenceNumber();
+
+            //pr.setReplicaID(cv.getReplicaID());
+
+            Quorum q = prqtable.get(seqn);
+
+            if(q == null){
+               q = new SoftQuorum(2 * f + 1);
+               prqtable.put(seqn, q);
+            }
+
+            q.add(new Vote(cv.getReplicaID(), new PrepareSubject(pr) ));
+            
+         }
+         
+         return true;
+      }
+
+      return false;
+   }
+
+   public Long computeLCWM(int view){
+      return computeLCWM(view, checkpointQuorum);
+   }
+   public Long computeLCWM(int view, int n){
+      
+      if(!chdatabase.isEmpty()){
+         if(chdatabase.containsKey(view)){
+            return chdatabase.computeLCWM(view, n);
+         }
+      }
+
+      return null;
    }
 
    public int size(){
-      return cvtable.size();
+      return cvdatabase.size();
    }
 
    public void clear(){
-      cvtable.clear();
+      cvdatabase.clear();
    }
-   protected long lcwm = -1;
-   protected long hcwm = -1;
    protected long checkpointPeriod = 0;
    protected long checkpointFactor = 0;
    protected int resilience = 0;
-   
-   public void findCheckpointWaterMarks(){
 
-       for(PBFTChangeView cv : cvtable.values()){
-           MessageCollection checkpoints  = cv.getCheckpointSet();
-           if(checkpoints != null && !checkpoints.isEmpty()){
-              for(IMessage m : checkpoints){
-                 PBFTCheckpoint checkpoint = (PBFTCheckpoint) m;
-                 if(checkpoint != null && checkpoint.getSequenceNumber() != null){
-                     long seqn = checkpoint.getSequenceNumber();
-                     if(seqn > lcwm){
-                        lcwm = seqn;
-                     }//end if checkpoint.sequenceNumber > lcwm
-                 }//end if is a valid checkpoint message
-              }//end for each checkpoint message
-           }//end if is a valid checkpoint set
-       }//end for each change-view message
+   protected int checkpointQuorum = 0;
 
-       hcwm = lcwm + checkpointFactor * checkpointPeriod;
-
-       System.out.println("LCWM = " + lcwm + ", HCWM = " + hcwm);
+   public void setCheckpointQuorumSize(int n){
+      checkpointQuorum = n;
    }
+   
 
-   public PBFTNewView buildNewView(){
+   public PBFTNewView buildNewView(int view){
+      if(cvdatabase.isEmpty()){
+         return null;
+      }
 
-      findCheckpointWaterMarks();
+      if(!cvdatabase.containsKey(view)){
+         return null;
+      }
+
+
+      Long lcwm = computeLCWM(view);
       
-      long minSEQ = Long.MAX_VALUE;
-      long maxSEQ = -1;
+      if(lcwm == null){
+         return null;
+      }
+
+      long hcwm = lcwm + checkpointFactor * checkpointPeriod;
+
 
       PBFTNewView nv = new PBFTNewView();
 
-      NewViewAuction pauction = new NewViewAuction(lcwm, hcwm, IProposal.BIGGER);
-      NewViewAuction qauction = new NewViewAuction(lcwm, hcwm, IProposal.LOWER);
+      nv.setViewNumber(view);
+      
+      long minSEQ = hcwm;
+      long maxSEQ = lcwm;
 
-      SequenceList sequences = new SequenceList();
+      if(!prqtable.isEmpty()){
+         long fseqn = prqtable.firstKey();
+         long lseqn = prqtable.lastKey();
 
-      /* for each certificated change-view message */
-      for(String cvkey : cvtable.keySet()){
+         for(long seqn = fseqn; seqn <= lseqn; seqn++){
+            Quorum q = prqtable.get(seqn);
+            ISubject decision = null;
 
-         PBFTChangeView cv = cvtable.get(cvkey);
+            if(q != null) decision = q.decide();
 
-         /* for each message in prepare set (P)*/
-         for(IMessage m : cv.getPrepareSet()){
-
-            /* get the prepare message */
-            PBFTPrepare pr = (PBFTPrepare) m;
-            
-            /* the prepare sequence number */
-            long seqn = pr.getSequenceNumber();
-
-           /* put the sequence as lot in the auction for request ordering */
-            pauction.addProposal(seqn, new PrepareProposal(pr));
-
-            if(!sequences.contains(seqn)) sequences.add(seqn);
-
-            if(minSEQ > seqn) minSEQ = seqn;
-            if(maxSEQ < seqn) maxSEQ = seqn;
-
-         }
-
-         /* for each message in pre-prepare set (Q) */
-         for(IMessage m : cv.getPrePrepareSet()){
-            /* get the pre-prepare message */
-            PBFTPrePrepare pp = (PBFTPrePrepare) m;
-
-            /* the pre-prepare sequence number */
-            long seqn = pp.getSequenceNumber();
-
-           /* put the sequence as lot in the auction for request ordering */            
-            qauction.addProposal(seqn, new PrePrepareProposal(pp));
-
-            if(!sequences.contains(seqn)) sequences.add(seqn);
-
-            if(minSEQ > seqn) minSEQ = seqn;
-            if(maxSEQ < seqn) maxSEQ = seqn;
-
-         }
-
-         nv.getChangeViewTable().put(cvkey, cv);
+            if(decision != null && seqn <= hcwm && seqn > maxSEQ) maxSEQ = seqn;
+            if(decision != null && seqn >  lcwm && seqn < minSEQ) minSEQ = seqn;
+         }         
       }
 
-      /* process auction and get results */
-      IAuctionResult presult = (IAuctionResult) pauction.decide();
-      IAuctionResult qresult = (IAuctionResult) qauction.decide();
+      if(!ppqtable.isEmpty()){
+         long fseqn = ppqtable.firstKey();
+         long lseqn = ppqtable.lastKey();
 
-      /* we shouldn't execute this test but if these conditions was true then something bad probabily happened */
-      if(minSEQ <= lcwm    ) minSEQ = lcwm + 1;
-      if(minSEQ >  lcwm + 1) minSEQ = lcwm + 1;
-      if(maxSEQ <= lcwm    ) maxSEQ = lcwm + 1;
-      if(maxSEQ >  hcwm    ) maxSEQ = hcwm;
+         for(long seqn = fseqn; seqn <= lseqn; seqn++){
+            Quorum q = ppqtable.get(seqn);
+            ISubject decision = null;
 
-      int f = pbft.getServiceBFTResilience();
-      
-      nv.setReplicaID(pbft.getLocalServerID());
+            if(q != null) decision = q.decide();
+
+            if(decision != null && seqn <= hcwm && seqn > maxSEQ) maxSEQ = lseqn;
+            if(decision != null && seqn >  lcwm && seqn < minSEQ) minSEQ = seqn;
+         }
+      }
 
       for(long seqn = minSEQ; seqn <= maxSEQ; seqn ++){
-         PBFTPrePrepare pp = new PBFTPrePrepare(pbft.getCurrentViewNumber(), seqn, pbft.getLocalServerID());
-         if(sequences.contains(seqn)){
+         Quorum ppq = ppqtable.get(seqn);
+         Quorum prq = prqtable.get(seqn);
 
-            Sequence sequence = sequences.get(seqn);
-            ILotResult lpresult = presult.get(sequence);
-            for(int p = 0; lpresult != null && p < lpresult.size(); p++){
+         if(ppq == null || prq == null){
+            continue;
+         }
 
-               int pcount = lpresult.getCount(p);
-               IProposal pproposal = lpresult.getProposal(p);
+         PrePrepareSubject ppd = (PrePrepareSubject) ppq.decide();
+         PrepareSubject    prd = (  PrepareSubject ) prq.decide();
 
-               if(pcount >= 2 * f + 1){
 
-                  ILotResult lqresult = qresult.get(sequence);
+         /*if both quorums were decided then I'll be able to decide by such pre-prepare message*/
+         if(ppd != null && prd != null){
+            PBFTPrePrepare pp = new PBFTPrePrepare(view, seqn, pbft.getLocalServerID());
+            pp.getDigests().addAll(prd.getPrepare().getDigests());
+            nv.getPrePrepareSet().add(pp);
+         }
 
-                  for(int q = 0; lqresult != null && q < lqresult.size(); q ++){
-                     int qcount = lqresult.getCount(q);
-                     IProposal qproposal = lqresult.getProposal(q);
+      }
 
-                     if(qcount >= f + 1){
-                        
-                        if(pproposal.equals(qresult)){
-                           PBFTPrePrepare pp1 = (PBFTPrePrepare) qproposal.getInfo(OrderingProposal.MESSAGE);
-                           if(pp1 != null){
-                              pp.getDigests().addAll(pp1.getDigests());
-                           }//end if is valid pre-prepare
-                        }//end if is the same proposal
-                     }//end if has f + 1
-                  }//end for each q auction result
-               }//end if has 2 * f + 1
-            }//end for each p auction result
-         }//end contains seqn
-         nv.getPreprepareSet().add(pp);
-      }//end for each seqn
+      ChangeViewtable table = cvdatabase.get(view);
 
-      nv.setViewNumber(pbft.getCurrentViewNumber());
+      if(table != null && !table.isEmpty()){
+         for(Object rpid : table.keySet()){
+            ChangeViewEntry entry = table.get(rpid);
+            nv.getChangeViewtable().put(rpid, entry.changeViewACK.getDigest());
+         }
+      }
 
+      nv.setSequenceNumber(LCWM);
+      nv.setDigest(DIGEST);
+      
       return nv;
+   }
+
+
+   class ChangeViewtable extends Hashtable<Object, ChangeViewEntry> {
+   }
+
+   class ChangeViewEntry{
+      PBFTChangeView changeView;
+      PBFTChangeViewACK changeViewACK;
+
+      public ChangeViewEntry(PBFTChangeView changeView, PBFTChangeViewACK changeViewACK) {
+         this.changeView = changeView;
+         this.changeViewACK = changeViewACK;
+      }
+      
+   }
+
+   class CheckpointDatabase extends Hashtable<Integer, Checkpointtable>{
+
+      public boolean put(int view, Object replicaID, PBFTCheckpoint checkpoint){
+         if( !(replicaID != null && view >= 0 && checkpoint != null && checkpoint.getSequenceNumber() != null && checkpoint.getDigest() != null)){
+            return false;
+         }
+         
+         Checkpointtable table = get(view);
+
+         if(table == null){
+            table = new Checkpointtable();
+            put(view, table);
+         }
+
+         return table.put(replicaID, checkpoint);
+      }
+
+      public Long computeLCWM(int view, int n){
+         if(!isEmpty()){
+            if(containsKey(view)){
+               Checkpointtable ctable = get(view);
+               return ctable.computeLCWM(n);
+            }
+         }
+
+         return null;
+      }
+   }
+
+   class Checkpointtable extends TreeMap<Long, CheckpointEntry>{
+
+      public boolean put(Object replicaID, PBFTCheckpoint checkpoint){
+
+         CheckpointEntry entry = get(checkpoint.getSequenceNumber());
+
+         if(entry == null){
+            entry = new CheckpointEntry();
+            put(checkpoint.getSequenceNumber(), entry);
+         }
+
+         return entry.put(replicaID, checkpoint);
+         
+      }
+
+      public Long computeLCWM(int n){
+         if(!isEmpty()){
+            long fseqn = firstKey();
+            long lseqn = lastKey();
+
+            for(Long seqn = lseqn; seqn >= fseqn; seqn --){
+               CheckpointEntry entry = get(seqn);
+
+               if(entry != null && !entry.isEmpty()){
+                  for(String digest : entry.keySet()){
+                     CheckpointList list = entry.get(digest);
+                     if(list != null && list.size() >= n){
+                        LCWM   = seqn;
+                        DIGEST = digest;
+                        return seqn;
+                     }
+                  }
+               }
+            }
+         }
+
+         return null;
+         
+      }
+   }
+
+   class CheckpointEntry extends Hashtable<String, CheckpointList>{
+
+      public boolean put(Object replicaID, PBFTCheckpoint checkpoint){
+
+         CheckpointList list = get(checkpoint.getDigest());
+
+         if(list == null){
+            list = new CheckpointList();
+            put(checkpoint.getDigest(), list);
+         }
+
+         list.put(replicaID, checkpoint);
+         
+         return true;
+      }
+      
+   }
+                                         /*replicaID, PBFTCheckpoint*/
+   class CheckpointList extends Hashtable<Object, PBFTCheckpoint>{
+      
    }
 }

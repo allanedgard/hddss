@@ -292,6 +292,8 @@ public class PBFTClient extends PBFT implements IPBFTClient{
     }
 
     public void handle(PBFTReply reply){
+
+        JDSUtility.debug("[handle(reply)] c" + getLocalProcessID() + ", at time " + getClockValue() + ", received " + reply);
         
         if(canProceed(reply)){
             ReplySubject rs = (ReplySubject)getDecision(reply);
@@ -316,9 +318,7 @@ public class PBFTClient extends PBFT implements IPBFTClient{
 
         if(!hasARelatedRequest(reply)){
             JDSUtility.debug(
-               "[PBFTClient:canProceed(reply)] c" + getLocalProcessID() + ", " +
-               "at time " + getClockValue() + ", discarded " + reply + " because there isn't " +
-               " a related request."
+               "[PBFTClient:canProceed(reply)] c" + getLocalProcessID() + ", at time " + getClockValue() + ", discarded " + reply + " because there isn't a related request."
              );
             return false;
         }

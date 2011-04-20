@@ -69,7 +69,7 @@ public class PBFTServerEventHandler extends PBFTServerMessageHandler implements 
             IEvent message = (IEvent) inbox.remove();
 //            PBFTServerMessageDispatcher handler = new PBFTServerMessageDispatcher(getProtocol());
 //            handler.input(message);
-//            handler.execute();
+//            handler.tryExecuteRequests();
             //handler.start();
 
     }

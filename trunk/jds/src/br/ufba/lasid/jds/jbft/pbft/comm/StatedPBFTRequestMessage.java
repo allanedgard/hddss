@@ -89,7 +89,7 @@ public class StatedPBFTRequestMessage extends PBFTMessage{
 
     @Override
     public String toString() {
-        return "STATED(" + this.request + "; " + this.rstate + ")";
+        return "STATED(" + this.sequenceNumber + ";" + this.rstate + ";" + this.request + "; " + this.digest + ";" + this.reply + ")";
     }
    
 

@@ -42,10 +42,9 @@ public class PBFTStatusActive extends PBFTServerMessage{
      */
     protected Long lastExecutedSEQ;
 
-    protected DigestList missedRequests = new DigestList();
-
     protected BitSet prepared = new BitSet();
     protected BitSet commited = new BitSet();
+    protected DigestList digests = new DigestList();
 
    public BitSet getCommited() {
       return commited;
@@ -63,14 +62,6 @@ public class PBFTStatusActive extends PBFTServerMessage{
         this.lastStableCheckpointSEQ = lastStableCheckpointSEQ;
     }
 
-//    public Long getLastCommittedSEQ() {
-//        return lastCommittedSEQ;
-//    }
-//
-//    public void setLastCommittedSEQ(Long lastCommittedSEQ) {
-//        this.lastCommittedSEQ = lastCommittedSEQ;
-//    }
-
     public Long getLastExecutedSEQ() {
         return lastExecutedSEQ;
     }
@@ -79,65 +70,49 @@ public class PBFTStatusActive extends PBFTServerMessage{
         this.lastExecutedSEQ = lastExecutedSEQ;
     }
 
-//    public Long getLastPreparedSEQ() {
-//        return lastPreparedSEQ;
-//    }
-//
-//    public void setLastPreparedSEQ(Long lastPreparedSEQ) {
-//        this.lastPreparedSEQ = lastPreparedSEQ;
-//    }
-//    public Long getLastPrePreparedSEQ() {
-//        return lastPrePreparedSEQ;
-//    }
-//
-//    public void setLastPrePreparedSEQ(Long lastPrePreparedSEQ) {
-//        this.lastPrePreparedSEQ = lastPrePreparedSEQ;
-//    }
-
-   public DigestList getMissedRequests() {
-      return missedRequests;
+   public DigestList getDigests() {
+      return digests;
    }
 
-   private String missedRequestsToString(){
-      String str = "";
-      String more = "";
-
-      for(String digest : getMissedRequests()){
-         str += more + digest;
-         more = ",";
-      }
-      return str;
-   }
-
+    
 
     public PBFTStatusActive(Long bseqn, Object replicaID, Integer viewNumber, Long executedSEQ, Long checkpointSEQ){
         setViewNumber(viewNumber);
-//        setLastPrePreparedSEQ(prepreparedSEQ);
-//        setLastPreparedSEQ(preparedSEQ);
-//        setLastCommittedSEQ(committedSEQ);
         setLastExecutedSEQ(executedSEQ);
         setLastStableCheckpointSEQ(checkpointSEQ);
         setReplicaID(replicaID);
         setSequenceNumber(bseqn);
     }
 
-    private String preparedToString(){
+    protected String preparedToString(){
        String str = "";
 
        for(int b = 0; b < prepared.length(); b++){
           boolean bit = prepared.get(b);
-          str += bit ? "1" : "0";
+          str += (bit ? "1" : "0");
        }
        return str;
     }
 
-    private String commitedToString(){
+    protected String commitedToString(){
        String str = "";
 
        for(int b = 0; b < commited.length(); b++){
           boolean bit = commited.get(b);
-          str += bit ? "1" : "0";
+          str += (bit ? "1" : "0");
        }
+       return str;
+    }
+
+    protected String digestsToString(){
+       String str = "";
+       String more = "";
+
+       for(String digest : digests){
+          str += more + digest;
+          more = "; ";
+       }
+
        return str;
     }
 
@@ -150,8 +125,8 @@ public class PBFTStatusActive extends PBFTServerMessage{
                  "STABLECHECKPOINTSEQ = " + getLastStableCheckpointSEQ().toString()  + ", " +
                  "EXECUTEDSEQ = " + getLastExecutedSEQ().toString()  + ", " +
                  "PREPARED = " + preparedToString() + ", " +
-                 "COMMITED = " + commitedToString() + ", " + 
-                 "MISSED-REQUESTS = {" + missedRequestsToString() + "}, " +
+                 "COMMITED = " + commitedToString() + ", " +
+                 "MISSED-REQUESTS = {" + digestsToString() + "}, " +
                  "SERVER = " + getReplicaID().toString() +
                  ">"
         );

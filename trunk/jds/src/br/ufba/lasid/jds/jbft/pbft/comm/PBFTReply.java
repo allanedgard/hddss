@@ -57,11 +57,11 @@ public class PBFTReply extends PBFTServerMessage{
 
         return (
                 "<REPLY" + ", " +
-                 "VIEW = " + getViewNumber().toString()     + ", " +
-                 "TIMESTAMP = " + getTimestamp().toString() + ", " +
-                 "CLIENT = " + getClientID().toString()     + ", " +
-                 "SENDER = " + getReplicaID().toString()    + ", " +
-                 "RESULT = " + getPayload().toString()      +
+                 "VIEW = " + getViewNumber()     + ", " +
+                 "TIMESTAMP = " + getTimestamp() + ", " +
+                 "CLIENT = " + getClientID()   + ", " +
+                 "SENDER = " + getReplicaID()    + ", " +
+                 "RESULT = " + (getPayload() == null ? "NULL" : getPayload()) +
                  ">"
         );
     }

@@ -17,7 +17,7 @@ public abstract class Channel {
     Channel() {
     }
     public final void connect(Agent x, Agent y) {
-        p_i = x ;
+        p_i = x;
         p_j = y;
         lastDelivery = 0;
         contention = false;
@@ -28,10 +28,13 @@ public abstract class Channel {
     }
 
     public final void deliverMsg(Message m, double a) {
-        synchronized(this){
+//        synchronized(this){
             if ( this.status() ) {
-                int at = (int) (delay()+a);
+                int d = delay();
+                int at = (int) (d + a);
+
                 int nextDelivery =(int)(p_j.infra.clock.value())+at;
+                //int nextDelivery =(int)(m.physicalClock)+at;
 
                 if (!contention) {
 
@@ -44,17 +47,23 @@ public abstract class Channel {
                  /*  Contenção
                  */
                         nextDelivery = max(lastDelivery,(int)(p_j.infra.clock.value()))+at;
-                };
+                          //nextDelivery = max(lastDelivery,(int)(m.physicalClock))+at;
+                }
 
-                p_j.infra.debug("process p" + p_j.ID + " delivers at time " + nextDelivery);
+                p_j.infra.debug("channel process p" + p_j.ID + " delivers " + m.content + "at time " + nextDelivery);
+                System.out.println(
+                     "(p" + p_i.ID + " => p" + p_j.ID + ") lastDelivery => " + lastDelivery + " ## at => " + at + " ## netdelay => " + a + " ## channeldelay => " + d + 
+                     " ## nextDelivery => " + nextDelivery + " ## msg => " + m.content
+                 );
+
                 p_j.infra.nic_in.add(nextDelivery, m);
                 lastDelivery=nextDelivery;
             }
-        }
+//        }
     }
     
     int max (int a, int b) {
-        return a>b?a:b;
+        return (a>b?a:b);
     }
     
     abstract int delay();

@@ -5,254 +5,355 @@
 
 package br.ufba.lasid.jds.jbft.pbft.comm;
 
-import br.ufba.lasid.jds.util.Queue;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Hashtable;
 import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage.RequestState;
+import br.ufba.lasid.jds.util.DigestList;
+import java.util.TreeMap;
 
 /**
  *
  * @author aliriosa
  */
 public class PBFTRequestInfo {
-   Hashtable<String, StatedPBFTRequestMessage>                  dLog = new Hashtable<String, StatedPBFTRequestMessage>();
-   Hashtable<Long  , ArrayList<String>>                         nLog = new Hashtable<Long  , ArrayList<String>>();
-   Hashtable<Object, Hashtable<Long, StatedPBFTRequestMessage>> rLog = new Hashtable<Object, Hashtable<Long, StatedPBFTRequestMessage>>();
-   Hashtable<Object, Long>                                timestamps = new Hashtable<Object, Long>();
-   Queue<String>                                              dQueue = new Queue<String>();
+   TreeMap<Integer, StatedPBFTRequestMessage> requestLog = new TreeMap<Integer, StatedPBFTRequestMessage>();
+   Hashtable<Object, Long>                      sessions = new Hashtable<Object, Long>();
+//   Hashtable<String, StatedPBFTRequestMessage>                  dLog = new Hashtable<String, StatedPBFTRequestMessage>();
+//   Hashtable<Long  , ArrayList<String>>                         nLog = new Hashtable<Long  , ArrayList<String>>();
+//   Hashtable<Object, Hashtable<Long, StatedPBFTRequestMessage>> rLog = new Hashtable<Object, Hashtable<Long, StatedPBFTRequestMessage>>();
    
-   public boolean add(String digest, PBFTRequest req, RequestState reqState){
-      if(!dLog.containsKey(digest)){
-         StatedPBFTRequestMessage statedREQ = new StatedPBFTRequestMessage(req, reqState, digest);
-         dLog.put(digest, statedREQ);
-         dQueue.add(digest);
-      }else{
-         if(getRequest(digest) == null){
-            dLog.get(digest).setRequest(req);
-         }
-      }
+//   Queue<String>                                              dQueue = new Queue<String>();
+   
+   public StatedPBFTRequestMessage add(String digest, PBFTRequest req, RequestState reqState){
+        for(StatedPBFTRequestMessage statedRequest : requestLog.values()){
+           if(statedRequest.getDigest().equals(digest)){
+              statedRequest.setState(reqState);
+              if(req != null && req.getClientID() != null && req.getTimestamp() != null){
+                 statedRequest.setRequest(req);
+                 Long currentTimestamp = sessions.get(req.getClientID());
 
-      StatedPBFTRequestMessage statedREQ = dLog.get(digest);
+                 if(currentTimestamp == null){
+                    currentTimestamp = req.getTimestamp();
+                 }
+                 
+                 if(currentTimestamp.longValue() < req.getTimestamp().longValue()){
+                    currentTimestamp = req.getTimestamp();
+                 }
+                 
+                 sessions.put(req, currentTimestamp);
+              }
+              return statedRequest;
+           }
+        }
 
-      if(req != null){
-         Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(req.getClientID());
+        StatedPBFTRequestMessage statedRequest = new StatedPBFTRequestMessage(req, reqState, digest);
+        
+        Integer index = null;
+        if(!requestLog.isEmpty()){
+           index = (Integer)requestLog.lastKey();
+        }
+        
+        if(index == null){
+           index = Integer.valueOf(-1);
+        }
 
-         if(requests == null){
-            requests = new Hashtable<Long, StatedPBFTRequestMessage>();
-            rLog.put(req.getClientID(), requests);
-         }
+        index = index + 1;
+        requestLog.put(index, statedRequest);
 
-         if(!requests.containsKey(req.getTimestamp())){
-            requests.put(req.getTimestamp(), statedREQ);
-            Long t = timestamps.get(req.getClientID());
-            Long _new = req.getTimestamp();
-            if(t != null){
-               long _old = t;
-               if(_new != null){
-                  if(_new < _old){
-                     _new = _old;
-                  }
-               }               
-            }
-            
-            timestamps.put(req.getClientID(), _new);
-         }
-      }
-
-      return false;
+      return statedRequest;
+      
    }
+   
    public boolean isNewest(PBFTRequest req){
+
       if(!(req != null && req.getClientID() != null && req.getTimestamp() != null)){
          return false;
       }
+     Long currentTimestamp = sessions.get(req.getClientID());
+     if(currentTimestamp == null){
+        return true;
+     }
 
-      Long old = timestamps.get(req.getClientID());
+     if(currentTimestamp.longValue() < req.getTimestamp().longValue()){
+        return true;
+     }
 
-      if(old != null){
-         long _old = old;
-         long _new = req.getTimestamp();
+     return false;
 
-         return _new >= _old;
-      }
-      
-      return true;
    }
    
-   public boolean add(String digest, PBFTRequest req){
+   public StatedPBFTRequestMessage add(String digest, PBFTRequest req){
       return add(digest, req, RequestState.WAITING);
    }
 
    public Long getSequenceNumber(String digest){
-      StatedPBFTRequestMessage statedREQ = dLog.get(digest);
-      if(statedREQ != null){
-         return statedREQ.getSequenceNumber();
+      for(StatedPBFTRequestMessage sr : requestLog.values()){
+        if(sr.getDigest().equals(digest)){
+           return sr.getSequenceNumber();
+        }
       }
+
       return null;
    }
 
    public PBFTRequest getRequest(String digest){
-      StatedPBFTRequestMessage statedREQ = dLog.get(digest);
-      if(statedREQ != null){
-         return statedREQ.getRequest();
+      for(StatedPBFTRequestMessage sr : requestLog.values()){
+        if(sr.getDigest().equals(digest)){
+           return sr.getRequest();
+        }
       }
+
       return null;
    }
 
    public PBFTReply getReply(PBFTRequest r){
-      Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(r.getClientID());
-      if(requests != null && !requests.isEmpty()){
-         StatedPBFTRequestMessage statedREQ = requests.get(r.getTimestamp());
-         if(statedREQ != null){
-            return statedREQ.getReply();
-         }
+      if(!(r != null && r.getClientID() != null && r.getTimestamp() != null)){
+         return null;
+      }
+      
+      for(StatedPBFTRequestMessage sr : requestLog.values()){
+
+        PBFTRequest r0 = sr.getRequest();
+
+        if(r0 != null && r0.getClientID() != null && r0.getTimestamp() != null){
+           if(r.getClientID().equals(r0.getClientID()) && r.getTimestamp().equals(r0.getTimestamp())){
+               return sr.getReply();
+           }
+        }
       }
 
       return null;
    }
 
-   public boolean assign(PBFTRequest request, RequestState state){
-      if(!(request != null && request.getClientID() != null && request.getTimestamp() != null)){
+   public boolean assign(PBFTRequest r, RequestState state){
+      if(!(r != null && r.getClientID() != null && r.getTimestamp() != null)){
          return false;
       }
-      Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(request.getClientID());
-      if(requests != null && !requests.isEmpty()){
-         StatedPBFTRequestMessage statedREQ = requests.get(request.getTimestamp());
-         statedREQ.setState(state);
-         return true;
+
+      for(StatedPBFTRequestMessage sr : requestLog.values()){
+
+        PBFTRequest r0 = sr.getRequest();
+
+        if(r0 != null && r0.getClientID() != null && r0.getTimestamp() != null){
+           if(r.getClientID().equals(r0.getClientID()) && r.getTimestamp().equals(r0.getTimestamp())){
+               sr.setState(state);
+               return true;
+           }
+        }
       }
+
       return false;
    }
 
    public boolean assign(String digest, RequestState state){
-      StatedPBFTRequestMessage statedREQ = dLog.get(digest);
-      if(statedREQ != null){
-         statedREQ.setState(state);
-         return true;
+      
+      if(digest == null) return false;
+
+      for(StatedPBFTRequestMessage sr : requestLog.values()){
+        if(sr.getDigest().equals(digest)){
+           sr.setState(state);
+           return true;
+        }
       }
+
       return false;
    }
 
    public boolean assign(Long seqn, RequestState state){
-      ArrayList<String> digests = nLog.get(seqn);
-      if(digests != null && !digests.isEmpty()){
-         for(String digest : digests){
-            assign(digest, state);
-         }
-
-         return true;
+      boolean ok = false;
+      for(StatedPBFTRequestMessage sr : requestLog.values()){
+         Long seqn0 = sr.getSequenceNumber();
+        if(seqn0 != null && seqn0.equals(seqn)){
+           sr.setState(state);
+           ok = true;
+        }
       }
 
-      return false;
+      return ok;
    }
 
    public void clear(){
-      dLog.clear();
-      nLog.clear();
-      rLog.clear();
-      timestamps.clear();
-      dQueue.clear();
+      requestLog.clear();      
    }
    
    public void garbage(Long seqn){
+
       if(seqn != null){
-         ArrayList<Long> seqns = new ArrayList<Long>(nLog.keySet());         
-         for(int i = seqns.size()-1; i >= 0; i--){
-            Long aSeqn = seqns.get(i);
-            if(aSeqn != null && aSeqn.longValue() < seqn.longValue()){
-               remove(aSeqn);
+         TreeMap<Integer, StatedPBFTRequestMessage> tempLog = new TreeMap<Integer, StatedPBFTRequestMessage>(requestLog);
+         for(Integer key : tempLog.keySet()){
+            StatedPBFTRequestMessage sr = tempLog.get(key);
+            Long seqn0 = sr.getSequenceNumber();
+            if(seqn0 != null && seqn0.longValue() < seqn.longValue()){
+               requestLog.remove(key);
             }
          }
       }
    }
 
-   public boolean remove(Long seqn){
-      ArrayList<String> digests = nLog.get(seqn);
-      if(digests != null && !digests.isEmpty()){
-         for(String digest : digests){
-            remove(digest);
-         }
-         nLog.remove(seqn);
-         return true;
-      }
-      return false;
-   }
+//   public boolean remove(Long seqn){
+//      ArrayList<String> digests = nLog.get(seqn);
+//      if(digests != null && !digests.isEmpty()){
+//         for(String digest : digests){
+//            remove(digest);
+//         }
+//         nLog.remove(seqn);
+//         return true;
+//      }
+//      return false;
+//   }
 
-   public boolean remove(String digest){
-      StatedPBFTRequestMessage statedREQ = dLog.get(digest);
-      if(statedREQ != null){
-         PBFTRequest req = statedREQ.getRequest();
-
-         if(req != null && req.getClientID() != null && req.getTimestamp() != null){
-            Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(req.getClientID());
-
-            if(requests != null && !requests.isEmpty()){
-               requests.remove(req.getTimestamp());
-            }
-         }
-         
-         dQueue.remove(digest);
-         
-         dLog.remove(digest);
-         return true;
-      }
-      return false;
-   }
+//   public boolean remove(String digest){
+//      StatedPBFTRequestMessage statedREQ = dLog.get(digest);
+//      if(statedREQ != null){
+//         PBFTRequest req = statedREQ.getRequest();
+//
+//         if(req != null && req.getClientID() != null && req.getTimestamp() != null){
+//            Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(req.getClientID());
+//
+//            if(requests != null && !requests.isEmpty()){
+//               requests.remove(req.getTimestamp());
+//            }
+//         }
+//
+//         dQueue.remove(digest);
+//
+//         dLog.remove(digest);
+//         return true;
+//      }
+//      return false;
+//   }
 
    public boolean assign(String digest, PBFTReply reply){
-      StatedPBFTRequestMessage statedREQ = dLog.get(digest);
-      if(statedREQ != null){
-         statedREQ.setReply(reply);
-         return true;
+      if(digest == null) return false;
+
+      for(StatedPBFTRequestMessage sr : requestLog.values()){
+        if(sr.getDigest().equals(digest)){
+           sr.setReply(reply);
+           return true;
+        }
       }
+
       return false;
    }
+
+   public boolean assign(String digest, PBFTRequest request){
+      if(digest == null) return false;
+
+      for(StatedPBFTRequestMessage sr : requestLog.values()){
+        if(sr.getDigest().equals(digest)){
+           sr.setRequest(request);
+           return true;
+        }
+      }
+
+      return false;
+   }
+
 
    public boolean assign(String digest, Long seqn){
-      StatedPBFTRequestMessage statedREQ = dLog.get(digest);
-      if(statedREQ != null){
-         statedREQ.setSequenceNumber(seqn);
-         ArrayList<String> digests = nLog.get(seqn);
-         if(digests == null){
-            digests = new ArrayList<String>();
-            nLog.put(seqn, digests);
-         }
+      if(digest == null) return false;
 
-         if(!digests.contains(digest)){
-            digests.add(digest);
-         }
-         
-         return true;
+      for(StatedPBFTRequestMessage loggedRequest : requestLog.values()){
+        if(loggedRequest.getDigest().equals(digest)){
+           loggedRequest.setSequenceNumber(seqn);
+           return true;
+        }
       }
+
       return false;
    }
+
 
    public boolean is(String digest, RequestState state){
-      StatedPBFTRequestMessage statedREQ = dLog.get(digest);
-      return (statedREQ != null && statedREQ.getState().equals(state));
-   }
+      
+      if(digest == null) return false;
 
-   public boolean is(PBFTRequest request, RequestState state){
-      Hashtable<Long, StatedPBFTRequestMessage> requests = rLog.get(request.getClientID());
-      if(requests != null && !requests.isEmpty()){
-         StatedPBFTRequestMessage statedREQ = requests.get(request.getTimestamp());
-         return (statedREQ != null && statedREQ.getState().equals(state));
+      for(StatedPBFTRequestMessage sr : requestLog.values()){
+        if(sr.getDigest().equals(digest)){
+           return state != null && state.equals(sr.getState());
+        }
       }
 
       return false;
    }
+
+   public boolean is(PBFTRequest receveidRequest, RequestState state){
+      if(!(receveidRequest != null && receveidRequest.getClientID() != null && receveidRequest.getTimestamp() != null)){
+         return false;
+      }
+
+      for(StatedPBFTRequestMessage statedRequest : requestLog.values()){
+
+        PBFTRequest loggedRequest = statedRequest.getRequest();
+
+        if(loggedRequest != null && loggedRequest.getClientID() != null && loggedRequest.getTimestamp() != null){
+
+           if(loggedRequest.getClientID().equals(receveidRequest.getClientID()) && loggedRequest.getTimestamp().equals(receveidRequest.getTimestamp())){
+
+              return state != null && state.equals(statedRequest.getState());
+
+           }
+           
+        }
+
+      }
+
+      return false;
+   }
+
+   public StatedPBFTRequestMessage getStatedRequest(String digest){
+      if(digest == null) return null;
+
+      for(StatedPBFTRequestMessage statedRequest : requestLog.values()){
+        if(statedRequest.getDigest().equals(digest)){
+           return statedRequest;
+        }
+      }
+
+      return null;
+   }
+
+
+   public StatedPBFTRequestMessage getStatedRequest(PBFTRequest receveidRequest){
+      if(!(receveidRequest != null && receveidRequest.getClientID() != null && receveidRequest.getTimestamp() != null)){
+         return null;
+      }
+
+      for(StatedPBFTRequestMessage statedRequest : requestLog.values()){
+
+        PBFTRequest loggedRequest = statedRequest.getRequest();
+
+        if(loggedRequest != null && loggedRequest.getClientID() != null && loggedRequest.getTimestamp() != null){
+
+           if(loggedRequest.getClientID().equals(receveidRequest.getClientID()) && loggedRequest.getTimestamp().equals(receveidRequest.getTimestamp())){
+
+              return statedRequest;
+
+           }
+
+        }
+
+      }
+
+      return null;
+   }
+
 
    public boolean is(Long seqn,  RequestState state){
-      ArrayList<String> digests = nLog.get(seqn);
-      if(digests != null){
-         for(String digest : digests){
-            if(!is(digest, state)) {
-               return false;
-            }
-         }
-         return true;
+      if(!(seqn != null && state != null)){
+         return false;
       }
-      return false;
+
+      boolean is = true;
+      long count = 0;
+
+      for(StatedPBFTRequestMessage sr : requestLog.values()){
+         Long seqn0 = sr.getSequenceNumber();
+         if(seqn0 != null && seqn0.equals(seqn)){
+            is = is && state.equals(sr.getState());
+            count ++;
+         }
+      }
+      return is && count > 0;
    }
 
    public boolean logged(PBFTRequest r){
@@ -263,9 +364,9 @@ public class PBFTRequestInfo {
       if(!(r != null && r.getClientID() != null && r.getTimestamp() != null)){
          return false;
       }
-      Long timestamp = timestamps.get(r.getClientID());
+      Long currentTimestamp = sessions.get(r.getClientID());
 
-      return (timestamp != null && timestamp.longValue() > r.getTimestamp().longValue());
+      return (currentTimestamp != null && currentTimestamp.longValue() >= r.getTimestamp().longValue());
       
    }
 
@@ -273,13 +374,8 @@ public class PBFTRequestInfo {
       if(!(r != null && r.getClientID() != null && r.getTimestamp() != null)){
          return false;
       }
-      Long timestamp = timestamps.get(r.getClientID());
 
-      if(timestamp == null){
-         return true;
-      }
-
-      return (timestamp.longValue() < r.getTimestamp().longValue());
+      return !isOld(r);
    }
    
    
@@ -311,17 +407,42 @@ public class PBFTRequestInfo {
       return getRequest(digest) != null;
    }
 
-   public boolean hasSomeRequestMissed(Long seqn){
+   public boolean hasRequest(PBFTRequest r){
+      
+      if(!(r != null && r.getClientID() != null && r.getTimestamp() != null)){
+         return false;
+      }
 
-      ArrayList<String> digests =  nLog.get(seqn);
-      if(digests != null && !digests.isEmpty()){
-         for(String digest : digests){
-            if(getRequest(digest) == null){
+      for(StatedPBFTRequestMessage sr : requestLog.values()){
+         PBFTRequest r0 = sr.getRequest();
+
+         if(r0 != null && r0.getClientID() != null && r0.getTimestamp() != null){
+            if(r0.getClientID().equals(r.getClientID()) && r0.getTimestamp().equals(r.getTimestamp())){
                return true;
             }
          }
       }
+
       return false;
+      
+   }
+
+   public boolean hasSomeRequestMissed(Long seqn){
+        if(seqn == null){
+           return false;
+        }
+
+        for(StatedPBFTRequestMessage sr : requestLog.values()){
+           Long seqn0 = sr.getSequenceNumber();
+
+           if(seqn0 != null && seqn0.equals(seqn)){
+              if(sr.getRequest() == null){
+                 return true;
+              }
+           }
+        }
+
+        return false;
       
    }
    public boolean wasPrepared(String digest){
@@ -361,25 +482,36 @@ public class PBFTRequestInfo {
   }
 
   public boolean hasSomeInState(RequestState state){
-      Collection<StatedPBFTRequestMessage> requests =  dLog.values();
-      for(StatedPBFTRequestMessage statedREQ : requests){
-         if(statedREQ.getState().equals(state)){
-            return true;
-         }
-      }
-      return false;
+        if(state == null){
+           return false;
+        }
+
+        for(StatedPBFTRequestMessage sr : requestLog.values()){
+           RequestState state0 = sr.getState();
+
+           if(state0 != null && state0.equals(state)){
+              return true;
+           }
+        }
+
+        return false;
    }
 
   public boolean hasSomeInState(Long seqn, RequestState state){
-      ArrayList<String> digests =  nLog.get(seqn);
-      if(digests != null){
-         for(String digest : digests){
-            if(is(digest, state)){
-               return true;
-            }
-         }
-      }
-      return false;
+        if(state == null || seqn == null){
+           return false;
+        }
+
+        for(StatedPBFTRequestMessage sr : requestLog.values()){
+           RequestState state0 = sr.getState();
+           Long seqn0 = sr.getSequenceNumber();
+
+           if(seqn0 != null && seqn0.equals(seqn) && state0 != null && state0.equals(state)){
+              return true;
+           }
+        }
+
+        return false;
    }
 
    public boolean hasSomeWaiting(){
@@ -430,30 +562,97 @@ public class PBFTRequestInfo {
       return hasSomeInState(seqn, RequestState.MISSED);
    }
 
-   public int getQueueSize(){
-      return dQueue.size();
-   }
-   public int getSizeInBytes(){
-      int size = 0;
+   public DigestList getDigestsOfMissedRequests(Long seqn){
+      DigestList digests = new DigestList();
 
-      for(int i = 0; i < dQueue.size(); i++){
-         String digest = dQueue.get(i);         
-         size += getRequestSize(digest);
+      if(seqn != null){
+         for(StatedPBFTRequestMessage statedRequest : requestLog.values()){
+            Long seqn0 = statedRequest.getSequenceNumber();
+
+            if(seqn0 != null && seqn0.equals(seqn) && statedRequest.getDigest() != null && statedRequest.getRequest() == null){
+               digests.add(statedRequest.getDigest());
+            }
+         }
+
       }
-
-      return size;
+      
+      return digests;
    }
+
+   public PBFTRequest getFirtRequestWaiting(){
+      Integer findex = requestLog.firstKey();
+      Integer lindex = requestLog.lastKey();
+
+      if(findex != null && lindex != null){
+         for(int index = findex; index <= lindex; index ++){
+            StatedPBFTRequestMessage sr = requestLog.get(index);
+            if(sr != null && sr.getRequest() != null){
+               if(RequestState.WAITING.equals(sr.getState())){
+                  return sr.getRequest();
+               }
+            }
+         }
+      }
+      return null;
+   }
+   public String getFirtRequestDigestWaiting(){
+      Integer findex = requestLog.firstKey();
+      Integer lindex = requestLog.lastKey();
+
+      if(findex != null && lindex != null){
+         for(int index = findex; index <= lindex; index ++){
+            StatedPBFTRequestMessage sr = requestLog.get(index);
+            if(sr != null && sr.getRequest() != null){
+               if(RequestState.WAITING.equals(sr.getState())){
+                  return sr.getDigest();
+               }
+            }
+         }
+      }
+      return null;
+   }
+   
+   public int getWaitingQueueSize(){
+      Integer findex = requestLog.firstKey();
+      Integer lindex = requestLog.lastKey();
+      int count = 0;
+      if(findex != null && lindex != null){
+         for(int index = findex; index <= lindex; index ++){
+            StatedPBFTRequestMessage sr = requestLog.get(index);
+            if(sr != null && sr.getRequest() != null){
+               if(RequestState.WAITING.equals(sr.getState())){
+                  count ++;
+               }
+            }
+         }
+      }
+      return count;
+   }
+
+//   public int getQueueSize(){
+//      return dQueue.size();
+//   }
+//   public int getSizeInBytes(){
+//      int size = 0;
+//
+//      for(int i = 0; i < dQueue.size(); i++){
+//         String digest = dQueue.get(i);
+//         size += getRequestSize(digest);
+//      }
+//
+//      return size;
+//   }
 
    public int getRequestSize(String digest){
       PBFTRequest r = getRequest(digest);
       return r == null ? 0 : r.getSize();
    }
 
-   public String getDigestFromQueue(){
-      return dQueue.remove();
-   }
-
-   public boolean digestQueueIsEmpty(){
-      return dQueue.isEmpty();
-   }
+//   public String getDigestFromQueue(){
+//      return dQueue.remove();
+//   }
+//
+//   public boolean digestQueueIsEmpty(){
+//      return dQueue.isEmpty();
+//   }
 }

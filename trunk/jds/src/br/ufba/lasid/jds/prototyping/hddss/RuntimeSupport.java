@@ -21,5 +21,5 @@ public interface RuntimeSupport {
     public <U> void set(String name, U value);
     public void perform(RuntimeContainer rs);
     public void ok();
-
+    public boolean advance();
 }

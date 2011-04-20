@@ -5,12 +5,12 @@
 
 package br.ufba.lasid.jds.decision.voting;
 
-import java.util.Hashtable;
+import java.util.TreeMap;
 
 /**
  *
  * @author aliriosa
  */
-public class Quorumtable<TableKey> extends Hashtable<TableKey, Quorum> {
+public class Quorumtable<TableKey> extends TreeMap<TableKey, Quorum> {
 
 }

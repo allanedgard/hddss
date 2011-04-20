@@ -11,7 +11,7 @@ import br.ufba.lasid.jds.decision.bargaining.auction.ILot;
  *
  * @author aliriosa
  */
-public class Sequence implements ILot<Long>{
+public class Sequence implements ILot<Long>, Comparable<Sequence>{
    long sequence;
 
    public Sequence(long sequence) {
@@ -52,5 +52,21 @@ public class Sequence implements ILot<Long>{
    @Override
    public int hashCode() {
       return ((Long)this.sequence).hashCode();
+   }
+
+   public int compareTo(Sequence o) {
+      try{
+         if(sequence == o.sequence){
+            return 0;
+         }
+         if(sequence > o.sequence){
+            return 1;
+         }
+
+         return -1;
+
+      }catch(Exception e){
+         return 1;
+      }
    }
 }

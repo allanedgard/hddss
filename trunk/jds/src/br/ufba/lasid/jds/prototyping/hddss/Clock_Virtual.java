@@ -22,23 +22,23 @@ public class Clock_Virtual extends AbstractClock {
     
     @Override
     public long value() {
-        synchronized(this){
+//        synchronized(this){
             return clock;
-        }
+  //      }
     }
 
     public void synchTick(){
-        synchronized(this){
+    //    synchronized(this){
             tick++;
             if (tick > nticks) {
                 clock++;
                 tick=0;
             }
-        }
+      //  }
     }
 
     public void asynchTick(){
-        synchronized(this){
+        //synchronized(this){
             if (CORR==0) {
                 tick++;
                 if (tick > nticks) {
@@ -49,11 +49,11 @@ public class Clock_Virtual extends AbstractClock {
             } else {
                 CORR--;
             }
-        }
+        //}
     }
 
     public void tick(){
-        synchronized(this){
+        //synchronized(this){
             if(mode == SYNCHMODE){
 
                 synchTick();
@@ -63,13 +63,13 @@ public class Clock_Virtual extends AbstractClock {
                 asynchTick();
 
             }
-        }
+        //}
     }
 
     public long tickValue(){
-        synchronized(this){
+        //synchronized(this){
             return tick;
-        }
+        //}
     }
 
     @Override
@@ -78,20 +78,20 @@ public class Clock_Virtual extends AbstractClock {
     }
 
     public void adjustCorrection(long c){
-        synchronized(this){
+        //synchronized(this){
             CORR = c;
-        }
+        //}
     }
     public void adjustValue(long v){
-        synchronized(this){
+        //synchronized(this){
             clock = v;
-        }
+        //}
     }
 
     public void adjustTickValue(long v){
-        synchronized(this){
+        //synchronized(this){
             tick = v;
-        }
+        //}
     }
 
     @Override

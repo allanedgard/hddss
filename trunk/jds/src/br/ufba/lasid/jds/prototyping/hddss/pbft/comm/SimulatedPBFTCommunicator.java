@@ -57,7 +57,8 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
         
         synchronized(agent.lock){
             int source = agent.ID;
-            int now   = (int)agent.infra.clock.value();
+            //int now   = (int)agent.infra.clock.value();
+            int now   = (int)agent.infra.cpu.value();
             
             //for(Object p : g.getMembers()){
                 int dest = (Integer) g.getID();
@@ -83,7 +84,8 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
 
             int source = agent.ID;
             int destin = dest;
-            int now   = (int) agent.infra.clock.value();
+            //int now   = (int) agent.infra.clock.value();
+            int now   = (int) agent.infra.cpu.value();
             int type  = getMSGTYPE(m);
 
             setSendTime(m);
@@ -122,6 +124,7 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
 
         if(m instanceof PBFTMessage){
            ((PBFTMessage)m).setSendTime(agent.infra.clock.value());
+           //((PBFTMessage)m).setSendTime(agent.infra.cpu.value());
         }
 
        

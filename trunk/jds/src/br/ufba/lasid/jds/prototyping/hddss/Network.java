@@ -16,9 +16,9 @@ import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
  * @author aliriosa
  */
 public abstract class Network extends Thread{
-    Buffer buffer;
+    Buffer net_out;
     Simulator conteiner;
-    Channel Channels[][];
+    Channel channels[][];
     long next = 0;
     long last = 0;
     double tqueue = 0.0;
@@ -37,7 +37,7 @@ public abstract class Network extends Thread{
 
     
     Network(){
-        buffer = new Buffer();
+        net_out = new Buffer();
         broadcasts = new int[256];
         unicasts = new int[256];
         multicasts = new int[256];
@@ -45,20 +45,20 @@ public abstract class Network extends Thread{
     }
     
     public final boolean verifyChannel(int i, int j) {
-        if (Channels[i][j] == null) {
+        if (channels[i][j] == null) {
             return false;
         }
 
-        return Channels[i][j].status();
+        return channels[i][j].status();
 
     }
 
     public final void handshaking(int p_i, int p_j) {
     	try {
 
-    	    Channels[p_i][p_j] = (Channel)Factory.create(Channel.TAG, Channel.class.getName());
-            Channels[p_i][p_j].connect(conteiner.p[p_i], conteiner.p[p_j]);
-            Factory.setup(Channels[p_i][p_j], Channel.TAG);
+    	    channels[p_i][p_j] = (Channel)Factory.create(Channel.TAG, Channel.class.getName());
+            channels[p_i][p_j].connect(conteiner.p[p_i], conteiner.p[p_j]);
+            Factory.setup(channels[p_i][p_j], Channel.TAG);
 
         } catch (Exception e) {
                 e.printStackTrace();
@@ -74,14 +74,12 @@ public abstract class Network extends Thread{
         
         int n = cxt.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value().intValue();
 
-        Channels = new Channel[n][n];
+        channels = new Channel[n][n];
         totalticks = (int)(1/conteiner.ro);
     }
 
-    public final void incTick() {
-        synchronized(this){
-            this.processaRelogio();
-        }
+    public synchronized final void incTick() {
+        this.clockTick();
     }
 
     @Override
@@ -98,67 +96,84 @@ public abstract class Network extends Thread{
     }
 
 
-    public final void processaRelogio() {
-        synchronized(this){
-            tick++;
-            this.yield();
-            //if ( (tick == 1)&& status() ) this.processa();
-            if (tick > totalticks) {
-                clock++;
-                tick=0;
-            }
-        }
+    public synchronized final void clockTick() {
+         tick++;
+         this.yield();
+         if (tick > totalticks) {
+             clock++;
+             tick=0;
+         }
     }
 
     
     public void send(Message msg){
         synchronized(this){
-        long dt = clock - last;
-        last = clock;
-        tqueue -= dt;
+            long dt = clock - last;
+            last = clock;
+            tqueue -= dt;
 
-        tqueue = tqueue < 0? 0: tqueue;
 
-//        long at = delay();
-        tqueue += delay(msg);
-        long at = (long) tqueue;
-        conteiner.get(RuntimeSupport.Variable.QueueDelayTrace).<DescriptiveStatistics>value().addValue(tqueue);
-//         try{
-//            System.out.println(msg.type + ", " + XObject.objectToByteArray(msg.content).length);
-//           }catch(Exception e){
-//               e.printStackTrace();
-//               System.exit(0);
-//           }
-            propagate(msg, at);
+            tqueue = (tqueue < 0? 0: tqueue);
+            //        long at = delay();
+            tqueue += delay(msg);
+            conteiner.get(RuntimeSupport.Variable.QueueDelayTrace).<DescriptiveStatistics>value().addValue(tqueue);
+            propagate(msg);
         }
        
     }
 
-    public void propagate(Message msg, double at){
+//    public void propagate(){
+//       Message m = null;
+//       while((m = getOutput())!= null){
+//          propagate(m);
+//       }
+//    }
+
+//    long cur = 0;
+//    public Message getOutput(){
+//         return getOutput(clock);
+//    }
+//    public Message getOutput(long now){
+//      ArrayList a = net_out.getMsgs((int)now);
+//
+//      if (a.isEmpty()) {
+//          return null;
+//      }
+//
+//      Message msg = (Message) a.get(0);
+//
+//      return msg;
+//
+//    }
+
+//    public void propagate(Message msg){
+//         propagate(msg, (long)Math.ceil(clock + tqueue));
+//    }
+    public void propagate(Message msg){
       synchronized(this){
          if(isMulticast(msg)){
-            multicast(msg, at);
+            multicast(msg);
             return;
          }
 
          if(isRelay(msg)){
-            relay(msg, at);
+            relay(msg);
             return;
          }
 
          if(isBroadcast(msg)){
-            broadcast(msg, at);
+            broadcast(msg);
             return;
          }//end if isBroadcast
          
-         unicast(msg, at);
+         unicast(msg);
       }
     }
     public void loopback(Message msg){
         synchronized(this){
             int address = msg.sender;
             Agent p = conteiner.p[address];
-            p.getInfra().nic_in.add((int)(p.getInfra().clock.value()) + 1, msg);
+            p.getInfra().nic_in.add((int)(p.getInfra().cpu.value())+1, msg);
         }
     }
     public boolean isMulticast(Message msg){
@@ -181,16 +196,16 @@ public abstract class Network extends Thread{
         return (msg.relayTo != -1);
     }
 
-    public void relay(Message msg, double atraso){
+    public void relay(Message msg){
         synchronized(this){
             int p_i = msg.relayFrom;
             int p_j = msg.relayTo;
 
-            if(verifyChannel(p_i, p_j)) transfer(p_i, p_j, msg, (int)atraso);
+            if(verifyChannel(p_i, p_j)) transfer(p_i, p_j, msg);
         }
     }
     
-    public void unicast(Message msg, double delay){
+    public void unicast(Message msg){
         synchronized(this){
             unicasts[msg.type]++;
             if (isLoopback(msg)) {
@@ -198,11 +213,11 @@ public abstract class Network extends Thread{
                 return;
             }
             if (verifyChannel(msg.sender, msg.destination))
-                transfer(msg.sender, msg.destination, msg, delay);
+                transfer(msg.sender, msg.destination, msg);
         }
     }
 
-    public void multicast(Message msg, double delay){
+    public void multicast(Message msg){
       synchronized(this){
          NetworkGroup g = gtable.get(msg.destination);
          if(g != null){
@@ -211,20 +226,20 @@ public abstract class Network extends Thread{
             
             for(int p_j : g){
                if (p_i != p_j && verifyChannel(p_i, p_j)){
-                  transfer(p_i, p_j, msg, delay);
+                  transfer(p_i, p_j, msg);
                }
             }
          }
       }
     }
 
-    public void transfer(int p_i, int p_j, Message msg, double delay){
+    public void transfer(int p_i, int p_j, Message msg){
         synchronized(this){
-            Channels[p_i][p_j].deliverMsg(msg, delay);
+            channels[p_i][p_j].deliverMsg(msg, (long)(tqueue));//Math.ceil(clock + tqueue));
         }
     }
 
-    public void broadcast(Message msg, double delay){
+    public void broadcast(Message msg){
         synchronized(this){
             int n = conteiner.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value();
 
@@ -240,7 +255,7 @@ public abstract class Network extends Thread{
 
                 }else if (verifyChannel(p_i, p_j)){
 
-                        transfer(p_i, p_j, msg, delay);
+                        transfer(p_i, p_j, msg);
 
                 }//end else if
             }//end for

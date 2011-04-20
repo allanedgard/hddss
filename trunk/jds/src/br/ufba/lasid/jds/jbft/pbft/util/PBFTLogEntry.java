@@ -45,7 +45,11 @@ public class PBFTLogEntry implements Serializable{
     public PBFTPrePrepare getPrePrepare() {
         return preprepare;
     }
-  
+
+    public void setPrePrepare(PBFTPrePrepare pp) {
+        preprepare = pp;
+    }
+
     public Long getSequenceNumber(){
 
         return getPrePrepare().getSequenceNumber();

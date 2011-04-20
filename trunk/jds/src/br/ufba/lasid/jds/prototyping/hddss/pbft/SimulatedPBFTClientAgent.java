@@ -9,7 +9,6 @@ import br.ufba.lasid.jds.cs.IClient;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.comm.SimulatedPBFTCommunicator;
 import br.ufba.lasid.jds.jbft.pbft.client.PBFTClient;
 import br.ufba.lasid.jds.jbft.pbft.architectures.PBFTClientArchitecture;
-import br.ufba.lasid.jds.security.SHA1withDSASunMessageAuthenticator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,7 +26,7 @@ public abstract class SimulatedPBFTClientAgent extends SimulatedPBFTAgent implem
     public void setup() {
         super.setup();
 
-        SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.cpu);
+        SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.clock);
         
         getProtocol().setCommunicator(new SimulatedPBFTCommunicator(this));
         getProtocol().setLocalProcess(this);
@@ -38,7 +37,8 @@ public abstract class SimulatedPBFTClientAgent extends SimulatedPBFTAgent implem
         ((PBFTClient)getProtocol()).setClient(this);
 
         try {
-            getProtocol().setAuthenticator(new SHA1withDSASunMessageAuthenticator());
+            //getProtocol().setAuthenticator(new SHA1withDSASunMessageAuthenticator());
+            getProtocol().setAuthenticator(new SimulatedAuthenticator(this));
 
         } catch (Exception ex) {
             Logger.getLogger(SimulatedPBFTAgent.class.getName()).log(Level.SEVERE, null, ex);
@@ -48,9 +48,7 @@ public abstract class SimulatedPBFTClientAgent extends SimulatedPBFTAgent implem
         getProtocol().setArchitecture(
             new PBFTClientArchitecture((PBFTClient)getProtocol())
         );
-
-        getProtocol().getArchitecture().buildup();
-        
+   
                 
     }
 
@@ -68,7 +66,7 @@ public abstract class SimulatedPBFTClientAgent extends SimulatedPBFTAgent implem
 
     @Override
     public void startup() {
-        //getProtocol().startup();
+         getProtocol().getArchitecture().buildup();
     }
 
 

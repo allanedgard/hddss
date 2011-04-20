@@ -35,47 +35,45 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTMetaData;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepare;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepare;
-import br.ufba.lasid.jds.jbft.pbft.comm.PBFTProcessingToken;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
 import br.ufba.lasid.jds.util.DigestList;
-import br.ufba.lasid.jds.jbft.pbft.util.PBFTLogEntry;
 import br.ufba.lasid.jds.util.JDSUtility;
 import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage.RequestState;
 import br.ufba.lasid.jds.comm.MessageCollection;
 import br.ufba.lasid.jds.comm.MessageQueue;
-import br.ufba.lasid.jds.decision.voting.IVote;
-import br.ufba.lasid.jds.decision.voting.Quorum;
 import br.ufba.lasid.jds.decision.voting.SoftQuorum;
-import br.ufba.lasid.jds.group.decision.ElectorProcess;
 import br.ufba.lasid.jds.group.decision.Vote;
 import br.ufba.lasid.jds.jbft.pbft.PBFT;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeViewACKInfo;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeViewInfo;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCheckpointInfo;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTCommitInfo;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTNewViewInfo;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrePrepareInfo;
+import br.ufba.lasid.jds.jbft.pbft.comm.PBFTPrepareInfo;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequestInfo;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusPending;
+import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
 import br.ufba.lasid.jds.jbft.pbft.server.decision.BagSubject;
-import br.ufba.lasid.jds.jbft.pbft.server.decision.ChangeViewACKSubject;
 import br.ufba.lasid.jds.jbft.pbft.server.decision.CheckpointSubject;
-import br.ufba.lasid.jds.jbft.pbft.server.decision.CommitSubject;
 import br.ufba.lasid.jds.jbft.pbft.server.decision.MetaDataSubject;
-import br.ufba.lasid.jds.jbft.pbft.server.decision.PrepareSubject;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTNewViewConstructor;
-import br.ufba.lasid.jds.jbft.pbft.util.PBFTStateLog;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTTimeoutDetector;
 import br.ufba.lasid.jds.management.memory.IMemory;
 import br.ufba.lasid.jds.management.memory.pages.IPage;
 import br.ufba.lasid.jds.management.memory.state.managers.IRecovarableStateManager;
 import br.ufba.lasid.jds.util.IPayload;
 import br.ufba.lasid.jds.util.ISchedule;
-import br.ufba.lasid.jds.util.XMath;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -135,77 +133,75 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
     public void doCheckpoint(long seqn) {
 
-        Object lSrvID = getLocalServerID();
-        long lcwm = getLCWM();
-        long startSEQ = lcwm + 1;
-        long finalSEQ = seqn;
-        long execSEQ = getStateLog().getNextExecuteSEQ() - 1;
+       if(getCheckpointInfo().isEmpty()){
+          return;
+       }
 
-        for(long currSEQ = startSEQ; currSEQ <= finalSEQ; currSEQ ++){
+       Object lpid = getLocalServerID();
 
-            /* If the sequence number was executed by the replica then we'll be able to compute the checkpoint. */
-            if(currSEQ <= execSEQ){
+       long fcheck = getCheckpointInfo().getFirstSequenceNumber();
+       long lcheck = getCheckpointInfo().getLastSequenceNumber();
+       long lexsqn = getCurrentExecuteSEQ();
+       long lcwm = getLCWM();
 
-                SoftQuorum q = (SoftQuorum)getStateLog().getQuorum(CHECKPOINTQUORUMSTORE, String.valueOf(currSEQ));
+       for(long icheck = fcheck; icheck <= lcheck && icheck <= lexsqn; icheck++){               
+            SoftQuorum q = (SoftQuorum)getStateLog().getQuorum(CHECKPOINTQUORUMSTORE, String.valueOf(icheck));
 
-                if(q == null){
-                   continue;
-                }
-
-                CheckpointSubject decision = (CheckpointSubject)q.getCurrentDecision();
-
-                if(decision != null){
-
-                   long   cSEQN = ( Long ) decision.getInfo(CheckpointSubject.SEQUENCENUMBER);
-                   String cDGST = (String) decision.getInfo(CheckpointSubject.DIGEST);
-
-                    CheckpointLogEntry clogEntry = rStateManager.getLogEntry(cSEQN);
-
-                    if(!(clogEntry != null && clogEntry.getDigest() != null && clogEntry.getDigest().equals(cDGST))){
-                        break;
-                    }
-
-                    if(!clogEntry.wasProcessed()){
-                        try {
-                            rStateManager.setCurrentState(clogEntry.getState());
-                            rStateManager.checkpoint(clogEntry.getCheckpointID());
-                            rStateManager.removeLogEntry(clogEntry.getCheckpointID());
-                            lcwm = currSEQ;
-                            clogEntry.setProcessed(true);
-
-                        } catch (Exception ex) {
-                            Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                }
+            if(q == null){
+               continue;
             }
-        }
 
-        if(lcwm >= getStateLog().getCheckpointLowWaterMark()){
+            CheckpointSubject cs = (CheckpointSubject)q.getCurrentDecision();
+
+            if(cs != null && getCheckpointInfo().hasEnough(icheck)){
+
+               CheckpointLogEntry clogEntry = rStateManager.getLogEntry(icheck);
+
+               String cDGST = (String) cs.getInfo(CheckpointSubject.DIGEST);
+
+               if(!(clogEntry != null && clogEntry.getDigest() != null && clogEntry.getDigest().equals(cDGST))){
+                  break;
+               }
+
+               if(!clogEntry.wasProcessed()){
+                  try {
+                     rStateManager.setCurrentState(clogEntry.getState());
+                     rStateManager.checkpoint(clogEntry.getCheckpointID());
+
+                     rStateManager.removeLogEntry(clogEntry.getCheckpointID());
+                     clogEntry.setProcessed(true);
+
+                     lcwm = icheck;
+
+                  } catch (Exception ex) {
+                     Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
+                  }
+               }
+            }
+       }
+
+       if(lcwm >= getStateLog().getCheckpointLowWaterMark()){
             getStateLog().setCheckpointLowWaterMark(lcwm);
 
             JDSUtility.debug(
-               "[PBFTServer:doCheckpoint(seqn)] s" + lSrvID + ", at time " + getClockValue() + ", starts the garbage collection procedure with LCWM = " + lcwm + "..."
+               "[doCheckpoint(seqn)] s" + lpid + ", at time " + getClockValue() + ", starts the garbage collection procedure with LCWM = " + lcwm + "..."
             );
 
             /* clean-up the request log */
             getRequestInfo().garbage(lcwm);
-            
+            getPrePrepareInfo().gc(lcwm);
+            getPrePreparebackupInfo().gc(lcwm);
+            getPrepareInfo().gc(lcwm);
+            getCommitInfo().gc(lcwm);            
+            getCheckpointInfo().removeLowerOrEqaul(lcwm);
+
             /* clean-up the order state log */
             getStateLog().garbage(lcwm);
 
-            if(!changing()){
-               preprepareset.clear();
-               prepareset.clear();
-            }
+            JDSUtility.debug("[doCheckpoint(seqn)] s" + lpid + " complete the garbage collection procedure for LCWM{" + lcwm + "}");
 
-
-            JDSUtility.debug("[PBFTServer:doCheckpoint(seqn)] s" + lSrvID + " complete the garbage collection procedure for LCWM = " + lcwm + "!");
-            
         }else{
-            JDSUtility.debug(
-               "[PBFTServer:doCheckpoint(seqn)] s" + lSrvID + ", at time " + getClockValue() + ", does not have cached stated matching LCWM = " + seqn + "..."
-             );
+            JDSUtility.debug("[doCheckpoint(seqn)] s" + lpid + ", at time " + getClockValue() + ", does not have cached stated matching LCWM{" + seqn + "}");
         }
     }
         
@@ -214,139 +210,89 @@ public class PBFTServer extends PBFT implements IPBFTServer{
    #########################################################################*/
     public synchronized void handle(PBFTRequest r){
        
-      Object lServerID = getLocalServerID();
+      Object lpid = getLocalServerID();
 
-      JDSUtility.debug("[PBFTServer:handle(request)] s" + lServerID + ", at time " + getClockValue() + ", received " + r);
+      JDSUtility.debug("[handle(request)] s" + lpid + ", at time " + getClockValue() + ", received " + r);
 
-      /* if it is a new request then it'll be accepted */
-      if(isValid(r)){
+      StatedPBFTRequestMessage loggedRequest = getRequestInfo().getStatedRequest(r);
+      
+      /* if the request has not been logged anymore and it's a old request, so it was garbage by checkpoint procedure then I must send a null reply */
+      if(loggedRequest == null && getRequestInfo().isOld(r)){
+         IProcess client = new BaseProcess(r.getClientID());
+         PBFTReply reply = new PBFTReply(r, null, lpid, getCurrentViewNumber());
+         emit(reply, client);
+         return;
          
-         try{
-            String digest = getRequestDigest(r);
-            
-            
-            JDSUtility.debug("[PBFTServer:handle(request)] s" + lServerID + ", at time " + getClockValue() + ", accepted " + r + " as a new request (" + digest + ").");
+      }
+      
+      try{
+         /*if the request is new and hasn't added yet then it'll be added */
+         if(loggedRequest == null){
+            /* I received a new request so a must log it */
+            loggedRequest = getRequestInfo().add(getRequestDigest(r), r, RequestState.WAITING);
+         }
 
-            /* it's a new request, so it'll be accepted and put it in backlog state. */
-            PBFTRequestInfo rinfo = getRequestInfo();
+         /* if I have a entry in request log but I don't have the request then I must update my request log. */
+         if(loggedRequest.getRequest() == null) loggedRequest.setRequest(r);
+         
+        /*if the request was served the I'll re-send the related reply if it has been logged yet.*/
+         if(loggedRequest.getState().equals(RequestState.SERVED)){
+            JDSUtility.debug("[handle(request)] s" + lpid + " has already served " + r);
 
-            if(!isPrimary()){
-               if(!rinfo.hasRequest(digest)){
-                  if(rinfo.is(digest, RequestState.PREPREPARED)){
-                     rinfo.add(digest, r, RequestState.PREPREPARED);
-                     Long seqn = rinfo.getSequenceNumber(digest);
-                     if(!rinfo.hasSomeRequestMissed(seqn)){
-                        PBFTPrePrepare pp = getStateLog().getPrePrepare(seqn);
-                        if(pp != null){
-                           emitPrepare(pp);
-                        }
-                     }
-                     return;
-                  }
+            /* retransmite the reply when the request was already served */
+            PBFTReply reply = getRequestInfo().getReply(r);
+            IProcess client = new BaseProcess(r.getClientID());
+            emit(reply, client);
+            return;
+         }
+         
+         /* If I'm changing then I'll do nothing more .*/
+         if(changing()) return;
 
-                  if(rinfo.is(digest, RequestState.PREPARED)){
-                     rinfo.add(digest, r, RequestState.PREPREPARED);
-                     Long seqn = rinfo.getSequenceNumber(digest);
-                     if(!rinfo.hasSomeRequestMissed(seqn)){
-                        Quorum q = getStateLog().getPrepareQuorum(seqn);
-                        if(q != null){
-                           PrepareSubject ps = (PrepareSubject) q.getCurrentDecision();
-                           if(ps != null){
-                              int viewn =  ( Integer) ps.getInfo(PrepareSubject.VIEWNUMBER);                              
-                              emitCommit(viewn, seqn);
-                           }
-                        }
-                     }
-                     return;
-                  }
-                  if(rinfo.is(digest, RequestState.COMMITTED)){
-                     rinfo.add(digest, r, RequestState.COMMITTED);
-                     Long seqn = rinfo.getSequenceNumber(digest);
-                     if(!rinfo.hasSomeRequestMissed(seqn)){
-                        Quorum q = getStateLog().getCommitQuorum(seqn);
-                        if(q != null){
-                           CommitSubject cs = (CommitSubject) q.getCurrentDecision();
-                           if(cs != null){
-                               handle(cs.getCommit());
-//                              int viewn =  ( Integer) cs.getInfo(PrepareSubject.VIEWNUMBER);
-//                              emitCommit(viewn, seqn);
-                           }
-                        }
-                     }
-                     return;
-                  }
+         PBFTPrePrepare pp = getPrePreparebackupInfo().get(getCurrentViewNumber(), getCurrentPrimaryID(), loggedRequest.getDigest());
 
+         if(pp != null && !isPrimary()){
+            /* For each digest in backuped pre-prepare, I haven't all request then it'll be discarded. */
+            DigestList digests = new DigestList();
+            for(String digest : pp.getDigests()){
+               if(!getRequestInfo().hasRequest(digest)){
+                  digests.add(digest);
                }
-
             }
             
-            getRequestInfo().add(digest, r, RequestState.WAITING);
-
-            JDSUtility.debug("[PBFTServer:handle(request)] s" + lServerID + " inserted " + r + " in waiting state.");
-
-            if(changing()){
-               JDSUtility.debug("[PBFTServer:handle(request)] s" + lServerID + ", at time " + getClockValue() + ", has been in change view state.");
+            if(digests.isEmpty()){
+               handle(pp);
+               getPrePreparebackupInfo().rem(pp);
                return;
-            }
+            }            
+         }
 
-            /* performs the batch procedure if the server is the primary replica. */
-            if(isPrimary()){
-               JDSUtility.debug("[PBFTServer:handle(request)] s" + lServerID + " (primary) is executing the batch procedure for " + r + ".");
-               batch();
-            }else{
-               /* schedules a timeout for the arriving of the pre-prepare message if the server is a secundary replica. */
-               scheduleViewChange();
-            }//end if is primary
-            
-         } catch (Exception ex) {
-            Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
-         }//end try/catch         
-      }//end if can proceed (request)
-    }//end execute(request)
+         boolean   committed = loggedRequest.getState().equals( RequestState.COMMITTED );
+           
+//         /* if my request was commit and it hasn't been served yet I must check the stated of the request */
+         if(committed){
+            tryExecuteRequests();
+            return;
+         }
+         
+         /* performs the batch procedure if the server is the primary replica. */
+         if(isPrimary()){
+            JDSUtility.debug("[handle(request)] s" + lpid + " (primary) is executing the batch procedure for " + r + ".");
+            batch();
+         }else{
+            /* schedules a timeout for the arriving of the pre-prepare message if the server is a secundary replica. */
+            scheduleViewChange();
+         }//end if is primary
+         
+      }catch(Exception e){
+         e.printStackTrace();
+      }
+    }//end handle(request)
 
     protected String getRequestDigest(PBFTRequest r) throws Exception{
          String digest = getAuthenticator().getDigest(r);
-         //System.out.println("[s" + getLocalServerID() + "] digest = " + digest + " => " + r);
          return digest;
     }
-
-    /**
-     * Checks if the client request r is new it returns true, otherwise: (a) If r is old, belongs to log and was served 
-     * then its reply will be resend (b) if r is old, doesn't belogns to log then a null reply will be sent.
-     * @param r - the client request
-     * @return true if it is a new request.
-     */
-    public boolean isValid(PBFTRequest r){
-       
-      PBFTRequestInfo rinfo = getRequestInfo(); 
-      Object          lsid  = getLocalServerID();
-
-      /* checks if it has been logged. */
-      if(rinfo.logged(r)){
-
-         /* checks if was served . */
-         if(rinfo.wasServed(r)){
-            JDSUtility.debug("[PBFTServer:isValid(request)] s" + lsid + " has already served " + r);
-            
-            /* retransmite the reply when the request was already served */
-            emit(rinfo.getReply(r), new BaseProcess(r.getClientID()));
-            return false;
-         }
-         /* if it was logged but it hasn't been server yet then it'll be discarded because it has been processed. */
-         JDSUtility.debug("[PBFTServer:isValid(request)] s" + lsid + " has already accepted " + r + " so this was discarded.");
-         return false;
-      }
-
-      /* if it isn't logged but it is older than some logged requests then it was discarded by the garbage collector. Thus, the
-      replica must sent a null reply */
-      if(rinfo.isOld(r)){
-         JDSUtility.debug("[PBFTServer:isValid(request)] s" + lsid + " hasn't a response for  " + r + " any more.");
-         emit(createNullReplyMessage(r), new BaseProcess(r.getClientID()));
-         return false;
-      }
-
-      return true;
-   }
     
    public void batch(){
       if(isPrimary()){
@@ -358,13 +304,13 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             }//end if has a complete batch
             return;
          }//end if !overloaded
-         JDSUtility.debug("[PBFTServer:batch()]s" + getLocalServerID() + ", at time " + getClockValue() + ", has been in overloaded state.");
+         JDSUtility.debug("[batch()]s" + getLocalServerID() + ", at time " + getClockValue() + ", has been in overloaded state.");
       }//end if is primary
    }//end batch(digest)
 
     protected boolean hasACompleteBatch(){
        //we must decide if we are going to use the number or size of requests in queue.
-       return getBatchSize() <= getRequestInfo().getQueueSize();//getRequestInfo().getSizeInBytes();
+       return getBatchSize() <= getRequestInfo().getWaitingQueueSize();//getRequestInfo().getSizeInBytes();
     }//is a complete batch
 
    protected void emitBatch(){
@@ -380,25 +326,32 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             return;
          }
          /* creates a new pre-prepare message */
-         PBFTPrePrepare pp = new PBFTPrePrepare(viewn, seqn, getLocalServerID());
+         PBFTPrePrepare pp = null;
 
          int size = 0;
 
          /* while has not achieved the batch size and there is digests in queue */
-         while(size < getBatchSize() && !rinfo.digestQueueIsEmpty()){
-            String digest = rinfo.getDigestFromQueue();
+         String digest = null;
+         while(size < getBatchSize() && (digest = rinfo.getFirtRequestDigestWaiting())!= null){
+            if(pp == null){
+               pp = new PBFTPrePrepare(viewn, seqn, getLocalServerID());
+            }
             pp.getDigests().add(digest);
+            rinfo.assign(digest, RequestState.PREPREPARED);
             size += 1;//rinfo.getRequestSize(digest);
          }
 
+         if(pp == null){
+            return;
+         }
          /* emits pre-prepare */
          emit(pp, getLocalGroup().minus(getLocalProcess()));
 
          /* update log current pre-prepare */
-         getDecision(pp);
+         handle(pp);
 
          /* if there is digest then it will schedule a send batch */
-         if(!rinfo.digestQueueIsEmpty()){
+         if(rinfo.hasSomeWaiting()){
             batch();
          }//end if digest queue is no empty
 
@@ -417,7 +370,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
          PBFTTimeoutDetector ttask = new PBFTTimeoutDetector() {
             @Override
             public void onTimeout() {
-               JDSUtility.debug("[PBFTServer::PBFTTimeoutDetector:onTimeout] s" + getLocalServerID() + " had a batch timer expired at time " + getClockValue());
+               JDSUtility.debug("[onTimeout()] s" + getLocalServerID() + " had a batch timer expired at time " + getClockValue());
                emitBatch();
             }
          };
@@ -438,7 +391,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             long timestamp = now + timeout;
 
             getBatchTimer().schedule(timestamp);
-            JDSUtility.debug("[PBFTServer:doSchedule(digest)] s" + getLocalServerID() + " scheduled a batch timeout for " + getBatchTimer().getTimestamp());
+            JDSUtility.debug("[doSchedule(digest)] s" + getLocalServerID() + " scheduled a batch timeout for " + getBatchTimer().getTimestamp());
 
         }//end batch time is no working
     }//end scheduleSendBatch()
@@ -451,8 +404,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
              PBFTTimeoutDetector ttask = new PBFTTimeoutDetector() {
                 @Override
                 public void onTimeout() {
-                   PBFTRequestInfo rinfo = getRequestInfo();
-                   if(rinfo.hasSomeWaiting()){
+                   if(getRequestInfo().hasSomeWaiting()){
                      emitChangeView();
                    }
                 }
@@ -462,7 +414,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             ttask.put("TIMEOUT", getPrimaryFaultTimeout());
         }//end if change-view timer is null
         return vtimer;        
-    }//end getViewTimer():ISchedule
+    }//end getViewTimer()
+
    /**
     * Schedule a view change in case of late response for the primary.
     * @param request - the client request.
@@ -470,8 +423,10 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     */
    public void scheduleViewChange(){
       PBFTRequestInfo rinfo = getRequestInfo();
+
       if(!isPrimary() && rinfo.hasSomeWaiting()){
-         if(!overloaded()){
+         
+         if(!overloaded() || changing()){
             long now = getClockValue();
 
             if(!getViewTimer().workingAt(now)){
@@ -481,7 +436,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
                if(ttask != null && ttask.get("TIMEOUT") != null){
                   timeout = (Long)ttask.get("TIMEOUT");
-                  JDSUtility.debug("[PBFTServer:scheduleViewChange] s" + getLocalServerID() + " computed changeview timeout equal to " + timeout);
+                  JDSUtility.debug("[scheduleViewChange()] s" + getLocalServerID() + " computed changeview timeout equal to " + timeout);
                }
 
                long timestamp = now + timeout;
@@ -490,7 +445,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             }
             return;
          }//end change-view timer is working
-        JDSUtility.debug("[PBFTServer:batch()]s" + getLocalServerID() + ", at time " + getClockValue() + ", has been in overloaded state.");
+        JDSUtility.debug("[batch()]s" + getLocalServerID() + ", at time " + getClockValue() + ", has been in overloaded state.");
       }//end if it is not primary
       
    }//scheduleViewChange()
@@ -499,6 +454,11 @@ public class PBFTServer extends PBFT implements IPBFTServer{
      * revoke the timer assigned to a client request (i.e. the change view timer).
      * @param leafPartDigest
      */
+
+    public void restartViewChangeTimer(){
+         revokeViewChange();
+         scheduleViewChange();
+    }
     public void revokeViewChange(){
        if(!isPrimary()){
          getViewTimer().cancel();
@@ -509,120 +469,101 @@ public class PBFTServer extends PBFT implements IPBFTServer{
   # 2. Methods for handling pre-prepare messages.
   #########################################################################*/
    public void handle(PBFTPrePrepare pp){
-      JDSUtility.debug("[PBFTServer:handle(preprepare)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + pp);
+      
+      Object lpid = getLocalServerID();
+      long    now = getClockValue();
 
-      if(isValid(pp)){
+      JDSUtility.debug("[handle(preprepare)] s" + lpid + ", at time " + now + ", received " + pp);
 
-         pp = getDecision(pp);
-         
-         if(pp != null){
-            if(!isPrimary()){
-               emitPrepare(pp);
-            }
-         }         
+      /* If I received a invalid preprepare then I'll discard it. */
+      if(!(pp != null && pp.getSequenceNumber() != null && pp.getViewNumber() != null && pp.getDigests() != null && pp.getReplicaID() != null)){
+         JDSUtility.debug("[handle(preprepare)] s" + lpid + ", at time " + now + ", discarded " + pp + " because it's a malformed pre-prepare.");
+         return;
+      }
+      
+      /* If the received pre-prepare wasn't sent by a group member then I'll discard it. */
+      if(!wasSentByAGroupMember(pp)){
+         JDSUtility.debug("[handle(preprepare)] s" + lpid + ", at time " + now + ", discarded " + pp + " because it wasn't sent by group member.");
+         return;
       }
 
-      scheduleViewChange();
+      long lcwm = getLCWM();
+      long hcwm = getHCWM();
+      long seqn = pp.getSequenceNumber();
 
-   }
+      /*If seqn(pp) not in (lcwm, hcwm] then pp will be discarded. */
+      if(!(lcwm < seqn && seqn <= hcwm)){         
+         JDSUtility.debug("[handle(preprepare)] s" + lpid + ", at time " + now + ", discarded " + pp + " because its SEQN{" + seqn +"} not in (" + lcwm + "; " + hcwm + "].");
+         return;
+      }
 
-   public void emitPrepare(PBFTPrePrepare pp){
-      PBFTPrepare p = createPrepareMessage(pp);
-      emit(p, getLocalGroup().minus(getLocalProcess()));
-      getDecision(p);
-   }
-   
-    public boolean isValid(PBFTPrePrepare pp){
-       Object lSrvID = getLocalServerID();
-        /* If the preprepare hasn't a valid sequence / view number then it'll force a change view. */
-        if(!(checkSequenceNumber(pp) && checkViewNumber(pp))){
-            long nxPP = getStateLog().getNextPrePrepareSEQ();  long viewn  = getCurrentViewNumber();
-            JDSUtility.debug(
-              "[PBFTServer:isValid(preprepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + pp + " because it hasn't " +
-              "a valid sequence/view number. (current(viewn) = " + viewn + ") [nextSEQN(pre-prepare) = " + nxPP + "]"
-            );
-
-            return false;
-        }
-
-        /* If the preprepare message wasn't sent by the primary replica then it will be discarded. */
-        if(!wasSentByPrimary(pp)){
-            JDSUtility.debug(
-              "[PBFTServer:isValid(preprepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + pp + " " +
-              "because it wasn't sent by primary server s" + getCurrentPrimaryID()
-            );
-            
-            return false;
-        }
-        
-        return true;
-    }
-
-   public PBFTPrePrepare getDecision(PBFTPrePrepare pp){
-      Object lSrvID = getLocalServerID();
+      int itView = pp.getViewNumber();
+      int myView = getCurrentViewNumber();
       
-      /* If the preprepare is null then do nothing. */
-      if(pp != null){
-         PBFTRequestInfo rinfo = getRequestInfo();
+      /*If a previous pre-prepare with same sequence number was accepted it'll be discarded. */
+      if(getPrePrepareInfo().count(itView, seqn) > 0){
+         JDSUtility.debug("[handle(preprepare)] s" + lpid + ", at time " + now + ", discarded " + pp + " because it has a previous pre-prepare with same SEQN{" + seqn + "}");
+         return;
+      }
 
-         /* Get composite key of the prepare. */
-         Long ekey = pp.getSequenceNumber();
+      /* If the pre-prepare wasn't sent in my current view then it won't be processed. */
+      if(itView > myView){
+         JDSUtility.debug("[handle(preprepare)] s" + lpid + ", at time " + now + ", cann't process " + pp + " because it doesn't belong to the CURR-VIEW{" + myView + "}");
+         return;
+      }
 
-         /* If the entry key is diferent of null then update state. Otherwise do nothing. */
-         if(ekey != null) {
+      /* if the pre-prepare wasn't sent by the primary of this or previous view then it'll be discarded. */
+      Object rpid = pp.getReplicaID();
+      if(!isPrimary(rpid, itView)){
+         JDSUtility.debug("[handle(preprepare)] s" + lpid + ", at time " + now + ", cann't process " + pp + " because it wasn't sent by the primary.");
+         return;
+      }
 
-            long seqn = ekey;
 
-            /* Get the batch in the preprepare. */
-            DigestList digests = pp.getDigests();
+      /* For each digest in pre-prepare, I haven't all request then it'll be discarded. */
+      DigestList digests = new DigestList();      
+      for(String digest : pp.getDigests()){
+         if(!getRequestInfo().hasRequest(digest)){
+            digests.add(digest);
+         }
+      }
 
-            /* get a log  entry for current preprepare. */
-            PBFTLogEntry entry = getStateLog().get(ekey);
+      if(!digests.isEmpty()){
+         getPrePreparebackupInfo().put(pp);
+         JDSUtility.debug("[handle(preprepare)] s" + lpid + ", at time " + now + ", cann't process " + pp + " because it has missed requests (" + digests +").");
+         return;
+      }
 
-            /* if there isn't a entry then create one. */
-            if(entry == null){
+      /*I store pre-prepares from current or previous views. */
+      getPrePrepareInfo().put(pp);
 
-               entry = new PBFTLogEntry(pp);
+      if(itView != myView){
+         JDSUtility.debug("[handle(preprepare)] s" + lpid + ", at time " + now + ", cann't prepare " + pp + " because it doesn't belongs to VIEW(" + myView + ").");
+         return;
+      }
 
-               /* Update the entry in log. */
-               getStateLog().put(ekey, entry);
+      getStateLog().updateNextPrePrepareSEQ(pp);
 
-               JDSUtility.debug("[PBFTServer:updateStatus(preprepare)] s"  + lSrvID + ", at time " + getClockValue() + ", created a new entry in its log for " + pp);
-                                             
-               /* For each request in batch, check if such request was received. */
-               for(String digest : digests){
-                  if(rinfo.getRequest(digest)!= null){
-                     rinfo.assign(digest, RequestState.PREPREPARED);
-                     rinfo.assign(digest, seqn);
-                  }else{
-                     rinfo.add(digest, null, RequestState.PREPREPARED);
-                     rinfo.assign(digest, seqn);
-                  }
-               }//end if for each digest
+      for(String digest : pp.getDigests()){
+         getRequestInfo().assign(digest, RequestState.PREPREPARED);
+         getRequestInfo().assign(digest, seqn);
+      }
+      
+      /* Everything is fine, so I can send a prepare if I'm not the primary of the current view. */
+      if(!isPrimary()){
+         restartViewChangeTimer();
+         emitPrepare(pp);
+      }
 
-               getStateLog().updateNextPrePrepareSEQ(pp);
+   }//end handle(pp)
+   
+   public void emitPrepare(PBFTPrePrepare pp){
 
-               if(rinfo.hasSomeRequestMissed(seqn)){
-                  JDSUtility.debug(
-                  "[PBFTServer:updateStatus(preprepare)] s" +lSrvID + ",  at time " + getClockValue() + ", couldn't update " +
-                  "pre-prepare " + pp + " because it has some request missed."
-                  );
-                  return null;
-               }
-               
-               revokeViewChange();
-               
-               if(rinfo.hasSomeWaiting()){
-                  scheduleViewChange();
-               }
+      PBFTPrepare p = createPrepareMessage(pp);
 
-               return pp;
-               
-            }//end if entry is null
-         }//end if entrykey is not null
-      }//end if pp is not null
+      emit(p, getLocalGroup().minus(getLocalProcess()));
 
-      return null;
+      handle(p);
       
    }
 
@@ -640,90 +581,103 @@ public class PBFTServer extends PBFT implements IPBFTServer{
   # 3. Methods for handling prepare messages.
   #########################################################################*/
    public void handle(PBFTPrepare p){
-      Object lSrvID = getLocalServerID();
-      JDSUtility.debug("[PBFTServer:handle(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", received " + p);
-      if(isValid(p)){
 
-         PrepareSubject ps = getDecision(p);
-         
-         if(ps != null){
-            long seqn = ( Long  ) ps.getInfo(PrepareSubject.SEQUENCENUMBER);
-            int viewn = (Integer) ps.getInfo(PrepareSubject.VIEWNUMBER);            
-            emitCommit(viewn, seqn);
-         }
+      Object lpid = getLocalServerID();
+      long    now = getClockValue();
+
+      JDSUtility.debug("[handle(prepare)] s" + lpid + ", at time " + now + ", received " + p);
+
+      /* If I received a invalid prepare then I'll discard it. */
+      if(!(p != null && p.getSequenceNumber() != null && p.getViewNumber() != null && p.getDigests() != null && p.getReplicaID() != null)){
+         JDSUtility.debug("[handle(prepare)] s" + lpid + ", at time " + now + ", discarded " + p + " because it's a malformed prepare.");
+         return;
       }
+
+      /* If the received prepare wasn't sent by a group member then I'll discard it. */
+      if(!wasSentByAGroupMember(p)){
+         JDSUtility.debug("[handle(prepare)] s" + lpid + ", at time " + now + ", discarded " + p + " because it wasn't sent by group member.");
+         return;
+      }
+
+      long lcwm = getLCWM();
+      long hcwm = getHCWM();
+      long seqn = p.getSequenceNumber();
+
+      /*If seqn(pp) not in (lcwm, hcwm] then p will be discarded. */
+      if(!(lcwm < seqn && seqn <= hcwm)){
+         JDSUtility.debug("[handle(prepare)] s" + lpid + ", at time " + now + ", discarded " + p + " because its SEQN{" + seqn +"} not in (" + lcwm + "; " + hcwm + "].");
+         return;
+      }
+
+      int itView = p.getViewNumber();
+      int myView = getCurrentViewNumber();
+      
+      /* If the preprepare wasn't sent by the current primary replica then it'll be discarded. */
+      Object currentPrimaryID = getCurrentPrimaryID();
+      if(wasSentByPrimary(p, itView)){
+         JDSUtility.debug("[handle(prepare)] s" + lpid + ", at time " + now + ", discarded " + p + " because it was sent by the primary server s" + currentPrimaryID);
+         return;
+      }
+
+      /* If the prepare was sent in my current view then I'll check and process it.*/
+      if(itView > myView){
+         JDSUtility.debug("[handle(prepare)] s" + lpid + ", at time " + now + ", discarded " + p + " because it wasn't sent in CURR-VIEW{" + myView + "}");
+         return;
+      }
+      
+      if(!getPrepareInfo().put(p)){
+         JDSUtility.debug("[handle(prepare)] s" + lpid + ", at time " + now + ", discarded " + p + " because it is a duplicaded prepare SEQN{" + seqn + "}");
+         return;
+      }
+
+      if(itView != myView){
+         JDSUtility.debug("[handle(prepare)] s" + lpid + ", at time " + now + ", cann't proceed because " + p + " in CURR-VIEW{" + myView + "}");
+         return;         
+      }
+
+      int f = getServiceBFTResilience();
+
+      if(getPrepareInfo().count(p) < (2 * f)){
+         return;
+      }
+
+      /*if it wasn't pre-prepared and I have a quorum then probably a missed pre-prepare or request messages. */
+      PBFTPrePrepare pp = getPrePrepareInfo().get(myView, seqn);
+      
+      if(pp == null){
+         pp = new PBFTPrePrepare(myView, seqn, getCurrentPrimaryID());
+         pp.getDigests().addAll(p.getDigests());
+         getPrePrepareInfo().put(pp);
+         getPrePreparebackupInfo().rem(pp);
+      }
+
+      if(!isPrimary() && getPrepareInfo().get(myView, seqn, lpid) == null){
+         getStateLog().updateNextPrePrepareSEQ(pp);
+         restartViewChangeTimer();
+         emitPrepare(pp);
+      }
+
+      if(getCommitInfo().get(myView, seqn, lpid) == null){
+         for(String digest : pp.getDigests()){
+            if(!getRequestInfo().hasRequest(digest)){
+               getRequestInfo().add(digest, null, RequestState.PREPARED);
+            }else{
+               getRequestInfo().assign(digest, RequestState.PREPARED);
+            }
+            getRequestInfo().assign(digest, seqn);
+         }
+
+         emitCommit(myView, seqn);
+
+      }
+         
    }
 
 
    public void emitCommit(int viewn, long seqn){
       PBFTCommit commit = createCommitMessage(viewn, seqn);
       emit(commit, getLocalGroup().minus(getLocalProcess()));
-      getDecision(commit);
-   }
-
-    public boolean isValid(PBFTPrepare p){
-       Object lSrvID = getLocalServerID();
-       Object curPID   = getCurrentPrimaryID();
-        /* If the prepare message was sent by the primary then it will be discarded. */
-        if(wasSentByPrimary(p)){
-            JDSUtility.debug(
-              "[PBFTServer:isValid(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because it was sent by the primary " + curPID
-            );
-
-            return false;
-        }
-
-        /* If the preprepare message wasn't sent by a group member then it will be discarded. */
-        if(!wasSentByAGroupMember(p)){
-            JDSUtility.debug(
-              "[PBFTServer:isValid(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because " +
-              "it wasn't sent by a member of the group " + getLocalGroup()
-            );
-
-            return false;
-        }
-        
-        /* If the preprepare hasn't a valid sequence or view number then force a change view. */
-        if(!checkViewNumber(p)){
-            JDSUtility.debug(
-              "[PBFTServer:isValid(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because " +
-              "it hasn't a valid view number. (CURRENT-VIEW = " + getCurrentViewNumber() + ")."
-            );
-            return false;
-        }
-
-        /* If the preprepare hasn't a valid sequence or view number then force a change view. */
-        if(!inAValidSequenceRange(p)){
-            long lcwm = getLCWM(); long hcwm = getHCWM();
-            JDSUtility.debug(
-              "[PBFTServer:isValid(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", discarded " + p + " because " +
-              "it hasn't a valid sequence (LCWM = " + lcwm + ", HCWM = " + hcwm + ")."
-            );            
-            return false;
-        }
-       
-        return true;
-    }
-
-   protected void checkMissedRequests(Long seqn){
-      if(seqn != null){
-         Quorum q = getStateLog().getPrepareQuorum(seqn);
-         if(q != null){
-            PrepareSubject ps = (PrepareSubject)q.getCurrentDecision();
-            if(ps != null){
-               PBFTPrepare p = ps.getPrepare();
-               PBFTRequestInfo rinfo = getRequestInfo();
-               for(String digest : p.getDigests()){
-                  if(!rinfo.hasRequest(digest)){
-                     if(!getMissedRequests().contains(digest)){
-                        JDSUtility.debug("[PBFTServer:checkMissedRequests(seqn)] s" + getLocalServerID() + " found a missed request with digest (" + digest + ")");
-                        getMissedRequests().add(digest);
-                     }//end if isn't in missed request list
-                  }//end if it hasn't the request
-               }//end if for each request digest
-            }//end if has a decided prepare
-         }//end if has a prepare quorum
-      }//end if is a valid sequence number
+      handle(commit);
    }
    
     public PBFTCommit createCommitMessage(int viewn, long seqn){
@@ -735,300 +689,74 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         return c;
     }
 
-   public PrepareSubject getDecision(PBFTPrepare p){
-      Object lSrvID = getLocalServerID();
-
-      boolean complete = false;
-      /* If the preprepare is null then do nothing. */
-      if(p != null && p.getSequenceNumber() != null){
-
-         /* Get composite key of the prepare. */
-         Long ekey = p.getSequenceNumber();
-
-         PBFTRequestInfo rinfo = getRequestInfo();
-
-//         if(!rinfo.wasPrePrepared(p.getSequenceNumber())){
-//            return null;
-//         }
-
-         /* get a log  entry for current preprepare. */
-         PBFTLogEntry entry = getStateLog().get(ekey);
-
-         /* if there isn't a entry then create one. */
-         if(entry != null){
-
-            SoftQuorum q = (SoftQuorum) entry.getPrepareQuorum();
-
-            if(q == null){
-               int f = getServiceBFTResilience();
-               q = new SoftQuorum(2 * f);
-               entry.setPrepareQuorum(q);
-               JDSUtility.debug("[PBFTServer:getDecision(prepare)] s"  + lSrvID + ", at time " + getClockValue() + ", created a new certificate for " + p);
-            }
-            
-            /*TODO: evaluate if "q.getCurrentDecision()" is a better implementation */
-            PrepareSubject decision = (PrepareSubject)q.decide();
-
-            if(decision != null){
-               complete = true;
-            }
-//            if(lSrvID != null && !lSrvID.equals(p.getReplicaID())){
-               IVote v = new Vote(p.getReplicaID(), new PrepareSubject(p));
-               q.add(v);
-//            }
-
-            if(lSrvID != null && lSrvID.equals(p.getReplicaID())){
-               q.getForbidden().put(v.getElector().getID(), v.getElector());
-            }
-
-
-            JDSUtility.debug("[PBFTServer:getDecision(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", inserted " + p + " in the local quorum certicate.");
-
-            if(decision == null){
-               decision = (PrepareSubject)q.decide();
-            }
-
-            //Long seqn = p.getSequenceNumber();
-
-            if(!complete && decision != null){
-
-               long seqn = ( Long  ) decision.getInfo(PrepareSubject.SEQUENCENUMBER);
-               int viewn = (Integer) decision.getInfo(PrepareSubject.VIEWNUMBER);
-               rinfo.assign(seqn, RequestState.PREPARED);
-
-               JDSUtility.debug(
-                  "[PBFTServer:accept(prepare)] s" + lSrvID + ", at time " + getClockValue() + ", completed prepare phase for sequence number (" + seqn + ") " +
-                  "and view number (" + viewn + ")."
-               );
-
-               if(rinfo.hasSomeRequestMissed(seqn)){
-                  revokeViewChange();
-                  scheduleViewChange();
-               }
-
-//               getStateLog().updateNextPrepareSEQ(p);
-
-               /* Update the entry in log. */
-               getStateLog().put(ekey, entry);
-               checkMissedRequests(seqn);
-               return decision;
-            }
-         }
-      }
-      return null;
-
-   }
-
-
 /*########################################################################
   # 4. Methods for handling commit messages.
   #########################################################################*/
     public void handle(PBFTCommit c){
+      Object lpid = getLocalServerID();
+      long    now = getClockValue();
 
-        JDSUtility.debug("[PBFTServer:handle(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + c);
-        
-        if(isValid(c)){
-           CommitSubject cs = getDecision(c);
-            if(cs != null){
+      JDSUtility.debug("[handle(commit)] s" + lpid + ", at time " + now + ", received " + c);
 
-//               long seqn = ( Long  ) cs.getInfo(CommitSubject.SEQUENCENUMBER);
-//              int viewn = (Integer) cs.getInfo(CommitSubject.VIEWNUMBER);
-              
-               execute();
-            }
-        }
-    }
-
-    public boolean isValid(PBFTCommit c){
-        /* If the preprepare message wasn't sent by a group member then it will be discarded. */
-        if(!wasSentByAGroupMember(c)){
-            JDSUtility.debug(
-              "[PBFTServer:isValid(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + c + " because " +
-              "it wasn't sent by a member of the group " + getLocalGroup()
-            );
-
-            return false;
-        }
-
-//        PBFTRequestInfo rinfo = getRequestInfo();
-//
-//        if(!rinfo.wasPrepared(c.getSequenceNumber())){
-//            JDSUtility.debug(
-//              "[PBFTServer:isValid(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + c + " because " +
-//              "it hasn't received a related prepare."
-//            );
-//
-//            return false;
-//        }
-
-        /* If the preprepare hasn't a valid sequence or view number then force a change view. */
-        if(!checkViewNumber(c)){
-
-            JDSUtility.debug(
-              "[PBFTServer:isValid(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + c + " because " +
-              "it hasn't a valid view number (CURRENT-VIEW = " + getCurrentViewNumber() + ")."
-            );
-            return false;
-        }
-
-        /* If the preprepare hasn't a valid sequence or view number then force a change view. */
-        if(!inAValidSequenceRange(c)){
-            long lcwm = getLCWM(); long hcwm = getHCWM();
-            JDSUtility.debug(
-              "[PBFTServer:isValid(commit)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + c + " because it " +
-              "hasn't a valid sequence number (LCWM = " + lcwm + ", HCWM = " + hcwm + ")."
-            );
-
-            return false;
-
-        }
-        return true;
-
-    }
-
-    public CommitSubject getDecision(PBFTCommit c){
-      Object lSrvID = getLocalServerID();
-
-      //boolean complete = false;
-      
-      /* If the commit is null then do nothing. */
-      if(c != null && c.getSequenceNumber() != null){
-
-         /* Get composite key of the commit. */
-         Long ekey = c.getSequenceNumber();
-
-         PBFTRequestInfo rinfo = getRequestInfo();
-
-         /* get a log  entry for current commit. */
-         PBFTLogEntry entry = getStateLog().get(ekey);
-
-         /* if there isn't a entry then create one. */
-         if(entry != null){
-
-            SoftQuorum q = (SoftQuorum) entry.getCommitQuorum();
-
-            if(q == null){
-               int f = getServiceBFTResilience();
-               q = new SoftQuorum(2 * f + 1);
-               entry.setCommitQuorum(q);
-               JDSUtility.debug("[PBFTServer:getDecision(commit)] s"  + lSrvID + ", at time " + getClockValue() + ", created a new certificate for " + c);
-            }
-
-            /*TODO: evaluate if "q.getCurrentDecision()" is a better implementation */
-//            CommitSubject decision = (CommitSubject)q.decide();
-//
-//            if(decision != null){
-//               complete = true;
-//            }
-            
-            q.add(new Vote(c.getReplicaID(), new CommitSubject(c)));
-
-            JDSUtility.debug("[PBFTServer:getDecision(commit)] s" + lSrvID + ", at time " + getClockValue() + ", inserted " + c + " in the local quorum certicate.");
-
-//            if(decision == null){
-               CommitSubject decision = (CommitSubject)q.decide();
-  //          }
-
-            //Long seqn = p.getSequenceNumber();
-
-            if(/*!complete && */ decision != null){
-
-               long seqn = ( Long  ) decision.getInfo(CommitSubject.SEQUENCENUMBER);
-               int viewn = (Integer) decision.getInfo(CommitSubject.VIEWNUMBER);
-               rinfo.assign(seqn, RequestState.COMMITTED);
-
-               JDSUtility.debug(
-                  "[PBFTServer:accept(commit)] s" + lSrvID + ", at time " + getClockValue() + ", completed prepare phase for sequence number (" + seqn + ") " +
-                  "and view number (" + viewn + ")."
-               );
-
-//               getStateLog().updateNextCommitSEQ(c);
-
-               /* Update the entry in log. */
-               getStateLog().put(ekey, entry);
-               checkMissedRequests(seqn);
-               return decision;
-            }
-         }
-
-//       boolean complete = false;
-//       Object lSrvID = getLocalServerID();
-//      /* If the preprepare is null then do nothing. */
-//      if(c != null && c.getSequenceNumber() != null){
-//
-//         /* Get composite key of the prepare. */
-//         Long ekey = c.getSequenceNumber();
-//
-//          /* get a log  entry for current preprepare. */
-//          PBFTLogEntry entry = getStateLog().get(ekey);
-//
-//          /* if there isn't a entry then create one.*/
-//          if(entry != null){
-//
-//              SoftQuorum pq = (SoftQuorum)entry.getPrepareQuorum();
-//
-//              if(pq != null && pq.getCurrentDecision() != null){
-//
-//                 PrepareSubject pqd = (PrepareSubject)pq.getCurrentDecision();
-//
-//                 int viewn = (Integer) pqd.getInfo(PrepareSubject.VIEWNUMBER);
-//
-//                 if(!c.getViewNumber().equals(viewn)){
-//                    return null;
-//                 }
-//
-//                  Quorum q = entry.getCommitQuorum();
-//
-//                  if(q == null){
-//
-//                      int f = getServiceBFTResilience();
-//
-//                      q = new SoftQuorum(2 * f + 1);
-//
-//                      entry.setCommitQuorum(q);
-//                  }
-//
-//                  /*TODO: evaluate if "q.getCurrentDecision()" is a better implementation */
-//                  CommitSubject decision = (CommitSubject) q.decide();
-//
-//                  if(decision != null){
-//                     complete = true;
-//                  }
-//
-//                  q.add(new Vote(c.getReplicaID(), new CommitSubject(c)));
-//
-//                  JDSUtility.debug("[PBFTServer:getDecision(commit)] s" + lSrvID + ", at time " + getClockValue() + ", inserted " + c + " in the local quorum certicate.");
-//
-//
-//                  if(decision == null){
-//                     decision = (CommitSubject)q.decide();
-//                  }
-//
-//                  /* Update the entry in log. */
-//                  getStateLog().put(ekey, entry);
-//
-//                  if(!complete && decision != null){
-//
-//                     long seqn = (Long) decision.getInfo(CommitSubject.SEQUENCENUMBER);
-//
-//                     PBFTRequestInfo rinfo = getRequestInfo();
-//
-//                     rinfo.assign(seqn, RequestState.COMMITTED);
-//
-//                     getStateLog().updateNextCommitSEQ(c);
-//
-//                     JDSUtility.debug(
-//                        "[PBFTServer:accept(commit)] s" + lSrvID + ", at time " + getClockValue() + ", completed commit phase for sequence number (" + seqn + ") " +
-//                        "and view number (" + viewn + ")."
-//                     );
-//
-//                      return decision;
-//                  }
-//              }
-//          }
+      /* If I received a invalid prepare then I'll discard it. */
+      if(!(c != null && c.getSequenceNumber() != null && c.getViewNumber() != null && c.getReplicaID() != null)){
+         JDSUtility.debug("[handle(commit)] s" + lpid + ", at time " + now + ", discarded " + c + " because it's a malformed commit.");
+         return;
       }
-      return null;
+
+      /* If the received commit wasn't sent by a group member then I'll discard it. */
+      if(!wasSentByAGroupMember(c)){
+         JDSUtility.debug("[handle(commit)] s" + lpid + ", at time " + now + ", discarded " + c + " because it wasn't sent by group member.");
+         return;
+      }
+
+      long lcwm = getLCWM();
+      long hcwm = getHCWM();
+      long seqn = c.getSequenceNumber();
+
+      /*If seqn(c) not in (lcwm, hcwm] then c will be discarded. */
+      if(!(lcwm < seqn && seqn <= hcwm)){
+         JDSUtility.debug("[handle(commit)] s" + lpid + ", at time " + now + ", discarded " + c + " because its SEQN{" + seqn +"} not in (" + lcwm + "; " + hcwm + "].");
+         return;
+      }
+
+      int itView = c.getViewNumber();
+      int myView = getCurrentViewNumber();
+
+      /* If the prepare was sent in my current view then I'll check and process it.*/
+      if(itView > myView){
+         JDSUtility.debug("[handle(commit)] s" + lpid + ", at time " + now + ", discarded " + c + " because it wasn't sent in CURR-VIEW{" + myView + "}");
+         return;
+      }
+      
+      if(!getCommitInfo().put(c)){
+         JDSUtility.debug("[handle(commit)] s" + lpid + ", at time " + now + ", discarded " + c + " because it is a duplicaded commit SEQN{" + seqn + "}");
+         return;
+      }
+
+      if(itView != myView){
+         JDSUtility.debug("[handle(commit)] s" + lpid + ", at time " + now + ", cann't proceed because " + c + " in CURR-VIEW{" + myView + "}");
+         return;
+      }
+
+      int f = getServiceBFTResilience();
+
+      if(getCommitInfo().count(myView, seqn) < (2 * f + 1)){
+         return;
+      }
+        
+      PBFTPrepare p = getPrepareInfo().get(myView, seqn, lpid);
+
+      if(p != null && getCommitInfo().get(myView, seqn, lpid) == null){
+         getRequestInfo().assign(seqn, RequestState.COMMITTED);
+         emitCommit(myView, seqn);
+         return;
+      }
+
+      tryExecuteRequests();
+      
     }
+
 
  /*########################################################################
   # 5. Methods for handling checkpoint messages.
@@ -1039,86 +767,104 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
         if(isValid(checkpoint)){
            
-            CheckpointSubject cs = getDecision(checkpoint);
-            
-            if(cs != null){
+           long seqn = checkpoint.getSequenceNumber();
+           long lcwm = getLCWM();
+           long hcwm = getHCWM();
+           long  now = getClockValue();
 
-                long hcwm = getHCWM();
-                long seqn = (Long) cs.getInfo(CheckpointSubject.SEQUENCENUMBER);//checkpoint.getSequenceNumber();
+           getCheckpointInfo().put(checkpoint);
+           
+           Object lpid = getLocalProcessID();
+           
+           CheckpointSubject cs = getDecision(checkpoint);
+           
+           if(getCheckpointInfo().hasEnough(seqn) && cs != null && lcwm < seqn && seqn <= hcwm){
 
-                if(seqn > hcwm){
-                    JDSUtility.debug(
-                      "[PBFTServer:handle(checkpoint)] s" + getLocalServerID() + ", at time " + getClockValue() + ", detected a stable checkpoint " +
-                      "certificate with sequence number (" + seqn + ") " + "greater than its high checkpoint water mark (HCWM = " + hcwm + ")."
-                    );
-                    JDSUtility.debug(
-                      "[PBFTServer:handle(checkpoint)] s" + getLocalServerID() + ", at time " + getClockValue() + ", is going to start a start transfer procedure."
-                    );
+              if(seqn > hcwm){
 
-                    emitFetch();
-                    return;
-                }
+                 JDSUtility.debug("[handle(checkpoint)] s"+ lpid +", at time "+ now +", detected a stable checkpoint certificate with SEQN{"+ seqn +"} > HCWM{"+ hcwm +"}.");
+                 JDSUtility.debug("[handle(checkpoint)] s"+ lpid +", at time "+ now +", is going to start a start transfer procedure.");
 
-                CheckpointLogEntry clogEntry = rStateManager.getLogEntry(seqn);
-                if(clogEntry != null){
-                    doCheckpoint(seqn);
-                    return;
-                }//end if ctupe != null
-                
-                JDSUtility.debug(
-                  "[PBFTServer:handle(checkpoint)] s" + getLocalServerID() + ", at time " + getClockValue() + ", is going to fetch the current state " + 
-                  "because it hasn't a cached state for the stable checkpoint (" + seqn + ")."
-                );
-                
-                /* We must work better on this after we finish change view procedure. */
-                emitFetch();
-                                
-            }//end if getDecision(checkpoint)
+                 emitFetch();
+                 return;
 
-        }//end if getDecision(checkpoint)
+              }//end if I've a unsynchronized state
+
+              if(getCheckpointInfo().getMine(lpid, seqn) != null){                                  
+                 doCheckpoint(seqn);                 
+              }
+              
+           }//end if has a decision
+           
+        }//end if isValid(checkpoint)
         
-    }//end execute(checkpoint);
+    }//end handle(checkpoint);
     
-    public boolean isValid(PBFTCheckpoint checkpoint){
-      /* If the preprepare message wasn't sent by a group member then it will be discarded. */
-      if(!wasSentByAGroupMember(checkpoint)){
-          JDSUtility.debug(
-            "[PBFTServer:isValid(checkpoint)] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + checkpoint + " because " +
-            "it wasn't sent by a member of the group " + getLocalGroup()
-          );
+    public boolean isValid(PBFTCheckpoint c){
+        /* If the prepare hasn't a valid sequence / view number then it'll force a change view. */
+        if(!(c != null && c.getSequenceNumber() != null && c.getDigest() != null)){
+           return false;
+        }
 
-          return false;
-      }//end if wasSentByAGroupMember(checkpoint)
-
-      /* If the preprepare message wasn't sent by a group member then it will be discarded. */
-      long lcwm = getLCWM();
-      long seqn = checkpoint.getSequenceNumber();
+     Object lpid = getLocalServerID();
+     long   seqn = c.getSequenceNumber();
+     long   lcwm = getLCWM();
+     long    now = getClockValue();
+     int   gsize = getLocalGroup().getGroupSize();
 
       if(lcwm > seqn){
-          JDSUtility.debug(
-            "[PBFTServer:isValid(checkpoint)] s" + getLocalServerID() + ", at  time " + getClockValue() + ", discarded " + checkpoint + " because " +
-            "it has a sequence number < current LCWM = " + lcwm + "). "
-          );
+         
+          JDSUtility.debug("[isValid(checkpoint)] s" + lpid + ", at  time " + now + ", discarded " + c + " because it has a SEQN{checkpoint} < LCWM{" + lcwm + "}). ");
 
           return false;
       }//end if lcwm  > seqn
-      return true;
-        
-    }//end getDecision(checkpoint)
+
+
+        /* If the checkpoint message wasn't sent by a group member then it will be discarded. */
+        if(!wasSentByAGroupMember(c)){
+
+            JDSUtility.debug("[isValid(checkpoint)] s" + lpid + ", at time " + now + ", discarded " + c + " because it wasn't sent by a group member.");
+
+            return false;
+        }
+
+        /*If a previous checkpoint with same sequence number was accepted */
+        if(getCheckpointInfo().count(seqn) >= gsize){
+
+            JDSUtility.debug(
+              "[isValid(checkpoint)] s" + lpid + ", at time " + now + ", discarded " + c + " because there is so much checkpoints " +
+              "(SIZE(CHECKPOINTSET{" + seqn + "}) >= " + gsize + ")."
+            );
+
+           return false;
+        }
+
+        if(getCheckpointInfo().contains(c)){
+
+            JDSUtility.debug("[isValid(checkpoint)] s" + lpid + ", at time " + now + ", discarded " + c + " because it's duplicated.");
+
+            return false;
+
+        }
+
+        return true;
+
+    }//end isValid(checkpoint)
 
     /**
      * Update the state of the PBFT. Insert the pre-prepare message in the log entry.
      * @param m
      */
    public CheckpointSubject getDecision(PBFTCheckpoint c){
-      boolean completed = false;
-      Object lSrvID = getLocalServerID();
-      
-      /* If the checkpoint is null or it has a invalid sequence number then it cann't decide. */
-      if(!(c != null && c.getSequenceNumber() != null)) return null;
+      if(!(c != null && c.getSequenceNumber() != null && c.getDigest() != null)){
+         return null;
+      }
 
-      /* Get composite key of the prepare. */
-      String qkey = c.getSequenceNumber().toString();
+      Object lpid = getLocalServerID();
+
+      long   seqn = c.getSequenceNumber();
+      long    now = getClockValue();
+      String qkey = String.valueOf(seqn);
 
       SoftQuorum q = (SoftQuorum)getStateLog().getQuorum(CHECKPOINTQUORUMSTORE, qkey);
 
@@ -1128,31 +874,21 @@ public class PBFTServer extends PBFT implements IPBFTServer{
          q = new SoftQuorum(2 * f + 1);
 
          getStateLog().getQuorumTable(CHECKPOINTQUORUMSTORE).put(qkey, q);
-      }
-
-      /*TODO: evaluate if "q.getCurrentDecision()" is a better implementation */
-      CheckpointSubject decision = (CheckpointSubject)q.decide();
-
-      if(decision != null){
-         completed = true;
+         
       }
 
       q.add(new Vote(c.getReplicaID(), new CheckpointSubject(c)));
+      
+      JDSUtility.debug("[getDecision(checkpoint)] s"  + lpid + ", at time " + now + ", updated a entry in its log for " + c);
 
-      JDSUtility.debug("[PBFTServer:getDecision(checkpoint)] s"  + lSrvID + ", at time " + getClockValue() + ", updated a entry in its log for " + c);
+      CheckpointSubject cs = (CheckpointSubject) q.decide();
 
-      if(decision == null){
-         decision = (CheckpointSubject) q.decide();
+      if(cs != null){         
+         JDSUtility.debug("[getDecision(checkpoint)] s" + lpid + ", at time " + now + ", completed quorum for checkpoint (" + seqn + ").");
       }
 
-      if(!completed && decision != null){
-         long seqn = (Long) decision.getInfo(CheckpointSubject.SEQUENCENUMBER);
-
-         JDSUtility.debug("[PBFTServer:getDecision(checkpoint)] s" + lSrvID + ", at time " + getClockValue() + ", completed quorum for checkpoint (" + seqn + ").");
-
-         return decision;
-      }
-      return null;
+      return cs;
+      
    }
 
     protected Object getReplierID(){
@@ -1201,7 +937,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 
             }//end received meta-data is certificated
         }//end received meta-data is validated
-    }//end execute received meta-data
+    }//end tryExecuteRequests received meta-data
 
     Parttable transferring = new Parttable();
     Parttable  transferred = new Parttable();
@@ -1219,7 +955,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             }
         }
 
-        /* get the part with the maximum record index (this is, in depthest level)*/
+        /* getChangeView the part with the maximum record index (this is, in depthest level)*/
         PartEntry part = getPartWithMaximumPartindex(transferring);
 
         /* if still exists a part */
@@ -1253,7 +989,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                     except.printStackTrace();
                 }
             }
-            /*get next*/
+            /*getChangeView next*/
             part = getPartWithMaximumPartindex(transferring);
         }
 
@@ -1267,6 +1003,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
         doRollback();
     }
+
+    /* the state transfer doesn't work properly and it must be reviewed. */
     
     public void doRollback() throws Exception{
         /* rollback to last stable checkpoint */
@@ -1276,18 +1014,21 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         long seqn = rStateManager.getCurrentCheckpointID();
 
         IRecoverableServer lServer = (IRecoverableServer)getServer();
+            
+         getStateLog().setNextExecuteSEQ(seqn + 1);
+         getStateLog().setCheckpointLowWaterMark(seqn);
 
-        if(seqn >= 0){ //tuple!=null
-            getStateLog().setNextPrePrepareSEQ(seqn+1);
-//            getStateLog().setNextPrepareSEQ(seqn+1);
-//            getStateLog().setNextCommitSEQ(seqn+1);
-            getStateLog().setNextExecuteSEQ(seqn+1);
-
-            getStateLog().setCheckpointLowWaterMark(seqn);
-
+         if(seqn >= 0){
             lServer.setCurrentState(rStateManager.getCurrentState());
-            updateCurrentSequenceNumber(seqn);
-        }
+         }else{
+            lServer.setCurrentState(null);
+         }
+
+         if(seqn > getCurrentPrePrepareSEQ()){
+            getStateLog().setNextPrePrepareSEQ(seqn+1);
+         }else{
+            tryExecuteRequests();
+         }
         
     }
     
@@ -1595,21 +1336,39 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         JDSUtility.debug("[PBFTServer:handle(bag)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + bag);
 
         if(isValid(bag)){
+           int f = getServiceBFTResilience();
            JDSUtility.debug("[PBFTServer:handle(bag)] s" + getLocalServerID() + ", at time " + getClockValue() + ", is going to processing " + bag);
            for(IMessage m: bag.getMessages()){
+
               if(m instanceof PBFTRequest){
-                  handle((PBFTRequest)m);
+
+                 PBFTRequest r = (PBFTRequest) m;
+                 
+                 if(!getRequestInfo().hasRequest(r)){
+                    handle(r);
+                 }
+
               }
+
               if(m instanceof PBFTPrePrepare){
-                  handle((PBFTPrePrepare)m);
+                 PBFTPrePrepare pp = (PBFTPrePrepare) m;
+                 if(!getPrePrepareInfo().contains(pp)) {
+                    handle(pp);
+                 }
               }
 
               if(m instanceof PBFTPrepare){
-                  handle((PBFTPrepare)m);
+                 PBFTPrepare p = (PBFTPrepare) m;
+                 if(!getPrepareInfo().contains(p)){
+                   handle(p);
+                 }
               }
 
               if(m instanceof PBFTCommit){
-                  handle((PBFTCommit)m);
+                 PBFTCommit c = (PBFTCommit) m;
+                 if(!getCommitInfo().contains(c)){
+                   handle(c);
+                 }
               }
               
               if(m instanceof PBFTCheckpoint){
@@ -1696,82 +1455,135 @@ public class PBFTServer extends PBFT implements IPBFTServer{
      #########################################################################*/
 
     public void handle(PBFTStatusActive sa){
-       
-        JDSUtility.debug("[PBFTServer:handle(statusactive)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + sa);
 
-       if(!isValid(sa)) return;
+      Object lpid = getLocalProcessID();
 
-       long rlesq = sa.getLastExecutedSEQ();
-       long rlcwm = sa.getLastStableCheckpointSEQ();
+      JDSUtility.debug("[handle(statusactive)] s" + lpid + ", at time " + getClockValue() + ", received " + sa);
 
-       BitSet prepared = sa.getPrepared();
-       BitSet commited = sa.getCommited();
-
-       long lpseq = getCurrentPrePrepareSEQ();
-       long llcwm = getLCWM();
-
-       PBFTRequestInfo rinfo = getRequestInfo();
-       Object lsid = getLocalServerID();
-
-       PBFTBag bag = new PBFTBag(lsid);
-
-       bag.setSequenceNumber(sa.getSequenceNumber());
-
-       PBFTStateLog slog = getStateLog();
-       
-      DigestList mr = sa.getMissedRequests();
-
-      if(mr != null && !mr.isEmpty()){
-         for(String digest : mr){
-            PBFTRequest rq = rinfo.getRequest(digest);
-            if(rq != null){
-               bag.addMessage(rq);
-            }
-         }
+      if(!(
+              sa != null && sa.getViewNumber() != null && sa.getPrepared() != null && sa.getCommited() != null &&
+              sa.getLastExecutedSEQ() != null && sa.getLastStableCheckpointSEQ() != null && sa.getReplicaID() != null 
+      )){
+         JDSUtility.debug("[handle(statusactive)] s" + lpid + ", at time " + getClockValue() + ", discarded " + sa + " because it's a malformed message.");
+         return;
       }
-       
-       for(long csqn = rlesq + 1; csqn <= lpseq; csqn ++){
 
-          int i = (int)(csqn - (rlesq+1));
-          
-         if(!prepared.get(i) && rinfo.wasPrepared(csqn)){
-            Quorum pq = slog.getPrepareQuorum(csqn);
-            if(pq != null && pq.getCurrentDecision() != null){
-               for(IVote v : pq.getVotes()){
-                  ElectorProcess eleitor = (ElectorProcess)v.getElector();
-                  if(eleitor != null && eleitor.getID() != null){
-                     Object eid = eleitor.getID();
-                     if(eid.equals(lsid)){
-                        PrepareSubject ps = (PrepareSubject) v.getSubject();
-                        bag.addMessage(ps.getPrepare());
-                        if(isPrimary()){
-                           bag.addMessage(slog.getPrePrepare(csqn));
-                        }
-                     }
+      if(!wasSentByAGroupMember(sa)){
+         JDSUtility.debug("[handle(statusactive)] s" + lpid + ", at time " + getClockValue() + ", discarded " + sa + " because it wasn't sent by a group member.");
+         return;
+      }
+
+      if(sa.getReplicaID().equals(lpid)){
+         JDSUtility.debug("[handle(statusactive)] s" + lpid + ", at time " + getClockValue() + ", discarded " + sa + " because it was sent by the local server.");
+         return;
+      }
+      
+      long rlesq = sa.getLastExecutedSEQ();
+      long rlcwm = sa.getLastStableCheckpointSEQ();
+      int view = sa.getViewNumber();
+
+      BitSet prepared = sa.getPrepared();
+      BitSet commited = sa.getCommited();
+
+      Long lpseq = getPrepareInfo().getLastSequenceNumber(view);
+      Long lcseq = getCommitInfo().getLastSequenceNumber(view);
+
+      if(lpseq == null) lpseq = getCurrentExecuteSEQ();
+      if(lcseq == null) lcseq = getCurrentExecuteSEQ();
+      
+      long llcwm = getLCWM();
+
+       
+      Object lsid = getLocalServerID();
+
+      PBFTBag bag = new PBFTBag(lsid);
+
+      bag.setSequenceNumber(sa.getSequenceNumber());
+
+       
+      if(sa instanceof PBFTStatusPending){
+         PBFTStatusPending sp = (PBFTStatusPending) sa;
+         int viewn = sp.getViewNumber();
+
+         for(int i = 0;  i < getLocalGroup().getGroupSize(); i++){
+            IProcess p = getLocalGroup().getMember(i);
+            boolean found = false;
+            for(Object pid : sp.getChangeViewReplicas()){
+               if(p.getID().equals(pid)){
+                  found = true;
+                  break;
+               }
+            }
+
+            if(!found){
+               PBFTChangeView cv = getChangeViewInfo().getChangeView(viewn, p.getID());
+               if(cv != null){
+                  bag.addMessage(cv);
+                  PBFTChangeViewACK ack = getChangeViewInfo().getMyACK(view, p.getID());
+                  if(ack != null){
+                     bag.addMessage(ack);
                   }
                }
             }
          }
 
-         if(!commited.get(i) && rinfo.wasCommitted(csqn)){
-            Quorum cq = getStateLog().getCommitQuorum(csqn);
-            if(cq != null && cq.getCurrentDecision() != null){
-               for(IVote v : cq.getVotes()){
-                  ElectorProcess eleitor = (ElectorProcess)v.getElector();
-                  if(eleitor != null && eleitor.getID() != null){
-                     Object eid = eleitor.getID();
-                     if(eid.equals(lsid)){
-                        CommitSubject ps = (CommitSubject) v.getSubject();
-                        bag.addMessage(ps.getCommit());
-                     }
+         boolean hasNewView = sp.hasNewView();
+
+         if(!hasNewView){
+            PBFTNewView nv = getNewViewInfo().get(viewn);
+            if(nv != null){
+               bag.addMessage(nv);
+            }
+         }
+       }
+
+       for(String digest : sa.getDigests()){
+          if(getRequestInfo().hasRequest(digest)){
+             bag.addMessage(getRequestInfo().getRequest(digest));
+          }
+       }
+       
+       for(long csqn = rlesq + 1; lpseq >= 0 && csqn <= lpseq ; csqn ++){
+
+         int i = (int)(csqn - (rlesq+1));
+
+         if(csqn > rlcwm){
+            if(isPrimary()){
+               if(!prepared.get(i)){
+
+                  PBFTPrePrepare pp = (PBFTPrePrepare) getPrePrepareInfo().get(view, csqn);
+
+                  if(pp != null) {
+                     bag.addMessage(pp);
                   }
+
                }
+            }
+
+            PBFTPrepare p = null;
+
+            if(!prepared.get(i) && (p = getPrepareInfo().get(view, csqn, lsid)) != null) {
+               bag.addMessage(p);
+            }
+         }
+       }
+      
+       for(long csqn = rlesq + 1; lcseq >= 0 && csqn <= lcseq; csqn ++){
+
+         int i = (int)(csqn - (rlesq+1));
+
+         if(csqn > rlcwm){
+            PBFTCommit  c = null;
+
+            if(!commited.get(i) && (c = (PBFTCommit ) getCommitInfo().get(view, csqn, lsid))!= null) {
+               bag.addMessage(c);
             }
          }
        }
 
       if(rlcwm < llcwm){
           try {
+              
               CheckpointLogEntry clogEntry = rStateManager.getBiggestLogEntry();
               if(clogEntry != null){
                   long seqn = clogEntry.getCheckpointID();
@@ -1789,161 +1601,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
       if(!bag.isEmpty()){
           emit(bag, new BaseProcess(sa.getReplicaID()));
       }
-
-
-//        long lexcSEQ = getStateLog().getNextExecuteSEQ()    -1;
-//        long lcmtSEQ = getStateLog().getNextCommitSEQ()     -1;
-//        long lpreSEQ = getStateLog().getNextPrepareSEQ()    -1;
-//        long lpprSEQ = getStateLog().getNextPrePrepareSEQ() -1;
-//        long llcwSEQ = getLCWM();
-//
-//        JDSUtility.debug(
-//           "[PBFTServer:execute(statusactive)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + sa + " current " +
-//           "(LCWM = " + llcwSEQ + "; PPSEQ = " + lpprSEQ + "; PSEQ = " + lpreSEQ + "; CSEQ = " + lcmtSEQ + "; ESEQ = " + lexcSEQ + ")"
-//        );
-//
-//        if(isValid(sa)){
-//
-//            long maxSEQ = -1;
-//            long minSEQ = Long.MAX_VALUE;
-//
-//            //remote active state variables
-//            long rcmtSEQ = sa.getLastCommittedSEQ();
-//            long rpreSEQ = sa.getLastPreparedSEQ();
-//            long rpprSEQ = sa.getLastPrePreparedSEQ();
-//            long rlcwSEQ = sa.getLastStableCheckpointSEQ();
-//
-//            if(lcmtSEQ > rcmtSEQ){
-//               if(minSEQ > rcmtSEQ) minSEQ = rcmtSEQ + 1; if(maxSEQ < lcmtSEQ) maxSEQ = lcmtSEQ;
-//            }
-//
-//            if(lpreSEQ > rpreSEQ){
-//               if(minSEQ > rpreSEQ) minSEQ = rpreSEQ + 1; if(maxSEQ < lpreSEQ) maxSEQ = lpreSEQ;
-//            }
-//
-//            if(lpprSEQ > rpprSEQ){
-//               if(minSEQ > rpprSEQ) minSEQ = rpprSEQ + 1; if(maxSEQ < lpprSEQ) maxSEQ = lpprSEQ;
-//            }
-//
-//
-//            if(maxSEQ < 0) maxSEQ = 0L;
-//            if(minSEQ < 0) minSEQ = 0L;
-//
-//            PBFTBag bag = new PBFTBag(getLocalServerID());
-//
-//            bag.setSequenceNumber(sa.getSequenceNumber());
-//
-//            if(lpprSEQ > rpprSEQ || lpreSEQ > rpreSEQ || lcmtSEQ > rcmtSEQ){
-//                for(long i = minSEQ; i <= maxSEQ; i++){
-//
-//                    PBFTLogEntry entry = getStateLog().get(i);
-//                    if(entry != null){
-//                        SoftQuorum pq = (SoftQuorum)entry.getPrepareQuorum();
-//                        SoftQuorum cq = (SoftQuorum)entry.getCommitQuorum();
-//
-//
-//                        if(i <= lpprSEQ && rpprSEQ < lpprSEQ && rpprSEQ < i && isPrimary() && entry.getPrePrepare() != null){
-//                            PBFTPrePrepare pp = entry.getPrePrepare();
-//                            bag.addMessage(pp);
-//                        }
-//
-//                        if(i <= lpreSEQ && rpreSEQ < lpreSEQ && rpreSEQ < i && pq != null){
-//                           VoteList votes = pq.getVotes();
-//                           for(IVote v : votes){
-//                              Object rid = v.getElector().getID();
-//                              if(rid.equals(getLocalServerID())){
-//                                 PrepareSubject ps = (PrepareSubject) v.getSubject();
-//                                 bag.addMessage(ps.getPrepare());
-//                              }
-//                           }
-//                        }
-//
-//                        if(i <= lcmtSEQ && rcmtSEQ < lcmtSEQ && rcmtSEQ < i && cq != null){
-//                           VoteList votes = cq.getVotes();
-//                           for(IVote v : votes){
-//                              Object rid = v.getElector().getID();
-//                              if(rid.equals(getLocalServerID())){
-//                                 CommitSubject cs = (CommitSubject) v.getSubject();
-//                                 bag.addMessage(cs.getCommit());
-//                              }
-//                           }
-//                        }
-//                    }//end if entry
-//                }//end for
-//            }
-//
-//
-//            if(rlcwSEQ < llcwSEQ){
-//                try {
-//                    CheckpointLogEntry clogEntry = rStateManager.getBiggestLogEntry();
-//                    if(clogEntry != null){
-//                        long seqn = clogEntry.getCheckpointID();
-//                        String digest = clogEntry.getDigest();
-//                        PBFTCheckpoint checkpoint = new PBFTCheckpoint(seqn, digest, getLocalServerID());
-//                        bag.addMessage(checkpoint);
-//                    }
-//
-//                } catch (Exception ex) {
-//                    Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
-//                    ex.printStackTrace();
-//                }
-//            }//end while currSEQ < _lwSEQ, if currSEQ_0 = lwSEQ
-//
-//            DigestList mr = sa.getMissedRequests();
-//
-//            if(mr != null && !mr.isEmpty()){
-//               PBFTRequestInfo rinfo = getRequestInfo();
-//               for(String digest : mr){
-//                  PBFTRequest rq = rinfo.getRequest(digest);
-//                  if(rq != null){
-//                     bag.addMessage(rq);
-//                  }
-//               }
-//            }
-//
-//            if(!bag.isEmpty()){
-//                emit(bag, new BaseProcess(sa.getReplicaID()));
-//            }
-//        }//end is valid status-active
-    }
-
-    public boolean isValid(PBFTStatusActive sa){
-        if(sa == null) return false;
-        
-        IProcess rServer = new BaseProcess(sa.getReplicaID());
-        if(getLocalServerID().equals(rServer.getID())){
-            JDSUtility.debug(
-              "[PBFTServer:isValid(activeStatus)] s" + getLocalServerID() + ", at time " + getClockValue() + ", " +
-              "discarded " + sa + " because it was sent by the local replica."
-            );
-            return false;
-        }
-
-        if(!checkViewNumber(sa)){
-            long nxPP = getStateLog().getNextPrePrepareSEQ();
-//            long nxPR  = getStateLog().getNextPrepareSEQ();
-//            long nxCM  = getStateLog().getNextCommitSEQ();
-            long nxEX  = getStateLog().getNextExecuteSEQ();
-            long lcwm  = getLCWM();
-
-            JDSUtility.debug(
-              "[PBFTServer:isValid(activeStatus)] s" + getLocalServerID() + ", at time " + getClockValue() + ", " + "discarded " + sa + " because it " +
-              "hasn't a valid view number. (viewn = " + getCurrentViewNumber() + ") [nxPP = " + nxPP + " , nxEX = " + nxEX + ", LCWM = " + lcwm + "]"
-            );
-            
-            return false;
-        }
-
-        if(!wasSentByAGroupMember(sa)){
-            JDSUtility.debug(
-              "[PBFTServer:isValid(activeStatus)] s" + getLocalServerID() + ", at time " + getClockValue() + ", " +
-              "discarded " + sa + " because it wasn't sent by a member of the group " + getLocalGroup() + "."
-            );
-
-            return false;
-        }
-
-        return true;
     }
 
     PBFTTimeoutDetector periodStatusTimer = null;
@@ -1985,259 +1642,188 @@ public class PBFTServer extends PBFT implements IPBFTServer{
    }
 
     public PBFTStatusActive createStatusActiveMessage(){
-
-        long lesq = getStateLog().getNextExecuteSEQ() - 1L;
+        int viewn = getCurrentViewNumber();
+        long lesq = getCurrentExecuteSEQ();
         long lcwm = getLCWM();
         long hcwm = getHCWM();
-        int viewn = getCurrentViewNumber();
+        Long lpsq = getPrepareInfo().getLastSequenceNumber(viewn);
+        Long lcsq = getCommitInfo().getLastSequenceNumber(viewn);
+
+        if(lpsq == null) lpsq = getCurrentExecuteSEQ();
+        if(lcsq == null) lcsq = getCurrentExecuteSEQ();
 
         Object lsid = getLocalProcessID();
 
         PBFTStatusActive sa = new PBFTStatusActive(lesq, lsid, viewn, lesq, lcwm);
 
-        PBFTRequestInfo rinfo = getRequestInfo();
-        
-        for(long csqn = lesq + 1; csqn <= hcwm; csqn++){
-            boolean prepared = rinfo.wasPrepared(csqn);
-            boolean commited = rinfo.wasCommitted(csqn);
-            
-            int i = (int)(csqn - (lesq + 1));
+        for(long csqn = lesq + 1; lpsq >= 0 && csqn <= lpsq && csqn > lcwm && csqn <= hcwm ; csqn++){
 
-            sa.getPrepared().set(i, prepared);
-            sa.getCommited().set(i, commited);
+           int i = (int)(csqn - (lesq + 1));
+
+           SoftQuorum q = (SoftQuorum) getStateLog().getPrepareQuorum(csqn);
+
+           boolean prepared = (q != null && q.getCurrentDecision() != null);
+           
+           sa.getPrepared().set(i, prepared);
 
         }
         
-        sa.getMissedRequests().addAll(getMissedRequests());
+        for(long csqn = lesq + 1; lcsq >= 0 && csqn <= lcsq && csqn > lcwm && csqn <= hcwm; csqn++){
+            int i = (int)(csqn - (lesq + 1));
 
+            SoftQuorum q = (SoftQuorum) getStateLog().getCommitQuorum(csqn);
+            
+            boolean commited = (q != null && q.getCurrentDecision() != null);
+
+            sa.getCommited().set(i, commited);
+
+        }
+
+        for(long csqn = lcwm + 1; csqn <= lesq; csqn ++){
+           DigestList digests = getRequestInfo().getDigestsOfMissedRequests(csqn);
+           sa.getDigests().addAll(digests);
+        }
+        
         return sa;
 
     }
 
     public PBFTStatusPending createStatusPendingMessage(){
+
        int viewn = getCurrentViewNumber();
-       PBFTNewView nv = getStateLog().getNewViewTable().get(viewn);
+
+       PBFTNewView nv = getNewViewInfo().get(viewn);
+
        long lseq = getCurrentExecuteSEQ();
+       long lcwm = getLCWM();
+
+       
        PBFTStatusPending sp = new PBFTStatusPending(lseq, viewn, lseq, getLCWM(), getLocalServerID(), nv != null);
 
-       sp.getMissedRequests().addAll(getMissedRequests());
+       int gs = getLocalGroup().getGroupSize();
 
-       for(PBFTChangeView cv : cvtable.values()){
-          Object rid = cv.getReplicaID();
-          if(!sp.getChangeViewReplicas().contains(rid)){
-            sp.getChangeViewReplicas().add(rid);
-          }
+       for(int i = 0; i < gs; i++){
+          IProcess p = getLocalGroup().getMember(i);
+
+          PBFTChangeView cv = getChangeViewInfo().getChangeView(viewn, p.getID());
+
+          if(cv != null){
+             sp.getChangeViewReplicas().add(p.getID());
+          }          
        }
+       
+        for(long csqn = lcwm + 1; csqn <= lseq; csqn ++){
+           DigestList digests = getRequestInfo().getDigestsOfMissedRequests(csqn);
+           sp.getDigests().addAll(digests);
+        }
 
        return sp;
        
     }
 
-   public void handle(PBFTStatusPending sp) {
-      JDSUtility.debug("[PBFTSever:handle(statusPending)] s" + getLocalServerID() + ",  at time " + getClockValue() + ", received " + sp);
-      
-      if(isValid(sp)){
-
-            PBFTBag bag = new PBFTBag(getLocalServerID());
-
-            bag.setSequenceNumber(sp.getSequenceNumber());
-            DigestList mr = sp.getMissedRequests();
-
-            if(mr != null && !mr.isEmpty()){
-               PBFTRequestInfo rinfo = getRequestInfo();
-               for(String digest : mr){
-                  PBFTRequest rq = rinfo.getRequest(digest);
-                  if(rq != null){
-                     bag.addMessage(rq);
-                  }
-               }
-            }
-
-
-            long llcwm = getLCWM();
-            long rlcwm = sp.getLastStableCheckpointSequenceNumber();
-
-            if(rlcwm < llcwm){
-                try {
-                    CheckpointLogEntry clogEntry = rStateManager.getBiggestLogEntry();
-                    if(clogEntry != null){
-                        long seqn = clogEntry.getCheckpointID();
-                        String digest = clogEntry.getDigest();
-                        PBFTCheckpoint checkpoint = new PBFTCheckpoint(seqn, digest, getLocalServerID());
-                        bag.addMessage(checkpoint);
-                    }
-
-                } catch (Exception ex) {
-                    Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
-                    ex.printStackTrace();
-                }
-            }//end while currSEQ < _lwSEQ, if currSEQ_0 = lwSEQ
-            
-            Hashtable<String, PBFTChangeView> cvt = new Hashtable<String, PBFTChangeView>();
-            cvt.putAll(cvtable);
-            for(String digest : cvtable.keySet()){
-               PBFTChangeView cv = cvtable.get(digest);
-               Object rid = cv.getReplicaID();
-               for(Object id : sp.getChangeViewReplicas()){
-                  if(rid.equals(id)){
-                     cvt.remove(digest);
-                  }
-               }
-            }
-
-            if(!cvt.isEmpty()){
-               for(String digest  : cvt.keySet()){
-                  PBFTChangeView cv = cvt.get(digest);
-                  PBFTChangeViewACK cva = cvatable.get(digest);
-                  bag.addMessage(cv);
-                  bag.addMessage(cva);
-               }
-            }
-
-            boolean hasNewView = sp.hasNewView();
-
-            if(!hasNewView){
-               int viewn = sp.getViewNumber();
-               PBFTNewView nv = getStateLog().getNewViewTable().get(viewn);
-
-               if(nv != null){
-                  bag.addMessage(nv);
-               }
-            }
-
-            if(!bag.isEmpty()){
-                emit(bag, new BaseProcess(sp.getReplicaID()));
-            }
-        }//end is valid status-active
-   }
-
-   public boolean isValid(PBFTStatusPending sp){
-      return sp != null;
-   }
-
-
    /*########################################################################
      # 9. Execute sequence number.
      #########################################################################*/
 
-    public void execute(){
-        JDSUtility.debug("[PBFTSever:handle(token)] s" + getLocalServerID() + ",  at time " + getClockValue() + ", is going to execute requests.");
+    public synchronized void tryExecuteRequests(){
+        Object lpid = getLocalProcessID();
+
+        JDSUtility.debug("[PBFTSever:handle(token)] s" + lpid + ",  at time " + getClockValue() + ", is going to execute requests.");
 
         //if(isValid(proctoken)){
-            long startSEQ = getStateLog().getNextExecuteSEQ();
-            long finalSEQ = getHCWM();//proctoken.getSequenceNumber();
-            PBFTRequestInfo rinfo = getRequestInfo();
+         long startSEQ = getStateLog().getNextExecuteSEQ();
+         long finalSEQ = getHCWM();//proctoken.getSequenceNumber();
+         long lcwm = getLCWM();
 
-            for(long currSEQ = startSEQ; currSEQ <= finalSEQ; currSEQ ++){
-                if(rinfo.hasSomeRequestMissed(currSEQ)){
-                    JDSUtility.debug(
-                      "[PBFTServer:handle(token)] s"  + getLocalServerID() + ", at time " + getClockValue() + ", couldn't executed " + currSEQ + " " +
-                      " because it has a missed request."
-                    );
+         PBFTRequestInfo rinfo = getRequestInfo();
 
-                   checkMissedRequests(currSEQ);
-                   return;
-                }
-                SoftQuorum cq = (SoftQuorum)getStateLog().getCommitQuorum(currSEQ);
+         int viewn = getCurrentViewNumber();
 
-                if(!(cq != null && cq.getCurrentDecision() != null)){
-                    return;
-                }
-                
-                IRecoverableServer lServer = (IRecoverableServer)getServer();
+         int f = getServiceBFTResilience();
 
-                PBFTPrePrepare preprepare = getStateLog().getPrePrepare(currSEQ);
-                for(String digest : preprepare.getDigests()){
+         for(long currSEQ = startSEQ; currSEQ <= finalSEQ && currSEQ > lcwm; currSEQ ++){
 
-                    PBFTRequest request = rinfo.getRequest(digest); //statedReq.getRequest();
-                    
-                    IPayload result = lServer.executeCommand(request.getPayload());
+             if(!(getPrepareInfo().count(viewn, currSEQ) >= (2* f) && getCommitInfo().count(viewn, currSEQ) >= (2 * f +1))){
+                return;
+             }
 
-                    PBFTReply reply = createReplyMessage(request, result);
-                    
-                    rinfo.assign(digest, RequestState.SERVED);
-                    rinfo.assign(digest, reply);
+             if(rinfo.hasSomeRequestMissed(currSEQ)){
+                 JDSUtility.debug("[tryExecuteRequests()] s"  + lpid+ ", at time " + getClockValue() + ", couldn't executed " + currSEQ + " because it has a missed request.");
+                 return;
+             }
 
-                    JDSUtility.debug(
-                      "[PBFTServer:handle(token)] s"  + getLocalServerID() + ", at time " + getClockValue() + ", executed " + request +
-                      " (currView = " + getCurrentViewNumber() + " / SEQ = " + currSEQ + ")."
-                    );
-                    
-                    JDSUtility.debug(
-                      "[PBFTServer:handle(token)] s"  + getLocalServerID() + ", at time " + getClockValue() + ", has the following state " + lServer.getCurrentState()
-                    );
-                    
-                    if(rinfo.isNewest(request)){
-                       IProcess client = new BaseProcess(reply.getClientID());
-                       emit(reply, client);
-                    }
+             if(rinfo.wasServed(currSEQ)){
+                continue;
+             }
 
-                }//end for each leafPartDigest (execute and reply)
+             IRecoverableServer lServer = (IRecoverableServer)getServer();
 
-                JDSUtility.debug(
-                  "[PBFTServer:handle(token)] s"  + getLocalServerID() + ", at time " + getClockValue() + ", after execute SEQN = "  + currSEQ + " " +
-                  "has the following state " + lServer.getCurrentState()
-                );
+             PBFTPrePrepare preprepare = getPrePrepareInfo().get(viewn, currSEQ);
 
-                getStateLog().updateNextExecuteSEQ(currSEQ);
+             for(String digest : preprepare.getDigests()){
 
-                long execSEQ = getStateLog().getNextExecuteSEQ() -1;
-                long chkPeriod = getCheckpointPeriod();
+                 PBFTRequest request = rinfo.getRequest(digest); //statedReq.getRequest();
 
-                if(execSEQ > 0 && (((execSEQ+1) % chkPeriod) == 0)){
-                    PBFTCheckpoint checkpoint;
-                    try {
-                        checkpoint = createCheckpointMessage(execSEQ);
-                        getDecision(checkpoint);
-                        rStateManager.addLogEntry(
-                           new CheckpointLogEntry(
-                                    checkpoint.getSequenceNumber(),
-                                    rStateManager.byteArray(),
-                                    checkpoint.getDigest()
-                               )
-                         );
-                        emit(checkpoint, getLocalGroup().minus(getLocalProcess()));
-                        if(isPrimary()){
-                           emitBatch();
-                           return;
-                        }
+                 IPayload result = lServer.executeCommand(request.getPayload());
 
-                        if(rinfo.hasSomeWaiting()){
-                           scheduleViewChange();
-                        }
-                        
-                    } catch (Exception ex) {
-                        Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
+                 PBFTReply reply = createReplyMessage(request, result);
 
+                 rinfo.assign(digest, RequestState.SERVED);
+                 rinfo.assign(digest, reply);
+
+                 JDSUtility.debug(
+                     "[tryExecuteRequests()] s"  + lpid + ", at time " + getClockValue() + ", executed " + request + " (CURR-VIEWN{ " + viewn + "}; SEQN{" + currSEQ + "})."
+                 );
+
+                 JDSUtility.debug("[tryExecuteRequests()] s"  + lpid + ", at time " + getClockValue() + ", has the following state " + lServer.getCurrentState());
+
+                 if(rinfo.isNewest(request)){
+                    IProcess client = new BaseProcess(reply.getClientID());
+                    emit(reply, client);
+                 }
+
+             }//end for each leafPartDigest (tryExecuteRequests and reply)
+
+             JDSUtility.debug(
+               "[tryExecuteRequests()] s"  + lpid + ", at time " + getClockValue() + ", after execute SEQN{" + currSEQ + "} has the following " +
+               "state " + lServer.getCurrentState()
+             );
+
+             getStateLog().updateNextExecuteSEQ(currSEQ);
+
+             long execSEQ = getStateLog().getNextExecuteSEQ() -1;
+             long chkPeriod = getCheckpointPeriod();
+
+
+             if(execSEQ > 0 && (((execSEQ+1) % chkPeriod) == 0)){
+                 PBFTCheckpoint checkpoint;
+                 try {
+                     checkpoint = createCheckpointMessage(execSEQ);
+                     getDecision(checkpoint);
+                     rStateManager.addLogEntry(
+                        new CheckpointLogEntry(
+                                 checkpoint.getSequenceNumber(),
+                                 rStateManager.byteArray(),
+                                 checkpoint.getDigest()
+                            )
+                      );
+
+
+                     emit(checkpoint, getLocalGroup().minus(getLocalProcess()));
+                     handle(checkpoint);
+                 } catch (Exception ex) {
+                     Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
+                 }
+             }
+
+            if(rinfo.hasSomeWaiting()){
+               if(isPrimary()){
+                  batch();
+               }else{
+                  scheduleViewChange();
+               }
             }
-        //}
-    }
-
-    public boolean isValid(PBFTProcessingToken token){
-        Long currSEQ = token.getSequenceNumber();
-
-        PBFTLogEntry entry = getStateLog().get(currSEQ);
-
-        /* If it isn't preprepared then it won't proceed */
-        if(!(entry != null && entry.getPrePrepare() != null)){
-            return false;
-        }
-
-        SoftQuorum pq = (SoftQuorum)entry.getPrepareQuorum();
-        SoftQuorum cq = (SoftQuorum)entry.getCommitQuorum();
-
-        /* If it isn't prepared and committed then it won't proceed */
-        if(pq != null && pq.getCurrentDecision() != null && cq != null & cq.getCurrentDecision() != null){
-            /*if it was served then it wouldn't proceed */
-            PBFTRequestInfo rinfo = getRequestInfo();
-            if(!rinfo.wasServed(currSEQ)){
-                return true;
-            }
-        }
-
-        return false;
+         }
     }
 
     public  PBFTReply createReplyMessage(PBFTRequest r, IPayload result){
@@ -2249,6 +1835,13 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     public PBFTReply createReplyMessage(PBFTRequest r, IPayload result, Integer viewNumber){
          PBFTReply reply = new PBFTReply(r, result, getLocalServerID(), viewNumber);
          return reply;
+    }
+
+    public void emitCheckpoint(long seqn) throws Exception{
+       PBFTCheckpoint checkpoint = createCheckpointMessage(seqn);
+       emit(checkpoint, getLocalGroup().minus(getLocalProcess()));
+       handle(checkpoint);
+
     }
 
     public PBFTCheckpoint createCheckpointMessage(long seqn) throws Exception{
@@ -2289,10 +1882,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 sent = "multicast";
             }
 
-            JDSUtility.debug(
-              "[PBFTServer:emit(msg, dest)]s" + getLocalServerID() + " " + sent + " " +
-              "" + msg + " at timestamp " + getClockValue() + " to " + remote + "."
-            );
+            JDSUtility.debug("[emit(msg, dest)]s" + getLocalServerID() + " " + sent + " " + msg + ", at time " + getClockValue() + ", to " + remote + ".");
 
         } catch (Exception ex) {
             Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -2337,122 +1927,83 @@ public class PBFTServer extends PBFT implements IPBFTServer{
        return primaryID == null;
        
     }
+    
     MessageCollection preprepareset = new MessageCollection();
     MessageCollection prepareset = new MessageCollection();
-
-    protected void addPrePrepare(long seqn, DigestList digests, int viewn){
-        for(int i = preprepareset.size()-1 ;  i >= 0; i--){
-            PBFTPrePrepare pp = (PBFTPrePrepare) preprepareset.get(i);
-            long seqn1 = pp.getSequenceNumber();
-            if(seqn == seqn1){
-                preprepareset.remove(i);
-            }
-        }
-
-        PBFTPrePrepare pp = new PBFTPrePrepare(viewn, seqn, null);
-        pp.getDigests().addAll(digests);
-        preprepareset.add(pp);
-    }
-
-    protected void addPrepare(long seqn, DigestList digests, int viewn){
-        for(int i = prepareset.size()-1 ;  i >= 0; i--){
-            PBFTPrepare p = (PBFTPrepare) prepareset.get(i);
-            long seqn1 = p.getSequenceNumber();
-            if(seqn == seqn1){
-                prepareset.remove(i);
-            }
-        }
-
-        PBFTPrepare p = new PBFTPrepare(viewn, seqn, null);
-        p.getDigests().addAll(digests);
-        prepareset.add(p);
-    }
-
-    protected void adjustPrePrepareSet(int viewn){
-      for(int i = 0 ;  i < preprepareset.size(); i++){
-         PBFTPrePrepare p = (PBFTPrePrepare) preprepareset.get(i);
-         p.setViewNumber(viewn);
-      }
-    }
-
-    protected void adjustPrepareSet(int viewn){
-      for(int i = 0 ;  i < prepareset.size(); i++){
-         PBFTPrepare p = (PBFTPrepare) prepareset.get(i);
-         p.setViewNumber(viewn);
-      }
-    }
-
-   /**
-    * builts the pre-prepare and prepare sets of messages for a specific view(Castro and Liskov, 2001).
-    * @param viewn - the view number.
-    */
-    protected void buildChangeView(int viewn){
-       
-        long lcwm = getLCWM();
-        long hcwm = getHCWM();
-
-        /* for each entry in current pbft log */
-        for(PBFTLogEntry lentry: getStateLog().values()){
-
-            /* gets the prepare quorum for current entry*/
-            SoftQuorum pq = (SoftQuorum)lentry.getPrepareQuorum();
-
-            /* if is a valid prepare quorum (i.e. a quorum with a certificate)*/
-            if(pq != null && pq.getCurrentDecision() != null){
-
-                PrepareSubject ps = (PrepareSubject) pq.getCurrentDecision();
-
-                /* gets the parameters (sequence number, view number and digests) which were certificate in current prepare quorum */
-                long seqn = ( Long  ) ps.getInfo(PrepareSubject.SEQUENCENUMBER);
-
-                DigestList digests = (DigestList) ps.getInfo(PrepareSubject.DIGESTLIST);
-                /* if the sequence number seqn belongs to (lcwm, hcwm] */
-                if(seqn > lcwm && seqn <= hcwm){
-                   /* adds the parameters to change view message to compose the prepared set P */
-                   addPrepare(seqn, digests, viewn);
-               }
-
-            }else{
-                /* if there isn't a prepare quorum then it'll add the accepted pre-prepare to change view message to compose
-                   pre-prepared set Q*/
-                PBFTPrePrepare pp = lentry.getPrePrepare();
-                long seqn = ( Long ) pp.getSequenceNumber();
-
-                /* if the sequence number seqn belongs to (lcwm, hcwm] */
-                if(seqn > lcwm && seqn <= hcwm){
-                  addPrePrepare(seqn, pp.getDigests(), viewn);
-                }
-            }
-        }
-
-        adjustPrePrepareSet(viewn);
-        adjustPrepareSet(viewn);
-       
-    }
     
     /* (a.1) a change-view message is emitted because of a suspect of failure of the primary replica.                   */
     /* (a.2) change-view-ack are sent for each change-view message that was received and match with the new view number */
     public void emitChangeView() {
-        
-        int viewn = getCurrentViewNumber();
+       
+       int    view = getCurrentViewNumber();
+       Object lpid = getLocalServerID();
+       
+        JDSUtility.debug("[emitChangeView()] s" + lpid + ", at time " + getClockValue() + ", is going to emit a change view message for (v + 1 = "  +  (view + 1) + ")");
 
-        JDSUtility.debug(
-            "[PBFTServer:emitChangeView()] s" + getLocalServerID() + ", at time " + getClockValue() + ", is going to emit a change view " +
-            "message for (v + 1 = "  +  (viewn + 1) + ")."
-        );
-
-        /* the replica makes sure that no timer is currently working. If the view change was trigged by a suspect of failure of the primary then
-         * probably it's been already true.
-         */
-        getViewTimer().cancel();
+        /* the replica makes sure that no timer is currently working. If the view change was trigged by a suspect of failure of the primary then probably it's  
+           been already true. */
         revokeSendBatch();
+        revokeViewChange();
+
+         /* an exponetial timeout has to be considered to guarantee liveness when the end-to-end delay is too long (it's prevent uncessary view-changes)*/
+         PBFTTimeoutDetector ttask = (PBFTTimeoutDetector) getViewTimer().getTask();
+         long timeout = (Long) ttask.get("TIMEOUT");
+         ttask.put("TIMEOUT", 2 * timeout);
 
         /* the replica moves to the next view. After that, this replica isn't accepting any message from view v < v+1. */
-        setCurrentViewNumber(viewn +1);
+        setCurrentViewNumber(view +1);
         
-        buildChangeView(viewn);
+        /* clean-up the sets P (prepare set) and Q (pre-prepare set)*/
+        preprepareset.clear();
+        prepareset.clear();
 
-        /*creates a change-view message */
+        long lcwm = getLCWM();
+        long hcwm = getHCWM();
+
+        /* compute Q (pre-prepare set) and P (prepare set) */
+        for(long seqn = lcwm + 1; seqn <=hcwm; seqn++){
+           /*If I have a prepare then its digests will be added to pre-prepared and prepared sets */
+           PBFTPrepare pr = getPrepareInfo().get(lpid, seqn);
+           if(pr != null){
+              PBFTPrePrepare pp = new PBFTPrePrepare(view, pr.getSequenceNumber(), null);
+              pp.getDigests().addAll(pr.getDigests());
+              preprepareset.add(pp);
+              
+              prepareset.add(new PBFTPrepare(pp, null));
+
+              for(String digest: pp.getDigests()){
+                 getRequestInfo().assign(digest, RequestState.WAITING);
+                 getRequestInfo().assign(digest, (Long)null);
+              }
+
+              continue;
+           }
+
+           /*If I have a pre-prepare then its digests will be added to pre-prepared set*/
+           PBFTPrePrepare ppr = getPrePrepareInfo().get(seqn);
+           if(ppr != null){
+              PBFTPrePrepare pp = new PBFTPrePrepare(view, ppr.getSequenceNumber(), null);
+              pp.getDigests().addAll(ppr.getDigests());
+              preprepareset.add(pp);
+              
+              for(String digest: pp.getDigests()){
+                 getRequestInfo().assign(digest, RequestState.WAITING);
+                 getRequestInfo().assign(digest, (Long)null);
+              }
+           }           
+        }
+
+        
+        try{
+            doRollback();
+        }catch(Exception e){
+           e.printStackTrace();
+        }
+
+        /* update the controls for sequence number execution */
+        getStateLog().setNextPrePrepareSEQ(lcwm + 1);
+        getStateLog().setNextExecuteSEQ   (lcwm + 1);
+
         PBFTChangeView cv = createChangeViewMessage();
         
         try {
@@ -2463,15 +2014,13 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             if(centry != null){
                cv.addCheckpoint(centry.getPartCheckpoint(), centry.getDigest());
             }else{
-               cv.addCheckpoint(-1, "");
+               cv.addCheckpoint(lcwm, "");
             }
         } catch (Exception ex) {
             Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
-            cv.addCheckpoint(getLCWM(), "");
+            cv.getCheckpointSet().clear();
+            cv.addCheckpoint(lcwm, "");
         }
-        
-        /* clean up the current pbft log */
-        getStateLog().clear();
 
         /* add the pre-prepare set to current change-view message*/
         cv.getPrePrepareSet().clear();
@@ -2480,395 +2029,294 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         /* add the prepare set to current change-view message*/
         cv.getPrepareSet().clear();
         cv.getPrepareSet().addAll(prepareset);
-        
-        long seqn = getCurrentExecuteSEQ() + 1;
-        getStateLog().setNextPrePrepareSEQ(seqn);
-//        getStateLog().setNextPrepareSEQ(seqn);
-//        getStateLog().setNextCommitSEQ(seqn);
 
         /*emit the change view message to group of replicas */
         emit(cv, getLocalGroup().minus(getLocalProcess()));
 
-        /*store change-view message in log */
-        storeChangeView(cv);
-        
-        uncertanty = true;
-        /* emit the view change ack for each view change message that match with new view */
+        getChangeViewInfo().setMinimumViewNumber(view);
+        getChangeViewInfo().put(cv);
+
+        if(isPrimary()){
+           getNewViewConstructor().addChangeView(cv);
+        }else{
+           finalizeNewViewConstructor();
+        }
+
+        getChangeViewInfo().gc(view);
+        getChangeViewACKInfo().gc(view);
+        getNewViewConstructor().gc(view);
+        getNewViewInfo().gc(view);
+        getPrePrepareInfo().gc(view);
+        getPrepareInfo().gc(view);
+        getPrePreparebackupInfo().gc(view);
+        getCommitInfo().gc(view);
+
+
         emitChangeViewACK();
-        
+
+
+        uncertanty = true;        
     }
 
+    PBFTChangeViewInfo cvi = null;
+
+    public PBFTChangeViewInfo getChangeViewInfo(){
+       if(cvi == null){
+          cvi = new PBFTChangeViewInfo(getLocalServerID());
+       }
+
+       return cvi;
+    }
+
+    PBFTChangeViewACKInfo cvacki = null;
+
+    public PBFTChangeViewACKInfo getChangeViewACKInfo(){
+       if(cvacki == null){
+          cvacki = new PBFTChangeViewACKInfo();
+       }
+
+       return cvacki;
+    }
+
+
     public void emitChangeViewACK(){
-        if(!isPrimary()){
-           int viewn = getCurrentViewNumber();
-            /* if it isn't the primary then it must send a change-view-ack message to the estimated primary */
-           int iprocess = (viewn) % getLocalGroup().getGroupSize();
+       int   viewn = getCurrentViewNumber();
 
-            //Object npid = getLocalGroup().next(getCurrentPrimaryID());
-            IProcess newPrimary = getLocalGroup().getMember(iprocess);
+       Object    localServerID = getLocalServerID();
+       IProcess currentPrimary = getPrimary(viewn);
+       
+       try{
+         List<PBFTChangeView> cvs = getChangeViewInfo().getPendingACK(viewn);
 
-            /* for each change-view messsage that has accepted ... send view-change ack */
-            for(PBFTChangeView oldCV : cvtable.values()){
-                int oldViewn = oldCV.getViewNumber();
-                Object rid = oldCV.getReplicaID();
-                Object lid = getLocalServerID();
+         for(PBFTChangeView cv : cvs){
 
-                /* if the view change has the same view number and wasn't sent by the local replica then a change-view-ack will be sent*/
-                if(viewn == oldViewn && !rid.equals(lid)){
-                   PBFTChangeViewACK ack = createChangeViewACKMessage(oldCV);
-                   if(ack != null){
-                      if(!isLocalServer(newPrimary)){
-                        emit(ack, newPrimary);
-                      }else{
-                        /* the primary store change-view ack including those from itself.*/
-                        storeChangeViewACK(ack);
-                      }//end if not is new primary
-                   }//end if ack is not null                  
-                }//end if current view number is equals to recently received change-view number and change-view replica is not equals to local replica
+            String digest = getAuthenticator().getDigest(cv);
+            PBFTChangeViewACK ack = getChangeViewInfo().buildMyACK(cv, digest);
+
+            if(ack != null){
+               getChangeViewACKInfo().put(ack);
+               if(!isPrimary() && !cv.getReplicaID().equals(localServerID)){
+                  emit(ack, currentPrimary);
+               }
+
+               if(isPrimary() && localServerID.equals(ack.getPrompterID())){
+                  getNewViewConstructor().addChangeViewACK(ack);
+               }
+
             }
-        }
+            
+         }
+       }catch(Exception e){
+          e.printStackTrace();
+       }       
     }
     
    public void handle(PBFTChangeView cv) {
-      JDSUtility.debug("[PBFTServer:handle(changeview)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + cv);
-
-      if(isValid(cv)){
-         if(storeChangeView(cv)){
-            Object   rpid    = cv.getReplicaID();        //cv sender id
-            int rviewn = cv.getViewNumber();
-            int cviewn = getCurrentViewNumber();
-
-            /* if the change-view message was sent by the current primary and such message has a view number greater than the current view
-            number then the replica will move to rview */
-            if(isPrimary(rpid) && rviewn > cviewn){
-               emitChangeView();
-               return;
-            }//end if isPrimary(rpid) && rviewn > cviewn
-
-            int f = getServiceBFTResilience();
-            Integer mxview = kthMaxLoggedViewNumber(f+1);
-
-            /*it has at least f+1 view-changes with a view number greater then or equals to mxview: change to view maxv */
-            if(mxview != null && mxview.compareTo(cviewn) > 0){
-               setCurrentViewNumber(mxview-1);
-               emitChangeView();
-               return;
-            }
-
-            emitChangeViewACK();
-            
-            if(uncertanty && !isPrimary()){
-               mxview = kthMaxLoggedViewNumber(2 * f + 1);
-
-               /*if it has 2f+1 change-view messages with view greater than or equals rviewn then it'll start a timer to ensure it moves
-               to another view if it doesn't receive the new-view message for rviewn*/
-               if(mxview != null && mxview.compareTo(cviewn)==0){
-                  PBFTTimeoutDetector ttask = (PBFTTimeoutDetector) getViewTimer().getTask();
-                  /* an exponetial timeout has to be considered to guarantee liveness when the end-to-end delay is too long (it's prevent uncessary view-changes)*/
-                  long timeout = (Long) ttask.get("TIMEOUT");
-                  ttask.put("TIMEOUT", 2 * timeout);
-                  scheduleViewChange();
-                  uncertanty = false;
-                  return;
-               }
-            }
-         }//end if store change view
-      }//end if it received a valid change-view message
-   }//end execute(changeview)
-        
-    public PBFTChangeViewACK createChangeViewACKMessage(PBFTChangeView cv){
-        try {
-
-           Object prompterID = cv.getReplicaID();
-             Object senderID = getLocalServerID();
-                   int viewn = cv.getViewNumber();
-               String digest = getAuthenticator().getDigest(cv);
-           
-           return new PBFTChangeViewACK(viewn, senderID, prompterID, digest);
-        } catch (Exception ex) {
-            Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return null;
-    }
-
-    public boolean isValid(PBFTChangeView cv){
-        if(!(cv != null && getCurrentViewNumber() != null)) return false;
-
-        int nxtViewNumber = getNextViewNumber();
-        int newViewNumber = cv.getViewNumber();
-        int curViewNumber = getCurrentViewNumber();
-
-        if(newViewNumber < nxtViewNumber) {
-           JDSUtility.debug(
-               "[PBFTServer:isValid(changeview] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + cv + " because it has " +
-               "this one has a view number (VW{" + newViewNumber + "} < NEXTVW{" + curViewNumber + "}). VW must be >= NEXTVW."
-           );
-           return false;
-        }
-
-        MessageCollection mcpp = cv.getPrePrepareSet();
-        MessageCollection mcpr = cv.getPrepareSet();
-
-        int mcsize = mcpp.size();
-
-        if(mcpr.size() > mcsize) mcsize = mcpr.size();
-        int i = -1; 
-        while(++i < mcsize){
-
-            int msgViewNumber = -1;
-            
-            if(i < mcpp.size()){
-                
-                PBFTPrePrepare pp = (PBFTPrePrepare) mcpp.get(i);
-                
-                msgViewNumber = pp.getViewNumber();
-                if(msgViewNumber > curViewNumber){
-                    JDSUtility.debug(
-                        "[PBFTServer:isValid(changeview] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + cv + " because it has " +
-                        "a component with a invalid view number (VW{" + msgViewNumber + "} > CURRVW{" + curViewNumber + "})."
-                    );
-                    return false;
-                }
-            }
-
-            if(i < mcpr.size()){
-                PBFTPrepare p = (PBFTPrepare) mcpr.get(i);
-                msgViewNumber = p.getViewNumber();
-                if(msgViewNumber > curViewNumber){
-                    JDSUtility.debug(
-                        "[PBFTServer:isValid(changeview] s" + getLocalServerID() + ", at time " + getClockValue() + ", discarded " + cv + " because it has " +
-                        "a component with a invalid view number (VW{" + msgViewNumber + "} > CURRVW{" + curViewNumber + "})."
-                    );
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-    PBFTNewViewConstructor nvc;
-    public void handle(PBFTChangeViewACK cva) {
-        Object lSrvID = getLocalServerID();
-        JDSUtility.debug("[PBFTServer:handle(changeviewack)] s" + lSrvID + ", at time " + getClockValue() + ", received " + cva);
-        /* cva is valid if there's a related change-view in change-view table */
-        if(isValid(cva)){
-           
-           int viewn = cva.getViewNumber();
-
-           /* if the current replica is primary of new view then it'll process the change-view message */
-           if(isPrimary(viewn)){
-              
-              ChangeViewACKSubject cvas = getDecision(cva);
-              /* if it's got a decision then it'll put the related change-view in certificated change-view table  S*/
-              if(cvas != null){
-                 String digest = (String)cvas.getInfo(ChangeViewACKSubject.DIGEST);
-                 //if(!ccvtable.containsKey(digest)){
-                 PBFTChangeView cv = cvtable.get(digest);
-                 if(cv != null){
-                    if(nvc == null){
-                        nvc = new PBFTNewViewConstructor(this, getCheckpointFactor(), getCheckpointPeriod(), getServiceBFTResilience());
-                    }
-                    nvc.addChangeView(digest, cv);
-                    JDSUtility.debug("[PBFTServer:handle(changeviewack)] s"  + lSrvID + ", at time " + getClockValue() + ", certificated " + cv);
-                    if(canProceed(nvc)){
-                       PBFTNewView nv = nvc.buildNewView();
-                       emit(nv, getLocalGroup().minus(getLocalProcess()));
-                       checkRequest(nv);
-                       installNewView(nv);
-                       adjustView(nv);
-                       emitBatch();
-                       nvc.clear();
-                       cvtable.clear();
-                       cvatable.clear();
-                       nvc = null;
-                    }
-                 }
-                 //}
-              }//end if it decide for change-view-ack
-           }//end if this replica is the primary of new view
-        }//end if is valid change-view-ack
-    }
-
-    public boolean canProceed(PBFTNewViewConstructor nvc){
-      int f = getServiceBFTResilience();
-      int n = getLocalGroup().getGroupSize();
-
-       return nvc.size() == (n - f);
-    }
-    public ChangeViewACKSubject getDecision(PBFTChangeViewACK cva){
-       boolean complete = false;
-       
-       Object lSrvID = getLocalServerID();
-
-       if(!(cva!=null && cva.getPrompterID()!=null && cva.getReplicaID()!=null && !cva.getPrompterID().equals(cva.getReplicaID()))){
-          return null;
-       }
-
-       String qkey = cva.getPrompterID().toString();
-
-       Quorum q = getStateLog().getQuorum(CHANGEVIEWACKQUORUMSTORE, qkey);
-
-       if(q == null){
-          int f = getServiceBFTResilience();
-          q = new SoftQuorum(2 * f - 1);
-          getStateLog().getQuorumTable(CHANGEVIEWACKQUORUMSTORE).put(qkey, q);
-       }
-       
-       /*TODO: evaluate if "q.getCurrentDecision()" is a better implementation */
-       ChangeViewACKSubject decision = (ChangeViewACKSubject) q.decide();
-
-       if(decision != null){
-          complete = true;
-       }
-
-       q.add(new Vote(cva.getReplicaID(), new ChangeViewACKSubject(cva)));
-
-       JDSUtility.debug("[PBFTServer:getDecision(changeViewACK)] s"  + lSrvID + ", at time " + getClockValue() + ", updated a entry in its log for " + cva);
-       
-       if(decision == null){
-          decision  = (ChangeViewACKSubject) q.decide();
-       }
-
-       if(!complete && decision != null){
-          JDSUtility.debug("[PBFTServer:getDecision(changeViewACK)] s" + lSrvID + ", at time " + getClockValue() + ", completed quorum for changeViewACK of (p" + qkey + ")");
-          return decision;
-       }
-       
-       return null;
-       
-    }
-    public boolean isValid(PBFTChangeViewACK cva){
-       int newViewNumber = cva.getViewNumber();
-       int nxtViewNumber = getNextViewNumber();
-       int curViewNumber = getCurrentViewNumber();
-       return cvtable.containsKey(cva.getDigest()) && newViewNumber >= nxtViewNumber && curViewNumber == newViewNumber;
-    }
-
-    public void checkRequest(PBFTNewView nv){
-     /*check for missing requests */
-      MessageCollection preprepareSet = nv.getPreprepareSet();
-      PBFTRequestInfo rinfo = getRequestInfo();
-
-      getMissedRequests().clear();
-
-      for(IMessage m : preprepareSet){
-         PBFTPrePrepare pp = (PBFTPrePrepare) m;
-         //long seqn = pp.getSequenceNumber();
-         DigestList digests = pp.getDigests();
-
-         if(!digests.isEmpty()){
-            for(String digest : digests){
-               if(rinfo.getRequest(digest) == null){
-                  getMissedRequests().add(digest);
-                  break;
-               }
-            }
-         }
-      }       
-    }
-
-    public void adjustView(PBFTNewView nv){
-      int nviewn = nv.getViewNumber();
-
-      for(int i = 0; i < nviewn;  i++){
-         getStateLog().getNewViewTable().remove(i);
+      if(!wasSentByAGroupMember(cv)){
+         return;
       }
 
-      getStateLog().getNewViewTable().put(nviewn, nv);
-//         }
-       
+      if(getChangeViewInfo().put(cv)){
+         
+         int receivedView = cv.getViewNumber();
+         int currentView  = getCurrentViewNumber();
+
+         Object rpid = cv.getReplicaID();
+
+         /* if the change-view message was sent by the current primary and such message has a view number greater than 
+            the current view number then the replica will move to rview */
+         if(isPrimary(rpid, currentView) && receivedView > currentView){
+            setCurrentViewNumber(receivedView -  1);
+            emitChangeView();
+            return;
+         }
+
+         int f = getServiceBFTResilience();
+
+         int certifiedView = getChangeViewInfo().biggestWithAtLeast(f + 1);
+         
+         /* if it was able to found the major view number in the set of view numbers which have at least f + 1 view-changes and that
+            is greater than current view, then it will change for this */
+         if(certifiedView > 0 && certifiedView > currentView){
+            setCurrentViewNumber(certifiedView - 1);
+            emitChangeView();
+            return;            
+         }
+
+
+         if(!isPrimary()){
+
+            certifiedView = getChangeViewInfo().biggestWithAtLeast(2 * f + 1);
+            
+            /* I have at least 2 * f + 1 view changes and I haven't received a new-view message yet, so I must restart the change view timeout
+               using a exponential step approach */
+
+            long now = getClockValue();
+            
+            if(certifiedView == currentView && !getViewTimer().workingAt(now)){
+
+               scheduleViewChange();
+
+               uncertanty = false;
+               
+            }
+            
+         }
+
+         emitChangeViewACK();
+
+      }else{
+         System.out.println(getLocalServerID() + "  ==>  " + cv);
+      }//end if is valid change
+   }//end tryExecuteRequests(changeview)
+        
+    
+    PBFTNewViewConstructor nvbuilder = null;
+
+    public PBFTNewViewConstructor getNewViewConstructor(){
+       if(nvbuilder == null){
+          nvbuilder = new PBFTNewViewConstructor(this, getCheckpointFactor(), getCheckpointPeriod(), getServiceBFTResilience());
+       }
+
+       return nvbuilder;
+    }
+
+    public void finalizeNewViewConstructor(){
+       nvbuilder = null;
+    }
+    
+    public void handle(PBFTChangeViewACK ack) {
+
+      if(!wasSentByAGroupMember(ack)){
+         return;
+      }
+      
+      if(!getChangeViewACKInfo().put(ack)){
+         return;
+      }
+
+      int f = getServiceBFTResilience();
+      int currentView = getCurrentViewNumber();
+      int ackView = ack.getViewNumber();
+
+      if(currentView != ackView){
+         return;
+      }
+
+      PBFTChangeViewACK myack = getChangeViewInfo().getMyACK(ack.getViewNumber(), ack.getPrompterID());
+      if(myack == null){
+         return;
+      }
+      if(getChangeViewACKInfo().count(ack.getPrompterID(), myack.getDigest(), ack.getViewNumber()) < (2 * f - 1)){
+         return;
+      }
+
+      if(!(isPrimary() && changing())){
+         return;
+      }
+
+      PBFTChangeView cv = getChangeViewInfo().getChangeView(myack);
+
+      if(!getNewViewConstructor().addChangeView(cv)){
+         return;
+      }
+
+      getNewViewConstructor().addChangeViewACK(myack);
+
+      getNewViewConstructor().setCheckpointQuorumSize(f + 1);
+
+      Long lcwm = getNewViewConstructor().computeLCWM(currentView);
+
+      if(lcwm == null){
+         return;
+      }
+
+      int n = getLocalGroup().getGroupSize();
+
+      if(!getNewViewConstructor().hasAtLeastMessages(currentView, n - f)){
+         return;
+      }
+
+      PBFTNewView nv = getNewViewConstructor().buildNewView(currentView);
+
+      if(nv == null){
+         return;
+      }
+
+      nv.setReplicaID(getLocalServerID());
+      emit(nv, getLocalGroup().minus(getLocalProcess()));
+      handle(nv);
+      
+    }
+
+
+    protected PBFTNewViewInfo nvi;
+    public PBFTNewViewInfo getNewViewInfo(){
+       if(nvi == null){
+          nvi = new PBFTNewViewInfo();
+       }
+
+       return nvi;
     }
     public void handle(PBFTNewView nv) {
         JDSUtility.debug("[PBFTServer:handle(newview)] s" + getLocalServerID() + ", at time " + getClockValue() + ", received " + nv);
-        if(isValid(nv)){
-            checkRequest(nv);
-            installNewView(nv);
-            adjustView(nv);
-            PBFTRequestInfo rinfo = getRequestInfo();
 
-            if(rinfo.hasSomeWaiting()){
-               scheduleViewChange();
-            }
+        if(!wasSentByAGroupMember(nv)){
+           return;
         }
-    }
-
-    public boolean isValid(PBFTNewView nv){
-       int nxtViewNumber = getNextViewNumber();
-       int newViewNumber = nv.getViewNumber();
-       int curViewNumber = getCurrentViewNumber();
-
-       if(newViewNumber < nxtViewNumber){
-          return false;
-       }
-
-       if(newViewNumber != curViewNumber){
-          return false;
-       }
-
-       int index = newViewNumber % getLocalGroup().getGroupSize();
-       Object replicaID = nv.getReplicaID();
-       IProcess primary = getLocalGroup().getMember(index);
-
-       if(!(replicaID != null && primary != null && primary.getID() != null && replicaID.equals(primary.getID()))){
-          return false;
-       }
-       
-       int f = getServiceBFTResilience();
-       int cvcount = 0;
-
-       Set<String> digests = nv.getChangeViewTable().keySet();
-       
-       for(String digest : digests){
-                    
-          if(cvtable.containsKey(digest)){
-             cvcount ++;
-          }
-          
-       }
-
-       if(cvcount < f + 1){
-          return false;
-       }
-       
-       return true;
-    }
-
-    Hashtable<String, PBFTChangeView>     cvtable = new Hashtable<String, PBFTChangeView>();
-    Hashtable<String, PBFTChangeViewACK> cvatable = new Hashtable<String, PBFTChangeViewACK>();
-    Hashtable<String, PBFTChangeView>    ccvtable = new Hashtable<String, PBFTChangeView>();
-    
-    public boolean storeChangeView(PBFTChangeView cv){
-        try {
-            /*stores the receive change view if it has been already stored*/
-            String digest = getAuthenticator().getDigest(cv);
-            if(!cvtable.contains(digest)){
-                cvtable.put(digest, cv);
-                int viewn = cv.getViewNumber();
-                views.add(viewn);
-                return true;
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
+        
+        if(!getNewViewInfo().put(nv)){
+           return;
         }
-        return false;
-    }
+        int itView = nv.getViewNumber();
+        int myView = getCurrentViewNumber();
 
-    public boolean storeChangeViewACK(PBFTChangeViewACK cva){
-        try {
-            /*stores the receive change view ack if it has been already stored*/
-            String digest = cva.getDigest();
-            if(!cvatable.contains(digest)){
-                cvatable.put(digest, cva);
-                return true;
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(PBFTServer.class.getName()).log(Level.SEVERE, null, ex);
+        if(itView != myView){
+           return;
         }
-        return false;
-    }
 
+        Object rpid = nv.getReplicaID();
 
-    public Integer kthMaxLoggedViewNumber(int k){
-        return XMath.kthmax(k, views);
+        if(!isPrimary(rpid)){
+           return;
+        }
+
+        for(Object prompterID : nv.getChangeViewtable().keySet()){
+           /*TODO: I must check it*/
+//           PBFTChangeViewACK myack = getChangeViewInfo().getMyACK(itView, prompterID);
+//           String digest = nv.getChangeViewtable().get(prompterID);
+//           if(!myack.getDigest().equals(digest)){
+//              return;
+//           }
+        }
+
+        long itLCWM = nv.getSequenceNumber();
+        long myLCWM = getLCWM();
+
+        if(itLCWM > myLCWM){
+           emitFetch();
+        }
+
+        for(IMessage im : nv.getPrePrepareSet()){
+           PBFTPrePrepare pp = (PBFTPrePrepare) im;
+           for(String digest : pp.getDigests()){
+              if(!getRequestInfo().hasRequest(digest)){
+//                 return;
+              }
+           }
+
+           handle(pp);
+        }
+
+        setNextViewNumber(myView + 1);
+        
+        if(isPrimary()){
+           emitBatch();
+        }else{
+           restartViewChangeTimer();
+        }
+        
+        
     }
 
     public PBFTChangeView createChangeViewMessage(){
@@ -2876,65 +2324,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         return cv;
     }
 
-
-    public void installNewView(PBFTNewView nv) {
-
-      if(nv != null && nv.getReplicaID() != null){
-         int viewn = getCurrentViewNumber();
-         int index = viewn % getLocalGroup().getGroupSize();
-         IProcess p = getLocalGroup().getMember(index);
-
-         Object rSrvID = nv.getReplicaID();
-         
-         if(p.getID().equals(rSrvID)){
-            JDSUtility.debug("[PBFTServer:handle(newview)] s" + getLocalServerID() + ", at time " + getClockValue() + ", is going to install " + nv);
-            getViewTimer().cancel();
-            //setCurrentPrimaryID(rSrvID);
-
-            Hashtable<String, PBFTChangeView> cvt = nv.getChangeViewTable();
-
-            for(String digest : cvt.keySet()){
-
-               PBFTChangeView cv = cvt.get(digest);
-               for(IMessage m : cv.getCheckpointSet()){
-                  PBFTCheckpoint checkpoint = (PBFTCheckpoint) m;
-                  long rlcwm = checkpoint.getSequenceNumber();
-                  long llcwm = getLCWM();
-
-                  if(llcwm < rlcwm){
-                     emitFetch();
-                  }                  
-               }
-            }
-            PBFTRequestInfo rinfo = getRequestInfo();
-            MessageCollection preprepareSet = nv.getPreprepareSet();
-            for(IMessage m : preprepareSet){
-               PBFTPrePrepare pp = (PBFTPrePrepare) m;
-               for(String digest : pp.getDigests()){
-                  if(rinfo.getRequest(digest) != null && !rinfo.wasServed(digest)){
-                     rinfo.assign(digest, RequestState.WAITING);
-                  }else{
-                     JDSUtility.debug("[PBFTServer:installNew(nv)] s" + getLocalServerID() + ", at time " + getClockValue() + ", has missed request digest(" + digest +")." );
-                  }
-               }
-               if(isPrimary()){
-                  getDecision(pp);
-               }else{
-                  handle(pp);
-               }
-            }
-
-            setNextViewNumber(getCurrentViewNumber() + 1);
-            //preprepareSet.clear();
-            //prepareset.clear();
-            //emitStatus(getLocalGroup());
-            
-
-            uncertanty = false;            
-         }
-       }
-       
-    }
 
   /*########################################################################
    # 11. Utility methods.
@@ -2983,17 +2372,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         this.batchSize = newSize;
     }
 
-    /* change-view timeout meansured in milliseconds */
-    protected long changeViewTimeout = 1000L;
-
-    public long getChangeViewRetransmissionTimeout(){
-        return changeViewTimeout;
-    }
-
-    public void setChangeViewRetransmissionTimeout(long newTimeout){
-        this.changeViewTimeout = newTimeout;
-    }
-
     /* current view number */
     protected Integer currentViewNumber = 0;
 
@@ -3005,28 +2383,40 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         this.currentViewNumber = newViewNumber;
     }
 
-    /* currentPrimaryID */
-    protected Object currentPrimaryID = null;
-
-    public Object getCurrentPrimaryID(){
-
-       int curViewNumber = 0;
-
-       if(getCurrentViewNumber() != null){
-          curViewNumber = getCurrentViewNumber();
-       }
-       int index = curViewNumber % getLocalGroup().getGroupSize();
+    public IProcess getPrimary(int viewn){
+       
+       int index = viewn % getLocalGroup().getGroupSize();
        IProcess p = getLocalGroup().getMember(index);
+       if(p !=null){
+          return p;
+       }
+
+       return null;
+
+    }
+    public Object getPrimaryID(int viewn){
+
+       IProcess p = getPrimary(viewn);
+
        if(p !=null){
           return p.getID();
        }
 
        return null;
+       
+    }
+    public Object getCurrentPrimaryID(){
+
+       int currView = 0;
+
+       if(getCurrentViewNumber() != null){
+          currView = getCurrentViewNumber();
+       }
+
+       return getPrimaryID(currView);
+       
     }
 
-//    public  void setCurrentPrimaryID(Object newServerID){
-//        currentPrimaryID = newServerID;
-//    }
     /* current sequence number (review it late) */
     protected static long SEQ = -1;
 
@@ -3068,11 +2458,47 @@ public class PBFTServer extends PBFT implements IPBFTServer{
        return ri;
     }
 
-    protected DigestList missedRequests = new DigestList();
-    
-    public DigestList getMissedRequests(){
-       return missedRequests;
+    protected PBFTPrePrepareInfo ppi = new PBFTPrePrepareInfo();
+    protected PBFTPrePrepareInfo ppi_backup = new PBFTPrePrepareInfo();
+
+    public PBFTPrePrepareInfo getPrePrepareInfo(){
+       return ppi;
     }
+
+    private PBFTPrePrepareInfo getPrePreparebackupInfo(){
+       return ppi_backup;
+    }
+
+    protected PBFTPrepareInfo pri = null;
+
+    public PBFTPrepareInfo getPrepareInfo(){
+       if(pri == null){
+          int f = getServiceBFTResilience();
+          pri = new PBFTPrepareInfo();
+       }
+       return pri;
+    }
+
+    protected PBFTCommitInfo cmi = null;
+
+    public PBFTCommitInfo getCommitInfo(){
+       if(cmi == null){
+          int f = getServiceBFTResilience();
+          cmi = new PBFTCommitInfo();
+       }
+       return cmi;
+    }
+
+    protected PBFTCheckpointInfo cki = null;
+
+    public PBFTCheckpointInfo getCheckpointInfo(){
+       if(cki == null){
+          int f = getServiceBFTResilience();
+          cki = new PBFTCheckpointInfo( f);
+       }
+       return cki;
+    }
+    
 
     Hashtable<String, MessageQueue> queuetable = new Hashtable<String, MessageQueue>();
     public MessageQueue getQueue(String name){
@@ -3107,6 +2533,12 @@ public class PBFTServer extends PBFT implements IPBFTServer{
        return isLocalServer(p);
     }
 
+    public boolean isPrimary(Object pid, int view){
+       int index = view % getLocalGroup().getGroupSize();
+       IProcess p = getLocalGroup().getMember(index);
+       return p.getID().equals(pid);
+    }
+
     public Object getLocalServerID(){return getLocalProcessID();}
 
     protected  long rejuvenationWindow;
@@ -3134,8 +2566,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     protected boolean isOrdered(PBFTServerMessage m){
 
         long nextPrePrepareSEQ = getStateLog().getNextPrePrepareSEQ();
-//        long nextPrepareSEQ = getStateLog().getNextPrepareSEQ();
-        //long nextCommitSEQ = getStateLog().getNextCommitSEQ();
 
         if(m != null && m.getSequenceNumber() != null){
 
@@ -3144,14 +2574,6 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             if(m instanceof PBFTPrePrepare){
                 return seqn == nextPrePrepareSEQ;
             }
-
-//            if(m instanceof PBFTPrepare){
-//                return seqn == nextPrepareSEQ;
-//            }
-//
-//            if(m instanceof PBFTCommit){
-//                return seqn <= nextPrepareSEQ; //nextCommitSEQ;
-//            }
         }
 
         return false;
@@ -3164,10 +2586,22 @@ public class PBFTServer extends PBFT implements IPBFTServer{
      * @return -- true if the message belongs to the current view.
      */
     public boolean checkViewNumber(PBFTServerMessage m) {
+        final int EQUALS = 0;
 
-        Object view = m.getViewNumber();
+        return checkViewNumber(m, EQUALS, false);
 
-        return getCurrentViewNumber().equals(view);
+    }
+    public boolean checkViewNumber(PBFTServerMessage m, int cmp) {
+       return checkViewNumber(m, cmp, false);
+   }
+
+    public boolean checkViewNumber(PBFTServerMessage m, int cmp, boolean not) {
+
+        Integer view = m.getViewNumber();
+
+        boolean ok =  view != null && view.compareTo(getCurrentViewNumber()) == cmp;
+        
+        return (not ^ ok);
 
     }
 
@@ -3204,7 +2638,13 @@ public class PBFTServer extends PBFT implements IPBFTServer{
      * @param m -- the message.
      * @return true if was sent by the primary.
      */
-    public boolean wasSentByPrimary(PBFTServerMessage m){ return isPrimary(m.getReplicaID());}
+    public boolean wasSentByPrimary(PBFTServerMessage m){
+         return isPrimary(m.getReplicaID(), getCurrentViewNumber());
+    }
+
+    public boolean wasSentByPrimary(PBFTServerMessage m, int view){
+         return isPrimary(m.getReplicaID(), view);
+    }
 
     public boolean wasSentByAGroupMember(PBFTServerMessage m){
         Object senderID = m.getReplicaID();

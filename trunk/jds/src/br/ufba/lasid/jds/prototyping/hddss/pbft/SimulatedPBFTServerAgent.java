@@ -29,7 +29,7 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
     public void setup() {
 
         super.setup();
-        SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.cpu);
+        SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.clock);
         getProtocol().setCommunicator(new SimulatedPBFTCommunicator(this));
         getProtocol().setLocalProcess(this);
         getProtocol().setClock(this.infra.cpu);
@@ -38,7 +38,8 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
         getProtocol().setLocalGroup(getGroup());
 
         try {
-            getProtocol().setAuthenticator(new SHA1withDSASunMessageAuthenticator());
+            //getProtocol().setAuthenticator(new SHA1withDSASunMessageAuthenticator());
+            getProtocol().setAuthenticator(new SimulatedAuthenticator(this));
             
         } catch (Exception ex) {
             Logger.getLogger(SimulatedPBFTAgent.class.getName()).log(Level.SEVERE, null, ex);
@@ -75,9 +76,9 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
         ((IPBFTServer)getProtocol()).setBatchTimeout(Long.valueOf(timeout));
     }
 
-    public void setViewChangeRetransmittionTimeout(String timeout){
-        ((IPBFTServer)getProtocol()).setChangeViewRetransmissionTimeout(Long.valueOf(timeout));
-    }
+//    public void setViewChangeRetransmittionTimeout(String timeout){
+//        ((IPBFTServer)getProtocol()).setChangeViewRetransmissionTimeout(Long.valueOf(timeout));
+//    }
     
 //    public void setCurrentPrimary(String addr){
 //        ((IPBFTServer)getProtocol()).setCurrentPrimaryID(Integer.valueOf(addr));

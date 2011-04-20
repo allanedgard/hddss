@@ -30,7 +30,7 @@ public class LotResult implements ILotResult{
    public int indexof(IProposal proposal){
       int i = -1;
       for(int j = 0; j < size(); j++){
-         LotResultItem item = items.get(i);
+         LotResultItem item = items.get(j);
          if(item != null && item.proposal.compareTo(proposal) == IProposal.EQUAL){
             i = j;
             break;
