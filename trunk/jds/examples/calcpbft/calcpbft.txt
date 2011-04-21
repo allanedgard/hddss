@@ -78,23 +78,31 @@ agent.MinTimeout = 20
 agent.RequestGenerationProbability = 0.1
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelDeterministicInterval
-channel.Contention = true	
-channel.DeltaMaximo = 5
+channel.Contention = fasle	
+channel.DeltaMaximo = 100
 channel.DeltaMinimo = 1
 
 network = br.ufba.lasid.jds.prototyping.hddss.PayloadAwareNetwork
 
 /* transferRate in  bps  (e.g. 10Mbps is equal to 10000000 bps, if simulation time in miliseconds then use 10Mbps / 1000  = 10Kb/ms*/
-network.TransferRate =  10000000
+network.TransferRate =  1000000
 
 /* MTU = bits (e.g. 64 KB is equal to 524288 bits) */
 network.MTU = 524288
 
 /* SegmentationCost in seconds (e.g. 0.000000001 seconds is equal to 1 nanosecond) if simulation time in millisenconds then use 0.000001 ms*/
-network.SegmentationCost = 0.000000000001
+network.SegmentationCost = 0.000001
 
 /* Use Groups = G(gid1){pid1, pid2, pid3,pid4}; G(gid2){pid2, pid8, pid4,pid1} */
 network.Groups = G(0){0,1,2,3}
+
+/* FIFO = false, the network doesn't guarantee fifo order in message trip from agent to network router and from network router to agent (connectionless service simulation)
+    FIFO = true,  the network guarantee fifo order in message trip from agent to network router and from network router to agent (connection-oriented service simulation) */
+network.FIFO = false
+
+/* determine the distribution of channel delay before and after network router, this is: TripBalance = 0.1 means 10% of end-to-end delays is assign to trip from agent to network router and 90% of end-to-end delay is 
+    assign to trip from network to agent */
+network.TripBalance = 0.5
 
 
 /***********************************************************/

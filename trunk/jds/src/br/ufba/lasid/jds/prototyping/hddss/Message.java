@@ -78,6 +78,20 @@ public class Message  implements Comparable<Message> {
         payload = false;
         multicast = m;
     }
+
+    public Message(Message m) {
+        sender = m.sender;
+        destination = m.destination;
+        type = m.type;
+        hops =m.hops;
+        logicalClock = m.logicalClock;
+        physicalClock = m.physicalClock;
+        content = m.content;
+        relayFrom = m.relayFrom;
+        relayTo = m.relayTo;
+        payload = m.payload;
+        multicast = m.multicast;
+    }
     
     public String getId() {
         return "p"+sender+" para p"+destination+" em "+physicalClock;

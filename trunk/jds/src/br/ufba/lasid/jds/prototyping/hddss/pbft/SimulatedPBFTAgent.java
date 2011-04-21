@@ -88,7 +88,7 @@ public class SimulatedPBFTAgent extends Agent implements IProcess<Integer>, Seri
             ((SimulatedScheduler)getProtocol().getScheduler()).execute();
 
             Message msg;
-            while((msg = getMessage())!= null){
+            while((msg = receive())!= null){
               ((MessageHandler)getProtocol().getArchitecture().getThead("__PBFTServant")).input((IMessage)msg.getContent());
               ((MessageHandler)getProtocol().getArchitecture().getThead("__PBFTServant")).handle();
             }
