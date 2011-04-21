@@ -27,7 +27,7 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
     }
 
     public boolean hasRequest(){
-        return true;//(r.uniform() <= rgp);
+        return (r.uniform() <= rgp);
     }
 
 

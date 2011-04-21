@@ -10,6 +10,10 @@ package br.ufba.lasid.jds.prototyping.hddss;
  * @author aliriosa
  */
 public class Network_Deterministic extends Network{
+    double processingTime;
+    public void setProcessingTime(String delay){
+       processingTime = Double.parseDouble(delay);
+    }
 
     @Override
     double delay(Message m) {

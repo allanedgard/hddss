@@ -97,10 +97,8 @@ public class Agent extends Thread implements IAgent{
         
     }
    
-   public void send(Message msg){
-      long at;
-      
-      //infra.nic_out.add((int)(infra.clock.value()), m);
+   public final void send(Message msg){
+      long at;      
       infra.nic_out.add((int)(at = infra.cpu.value()), msg);
       System.out.println("(p" + ID + ") sent at " + at  + " " + msg.content);
 
@@ -111,12 +109,6 @@ public class Agent extends Thread implements IAgent{
    }
    
     public void startup(){
-/*        int temp[] = {11, 22,33, 44, 55};
-        for (int i = 0; i<temp.length; i++) {
-            System.out.println("avanca");
-            send(new Mensagem());
-            //this.criamensagem(temp[i], this.ID, infra.nprocess, i, "teste",0);
-        }*/
     }
     
     public void execute() {
@@ -148,7 +140,7 @@ public class Agent extends Thread implements IAgent{
 
     }
     long cur = 0;
-    public Message getMessage(){
+    public final Message receive(){
          Message msg = null;
          long now = infra.cpu.value();
          cur = infra.clock.value();
