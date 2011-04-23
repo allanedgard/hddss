@@ -1,8 +1,8 @@
 /***********************************************************/
  * GENERAL SIMULATION OPTIONS
  ***********************************************************/
-FinalTime = 100000
-NumberOfAgents = 16
+FinalTime = 1000
+NumberOfAgents = 10
 MaximumDeviation = 0
 Mode = clock
 Debug = false
