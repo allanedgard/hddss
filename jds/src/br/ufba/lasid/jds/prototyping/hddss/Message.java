@@ -15,7 +15,7 @@ package br.ufba.lasid.jds.prototyping.hddss;
  */
 
 public class Message  implements Comparable<Message> {
-    
+
     int sender;
     int relayFrom;
     int relayTo;
@@ -24,11 +24,16 @@ public class Message  implements Comparable<Message> {
     int logicalClock;
     int physicalClock;
     int receptionTime;
-    int refClock;
     int hops;
     Object content;
     boolean payload;
+    
+    /*FIELDS ADDED BY ALIRIO SÁ*/
     boolean multicast = false;
+    transient static long SERIALNUMBER = -1;
+    long serialnumber = -1;
+
+
 
     public Object getContent() {
         return content;
@@ -43,12 +48,14 @@ public class Message  implements Comparable<Message> {
         sender = r;
         destination = d;
         content =c ;
+        serialnumber = ++SERIALNUMBER;
     }
     public Message(int r, int d, Object c, boolean m){
         sender = r;
         destination = d;
         content =c ;
         multicast = m;
+        serialnumber = ++SERIALNUMBER;
     }
 
     /** Creates a new instance of Mensagem */
@@ -63,6 +70,7 @@ public class Message  implements Comparable<Message> {
         relayFrom = -1;
         relayTo = -1;
         payload = false;
+        serialnumber = ++SERIALNUMBER;
     }
 
     public Message(int r, int d, int t, int rL, int rF, Object c, boolean m) {
@@ -77,20 +85,7 @@ public class Message  implements Comparable<Message> {
         relayTo = -1;
         payload = false;
         multicast = m;
-    }
-
-    public Message(Message m) {
-        sender = m.sender;
-        destination = m.destination;
-        type = m.type;
-        hops =m.hops;
-        logicalClock = m.logicalClock;
-        physicalClock = m.physicalClock;
-        content = m.content;
-        relayFrom = m.relayFrom;
-        relayTo = m.relayTo;
-        payload = m.payload;
-        multicast = m.multicast;
+        serialnumber = ++SERIALNUMBER;
     }
     
     public String getId() {

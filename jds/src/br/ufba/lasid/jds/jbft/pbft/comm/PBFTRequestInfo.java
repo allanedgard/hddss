@@ -312,6 +312,29 @@ public class PBFTRequestInfo {
       return null;
    }
 
+   public StatedPBFTRequestMessage getStatedRequest(PBFTReply reply){
+      if(!(reply != null && reply.getClientID() != null && reply.getTimestamp() != null)){
+         return null;
+      }
+
+      for(StatedPBFTRequestMessage statedRequest : requestLog.values()){
+
+        PBFTRequest loggedRequest = statedRequest.getRequest();
+
+        if(loggedRequest != null && loggedRequest.getClientID() != null && loggedRequest.getTimestamp() != null){
+
+           if(loggedRequest.getClientID().equals(reply.getClientID()) && loggedRequest.getTimestamp().equals(reply.getTimestamp())){
+
+              return statedRequest;
+
+           }
+
+        }
+
+      }
+
+      return null;
+   }
 
    public StatedPBFTRequestMessage getStatedRequest(PBFTRequest receveidRequest){
       if(!(receveidRequest != null && receveidRequest.getClientID() != null && receveidRequest.getTimestamp() != null)){

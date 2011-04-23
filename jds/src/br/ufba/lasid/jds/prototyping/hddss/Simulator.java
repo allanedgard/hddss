@@ -1,5 +1,6 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
+import br.ufba.lasid.jds.prototyping.hddss.report.Reporter;
 import org.apache.commons.math.stat.descriptive.*;
 
 /**
@@ -12,7 +13,7 @@ public class Simulator  extends Thread implements RuntimeSupport
     java.io.PrintStream out;
     //char modo;
     int clock;
-        int m;
+    int m;
     //int n;
     //int tempofinal;
     public Agent p[];
@@ -34,9 +35,12 @@ public class Simulator  extends Thread implements RuntimeSupport
     public static double ro = .001;
     public static int maxro = 5;
     public static Configurations config;
+    boolean formattedReport = true;
     
     RuntimeVariables variables = new RuntimeVariables();
     
+    public static final Reporter reporter = new Reporter();
+
     public final int obtemAtraso(int i, int j)
     {
                 return (int) (network.channels[i][j].delay());
@@ -216,50 +220,13 @@ public class Simulator  extends Thread implements RuntimeSupport
 
     public void estatisticas() {
         System.out.println("simulation finished: ");
-        java.util.Date data = new java.util.Date();
+        java.util.Date data = new java.util.Date();        
         System.out.println(data.toString());
-
-        DescriptiveStatistics deliveryDelay = get(Variable.DlvDelayTrace).<DescriptiveStatistics>value();
-        DescriptiveStatistics receptionDelay = get(Variable.RxDelayTrace).<DescriptiveStatistics>value();
-        DescriptiveStatistics transmitionDelay = get(Variable.TxDelayTrace).<DescriptiveStatistics>value();
-        DescriptiveStatistics queueDelay = get(Variable.QueueDelayTrace).<DescriptiveStatistics>value();
-        
-        for (int i = 0; i< 256; i++){
-            if (network.unicasts[i] != 0) {
-                System.out.println("total of unicast class "+i+" = "+network.unicasts[i]);
-            }
-            if (network.broadcasts[i] != 0) {
-                System.out.println("total of broadcast class "+i+" = "+network.broadcasts[i]);
-            }
-            if (network.multicasts[i] != 0) {
-                System.out.println("total of multicast class "+i+" = "+network.multicasts[i]);
-            }
+        if(formattedReport){
+           reporter.report2FormattedTable(System.out);
+        }else{
+            reporter.report2UnformattedTable(System.out);
         }
-
-//        for (int i = 0; i< 256; i++){
-//            if (cpu.objects[i] != 0) {
-//                System.out.println("total of " + cpu.objectsTAGs[i] + " objects = " + cpu.objects[i]);
-//            }
-//        }
-
-        System.out.println("mean end-to-end delay = " + deliveryDelay.getMean() + ", end-to-end std dev delay = " + deliveryDelay.getStandardDeviation()
-                           +", maximum end-to-end delay = " + deliveryDelay.getMax() + ", minimun end-to-end delay = " + deliveryDelay.getMin()
-                           );
-        System.out.println("mean reception-delivery delay = "+receptionDelay.getMean()+", repection-delivery std dev delay = "+receptionDelay.getStandardDeviation()
-                           +", maximum repcetion-delivery delay = "+receptionDelay.getMax()+", minimum repcetion-delivery delay = "+receptionDelay.getMin()
-                           );  
-        System.out.println("mean send-reception delay = "+transmitionDelay.getMean()+", send-reception std dev delay = "+transmitionDelay.getStandardDeviation()
-                           +", maximum send-reception delay = "+transmitionDelay.getMax()+", minimum send-reception = "+transmitionDelay.getMin()
-                           );
-        System.out.println("mean queue delay = "+queueDelay.getMean()+", queue std dev delay = "+queueDelay.getStandardDeviation()
-                           +", maximum queue delay = "+queueDelay.getMax()+", minimum queue delay = "+queueDelay.getMin()
-                           );
-
-//        System.out.println("mean cpu delay = "+cpuDelay.getMean()+", cpu std dev delay = "+cpuDelay.getStandardDeviation()
-//                           +", maximum cpu delay = "+cpuDelay.getMax()+", minimum cpu delay = "+cpuDelay.getMin()
-//                           );
-
-        System.out.println("total: " + transmitionDelay.getN());
         out.close();
     }
 
@@ -429,6 +396,9 @@ public class Simulator  extends Thread implements RuntimeSupport
         set(Variable.StdOutput, out);
         set(Variable.ClockDeviation, ro);
         set(Variable.MaxClockDeviation, maxro);
+
+        formattedReport =  config.getBoolean("FormattedReport", true);
+        
         //set(Variable.Scheduler, scheduler);
         
     }

@@ -9,6 +9,8 @@ import br.ufba.lasid.jds.cs.IClient;
 import br.ufba.lasid.jds.prototyping.hddss.pbft.comm.SimulatedPBFTCommunicator;
 import br.ufba.lasid.jds.jbft.pbft.client.PBFTClient;
 import br.ufba.lasid.jds.jbft.pbft.architectures.PBFTClientArchitecture;
+import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport.Variable;
+import br.ufba.lasid.jds.util.JDSUtility;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,9 +28,12 @@ public abstract class SimulatedPBFTClientAgent extends SimulatedPBFTAgent implem
     public void setup() {
         super.setup();
 
+        JDSUtility.debug = infra.debug;
+        JDSUtility.out = infra.context.get(Variable.StdOutput).<java.io.PrintStream>value();
+
         SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.clock);
         
-        getProtocol().setCommunicator(new SimulatedPBFTCommunicator(this));
+        getProtocol().setCommunicator(new SimulatedPBFTCommunicator(this, getProtocol()));
         getProtocol().setLocalProcess(this);
         getProtocol().setClock(this.infra.cpu);
         getProtocol().setScheduler(scheduler);

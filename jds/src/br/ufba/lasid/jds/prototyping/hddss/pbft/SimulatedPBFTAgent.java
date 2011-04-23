@@ -13,7 +13,6 @@ import br.ufba.lasid.jds.group.Group;
 import br.ufba.lasid.jds.jbft.pbft.IPBFT;
 import br.ufba.lasid.jds.prototyping.hddss.Agent;
 import br.ufba.lasid.jds.prototyping.hddss.Message;
-import br.ufba.lasid.jds.util.JDSUtility;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
@@ -27,10 +26,6 @@ public class SimulatedPBFTAgent extends Agent implements IProcess<Integer>, Seri
     protected transient IPBFT  protocol;
     protected transient IGroup group = new Group();
     
-    static{
-       JDSUtility.debug = false;
-    }
-
     public IPBFT getProtocol() {
         return protocol;
     }

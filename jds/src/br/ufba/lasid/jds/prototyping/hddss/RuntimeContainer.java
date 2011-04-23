@@ -2,7 +2,6 @@ package br.ufba.lasid.jds.prototyping.hddss;
 
 import br.ufba.lasid.jds.util.IDebugger;
 import java.util.ArrayList;
-import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 
 /**
  * A RuntimeContainer can be a Operating System, a Middleware or a Simulator.
@@ -124,16 +123,16 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
 
             reportEvent(m, 'd');
 
-            if (m.payload) {
-                context.get(Variable.DlvDelayTrace).<DescriptiveStatistics>value().addValue(
-                        (int)clock.value() - m.physicalClock
-                );
-
-                context.get(Variable.RxDelayTrace).<DescriptiveStatistics>value().addValue(
-                        (int)clock.value() - m.receptionTime
-                );
-
-            }
+//            if (m.payload) {
+//                context.get(Variable.DlvDelayTrace).<DescriptiveStatistics>value().addValue(
+//                        (int)clock.value() - m.physicalClock
+//                );
+//
+//                context.get(Variable.RxDelayTrace).<DescriptiveStatistics>value().addValue(
+//                        (int)clock.value() - m.receptionTime
+//                );
+//
+//            }
 
           return true;
        }
@@ -160,9 +159,9 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
        Message m = receive(clock.value());
        if(m != null){
             agent.receive(m);
-             context.get(Variable.TxDelayTrace).<DescriptiveStatistics>value().addValue(
-                     (double)(m.receptionTime - m.physicalClock)
-             );
+//             context.get(Variable.TxDelayTrace).<DescriptiveStatistics>value().addValue(
+//                     (double)(m.receptionTime - m.physicalClock)
+//             );
 
             reportEvent(m, 'r');
 
@@ -309,11 +308,11 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
       return this.context.advance();
    }
 
-   public void exec(Object data){
+   public long exec(Object data){
       
-       long btime = cpu.exec(data);
-       long stime = clock.value();
-       long ftime = stime + btime;
+       return cpu.exec(data);
+//       long stime = clock.value();
+//       long ftime = stime + btime;
 
 //       for(long i = stime; i < ftime; i++){
 //          while(send(i));
