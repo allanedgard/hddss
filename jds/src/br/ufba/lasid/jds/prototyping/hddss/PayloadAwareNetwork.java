@@ -34,9 +34,15 @@ public class PayloadAwareNetwork extends Network{
 
       if(transferrate > 0){
          try{
-            mbits = XObject.objectToByteArray(m.content).length * 8;
+            int mbytes = XObject.objectToByteArray(m.content).length;
+            mbits = mbytes * 8;
             int nsegments = (int)Math.ceil((double)mbits / (double)mtu);
             delay = (double)mbits / (double)transferrate + ((double)nsegments -  1.0) * (double)scost;
+
+            Simulator.reporter.stats("message size", mbytes);
+
+            if(m.type >=0) Simulator.reporter.stats("message size class " + m.type, mbytes);
+
          }catch(Exception e){
 
          }
