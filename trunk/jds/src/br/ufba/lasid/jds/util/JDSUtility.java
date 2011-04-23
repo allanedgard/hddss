@@ -6,6 +6,7 @@
 package br.ufba.lasid.jds.util;
 
 import br.ufba.lasid.jds.management.IProvider;
+import java.io.PrintStream;
 import java.util.Properties;
 
 /**
@@ -37,6 +38,7 @@ public final class JDSUtility{
     public static final String        BaseStateManagerProvider = "BaseStateManagerProvider";
 
     public static final Properties Options = new Properties();
+    public static PrintStream out = System.out;
 
     static{
         
@@ -133,7 +135,7 @@ public final class JDSUtility{
 
     public synchronized static void debug(String txt){
         //if(txt.matches("[s4]") || txt.matches("[p4]") || txt.matches("[ID=4]"))
-        if(isDebug())  System.out.println(txt);
+        if(isDebug())  out.println(txt);
     }
 
 

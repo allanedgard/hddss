@@ -2,10 +2,11 @@
  * GENERAL SIMULATION OPTIONS
  ***********************************************************/
 FinalTime = 100000
-NumberOfAgents = 10
+NumberOfAgents = 16
 MaximumDeviation = 0
 Mode = clock
 Debug = false
+FormattedReport = true
 
 clock = br.ufba.lasid.jds.prototyping.hddss.Clock_Virtual
 clock.Mode = s

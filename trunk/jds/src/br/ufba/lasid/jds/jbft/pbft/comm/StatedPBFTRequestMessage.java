@@ -30,12 +30,31 @@ public class StatedPBFTRequestMessage extends PBFTMessage{
     private  PBFTRequest request = null;
     private  PBFTReply   reply = null;
     private  Long sequenceNumber = null;
-    
+    private  Long requestReceiveTime = null;
+    private  Long replySendTime = null;
+
     public StatedPBFTRequestMessage(PBFTRequest request, RequestState rstate, String digest) {
         this.request = request;
         this.rstate = rstate;
         this.digest = digest;
     }
+
+   public Long getReplySendTime() {
+      return replySendTime;
+   }
+
+   public void setReplySendTime(Long replySendTime) {
+      this.replySendTime = replySendTime;
+   }
+
+   public Long getRequestReceiveTime() {
+      return requestReceiveTime;
+   }
+
+   public void setRequestReceiveTime(Long requestReceiveTime) {
+      this.requestReceiveTime = requestReceiveTime;
+   }
+
 
     public Long getSequenceNumber() {
         return sequenceNumber;

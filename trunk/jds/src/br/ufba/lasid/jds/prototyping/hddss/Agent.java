@@ -1,8 +1,6 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 //
 
-import br.ufba.lasid.jds.util.IScheduler;
-
 public class Agent extends Thread implements IAgent{
     public int ID;
     public char tipo;
@@ -13,7 +11,6 @@ public class Agent extends Thread implements IAgent{
     public static transient final String TAG = "agent";
     public transient RuntimeContainer infra;
     public transient final Object lock = this;
-    private long lastExecution = 0;
 
     public int getAgentID() {
         return ID;
@@ -37,14 +34,6 @@ public class Agent extends Thread implements IAgent{
 
     public void setDone(boolean done) {
         this.done = done;
-    }
-
-    public long getExectime() {
-        return exectime;
-    }
-
-    public void setExectime(long exectime) {
-        this.exectime = exectime;
     }
 
     public RuntimeContainer getInfra() {
@@ -85,27 +74,21 @@ public class Agent extends Thread implements IAgent{
    public final boolean status() {
         if (infra.faultModel == null) {
             return true;
-        } else
-        return infra.faultModel.status();
+        } else{
+            return infra.faultModel.status();
+        }
     }
 
     
     @Override
     public final void run() {
-
-        infra.start();
-        
+       infra.start();
     }
    
    public final void send(Message msg){
-      long at;      
+      long at;
       infra.nic_out.add((int)(at = infra.cpu.value()), msg);
-      System.out.println("(p" + ID + ") sent at " + at  + " " + msg.content);
-
-   }
-
-   public long getProcessingTime(Object m){
-      return 0;
+      infra.debug("(p" + ID + ") sent at " + at  + " " + msg.content);
    }
    
     public void startup(){
@@ -119,25 +102,22 @@ public class Agent extends Thread implements IAgent{
     }
     
     public void receive(Message msg) {
-        /* 
-         *   Este evento pode ser sobrecarregado pela ação específica 
-         *   do protocolo
-         */
-       long at = 0;
-//        synchronized(lock){
-            infra.app_in.add((int)(at = this.infra.cpu.value()), msg);
-            System.out.println("(p" + ID + ") received at " + at + " " + msg.content);
-
-            //infra.app_in.add((int)this.infra.cpu.value(), msg);
-  //      }
+      /* Este evento pode ser sobrecarregado pela ação específica do protocolo (NO ANYMORE)*/
+      long at = 0;
+      infra.app_in.add((int)(at = this.infra.cpu.value()), msg);
+      infra.debug("(p" + ID + ") received at " + at + " " + msg.content);
+      Simulator.reporter.stats("send-reception delay", at - msg.physicalClock);
+      Simulator.reporter.stats("send-reception delay agent" + msg.sender + "/agent" + ID , at - msg.physicalClock);
+      
     }
     
     
     public void deliver(Message msg) {
          long at = 0;
          infra.exc_in.add((int)(at = this.infra.cpu.value()), msg);
-         System.out.println("(p" + ID + ") delivered at " + at + " " + msg.content);
-
+         infra.debug("(p" + ID + ") delivered at " + at + " " + msg.content);
+         Simulator.reporter.stats("send-delivery delay", at - msg.physicalClock);
+         Simulator.reporter.stats("send-delivery delay agent" + msg.sender + "/agent" + ID, at - msg.physicalClock);
     }
     long cur = 0;
     public final Message receive(){
@@ -155,22 +135,10 @@ public class Agent extends Thread implements IAgent{
             cur +=1;
          }
          if(msg != null){
-            System.out.println("(p" + ID + ") retrieve to execute at " + t + " " + msg.content);
+            infra.debug("(p" + ID + ") retrieve to execute at " + t + " " + msg.content);
          }
          return msg;
          
-    }
-
-    public long getExecutionTime() {
-        return this.exectime;
-    }
-
-    public void setExecutionTime(long exectime) {
-        this.exectime = exectime;
-    }
-
-    public IScheduler getScheduler(){
-        return null;//(IScheduler)infra.scheduler;
     }
 
     public void shutdown(){
@@ -185,9 +153,8 @@ public class Agent extends Thread implements IAgent{
 
 
     public final void exec(Object data){
-
-       this.infra.exec(lock);
-       
+      long cpuQueue = this.infra.exec(data);
+      Simulator.reporter.stats("cpu queue delay of agent" + ID , cpuQueue);       
     }
 
 }

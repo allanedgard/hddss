@@ -230,6 +230,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
          if(loggedRequest == null){
             /* I received a new request so a must log it */
             loggedRequest = getRequestInfo().add(getRequestDigest(r), r, RequestState.WAITING);
+            loggedRequest.setRequestReceiveTime(getClockValue());
          }
 
          /* if I have a entry in request log but I don't have the request then I must update my request log. */
@@ -1761,15 +1762,14 @@ public class PBFTServer extends PBFT implements IPBFTServer{
              PBFTPrePrepare preprepare = getPrePrepareInfo().get(viewn, currSEQ);
 
              for(String digest : preprepare.getDigests()){
-
-                 PBFTRequest request = rinfo.getRequest(digest); //statedReq.getRequest();
+                 StatedPBFTRequestMessage loggedRequest = rinfo.getStatedRequest(digest);
+                 PBFTRequest request = loggedRequest.getRequest();//rinfo.getRequest(digest); //statedReq.getRequest();
 
                  IPayload result = lServer.executeCommand(request.getPayload());
 
                  PBFTReply reply = createReplyMessage(request, result);
-
-                 rinfo.assign(digest, RequestState.SERVED);
-                 rinfo.assign(digest, reply);
+                 loggedRequest.setState(RequestState.SERVED);
+                 loggedRequest.setReply(reply);
 
                  JDSUtility.debug(
                      "[tryExecuteRequests()] s"  + lpid + ", at time " + getClockValue() + ", executed " + request + " (CURR-VIEWN{ " + viewn + "}; SEQN{" + currSEQ + "})."
@@ -1777,6 +1777,8 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
                  JDSUtility.debug("[tryExecuteRequests()] s"  + lpid + ", at time " + getClockValue() + ", has the following state " + lServer.getCurrentState());
 
+                 loggedRequest.setReplySendTime(getClockValue());
+                 
                  if(rinfo.isNewest(request)){
                     IProcess client = new BaseProcess(reply.getClientID());
                     emit(reply, client);
@@ -2165,9 +2167,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
 
          emitChangeViewACK();
 
-      }else{
-         System.out.println(getLocalServerID() + "  ==>  " + cv);
-      }//end if is valid change
+      }
    }//end tryExecuteRequests(changeview)
         
     

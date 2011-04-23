@@ -10,6 +10,8 @@ import br.ufba.lasid.jds.comm.IMessage;
 import br.ufba.lasid.jds.comm.PDU;
 import br.ufba.lasid.jds.comm.SignedMessage;
 import br.ufba.lasid.jds.group.IGroup;
+import br.ufba.lasid.jds.jbft.pbft.IPBFT;
+import br.ufba.lasid.jds.jbft.pbft.PBFT;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTBag;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeView;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTChangeViewACK;
@@ -26,9 +28,12 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTReply;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTRequest;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusPending;
+import br.ufba.lasid.jds.jbft.pbft.comm.StatedPBFTRequestMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.communicators.PBFTCommunicator;
 import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
+import br.ufba.lasid.jds.jbft.pbft.server.PBFTServer;
 import br.ufba.lasid.jds.prototyping.hddss.Agent;
+import br.ufba.lasid.jds.prototyping.hddss.Simulator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,7 +44,7 @@ import java.util.logging.Logger;
 public class SimulatedPBFTCommunicator extends PBFTCommunicator{
     
     protected Agent agent;
-
+    protected IPBFT pbft;
     public Agent getAgent() {
         return agent;
     }
@@ -47,9 +52,19 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
     public void setAgent(Agent agent) {
         this.agent = agent;
     }
-    
-    public SimulatedPBFTCommunicator(Agent agent) {
+
+   public IPBFT getPbft() {
+      return pbft;
+   }
+
+   public void setPbft(IPBFT pbft) {
+      this.pbft = pbft;
+   }
+
+
+    public SimulatedPBFTCommunicator(Agent agent, IPBFT pbft) {
          setAgent(agent);
+         setPbft(pbft);
     }
 
     @Override
@@ -78,6 +93,7 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
         }
     }
 
+    int replies = 0;
     public void unicast(IMessage m, IProcess p) {
         synchronized(agent.lock){
             int dest = (Integer) p.getID();
@@ -88,7 +104,20 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
             int now   = (int) agent.infra.cpu.value();
             int type  = getMSGTYPE(m);
 
-            setSendTime(m);
+            if(type == IPBFTServer.REPLY){
+               if(pbft instanceof PBFTServer){
+                  PBFTServer proto = (PBFTServer)pbft;
+                  StatedPBFTRequestMessage loggedRequest = proto.getRequestInfo().getStatedRequest((PBFTReply)getMSG(m));
+                  long t0 = loggedRequest.getRequestReceiveTime();
+                  long t1 = loggedRequest.getReplySendTime();
+                  replies ++;
+                  Simulator.reporter.stats("response time of replicated state machine", t1 - t0);
+                  Simulator.reporter.stats("response time of server" + agent.ID , t1 - t0);
+                  if(t1 > 0){
+                     Simulator.reporter.assign("general mean throughput server" + agent.ID , ((double)replies)/((double)t1));
+                  }
+               }
+            }
             
             agent.send(
              new br.ufba.lasid.jds.prototyping.hddss.Message(
@@ -106,16 +135,15 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
             agent.lock.notify();
         }
     }
-    public void setSendTime(IMessage m){
+
+    public PBFTMessage getMSG(IMessage m){
         if(m instanceof PDU){
-            setSendTime((IMessage)((PDU)m).getPayload());
-            return;
+            return getMSG((IMessage)((PDU)m).getPayload());
         }
 
         if(m instanceof SignedMessage){
             try {
-                setSendTime((IMessage) ((SignedMessage)m).getSignedObject().getObject());
-                return;
+                return getMSG((IMessage) ((SignedMessage)m).getSignedObject().getObject());
             } catch (Exception ex) {
                 Logger.getLogger(SimulatedPBFTCommunicator.class.getName()).log(Level.SEVERE, null, ex);
                 ex.printStackTrace();
@@ -123,41 +151,33 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
         }
 
         if(m instanceof PBFTMessage){
-           ((PBFTMessage)m).setSendTime(agent.infra.clock.value());
-           //((PBFTMessage)m).setSendTime(agent.infra.cpu.value());
+           return (PBFTMessage)m;
         }
 
+        return null;
        
     }
+
     public int getMSGTYPE(IMessage m){
-        if(m instanceof PDU){
-            return getMSGTYPE((IMessage)((PDU)m).getPayload());
-        }
 
-        if(m instanceof SignedMessage){
-            try {
-                return getMSGTYPE((IMessage) ((SignedMessage)m).getSignedObject().getObject());
-            } catch (Exception ex) {
-                Logger.getLogger(SimulatedPBFTCommunicator.class.getName()).log(Level.SEVERE, null, ex);
-                ex.printStackTrace();
-            } 
-        }
+        PBFTMessage pm = getMSG(m);
+        if(pm == null) return -1;
 
-        if(m instanceof PBFTRequest)        return IPBFTServer.REQUEST;
-        if(m instanceof PBFTPrePrepare)     return IPBFTServer.PREPREPARE;
-        if(m instanceof PBFTPrepare)        return IPBFTServer.PREPARE;
-        if(m instanceof PBFTCommit)         return IPBFTServer.COMMIT;
-        if(m instanceof PBFTCheckpoint)     return IPBFTServer.CHECKPOINT;
-        if(m instanceof PBFTFetch)          return IPBFTServer.FETCH;
-        if(m instanceof PBFTMetaData)       return IPBFTServer.METADATA;
-        if(m instanceof PBFTData)           return IPBFTServer.DATA;
-        if(m instanceof PBFTBag)            return IPBFTServer.BAG;
-        if(m instanceof PBFTStatusActive)   return IPBFTServer.STATUSACTIVE;
-        if(m instanceof PBFTReply)          return IPBFTServer.REPLY;
-        if(m instanceof PBFTChangeView)     return IPBFTServer.CHANGEVIEW;
-        if(m instanceof PBFTChangeViewACK)  return IPBFTServer.CHANGEVIEWACK;
-        if(m instanceof PBFTNewView)        return IPBFTServer.NEWVIEW;
-        if(m instanceof PBFTStatusPending)  return IPBFTServer.STATUSPENDING;
+        if(pm instanceof PBFTRequest)        return IPBFTServer.REQUEST;
+        if(pm instanceof PBFTPrePrepare)     return IPBFTServer.PREPREPARE;
+        if(pm instanceof PBFTPrepare)        return IPBFTServer.PREPARE;
+        if(pm instanceof PBFTCommit)         return IPBFTServer.COMMIT;
+        if(pm instanceof PBFTCheckpoint)     return IPBFTServer.CHECKPOINT;
+        if(pm instanceof PBFTFetch)          return IPBFTServer.FETCH;
+        if(pm instanceof PBFTMetaData)       return IPBFTServer.METADATA;
+        if(pm instanceof PBFTData)           return IPBFTServer.DATA;
+        if(pm instanceof PBFTBag)            return IPBFTServer.BAG;
+        if(pm instanceof PBFTStatusActive)   return IPBFTServer.STATUSACTIVE;
+        if(pm instanceof PBFTReply)          return IPBFTServer.REPLY;
+        if(pm instanceof PBFTChangeView)     return IPBFTServer.CHANGEVIEW;
+        if(pm instanceof PBFTChangeViewACK)  return IPBFTServer.CHANGEVIEWACK;
+        if(pm instanceof PBFTNewView)        return IPBFTServer.NEWVIEW;
+        if(pm instanceof PBFTStatusPending)  return IPBFTServer.STATUSPENDING;
 
 
         return -1;

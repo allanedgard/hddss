@@ -74,9 +74,9 @@ public class PBFTServerMessageDispatcher extends PBFTServerMessageHandler {
         IMessageHandler handler = null;
 
         IMessage m = getMessage();
-        if(m instanceof PBFTMessage){
-           ((PBFTMessage)m).setRecvTime(getProtocol().getClockValue());
-        }
+//        if(m instanceof PBFTMessage){
+//           ((PBFTMessage)m).setRecvTime(getProtocol().getClockValue());
+//        }
         if(m instanceof PBFTRequest){
             handler = new PBFTRequestHandler(getProtocol());
 
@@ -133,7 +133,6 @@ public class PBFTServerMessageDispatcher extends PBFTServerMessageHandler {
         if(handler != null){
             handler.input(m);
             handler.handle();
-            //handler.start();
         }
         
     }

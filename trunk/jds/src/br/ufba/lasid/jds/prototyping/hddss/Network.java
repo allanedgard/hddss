@@ -4,7 +4,6 @@ package br.ufba.lasid.jds.prototyping.hddss;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
-import org.apache.commons.math.stat.descriptive.DescriptiveStatistics;
 
 /*
  * To change this template, choose Tools | Templates
@@ -133,7 +132,8 @@ public abstract class Network extends Thread{
          tqueue = (tqueue < 0? 0: tqueue);
          //        long at = delay();
          tqueue += delay(msg);
-         conteiner.get(RuntimeSupport.Variable.QueueDelayTrace).<DescriptiveStatistics>value().addValue(tqueue);
+         //conteiner.get(RuntimeSupport.Variable.QueueDelayTrace).<DescriptiveStatistics>value().addValue(tqueue);
+         Simulator.reporter.stats("network queue delay", tqueue);
        
     }
 
@@ -224,6 +224,10 @@ public abstract class Network extends Thread{
     }
     public void loopback(Message msg){
         synchronized(this){
+            Simulator.reporter.count("network loopbacks");
+
+            if(msg.type >=0) Simulator.reporter.count("network loopbacks class " + msg.type);
+
             int address = msg.sender;
             Agent p = conteiner.p[address];
             p.getInfra().nic_in.add((int)(p.getInfra().cpu.value())+1, msg);
@@ -251,6 +255,11 @@ public abstract class Network extends Thread{
 
     public void relay(Message msg){
         synchronized(this){
+
+            Simulator.reporter.count("network relays");
+
+            if(msg.type >=0) Simulator.reporter.count("network relays class " + msg.type);
+
             int p_i = msg.relayFrom;
             int p_j = msg.relayTo;
 
@@ -260,7 +269,12 @@ public abstract class Network extends Thread{
     
     public void unicast(Message msg){
         synchronized(this){
-            unicasts[msg.type]++;
+
+            Simulator.reporter.count("network unicasts");
+
+            if(msg.type >=0) Simulator.reporter.count("network unicasts class " + msg.type);
+
+            //unicasts[msg.type]++;
             if (isLoopback(msg)) {
                 loopback(msg);
                 return;
@@ -274,7 +288,11 @@ public abstract class Network extends Thread{
       synchronized(this){
          NetworkGroup g = gtable.get(msg.destination);
          if(g != null){
-            multicasts[msg.type]++;
+            
+            Simulator.reporter.count("network multicasts");
+
+            if(msg.type >=0) Simulator.reporter.count("network multicasts class " + msg.type);
+
             int p_i = msg.sender;
             
             for(int p_j : g){
@@ -297,7 +315,9 @@ public abstract class Network extends Thread{
         synchronized(this){
             int n = conteiner.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value();
 
-            broadcasts[msg.type]++;
+            Simulator.reporter.count("network broadcasts");
+            
+            if(msg.type >=0) Simulator.reporter.count("network broadcasts class " + msg.type);
 
             int p_i = msg.sender;
 
@@ -342,11 +362,11 @@ public abstract class Network extends Thread{
       
       StringTokenizer tokens = new StringTokenizer(gdefs);
       
-      NetworkGroup group = new NetworkGroup();
+      //NetworkGroup group = new NetworkGroup();
       while(tokens.hasMoreTokens()){
          String gtoken = tokens.nextToken(";");
          gtoken = gtoken.trim();
-         System.out.println(gtoken);
+         //debug(gtoken);
          setGroup(gtoken);
       }
     }
@@ -391,7 +411,7 @@ public abstract class Network extends Thread{
             }
          }
 
-         System.out.println(g);
+         //System.out.println(g);
       }    
     }
 

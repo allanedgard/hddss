@@ -20,21 +20,21 @@ public abstract class PBFTMessage implements IMessage, IProcessable{
     transient protected long sendTime;
     transient protected long recvTime;
 
-   public long getRecvTime() {
-      return recvTime;
-   }
-
-   public void setRecvTime(long recvTime) {
-      this.recvTime = recvTime;
-   }
-
-   public long getSendTime() {
-      return sendTime;
-   }
-
-   public void setSendTime(long sendTime) {
-      this.sendTime = sendTime;
-   }
+//   public long getRecvTime() {
+//      return recvTime;
+//   }
+//
+//   public void setRecvTime(long recvTime) {
+//      this.recvTime = recvTime;
+//   }
+//
+//   public long getSendTime() {
+//      return sendTime;
+//   }
+//
+//   public void setSendTime(long sendTime) {
+//      this.sendTime = sendTime;
+//   }
 
     
     
