@@ -1,3 +1,3 @@
 WorkDir = ./examples/calcpbft/
 
-cenarios = calcpbft.txt
+cenarios = replica1.txt, replica2.txt, replica3.txt, replica4.txt, replica5.txt, replica6.txt, replica7.txt, replica8.txt, replica9.txt, replica10.txt, replica11.txt, replica12.txt, replica13.txt, replica14.txt, replica15.txt, replica16.txt
