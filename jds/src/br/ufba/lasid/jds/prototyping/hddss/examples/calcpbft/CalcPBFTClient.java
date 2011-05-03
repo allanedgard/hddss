@@ -17,10 +17,13 @@ import br.ufba.lasid.jds.util.JDSUtility;
  */
 public class CalcPBFTClient extends SimulatedPBFTClientAgent{
     private transient double rgp = 0.0;
+    private transient Randomize r1 = new Randomize();
     private transient Randomize r = new Randomize();
     private transient int send = 0;
     private transient int recv = 0;
 
+    double minPayload;
+    double maxPayload;
 
     public void setRequestGenerationProbability(String prob){
         rgp = Double.parseDouble(prob);
@@ -30,6 +33,14 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
         return (r.uniform() <= rgp);
     }
 
+    public String geraDump() {
+        int size = (int) (r1.uniform(minPayload, maxPayload));
+        String dump = "";
+        for (int i=0; i<size; i++) {
+            dump = dump + " ";
+        }
+        return dump;
+    }
 
     public CalcPBFTClient() {
 
@@ -65,7 +76,7 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
             content.put(Calculator.OPCODE, opcode);
             content.put(Calculator.OP1, op1);
             content.put(Calculator.OP2, op2);
-
+            content.put("dump", geraDump());
             return content;
         
     }
@@ -93,6 +104,15 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
 
       ((PBFTClient)getProtocol()).syncCall(operation);
     }
+
+    public void setMaxPayload(String size) {
+        maxPayload = Double.valueOf(size);
+    }
+
+    public void setMinPayload(String size) {
+        minPayload = Double.valueOf(size);
+    }
+
 
 
     @Override

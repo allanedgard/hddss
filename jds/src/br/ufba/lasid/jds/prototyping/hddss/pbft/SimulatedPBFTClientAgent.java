@@ -24,9 +24,13 @@ public abstract class SimulatedPBFTClientAgent extends SimulatedPBFTAgent implem
         setProtocol(new PBFTClient());
     }
 
+
+
     @Override
     public void setup() {
         super.setup();
+
+
 
         JDSUtility.debug = infra.debug;
         JDSUtility.out = infra.context.get(Variable.StdOutput).<java.io.PrintStream>value();
@@ -68,6 +72,9 @@ public abstract class SimulatedPBFTClientAgent extends SimulatedPBFTAgent implem
     public void setMinTimeout(String timeout) {
         ((PBFTClient)getProtocol()).setMinTimeout(Double.valueOf(timeout));
     }
+
+
+
 
     @Override
     public void startup() {
