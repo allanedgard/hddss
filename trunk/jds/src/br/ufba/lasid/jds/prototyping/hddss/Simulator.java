@@ -349,13 +349,14 @@ public class Simulator  extends Thread implements RuntimeSupport
         
         Configurations configGeral = getConfig(args);
         String WorkDir = configGeral.getString("WorkDir", ".");
-        System.out.println("configurando");
+        System.out.println("Configuring: ");
         System.out.println(WorkDir);
         String[] classNames =
         configGeral.getStringArray("cenarios");
         if (classNames == null) {
             classNames = new String[0];
         }
+        System.out.println("n = "+classNames.length);
         for (int i = 0; i < classNames.length; i++) {
             java.util.Date data = new java.util.Date();
             System.out.println(data.toString());
