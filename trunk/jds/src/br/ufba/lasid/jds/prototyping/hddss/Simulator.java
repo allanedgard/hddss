@@ -215,7 +215,7 @@ public class Simulator  extends Thread implements RuntimeSupport
 
         estatisticas();
         
-        System.exit(0);
+        // System.exit(0);
     }
 
     public void estatisticas() {
@@ -364,6 +364,7 @@ public class Simulator  extends Thread implements RuntimeSupport
             config = getConfig(new String[] {WorkDir+classNames[i]});
             Simulator simulador = new Simulator(WorkDir+classNames[i]);
             simulador.run();
+
         }
 
         /*
