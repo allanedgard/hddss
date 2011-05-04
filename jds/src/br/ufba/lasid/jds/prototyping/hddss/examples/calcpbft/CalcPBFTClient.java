@@ -17,6 +17,7 @@ import br.ufba.lasid.jds.util.JDSUtility;
  */
 public class CalcPBFTClient extends SimulatedPBFTClientAgent{
     private transient double rgp = 0.0;
+    private transient Randomize r2 = new Randomize();
     private transient Randomize r1 = new Randomize();
     private transient Randomize r = new Randomize();
     private transient int send = 0;
@@ -77,6 +78,7 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
             content.put(Calculator.OP1, op1);
             content.put(Calculator.OP2, op2);
             content.put("dump", geraDump());
+            content.put("response_size", (int) r2.uniform(minPayload, maxPayload));
             return content;
         
     }

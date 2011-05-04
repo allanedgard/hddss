@@ -22,6 +22,14 @@ public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecover
     transient protected int ncalcs = 0;
     transient protected CalculatorState _state = new CalculatorState();
 
+    public String geraDump(int size) {
+        String dump = "";
+        for (int i=0; i<size; i++) {
+            dump = dump + " ";
+        }
+        return dump;
+    }
+
     @Override
     public IPayload executeCommand(IPayload arg) {
         CalculatorPayload args = (CalculatorPayload)arg;
@@ -41,12 +49,17 @@ public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecover
         double op1 = ((Double)args.get(Calculator.OP1)).doubleValue();
         double op2 = ((Double)args.get(Calculator.OP2)).doubleValue();        
         Double r = round(calculator.solve(opcode, op1, op2));
+
+        int resp_size = ((Integer)args.get("response_size")).intValue();
+
         
         if(r != null){
             result.put(Calculator.RESULT, r);
         }else{
             result.put(Calculator.RESULT,"[ERROR]INVALID OPERATION");
         }
+
+        result.put("dump", geraDump(resp_size));
 
         Long count = _state.get(opcode);
         if(count == null){

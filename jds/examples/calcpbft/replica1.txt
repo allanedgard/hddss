@@ -6,7 +6,7 @@ NumberOfAgents = 14
 MaximumDeviation = 0
 Mode = clock
 Debug = false
-FormattedReport = false
+FormattedReport = true
 
 clock = br.ufba.lasid.jds.prototyping.hddss.Clock_Virtual
 clock.Mode = s
@@ -77,6 +77,8 @@ agent.GroupSize = 4
 agent.MaxTimeout = 5000
 agent.MinTimeout = 20
 agent.RequestGenerationProbability = 0.1
+agent.MaxPayload = 200
+agent.MinPayload = 10
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal
 channel.Contention = false	
