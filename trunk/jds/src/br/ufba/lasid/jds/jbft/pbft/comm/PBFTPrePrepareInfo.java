@@ -208,7 +208,7 @@ public class PBFTPrePrepareInfo{
             for(long lookup = fSeqn; lookup <= lSeqn; lookup ++){
                PrePrepareEntry entry = table.get(lookup);
                
-               if(!entry.isEmpty() && entry.containsKey(pid)){
+               if(entry != null && !entry.isEmpty() && entry.containsKey(pid)){
                   PBFTPrePrepare pp = entry.get(pid);
                   for(String loggedDigest : pp.getDigests()){
                      if(loggedDigest.equals(digest)){
