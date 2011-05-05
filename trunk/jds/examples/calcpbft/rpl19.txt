@@ -1,0 +1,140 @@
+/***********************************************************/
+ * GENERAL SIMULATION OPTIONS
+ ***********************************************************/
+FinalTime = 1200000
+NumberOfAgents = 5
+MaximumDeviation = 0
+Mode = clock
+Debug = false
+FormattedReport = false
+
+clock = br.ufba.lasid.jds.prototyping.hddss.Clock_Virtual
+clock.Mode = s
+
+cpu = br.ufba.lasid.jds.prototyping.hddss.LoadAwareCPU
+
+/* transferRate in  bps  (e.g. 9Gbps is equal to 9000000000 bps, if simulation time in miliseconds then use 9Gbps / 1000  = 9Mb/ms */
+/*  ProcessingRate = 9446400 ~ i7 3.3GHz | 64 bits/instruction | PW = 147,6 MIPS */
+cpu.ProcessingRate = 9446400 
+/* LoadCost in seconds (e.g. 0.000000000001 seconds is equal to 1 picosecond) if simulation time in millisenconds then use 0.000000001 ms*/
+cpu.LoadCost = 0.000000001
+
+/***********************************************************/
+ * SPECIFIC DISTRIBUTED SYSTEM SIMULATION OPTIONS
+ ***********************************************************/
+agent[0] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
+agent[0].ServerGroupAddress = 0
+agent[0].GroupList = 0,1,2,3
+agent[0].CurrentView = 0
+agent[0].PrimaryFaultTimeout = 250
+agent[0].BatchingSize = 50
+agent[0].BatchingTimeout = 10
+agent[0].CheckpointPeriod = 128
+agent[0].CheckpointFactor = 3
+agent[0].SendStatusPeriod = 200
+agent[0].SlidingWindowSize = 8
+
+agent[1] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
+agent[1].ServerGroupAddress = 0
+agent[1].GroupList = 0,1,2,3
+agent[1].CurrentView = 0
+agent[1].PrimaryFaultTimeout = 250
+agent[1].BatchingSize = 50
+agent[1].BatchingTimeout = 10
+agent[1].CheckpointPeriod = 128
+agent[1].CheckpointFactor = 3
+agent[1].SendStatusPeriod = 200
+agent[1].SlidingWindowSize = 8
+
+agent[2] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
+agent[2].ServerGroupAddress = 0
+agent[2].GroupList = 0,1,2,3
+agent[2].CurrentView = 0
+agent[2].PrimaryFaultTimeout = 250
+agent[2].BatchingSize = 50
+agent[2].BatchingTimeout = 10
+agent[2].CheckpointPeriod = 128
+agent[2].CheckpointFactor = 3
+agent[2].SendStatusPeriod = 200
+agent[2].SlidingWindowSize = 8
+
+
+agent[3] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTServer
+agent[3].ServerGroupAddress = 0
+agent[3].GroupList = 0,1,2,3
+agent[3].CurrentView = 0
+agent[3].PrimaryFaultTimeout = 250
+agent[3].BatchingSize = 50
+agent[3].BatchingTimeout = 10
+agent[3].CheckpointPeriod = 128
+agent[3].CheckpointFactor = 3
+agent[3].SendStatusPeriod = 200
+agent[3].SlidingWindowSize = 8
+
+agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
+agent.ServerGroupAddress = 0
+agent.GroupSize = 4
+agent.MaxTimeout = 5000
+agent.MinTimeout = 20
+agent.RequestGenerationProbability = 0.1
+agent.MaxPayload = 256
+agent.MinPayload = 256
+agent.MaxPayloadResponse = 8192
+agent.MinPayloadResponse = 8192
+
+channel = br.ufba.lasid.jds.prototyping.hddss.ChannelDeterministicInterval
+channel.Contention = false	
+channel.DeltaMaximo = 5
+channel.DeltaMinimo = 1
+
+network = br.ufba.lasid.jds.prototyping.hddss.PayloadAwareNetwork
+
+/* transferRate in  bps  (e.g. 10Mbps is equal to 10000000 bps, if simulation time in miliseconds then use 10Mbps / 1000  = 10Kb/ms*/
+network.TransferRate =  10000000
+
+/* MTU = bits (e.g. 64 KB is equal to 524288 bits) */
+network.MTU = 524288
+
+/* SegmentationCost in seconds (e.g. 0.000000001 seconds is equal to 1 nanosecond) if simulation time in millisenconds then use 0.000001 ms*/
+network.SegmentationCost = 0.000001
+
+/* Use Groups = G(gid1){pid1, pid2, pid3,pid4}; G(gid2){pid2, pid8, pid4,pid1} */
+network.Groups = G(0){0,1,2,3}
+
+/* FIFO = false, the network doesn't guarantee fifo order in message trip from agent to network router and from network router to agent (connectionless service simulation)
+    FIFO = true,  the network guarantee fifo order in message trip from agent to network router and from network router to agent (connection-oriented service simulation) */
+network.FIFO = true
+
+/* determine the distribution of channel delay before and after network router, this is: TripBalance = 0.1 means 10% of end-to-end delays is assign to trip from agent to network router and 90% of end-to-end delay is 
+    assign to trip from network to agent */
+network.TripBalance = 0.5
+
+/***********************************************************/
+ * JDS FRAMEWORK OPTIONS
+ ***********************************************************/
+
+JDS.MaximumPageSize = "MaximumPageSize";
+JDS.PageOffset	= "PageOffset";
+JDS.PageIndex	= "PageIndex";
+JDS.PageBytes	= "PageBytes";
+JDS.PageProvider	= "PageProvider";
+JDS.VolatileMemoryProvider = "VolatileMemoryProvider";
+JDS.PersistentMemoryProvider = "PersistentMemoryProvider";
+JDS.Filename = "Filename";
+JDS.FileAccessMode = "FileAccessMode";
+JDS.MaximumCacheSize = "MaximumCacheSize";
+JDS.CacheProvider = "CacheProvider";
+JDS.CachePolicyProvider = "CachePolicyProvider";
+JDS.VolatileMemoryFactory = "VolatileMemoryFactoryName";
+JDS.PersistentMemoryFactory = "PersistentMemoryFactoryName";
+JDS.CacheFactory = "CacheFactoryName";
+JDS.PageFactory = "PageFactoryName";
+JDS.VolatileStateProvider = "VolatileStateProvider";
+JDS.VolatileStateFactory = "VolatileStateFactory";
+JDS.PersistentStateProvider = "PersistentStateProvider";
+JDS.PersistentStateFactory = "PersistentStateFactory";
+JDS.PersistentStorageID = "PersistentStorageID";
+JDS.StampSize = "StampSize";
+JDS.BTreeStructureOrder = "BTreeStructureOrder";
+JDS.BTreeStructureMaximumDepth = "BTreeStructureMaximumDepth";
+
