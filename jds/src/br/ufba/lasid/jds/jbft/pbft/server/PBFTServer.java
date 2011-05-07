@@ -82,10 +82,24 @@ public class PBFTServer extends PBFT implements IPBFTServer{
     /* state recovery manager */
     IRecovarableStateManager rStateManager;
 
+    protected String defaultFileName = null;
+
+    public void setDefaultFileName(String defaultFileName){
+       this.defaultFileName = defaultFileName;
+    }
+
+    public String getDefaultFileName(){
+       if(defaultFileName == null){
+          return "replica" + getLocalServerID();
+       }
+
+       return defaultFileName;
+    }
+    
     public void loadState(){
        try {
            
-            String defaultFName = "replica" + getLocalServerID();
+            String defaultFName = getDefaultFileName();
            /*instatiates a empty property collection*/
             Properties initOptions = new Properties();
 
@@ -119,6 +133,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
         }
 
     }
+    
     @Override
     public void startup() {
 

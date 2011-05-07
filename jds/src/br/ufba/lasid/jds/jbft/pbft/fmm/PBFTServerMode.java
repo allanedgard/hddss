@@ -220,6 +220,16 @@ public abstract class PBFTServerMode extends Mode implements IPBFTServer{
         return getMachine().getProtocol().getServer();
     }
 
+   public String getDefaultFileName() {
+      return getMachine().getProtocol().getDefaultFileName();
+   }
+
+   public void setDefaultFileName(String defaultFileName) {
+      getMachine().getProtocol().getDefaultFileName();
+   }
+
+
+
     public void loadState() {
         getMachine().getProtocol().loadState();
     }

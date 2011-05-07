@@ -128,4 +128,8 @@ public interface IPBFTServer extends IPBFT{
     public boolean overloaded();
     public boolean starting();
 
+    public void setDefaultFileName(String defaultFileName);
+
+    public String getDefaultFileName();
+
 }

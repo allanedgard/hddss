@@ -317,4 +317,12 @@ public class PBFTServerMultiModeMachine extends MultiModeMachine implements IPBF
    public boolean starting() {
       return getProtocol().starting();
    }
+
+   public void setDefaultFileName(String defaultFileName) {
+      getProtocol().setDefaultFileName(defaultFileName);
+   }
+
+   public String getDefaultFileName() {
+     return getProtocol().getDefaultFileName();
+   }
 }
