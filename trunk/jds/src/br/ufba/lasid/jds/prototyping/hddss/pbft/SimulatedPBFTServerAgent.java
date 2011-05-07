@@ -6,7 +6,6 @@
 package br.ufba.lasid.jds.prototyping.hddss.pbft;
 
 import br.ufba.lasid.jds.prototyping.hddss.pbft.comm.SimulatedPBFTCommunicator;
-import br.ufba.lasid.jds.security.SHA1withDSASunMessageAuthenticator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import br.ufba.lasid.jds.cs.IServer;
@@ -40,6 +39,8 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
         getProtocol().setClock(this.infra.cpu);
         getProtocol().setScheduler(scheduler);
         ((IPBFTServer)getProtocol()).setServer(this);
+        String fname = infra.context.get(Variable.FileName).<String>value() + "replica" + this.getID();
+        ((IPBFTServer)getProtocol()).setDefaultFileName(fname);
         getProtocol().setLocalGroup(getGroup());
 
         try {

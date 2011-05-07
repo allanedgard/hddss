@@ -398,6 +398,7 @@ public class Simulator  extends Thread implements RuntimeSupport
         set(Variable.StdOutput, out);
         set(Variable.ClockDeviation, ro);
         set(Variable.MaxClockDeviation, maxro);
+        set(Variable.FileName, filename);
 
         formattedReport =  config.getBoolean("FormattedReport", true);
         
