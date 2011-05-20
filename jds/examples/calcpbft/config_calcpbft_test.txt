@@ -1,0 +1,2 @@
+WorkDir = ./examples/calcpbft/
+cenarios = config_pbft_test_cenario.txt

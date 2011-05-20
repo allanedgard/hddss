@@ -12,6 +12,7 @@ import br.ufba.lasid.jds.cs.IServer;
 import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.server.PBFTServer;
 import br.ufba.lasid.jds.jbft.pbft.architectures.PBFTServerArchitecture;
+import br.ufba.lasid.jds.jbft.pbft.server.AutonomicPBFTServer;
 import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport.Variable;
 import br.ufba.lasid.jds.util.JDSUtility;
 
@@ -20,10 +21,12 @@ import br.ufba.lasid.jds.util.JDSUtility;
  * @author aliriosa
  */
 public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implements IServer<Integer>{
-
+    protected void setProtocol(){
+       setProtocol(PBFTServer.create());
+    }
     public SimulatedPBFTServerAgent() {
         //setProtocol(new PBFTServerMultiModeMachine(PBFTServer.create()));
-       setProtocol(PBFTServer.create());
+       setProtocol();
     }
 
     @Override

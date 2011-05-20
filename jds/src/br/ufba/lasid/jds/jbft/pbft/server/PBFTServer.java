@@ -360,8 +360,10 @@ public class PBFTServer extends PBFT implements IPBFTServer{
          if(pp == null){
             return;
          }
+         
          /* emits pre-prepare */
-         emit(pp, getLocalGroup().minus(getLocalProcess()));
+         emitPrePrepare(pp);
+         //emit(pp, getLocalGroup().minus(getLocalProcess()));
 
          /* update log current pre-prepare */
          handle(pp);
@@ -374,6 +376,9 @@ public class PBFTServer extends PBFT implements IPBFTServer{
       }//end synchronized(this)
    }//end emitBatch()
 
+   public void emitPrePrepare(PBFTPrePrepare pp){
+      emit(pp, getLocalGroup().minus(getLocalProcess()));
+   }
     public void revokeSendBatch(){
         getBatchTimer().cancel();
     }
@@ -1772,35 +1777,36 @@ public class PBFTServer extends PBFT implements IPBFTServer{
                 continue;
              }
 
+             executeSequencedComand(currSEQ);
+//
+//             PBFTPrePrepare preprepare = getPrePrepareInfo().get(viewn, currSEQ);
+//
+//             for(String digest : preprepare.getDigests()){
+//                 StatedPBFTRequestMessage loggedRequest = rinfo.getStatedRequest(digest);
+//                 PBFTRequest request = loggedRequest.getRequest();//rinfo.getRequest(digest); //statedReq.getRequest();
+//
+//                 IPayload result = lServer.executeCommand(request.getPayload());
+//
+//                 PBFTReply reply = createReplyMessage(request, result);
+//                 loggedRequest.setState(RequestState.SERVED);
+//                 loggedRequest.setReply(reply);
+//
+//                 JDSUtility.debug(
+//                     "[tryExecuteRequests()] s"  + lpid + ", at time " + getClockValue() + ", executed " + request + " (CURR-VIEWN{ " + viewn + "}; SEQN{" + currSEQ + "})."
+//                 );
+//
+//                 JDSUtility.debug("[tryExecuteRequests()] s"  + lpid + ", at time " + getClockValue() + ", has the following state " + lServer.getCurrentState());
+//
+//                 loggedRequest.setReplySendTime(getClockValue());
+//
+//                 if(rinfo.isNewest(request)){
+//                    IProcess client = new BaseProcess(reply.getClientID());
+//                    emit(reply, client);
+//                 }
+//
+//             }//end for each leafPartDigest (tryExecuteRequests and reply)
+             
              IRecoverableServer lServer = (IRecoverableServer)getServer();
-
-             PBFTPrePrepare preprepare = getPrePrepareInfo().get(viewn, currSEQ);
-
-             for(String digest : preprepare.getDigests()){
-                 StatedPBFTRequestMessage loggedRequest = rinfo.getStatedRequest(digest);
-                 PBFTRequest request = loggedRequest.getRequest();//rinfo.getRequest(digest); //statedReq.getRequest();
-
-                 IPayload result = lServer.executeCommand(request.getPayload());
-
-                 PBFTReply reply = createReplyMessage(request, result);
-                 loggedRequest.setState(RequestState.SERVED);
-                 loggedRequest.setReply(reply);
-
-                 JDSUtility.debug(
-                     "[tryExecuteRequests()] s"  + lpid + ", at time " + getClockValue() + ", executed " + request + " (CURR-VIEWN{ " + viewn + "}; SEQN{" + currSEQ + "})."
-                 );
-
-                 JDSUtility.debug("[tryExecuteRequests()] s"  + lpid + ", at time " + getClockValue() + ", has the following state " + lServer.getCurrentState());
-
-                 loggedRequest.setReplySendTime(getClockValue());
-                 
-                 if(rinfo.isNewest(request)){
-                    IProcess client = new BaseProcess(reply.getClientID());
-                    emit(reply, client);
-                 }
-
-             }//end for each leafPartDigest (tryExecuteRequests and reply)
-
              JDSUtility.debug(
                "[tryExecuteRequests()] s"  + lpid + ", at time " + getClockValue() + ", after execute SEQN{" + currSEQ + "} has the following " +
                "state " + lServer.getCurrentState()
@@ -1843,6 +1849,52 @@ public class PBFTServer extends PBFT implements IPBFTServer{
          }
     }
 
+   public void executeSequencedComand(long currSEQ){
+
+      int viewn = getCurrentViewNumber();
+
+      PBFTPrePrepare preprepare = getPrePrepareInfo().get(viewn, currSEQ);
+      
+      executeBatchCommand(preprepare);
+
+   }
+
+   public void executeBatchCommand(PBFTPrePrepare preprepare){
+      
+      long currSEQ = preprepare.getSequenceNumber();
+      int viewn = getCurrentViewNumber();
+
+      Object lpid = getLocalProcessID();
+
+      IRecoverableServer lServer = (IRecoverableServer)getServer();
+
+      PBFTRequestInfo rinfo = getRequestInfo();
+
+      for(String digest : preprepare.getDigests()){
+         StatedPBFTRequestMessage loggedRequest = rinfo.getStatedRequest(digest);
+         PBFTRequest request = loggedRequest.getRequest();//rinfo.getRequest(digest); //statedReq.getRequest();
+
+         IPayload result = lServer.executeCommand(request.getPayload());
+
+         PBFTReply reply = createReplyMessage(request, result);
+         loggedRequest.setState(RequestState.SERVED);
+         loggedRequest.setReply(reply);
+
+         JDSUtility.debug(
+         "[tryExecuteRequests()] s"  + lpid + ", at time " + getClockValue() + ", executed " + request + " (CURR-VIEWN{ " + viewn + "}; SEQN{" + currSEQ + "})."
+         );
+
+         JDSUtility.debug("[tryExecuteRequests()] s"  + lpid + ", at time " + getClockValue() + ", has the following state " + lServer.getCurrentState());
+
+         loggedRequest.setReplySendTime(getClockValue());
+
+         if(rinfo.isNewest(request)){
+            IProcess client = new BaseProcess(reply.getClientID());
+            emit(reply, client);
+         }
+      }//end for each leafPartDigest (tryExecuteRequests and reply)
+      
+   }
     public  PBFTReply createReplyMessage(PBFTRequest r, IPayload result){
 
         return createReplyMessage(r, result, getCurrentViewNumber());
@@ -2709,7 +2761,7 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             return pbft;//(IPBFTServer)EventHandler.newInstance(pbft, pbft.beforeEventtable, pbft.afterEventtable);
     }
 
-    private PBFTServer(){}
+    protected PBFTServer(){}
 
     public long getCurrentPrePrepareSEQ() {return getStateLog().getNextPrePrepareSEQ() -1;}
 
