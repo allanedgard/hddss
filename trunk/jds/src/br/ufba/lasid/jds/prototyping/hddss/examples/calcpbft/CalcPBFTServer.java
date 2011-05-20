@@ -23,10 +23,10 @@ public class CalcPBFTServer extends SimulatedPBFTServerAgent implements IRecover
     transient protected CalculatorState _state = new CalculatorState();
 
     public String geraDump(int size) {
-        String dump = "";
-        for (int i=0; i<size; i++) {
-            dump = dump + " ";
-        }
+        String dump = String.format("%1$#"+size+"s", "");
+//        for (int i=0; i<size; i++) {
+//            dump = dump + " ";
+//        }
         return dump;
     }
 

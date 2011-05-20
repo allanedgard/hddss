@@ -36,10 +36,10 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
 
     public String geraDump() {
         int size = (int) (r1.uniform(minPayload, maxPayload));
-        String dump = "";
-        for (int i=0; i<size; i++) {
-            dump = dump + " ";
-        }
+        String dump = String.format("%1$#"+size+"s", "");
+//        for (int i=0; i<size; i++) {
+//            dump = dump + " ";
+//        }
         return dump;
     }
 
