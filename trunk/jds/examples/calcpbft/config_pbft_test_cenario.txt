@@ -2,7 +2,7 @@
  * GENERAL SIMULATION OPTIONS
  ***********************************************************/
 FinalTime = 12000
-NumberOfAgents = 14
+NumberOfAgents = 104
 MaximumDeviation = 0
 Mode = clock
 Debug = false
@@ -27,36 +27,36 @@ agent[0].ServerGroupAddress = 0
 agent[0].GroupList = 0,1,2,3
 agent[0].CurrentView = 0
 agent[0].PrimaryFaultTimeout = 250
-agent[0].BatchingSize = 3
+agent[0].BatchingSize = 1
 agent[0].BatchingTimeout = 10
 agent[0].CheckpointPeriod = 128
 agent[0].CheckpointFactor = 3
 agent[0].SendStatusPeriod = 200
-agent[0].SlidingWindowSize = 8
+agent[0].SlidingWindowSize = 1000
 
 agent[1] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcAutonomicPBFTServer
 agent[1].ServerGroupAddress = 0
 agent[1].GroupList = 0,1,2,3
 agent[1].CurrentView = 0
 agent[1].PrimaryFaultTimeout = 250
-agent[1].BatchingSize = 3
+agent[1].BatchingSize = 1
 agent[1].BatchingTimeout = 10
 agent[1].CheckpointPeriod = 128
 agent[1].CheckpointFactor = 3
 agent[1].SendStatusPeriod = 200
-agent[1].SlidingWindowSize = 8
+agent[1].SlidingWindowSize = 1000
 
 agent[2] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcAutonomicPBFTServer
 agent[2].ServerGroupAddress = 0
 agent[2].GroupList = 0,1,2,3
 agent[2].CurrentView = 0
 agent[2].PrimaryFaultTimeout = 250
-agent[2].BatchingSize = 3
+agent[2].BatchingSize = 1
 agent[2].BatchingTimeout = 10
 agent[2].CheckpointPeriod = 128
 agent[2].CheckpointFactor = 3
 agent[2].SendStatusPeriod = 200
-agent[2].SlidingWindowSize = 8
+agent[2].SlidingWindowSize = 1000
 
 
 agent[3] = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcAutonomicPBFTServer
@@ -64,12 +64,12 @@ agent[3].ServerGroupAddress = 0
 agent[3].GroupList = 0,1,2,3
 agent[3].CurrentView = 0
 agent[3].PrimaryFaultTimeout = 250
-agent[3].BatchingSize = 3
+agent[3].BatchingSize = 1
 agent[3].BatchingTimeout = 10
 agent[3].CheckpointPeriod = 128
 agent[3].CheckpointFactor = 3
 agent[3].SendStatusPeriod = 200
-agent[3].SlidingWindowSize = 8
+agent[3].SlidingWindowSize = 1000
 
 agent = br.ufba.lasid.jds.prototyping.hddss.examples.calcpbft.CalcPBFTClient
 agent.ServerGroupAddress = 0

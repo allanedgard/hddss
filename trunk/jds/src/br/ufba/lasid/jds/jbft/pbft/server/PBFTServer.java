@@ -1864,14 +1864,20 @@ public class PBFTServer extends PBFT implements IPBFTServer{
       long currSEQ = preprepare.getSequenceNumber();
       int viewn = getCurrentViewNumber();
 
-      Object lpid = getLocalProcessID();
-
-      IRecoverableServer lServer = (IRecoverableServer)getServer();
-
       PBFTRequestInfo rinfo = getRequestInfo();
 
       for(String digest : preprepare.getDigests()){
          StatedPBFTRequestMessage loggedRequest = rinfo.getStatedRequest(digest);
+         executeRequest(loggedRequest, currSEQ, viewn);
+      }//end for each leafPartDigest (tryExecuteRequests and reply)
+      
+   }
+
+   public void executeRequest(StatedPBFTRequestMessage loggedRequest, long currSEQ, int viewn){
+         IRecoverableServer lServer = (IRecoverableServer)getServer();
+         PBFTRequestInfo rinfo = getRequestInfo();
+         Object lpid = getLocalProcessID();
+         
          PBFTRequest request = loggedRequest.getRequest();//rinfo.getRequest(digest); //statedReq.getRequest();
 
          IPayload result = lServer.executeCommand(request.getPayload());
@@ -1892,14 +1898,12 @@ public class PBFTServer extends PBFT implements IPBFTServer{
             IProcess client = new BaseProcess(reply.getClientID());
             emit(reply, client);
          }
-      }//end for each leafPartDigest (tryExecuteRequests and reply)
       
    }
-    public  PBFTReply createReplyMessage(PBFTRequest r, IPayload result){
-
-        return createReplyMessage(r, result, getCurrentViewNumber());
-
-    }
+   
+   public  PBFTReply createReplyMessage(PBFTRequest r, IPayload result){
+      return createReplyMessage(r, result, getCurrentViewNumber());
+   }
 
     public PBFTReply createReplyMessage(PBFTRequest r, IPayload result, Integer viewNumber){
          PBFTReply reply = new PBFTReply(r, result, getLocalServerID(), viewNumber);
