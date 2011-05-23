@@ -67,4 +67,9 @@ public class TimeVarying1stOrderEMA {
       this.mean = mean;
    }
 
+   public void setMean(double mean, double curTime){
+      this.mean = mean;
+      this.oldTime = curTime;
+   }
+
 }
