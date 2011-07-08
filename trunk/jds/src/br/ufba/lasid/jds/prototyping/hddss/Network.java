@@ -52,17 +52,29 @@ public abstract class Network extends Thread{
 
     }
 
-    public final void handshaking(int p_i, int p_j) {
-    	try {
+public final void handshaking(int p_i, int p_j) {
+        try {
+            String TAG = Channel.TAG + "["+p_i+"]["+p_j+"]";
 
-    	    channels[p_i][p_j] = (Channel)Factory.create(Channel.TAG, Channel.class.getName());
-            channels[p_i][p_j].connect(conteiner.p[p_i], conteiner.p[p_j]);
-            Factory.setup(channels[p_i][p_j], Channel.TAG);
+            if(!conteiner.config.getString(TAG, "null").equals("null"))
+            {
+                channels[p_i][p_j] = (Channel)Factory.create(TAG, Channel.class.getName());
+                channels[p_i][p_j].connect(conteiner.p[p_i], conteiner.p[p_j]);
+                Factory.setup(channels[p_i][p_j], TAG);
+            }
+            else
+            {
+                channels[p_i][p_j] = (Channel)Factory.create(Channel.TAG, Channel.class.getName());
+                channels[p_i][p_j].connect(conteiner.p[p_i], conteiner.p[p_j]);
+                Factory.setup(channels[p_i][p_j], Channel.TAG);
+            }
+
 
         } catch (Exception e) {
                 e.printStackTrace();
-    	}
+        }
     }
+
 
     public final void init(Simulator cxt){
         conteiner = cxt;
