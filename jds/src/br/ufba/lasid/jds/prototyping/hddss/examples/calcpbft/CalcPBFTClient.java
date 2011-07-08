@@ -25,6 +25,8 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
 
     double minPayload;
     double maxPayload;
+    double minPayloadResp;
+    double maxPayloadResp;
 
     public void setRequestGenerationProbability(String prob){
         rgp = Double.parseDouble(prob);
@@ -78,7 +80,7 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
             content.put(Calculator.OP1, op1);
             content.put(Calculator.OP2, op2);
             content.put("dump", geraDump());
-            content.put("response_size", (int) r2.uniform(minPayload, maxPayload));
+            content.put("response_size", (int) r2.uniform(minPayloadResp, maxPayloadResp));
             return content;
         
     }
@@ -115,6 +117,13 @@ public class CalcPBFTClient extends SimulatedPBFTClientAgent{
         minPayload = Double.valueOf(size);
     }
 
+    public void setMaxPayloadResponse(String size) {
+        maxPayloadResp = Double.valueOf(size);
+    }
+
+    public void setMinPayloadResponse(String size) {
+        minPayloadResp = Double.valueOf(size);
+    }
 
 
     @Override
