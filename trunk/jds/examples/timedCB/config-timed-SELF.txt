@@ -1,0 +1,2 @@
+WorkDir = /repositorio/hddss/jds/examples/timedCB/
+cenarios = timed-SELF-5.txt
