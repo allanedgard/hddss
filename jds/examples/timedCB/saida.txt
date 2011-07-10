@@ -1,0 +1,15 @@
+Configuring: 
+./
+n = 1
+Sun Jul 10 09:12:43 GMT-03:00 2011
+cenario simulado: ./timed-SELF-5.txt
+Configuring: 
+./
+n = 1
+Sun Jul 10 09:12:50 GMT-03:00 2011
+cenario simulado: ./timed-SELF-5.txt
+Configuring: 
+./
+n = 1
+Sun Jul 10 09:14:18 GMT-03:00 2011
+cenario simulado: ./timed-SELF-5.txt
