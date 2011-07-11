@@ -1,5 +1,5 @@
-FinalTime = 10000
-NumberOfAgents = 5
+FinalTime = 60000
+NumberOfAgents = 25
 MaximumDeviation = 4
 Mode = clock
 Debug = false
@@ -19,9 +19,10 @@ agent = br.ufba.lasid.jds.prototyping.hddss.Agent_AutonomicTimedCB
 agent.DeltaMax = 100
 agent.DeltaMin = 1
 agent.TimeSilence = 200
-agent.PacketGenerationProb = .1
+agent.PacketGenerationProb = .15
 agent.StableMode = 1
 agent.DesiredResourceConsumption = 0.25
+agent.PayloadSize = 256
 
 /* agent[1].ModeloFalha = CrashProcesso */
 
