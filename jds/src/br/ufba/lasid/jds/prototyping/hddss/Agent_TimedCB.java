@@ -17,6 +17,7 @@ public class Agent_TimedCB extends SimulatedAgent {
         double prob;
         int logicalClock;
         int lastTimeSent;
+        int payloadSize;
         final int TIMEDCB_APP = 4;
         final int TIMEDCB_TS = 5;
         final int CHANGE_VIEW_REQUEST = 6;
@@ -89,7 +90,7 @@ public class Agent_TimedCB extends SimulatedAgent {
             BM = new int[infra.nprocess];
             LCB = new int[infra.nprocess];
             ultimaMsgTimeStamp = new int[infra.nprocess];
-
+            payloadSize = 0;
             acks = new Content_Acknowledge[infra.nprocess];
             
             r = new Randomize(ID);
@@ -195,7 +196,11 @@ public class Agent_TimedCB extends SimulatedAgent {
         public void setStableMode(String dt) {
             stableMode = Integer.parseInt(dt);
         }
-        
+
+        public void setPayloadSize(String dt) {
+            payloadSize = Integer.parseInt(dt);
+        }
+
         public void setDeltaMin(String dt) {
             delta = Integer.parseInt(dt);
         }
@@ -287,8 +292,7 @@ public class Agent_TimedCB extends SimulatedAgent {
                 logicalClock ++;        // Ajusta o relógio lógico
                 //LastTimeSent = clock;   // Registra clock do ultimo envio
                 SENT = logicalClock;    // Registra numero do bloco do ultimo envio
-
-                sendGroupMsg(clock, TIMEDCB_APP, new Content_TimedCB("payload", LCB[ID], acks), logicalClock, true );
+                sendGroupMsg(clock, TIMEDCB_APP, new Content_TimedCB("payload", LCB[ID], acks, payloadSize), logicalClock, true );
                 blockRegister(logicalClock, ID, clock);
             }
             
@@ -498,6 +502,8 @@ public class Agent_TimedCB extends SimulatedAgent {
                 if ( (m.logicalClock <= min)  ) {
                     cont++;
                     infra.app_in.add(clock, m);
+                    if (m.type == TIMEDCB_APP)
+                        Simulator.reporter.stats("blocking time", clock-m.receptionTime);
                 }
             }
         infra.debug("p"+ID+" delivers "+cont+" msgs of block "+min);

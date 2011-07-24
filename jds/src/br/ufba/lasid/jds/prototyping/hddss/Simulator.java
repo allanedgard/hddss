@@ -356,15 +356,16 @@ public class Simulator  extends Thread implements RuntimeSupport
         if (classNames == null) {
             classNames = new String[0];
         }
+        Simulator simulador;
         System.out.println("n = "+classNames.length);
         for (int i = 0; i < classNames.length; i++) {
             java.util.Date data = new java.util.Date();
             System.out.println(data.toString());
             System.out.println("cenario simulado: "+WorkDir+classNames[i]);
             config = getConfig(new String[] {WorkDir+classNames[i]});
-            Simulator simulador = new Simulator(WorkDir+classNames[i]);
+            simulador = new Simulator(WorkDir+classNames[i]);
             simulador.run();
-
+            simulador = null;
         }
 
         /*

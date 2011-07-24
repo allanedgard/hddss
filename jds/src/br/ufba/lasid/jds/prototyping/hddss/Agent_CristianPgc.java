@@ -109,6 +109,9 @@ public class Agent_CristianPgc extends SimulatedAgent {
         }
 
         public void deliver(Message msg) {
+            if (msg.type == PG_APP)
+                   Simulator.reporter.stats("blocking time",
+                           (int)infra.clock.value()-msg.receptionTime);
             if (msg.logicalClock > LogicalClock) {
                 LogicalClock = msg.logicalClock+1;
             }
