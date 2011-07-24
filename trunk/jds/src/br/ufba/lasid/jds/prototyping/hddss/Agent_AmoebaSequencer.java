@@ -225,6 +225,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                     break;
                 case DLV:
                     infra.app_in.add(clock, (Message) msg.content);
+                    Simulator.reporter.stats("blocking time", clock-msg.receptionTime);
                     break;
                 case CHANGE_VIEW_REQUEST:
                     if ( UnstableMensagensEnviadas.contains(msg.content) )

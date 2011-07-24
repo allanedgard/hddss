@@ -15,6 +15,7 @@ public class Content_TimedCB {
     String message;
     int [] lastMsgTimeStamp;
     Content_Acknowledge [] vack;
+    String cont;
 
     Content_TimedCB(String m, int l, Content_Acknowledge [] acks) {
         LCB = l;
@@ -22,10 +23,28 @@ public class Content_TimedCB {
         vack = acks;
     }
 
+    Content_TimedCB(String m, int l, Content_Acknowledge [] acks, int size) {
+        LCB = l;
+        message = m;
+        vack = acks;
+        cont = "";
+        for (int i=0;i<size; i++)
+            cont = cont + "*";
+    }
+
     Content_TimedCB(String m, int l, int [] u) {
         LCB = l;
         message = m;
         lastMsgTimeStamp = u;
+    }
+
+    Content_TimedCB(String m, int l, int [] u, int size) {
+        LCB = l;
+        message = m;
+        lastMsgTimeStamp = u;
+        cont = "";
+        for (int i=0;i<size; i++)
+            cont = cont + "*";
     }
 
     Content_TimedCB(String m, int l) {
