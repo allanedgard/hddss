@@ -1,5 +1,5 @@
 FinalTime = 60000
-NumberOfAgents = 50
+NumberOfAgents = 20
 MaximumDeviation = 4
 Mode = clock
 Debug = false
