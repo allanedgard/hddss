@@ -1,2 +1,2 @@
 WorkDir = /repositorio/hddss/jds/examples/timedCB/
-cenarios = timed-SELF-05-LOW.txt,timed-SELF-05-MEDIUM.txt,timed-SELF-05-HIGH.txt,timed-SELF-25-LOW.txt,timed-SELF-25-MEDIUM.txt,timed-SELF-25-HIGH.txt,timed-SELF-50-LOW.txt,timed-SELF-50-MEDIUM.txt,timed-SELF-50-HIGH.txt
+cenarios = timed-SELF-10-LOW.txt
