@@ -1,5 +1,7 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
+import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport.Variable;
+
 public class Agent_TimedCB extends SimulatedAgent {
     
     
@@ -15,6 +17,8 @@ public class Agent_TimedCB extends SimulatedAgent {
         int ts;
         int tsmax;
         double prob;
+        double minProb;
+        double maxProb;
         int logicalClock;
         int lastTimeSent;
         int payloadSize;
@@ -94,7 +98,7 @@ public class Agent_TimedCB extends SimulatedAgent {
             acks = new Content_Acknowledge[infra.nprocess];
             
             r = new Randomize(ID);
-            scheduler = new int[finalTime*2];
+            scheduler = new int[finalTime*4];
  //           BM_Matrix = new char[controle.n][controle.tempofinal*2];
             for (int j = 0;j<scheduler.length ;j++) {
                     scheduler[j]=-1;
@@ -205,6 +209,16 @@ public class Agent_TimedCB extends SimulatedAgent {
             delta = Integer.parseInt(dt);
         }
 
+        public void setMaxProb(String dt) {
+            maxProb = Double.parseDouble(dt);
+        }
+
+        
+        public void seMinProb(String dt) {
+            minProb = Double.parseDouble(dt);
+        }
+
+        
         public void setTimeSilence(String p) {
             ts = Integer.parseInt(p);
             tsmax = ts;
@@ -287,7 +301,13 @@ public class Agent_TimedCB extends SimulatedAgent {
     @Override
         public void execute() {
             int clock = (int)infra.clock.value();
-            if ( (r.uniform() <= prob)  ) {
+            double x1;
+            
+            if (prob==0.0) {
+                x1 = r.uniform(minProb, maxProb);
+            } else x1 = prob;
+            
+            if ( (r.uniform() <= x1)  ) {
 
                 logicalClock ++;        // Ajusta o relógio lógico
                 //LastTimeSent = clock;   // Registra clock do ultimo envio

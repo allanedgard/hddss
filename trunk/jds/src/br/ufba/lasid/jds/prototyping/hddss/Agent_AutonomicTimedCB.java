@@ -56,6 +56,8 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
             larrv[i]  = 0;
         }
     }
+    
+    
     @Override
     public void receive(Message msg) {
         nrecv++;
@@ -68,6 +70,15 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
 
         super.receive(msg);
 
+    
+        
+        
+    }
+    
+    @Override
+    public void setDeltaMax(String dt) {
+            super.setDeltaMax(dt);
+            dmax = DELTA;
     }
 
     public void estimateDelay(Message msg){
@@ -90,18 +101,20 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
             dmean = 0.99 * dmean + 0.01 * delay;
 
             if(dmin < 0){
-                dmin = dmean;
+                dmin = dmean;                
+                dmax = dmean;              
+            }
+            
+            if(dmax < 0){
                 dmax = dmean;                
             }
-
+            
             if(delay > dmax) dmax = 1.1 * delay;
             if(delay < dmin) dmin = delay;
 
             dmin = dmin * 0.99999 + delay * 0.0001;
             dmax = dmax * 0.99999 + delay * 0.0001;
-            
             computeRC();
-
         }
         
     }
@@ -112,8 +125,6 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
         if(dmax > dmin){
             RC = (dmean - dmin)/(dmax - dmin);
         }
-
-        
     }
 
     @Override
@@ -128,11 +139,13 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
 
     @Override
     public int getDeltaMax() {
-        if(dmax < 0)
+        // return super.getDeltaMax();
+       
+           if(dmax < 0)
             return super.getDeltaMax();
         
         return (int) round(dmax, 0);
-        
+        /* */
     }
 
     @Override

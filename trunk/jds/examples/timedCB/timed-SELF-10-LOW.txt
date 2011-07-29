@@ -1,5 +1,5 @@
 FinalTime = 60000
-NumberOfAgents = 25
+NumberOfAgents = 10
 MaximumDeviation = 4
 Mode = clock
 Debug = false
@@ -19,28 +19,31 @@ agent = br.ufba.lasid.jds.prototyping.hddss.Agent_AutonomicTimedCB
 agent.DeltaMax = 100
 agent.DeltaMin = 1
 agent.TimeSilence = 200
-agent.PacketGenerationProb = .15
+agent.PacketGenerationProb = 0.0
+agent.MinProb = 0.05
+agent.MaxProb = 0.15
 agent.StableMode = 1
 agent.DesiredResourceConsumption = 0.25
 agent.PayloadSize = 256
-
-/* agent[1].ModeloFalha = CrashProcesso */
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal
 channel.Mean = 10
 channel.MinDelay = 1
 channel.Std = 5
 
-network = br.ufba.lasid.jds.prototyping.hddss.PayloadAwareNetwork
+// network = br.ufba.lasid.jds.prototyping.hddss.PayloadAwareNetwork
+network = br.ufba.lasid.jds.prototyping.hddss.NetworkDeterministic
+network.ProcessingTime = .001
+
 
 /* transferRate in  bps  (e.g. 10Mbps is equal to 10000000 bps, if simulation time in miliseconds then use 10Mbps / 1000  = 10Kb/ms*/
-network.TransferRate =  10000000
+//network.TransferRate =  10000000
 
 /* MTU = bits (e.g. 64 KB is equal to 524288 bits) */
-network.MTU = 524288
+//network.MTU = 524288
 
 /* SegmentationCost in seconds (e.g. 0.000000001 seconds is equal to 1 nanosecond) if simulation time in millisenconds then use 0.000001 ms*/
-network.SegmentationCost = 0.000001
+//network.SegmentationCost = 0.000001
 /* FIFO = false, the network doesn't guarantee fifo order in message trip from agent to network router and from network router to agent (connectionless service simulation)
     FIFO = true,  the network guarantee fifo order in message trip from agent to network router and from network router to agent (connection-oriented service simulation) */
 network.FIFO = true
