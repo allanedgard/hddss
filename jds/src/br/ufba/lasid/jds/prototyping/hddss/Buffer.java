@@ -64,7 +64,7 @@ public  class Buffer {
          
      }
      
-     private boolean checkTime(int time) {
+     public boolean checkTime(int time) {
          if ( inside.containsKey(time) ) {
              return true;
          }
