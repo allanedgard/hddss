@@ -1,5 +1,7 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
+import java.util.ArrayList;
+
 public class Agent_AmoebaSequencer extends SimulatedAgent {
     
     
@@ -9,7 +11,10 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
      * o mesmo deve ser implementado de modo a monitorar os canais
      * e decidir o estado
      */
-    
+        int LastClock;
+        int LastACK;
+        int LastDLV;
+        int LastAccepted;
         int DELTA;
         int delta;
         int ts;
@@ -93,8 +98,8 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             
             Sequencia = -1;
             SENT = Integer.MAX_VALUE;
-
-            
+            LastDLV = -1;
+            LastAccepted = -1;
             
             /* Flags para bloquear a entrega 
              * e startup o consenso
@@ -110,13 +115,15 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             uncertain = new IntegerSet();
             suspected = new IntegerSet();
             visao = new IntegerSet();
-
+            BM = new int[infra.nprocess];
+            for (int i=0;i<infra.nprocess;i++)
+                BM[i]=-1;
             
             visaoProposta = new IntegerSet();
             
             initializeSets();
-            quorum= new int[100000];
-            timeout= new int[100000];
+            quorum= new int[1000000];
+            timeout= new int[1000000];
             // Mensagens instáveis que serão usadas no consenso
             AllUnstableMensagens =  new java.util.ArrayList();
             
@@ -145,6 +152,14 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             DELTA = Integer.parseInt(dt);
         }
 
+        public void setTS(String dt) {
+            ts = Integer.parseInt(dt);
+        } 
+        
+        public int getDelta() {
+            return DELTA;
+        }
+        
         public void setPacketGenerationProb (String po) {
             prob = Double.parseDouble(po);
         }
@@ -158,10 +173,11 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
         
     @Override
         public void execute() {
+            Content_Amoeba ca = new Content_Amoeba(LastACK, "stuff");
             if ( (r.uniform() <= prob) && !bloquearEntrega ) {
                 int clock = (int)infra.clock.value();
                 SENT = clock;    // Registra numero do bloco do ultimo envio
-                this.createMessage(clock, ID, Lider, REQ_SEQ, "payload", -1);
+                this.createMessage(clock, ID, Lider, REQ_SEQ, ca, -1);
             }
             /*
             if ((clock-SENT) > DELTA) {
@@ -206,26 +222,71 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                 case REQ_SEQ:
                     if (SouLider) {
                         Sequencia++;
-                        relayGroupMsg(clock, msg.sender, APP, msg.content, Sequencia, true);
+                        Content_Amoeba_Reply cm = new Content_Amoeba_Reply(LastDLV, msg);
+                        relayGroupMsg(clock, msg.sender, APP, cm, Sequencia, true);
                         quorum[Sequencia]=0;
+                        /*
+                         *   PROCESSA OS EMBEDDED ACKS 
+                         */
+                        if (BM[msg.sender] < ((Content_Amoeba)msg.content).getLast()) {
+                            for (int i=BM[msg.sender]+1;i<=((Content_Amoeba)msg.content).getLast();i++){
+                                quorum[i]++;
+                                infra.debug("seq "+i+" count "+quorum[i]);
+                                if ( quorum[i] == infra.nprocess ) {
+                                    if (clock - SENT >= ts)
+                                        this.sendGroupMsg(clock, DLV, msg, msg.logicalClock);
+                                    LastDLV = msg.logicalClock; }
+                                }
+                            BM[msg.sender] = ((Content_Amoeba)msg.content).getLast();
+                        }
                     }
                     break;
                 case APP:
-                    msgs.add(msg.logicalClock, msg);
-                    this.createMessage(clock, ID, Lider, ACK, msg, msg.logicalClock);
-                    
+                    msgs.add(msg.logicalClock, ((Content_Amoeba_Reply)msg.content).getContent() );
+                    int lastAcc = ((Content_Amoeba_Reply)msg.content).getAccept();
+                    for (int i=LastAccepted+1;i<=lastAcc;i++){
+                        if (msgs.checkTime(i)) {
+                            ArrayList a =  (msgs.getMsgs(i));
+                            Message me =  (Message) a.get(0);
+                            infra.app_in.add(clock, me );
+                            Simulator.reporter.stats("blocking time", clock - me.receptionTime);
+                        }
+                    };
+                    LastAccepted = lastAcc;
+                    /* 
+                     * SÓ ENVIAR ACK SE PASSOU SILENCE
+                     */
+                    if (clock - SENT >= ts)
+                        this.createMessage(clock, ID, Lider, ACK, msg, msg.logicalClock);
+                    LastACK = msg.logicalClock;
+                    ((Content_Amoeba_Reply) msg.content).getAccept();                    
                     break;
                 case ACK:
+                    /*
                     if (SouLider) {
                         quorum[msg.logicalClock]++;
                         infra.debug("seq "+Sequencia+" count "+quorum[Sequencia]);
                         if ( quorum[msg.logicalClock] == infra.nprocess )
                             this.sendGroupMsg(clock, DLV, msg.content, msg.logicalClock);
                     }
+                    */
+                    if (SouLider) {
+                        if (BM[msg.sender] < msg.logicalClock) {
+                            for (int i=BM[msg.sender]+1;i<=msg.logicalClock;i++){
+                                quorum[i]++;
+                                infra.debug("seq "+i+" count "+quorum[i]);
+                                if ( quorum[i] == infra.nprocess )
+                                    if (clock - SENT >= ts)
+                                        this.sendGroupMsg(clock, DLV, msg, msg.logicalClock);
+                                    LastDLV = msg.logicalClock;
+                                }
+                            BM[msg.sender] = msg.logicalClock;
+                        }
+                    }
                     break;
                 case DLV:
                     infra.app_in.add(clock, (Message) msg.content);
-                    Simulator.reporter.stats("blocking time", clock-msg.receptionTime);
+                    Simulator.reporter.stats("blocking time", clock - ((Message) msg.content).receptionTime);
                     break;
                 case CHANGE_VIEW_REQUEST:
                     if ( UnstableMensagensEnviadas.contains(msg.content) )

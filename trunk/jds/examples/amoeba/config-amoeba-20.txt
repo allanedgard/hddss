@@ -1,2 +1,2 @@
 WorkDir = /repositorio/hddss/jds/examples/amoeba/
-cenarios = amoeba-20-10-LOW.txt,amoebaAC-20-10-LOW.txt
+cenarios = amoebaAC-20-10-LOW.txt,amoeba-20-10-LOW.txt

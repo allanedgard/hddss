@@ -1,8 +1,8 @@
-FinalTime = 60000
+FinalTime = 6000
 NumberOfAgents = 10
 MaximumDeviation = 4
 Mode = clock
-Debug = false
+Debug = true
 FormattedReport = false
 
 clock = br.ufba.lasid.jds.prototyping.hddss.Clock_Virtual
@@ -15,12 +15,12 @@ cpu.ProcessingRate = 9446400
 /* LoadCost in seconds (e.g. 0.000000000001 seconds is equal to 1 picosecond) if simulation time in millisenconds then use 0.000000001 ms*/
 cpu.LoadCost = 0.000000001
 
-agent = br.ufba.lasid.jds.prototyping.hddss.Agent_Amoeba
-agent.Delta = 100
-agent.Interval = 20
-agent.TimeSilence = 20
-agent.ProbabilidadeGerarPacote = 0.05
-agent.ProbabilidadePerderPacote = 0.0
+agent = br.ufba.lasid.jds.prototyping.hddss.Agent_AmoebaSequencer
+agent.DeltaMax = 100
+; agent.Interval = 20
+agent.TS = 30
+agent.PacketGenerationProb = 0.05
+; agent.ProbabilidadePerderPacote = 0.0
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal
 channel.Mean = 10

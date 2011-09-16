@@ -2,7 +2,7 @@ package br.ufba.lasid.jds.prototyping.hddss;
 
 import java.util.Hashtable;
 
-public class Agent_AutonomicAmoeba extends Agent_Amoeba{
+public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
 
     double minTS  = 0;
     double maxTS  = 0;
@@ -26,8 +26,6 @@ public class Agent_AutonomicAmoeba extends Agent_Amoeba{
 
     double RCRef = 0.0;
     double RC    = 0.0;
-    
-    int maxInterval;
     
     Hashtable<String, Integer> buffer = new Hashtable<String, Integer>();
     
@@ -66,7 +64,7 @@ public class Agent_AutonomicAmoeba extends Agent_Amoeba{
         
         estimateDelay(msg);
 
-        if(msg.type != BROAD_REQ){
+        if(msg.type != APP){
                 nts++;
         }
 
@@ -75,8 +73,8 @@ public class Agent_AutonomicAmoeba extends Agent_Amoeba{
     }
     
     @Override
-    public void setDelta(String dt) {
-            super.setDelta(dt);
+    public void setDeltaMax(String dt) {
+            super.setDeltaMax(dt);
             dmax = DELTA;
     }
 
@@ -127,16 +125,16 @@ public class Agent_AutonomicAmoeba extends Agent_Amoeba{
     }
 
     @Override
-    public void setInterval(String in)
+    public void setTS(String in)
     {
-        super.setInterval(in);
-        maxTS = interval;
+        super.setTS(in);
+        maxTS = ts;
     }
 
     
     public int getMaxTS() {
 
-        return maxInterval;
+        return (int) maxTS;
     }
 
 
@@ -167,7 +165,7 @@ public class Agent_AutonomicAmoeba extends Agent_Amoeba{
         super.deliver(msg);
         int clock = (int)infra.clock.value();
 
-        if(msg.type == BROAD_REQ){
+        if(msg.type == APP){
 
             iarrv[msg.sender] = clock - larrv[msg.sender];
             larrv[msg.sender] = clock;
@@ -213,7 +211,7 @@ public class Agent_AutonomicAmoeba extends Agent_Amoeba{
 
         
         //double dtsOvh = (-1.0/maxTS) * ((infra.nprocess - 1)/((double)infra.nprocess)) * error;
-        double dtsOvh = 1.0;
+        double dtsOvh = 2.0/3.0;
         
         double dt = now - old;
         
@@ -240,7 +238,7 @@ public class Agent_AutonomicAmoeba extends Agent_Amoeba{
     }
 
     public void actuate(double value){
-        interval = (int)value;
+        ts = (int)value;
         //System.nic_out.println("p" + ID + "," + dmean + "," + meanOVH + "," +ts + "," + RC);
     }    
 }
