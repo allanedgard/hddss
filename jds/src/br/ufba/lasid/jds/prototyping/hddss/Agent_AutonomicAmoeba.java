@@ -39,7 +39,8 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
 
     public double computeSetPoint(){
         
-        double maxOVH = (((double)(infra.nprocess - 1))/infra.nprocess);
+        //double maxOVH = (((double)(infra.nprocess - 1))/infra.nprocess);
+        double maxOVH = 2/3;
         return (maxOVH * (RCRef - RC));
 
     }
@@ -81,8 +82,31 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
     public void estimateDelay(Message msg){
         double ro = infra.context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
         int maxro = infra.context.get(RuntimeSupport.Variable.MaxClockDeviation).<Integer>value();
-        if(msg.content instanceof Content_TimedCB){
-            Content_TimedCB content = (Content_TimedCB) msg.content;
+
+            double delay = msg.receptionTime - msg.physicalClock;
+            
+            if(dmean < 0) dmean = delay;
+
+            dmean = 0.99 * dmean + 0.01 * delay;
+
+            if(dmin < 0){
+                dmin = dmean;                
+                dmax = dmean;              
+            }
+            
+            if(dmax < 0){
+                dmax = dmean;                
+            }
+            
+            if(delay > dmax) dmax = 1.1 * delay;
+            if(delay < dmin) dmin = delay;
+
+            dmin = dmin * 0.99999 + delay * 0.0001;
+            dmax = dmax * 0.99999 + delay * 0.0001;
+            computeRC();        
+        /*
+        if(msg.content instanceof Content_Amoeba){
+            Content_Amoeba content = (Content_Amoeba) msg.content;
             Content_Acknowledge ack = content.vack[msg.destination];
 
             //compute the round-trip-time
@@ -114,6 +138,81 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
             computeRC();
         }
         
+        if(msg.content instanceof Content_Amoeba_Reply){
+            Content_Amoeba_Reply content = (Content_Amoeba_Reply) msg.content;
+            Content_Acknowledge ack = content.vack[msg.destination];
+
+            //compute the round-trip-time
+            double rtt = msg.receptionTime - ack.lsendTime;
+            
+            //compute the remote proc time
+            double ptime = (ack.rsendTime - ack.rrecvTime) * (1 - maxro * ro);
+
+            double delay = (rtt - ptime)/2;
+            
+            if(dmean < 0) dmean = delay;
+
+            dmean = 0.99 * dmean + 0.01 * delay;
+
+            if(dmin < 0){
+                dmin = dmean;                
+                dmax = dmean;              
+            }
+            
+            if(dmax < 0){
+                dmax = dmean;                
+            }
+            
+            if(delay > dmax) dmax = 1.1 * delay;
+            if(delay < dmin) dmin = delay;
+
+            dmin = dmin * 0.99999 + delay * 0.0001;
+            dmax = dmax * 0.99999 + delay * 0.0001;
+            computeRC();
+        }
+        
+        if(msg.content instanceof Message){
+            Content_Acknowledge ack = new Content_Acknowledge();
+            Content_Amoeba_Reply c1;
+            Content_Amoeba c2;
+            if ( ((Message)msg.content).content instanceof Content_Amoeba_Reply) {
+                c1 = (Content_Amoeba_Reply) ((Message)msg.content).content;
+                ack = c1.vack[msg.destination];
+            }
+            if ( ((Message)msg.content).content instanceof Content_Amoeba) {
+                c2 = (Content_Amoeba) ((Message)msg.content).content;
+                ack = c2.vack[msg.destination];
+            }                 
+            
+            //compute the round-trip-time
+            double rtt = msg.receptionTime - ack.lsendTime;
+            
+            //compute the remote proc time
+            double ptime = (ack.rsendTime - ack.rrecvTime) * (1 - maxro * ro);
+
+            double delay = (rtt - ptime)/2;
+            
+            if(dmean < 0) dmean = delay;
+
+            dmean = 0.99 * dmean + 0.01 * delay;
+
+            if(dmin < 0){
+                dmin = dmean;                
+                dmax = dmean;              
+            }
+            
+            if(dmax < 0){
+                dmax = dmean;                
+            }
+            
+            if(delay > dmax) dmax = 1.1 * delay;
+            if(delay < dmin) dmin = delay;
+
+            dmin = dmin * 0.99999 + delay * 0.0001;
+            dmax = dmax * 0.99999 + delay * 0.0001;
+            computeRC();
+        }
+        */
     }
 
     public void computeRC(){
@@ -134,7 +233,7 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
     
     public int getMaxTS() {
 
-        return (int) maxTS;
+        return (int) round(maxTS,0);
     }
 
 
@@ -211,7 +310,7 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
 
         
         //double dtsOvh = (-1.0/maxTS) * ((infra.nprocess - 1)/((double)infra.nprocess)) * error;
-        double dtsOvh = 2.0/3.0;
+        double dtsOvh = (-1.0/maxTS) * 2.0/3.0 * error ;
         
         double dt = now - old;
         
@@ -228,7 +327,7 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
     }
     
     public double sensing(){
-        double OVH = ((double)nts) / nrecv;
+        double OVH = ((double) (nts) ) / nrecv;
 
         if(meanOVH < 0) meanOVH = OVH;
         

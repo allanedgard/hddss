@@ -14,6 +14,7 @@ public class Content_Amoeba {
     private int[] missing;
     private int last;
     private String content;
+    Content_Acknowledge [] vack;
 
     Content_Amoeba(int last, int atual)
     {
@@ -23,6 +24,17 @@ public class Content_Amoeba {
         missing[0] = last;
         for(int i=1; i<total; i++)
             missing[i] = missing[i-1]++;
+    }
+    
+Content_Amoeba(int last, int atual,  Content_Acknowledge [] acks)
+    {
+        this.last = last - 1;
+        int total = atual - last;
+        missing = new int[total];
+        missing[0] = last;
+        for(int i=1; i<total; i++)
+            missing[i] = missing[i-1]++;
+        vack = acks;
     }
 
     Content_Amoeba(int last, int atual, String content)
@@ -41,6 +53,13 @@ public class Content_Amoeba {
         this.last = last;
         this.content = content; 
     }    
+    
+    Content_Amoeba(int last, String content,  Content_Acknowledge [] acks)
+    {
+        this.last = last;
+        this.content = content; 
+        vack = acks;
+    }  
     
     Content_Amoeba(int last){
         this.last = last - 1;

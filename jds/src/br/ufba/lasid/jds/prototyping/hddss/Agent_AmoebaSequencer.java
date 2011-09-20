@@ -32,6 +32,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
         final int DLV = 14;
         int RECV;
         int SENT;
+        Content_Acknowledge [] acks;
         
         // 
         int Lider;
@@ -83,6 +84,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
             LSN = -1;
             bloquearEntrega = false;
             consenso = false;
+            acks = new Content_Acknowledge[infra.nprocess];
             Lider = 1;
             if (ID==Lider)
                 SouLider = true;
@@ -106,6 +108,9 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
              */ 
             bloquearEntrega = false;
             consenso = false;
+            for (int i = 0;i<infra.nprocess;i++) {
+                acks[i] = new Content_Acknowledge();
+            }
             
             /* Conjuntos a serem mantidos pelos 
              * Detectores de Estados e de Defeitos
@@ -173,7 +178,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
         
     @Override
         public void execute() {
-            Content_Amoeba ca = new Content_Amoeba(LastACK, "stuff");
+            Content_Amoeba ca = new Content_Amoeba(LastACK, "stuff", acks);
             if ( (r.uniform() <= prob) && !bloquearEntrega ) {
                 int clock = (int)infra.clock.value();
                 SENT = clock;    // Registra numero do bloco do ultimo envio
@@ -194,18 +199,65 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
          *  Envia mensagem a grupo
          */
         public void sendGroupMsg(int clock, int tipo, Object valor, int LC) {
-            for (int j=0; j<infra.nprocess;j++)
-                this.createMessage(clock, this.ID, j, tipo, valor, LC);
+            for (int j=0; j<infra.nprocess;j++) {
+                if(valor instanceof Content_Amoeba){
+                    ((Content_Amoeba)valor).vack[j].rsendTime = clock;
+                }
+                if(valor instanceof Content_Amoeba_Reply){
+                    ((Content_Amoeba_Reply)valor).vack[j].rsendTime = clock;
+                }
+                if (valor instanceof Message) {
+                    Message me = (Message) valor;
+                    if(me.content instanceof Content_Amoeba){
+                        ((Content_Amoeba) ((Message)valor).content).vack[j].rsendTime = clock;
+                    }
+                    if(me.content instanceof Content_Amoeba_Reply){
+                        ((Content_Amoeba_Reply)((Message)valor).content).vack[j].rsendTime = clock;
+                    }                    
+                }
+                this.createMessage(clock, this.ID, j, tipo, valor, LC);  }
         }
         
         public void sendGroupMsg(int clock, int tipo, Object valor, int LC, boolean pay) {
-            for (int j=0; j<infra.nprocess;j++)
+            for (int j=0; j<infra.nprocess;j++) {
+                if(valor instanceof Content_Amoeba){
+                    ((Content_Amoeba)valor).vack[j].rsendTime = clock;
+                }
+                if(valor instanceof Content_Amoeba_Reply){
+                    ((Content_Amoeba_Reply)valor).vack[j].rsendTime = clock;
+                }
+                if (valor instanceof Message) {
+                    Message me = (Message) valor;
+                    if(me.content instanceof Content_Amoeba){
+                        ((Content_Amoeba) ((Message)valor).content).vack[j].rsendTime = clock;
+                    }
+                    if(me.content instanceof Content_Amoeba_Reply){
+                        ((Content_Amoeba_Reply)((Message)valor).content).vack[j].rsendTime = clock;
+                    }                    
+                }
                 this.createMessage(clock, this.ID, j, tipo, valor, LC, pay);
+            }
         }
 
         public void relayGroupMsg(int clock, int i, int tipo, Object valor, int LC, boolean pay) {
-            for (int j=0; j<infra.nprocess;j++)
+            for (int j=0; j<infra.nprocess;j++) {
+                if(valor instanceof Content_Amoeba){
+                    ((Content_Amoeba)valor).vack[j].rsendTime = clock;
+                }
+                if(valor instanceof Content_Amoeba_Reply){
+                    ((Content_Amoeba_Reply)valor).vack[j].rsendTime = clock;
+                }
+                if (valor instanceof Message) {
+                    Message me = (Message) valor;
+                    if(me.content instanceof Content_Amoeba){
+                        ((Content_Amoeba) ((Message)valor).content).vack[j].rsendTime = clock;
+                    }
+                    if(me.content instanceof Content_Amoeba_Reply){
+                        ((Content_Amoeba_Reply)((Message)valor).content).vack[j].rsendTime = clock;
+                    }                    
+                }
                 this.createMessage(clock, i, j, tipo, valor, LC, pay);
+            }
         }        
 
         
@@ -222,9 +274,11 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                 case REQ_SEQ:
                     if (SouLider) {
                         Sequencia++;
-                        Content_Amoeba_Reply cm = new Content_Amoeba_Reply(LastDLV, msg);
+                        Content_Amoeba_Reply cm = new Content_Amoeba_Reply(LastDLV, msg, acks);
                         relayGroupMsg(clock, msg.sender, APP, cm, Sequencia, true);
                         quorum[Sequencia]=0;
+                        acks[msg.sender].rrecvTime = msg.receptionTime;
+                        acks[msg.sender].lsendTime = msg.physicalClock;
                         /*
                          *   PROCESSA OS EMBEDDED ACKS 
                          */
@@ -240,6 +294,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                             BM[msg.sender] = ((Content_Amoeba)msg.content).getLast();
                         }
                     }
+                    
                     break;
                 case APP:
                     msgs.add(msg.logicalClock, ((Content_Amoeba_Reply)msg.content).getContent() );
@@ -259,7 +314,9 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                     if (clock - SENT >= ts)
                         this.createMessage(clock, ID, Lider, ACK, msg, msg.logicalClock);
                     LastACK = msg.logicalClock;
-                    ((Content_Amoeba_Reply) msg.content).getAccept();                    
+                    ((Content_Amoeba_Reply) msg.content).getAccept();
+                    acks[msg.sender].rrecvTime = msg.receptionTime;
+                    acks[msg.sender].lsendTime = msg.physicalClock;
                     break;
                 case ACK:
                     /*
@@ -283,11 +340,16 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                             BM[msg.sender] = msg.logicalClock;
                         }
                     }
+                    acks[msg.sender].rrecvTime = msg.receptionTime;
+                    acks[msg.sender].lsendTime = msg.physicalClock;
                     break;
                 case DLV:
                     infra.app_in.add(clock, (Message) msg.content);
                     Simulator.reporter.stats("blocking time", clock - ((Message) msg.content).receptionTime);
+                    acks[msg.sender].rrecvTime = msg.receptionTime;
+                    acks[msg.sender].lsendTime = msg.physicalClock;
                     break;
+                /*
                 case CHANGE_VIEW_REQUEST:
                     if ( UnstableMensagensEnviadas.contains(msg.content) )
                             break;
@@ -343,12 +405,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                     break;
                 case CONSENSUS_P2:
                     c = (Consensus) msg.content;
-                    /* 
-                     *  Se recebe a mensagem de FASE 2 do consenso n:
-                     *  - verifica se há um QUÓRUM de processos:
-                     *      - se não há inclui as contribuições no
-                     *        conjunto de mensagens recebidas
-                     */
+
                     if (Consensus[c.number]==null)
                         Consensus[c.number] = iniciaConsensus( (Content_Unstable) c.estimated );
                     
@@ -363,20 +420,14 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                             if ( ( (Content_Unstable) Consensus[c.number].rec).conteudo.size() == 0)
                             {
                                 if (Consensus[c.number].noneREC) {
-                                /*      - se sim, se a decisão é somente {_|_} 
-                                */
                                 rotacionaCoordenador(c.number);
                                 }
                                 else {
-                                    /*      - se sim, se a decisão é {v, _|_} 
-                                    */
                                     rotacionaCoordenador(c.number);
                                     Consensus[c.number].estimated = Consensus[c.number].rec;
                                 }
                             } 
                             else {
-                                /*      - se sim, se a decisão é {v} 
-                                */                        
                                 sendGroupMsg(clock, DECIDED,Consensus[c.number], LogicalClock);
                             }
                         } 
@@ -385,14 +436,8 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                     break;               
                 
                 case DECIDED:
-                    /*
-                     *  Se recebe a mensagem do consenso n estar decidido e 
-                     *  as mensagens ainda não haviam sido entregues:
-                     *  - entrega as mensagens;
-                     *  - finaliza o consenso n.
-                     */
+                    
                     c = (Consensus) msg.content;
-                    // Implementa a decisao
                     if (Consensus[c.number].active) {
                         Consensus[c.number].active = false;
                         Consensus[c.number].estimated = c.rec;
@@ -427,6 +472,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                         }
                             
                     }
+                     */
             }
             
         }

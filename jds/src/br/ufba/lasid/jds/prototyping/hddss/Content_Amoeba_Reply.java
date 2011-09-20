@@ -9,6 +9,7 @@ public class Content_Amoeba_Reply {
     private int accept;
     private Message content;
     private String value;
+    Content_Acknowledge [] vack;
 
     Content_Amoeba_Reply(int accept, Message content)
     {
@@ -16,6 +17,13 @@ public class Content_Amoeba_Reply {
         this.content = content;
     }
 
+    Content_Amoeba_Reply(int accept, Message content, Content_Acknowledge [] ack)
+    {
+        this.accept = accept;
+        this.content = content;
+        vack = ack;
+    }
+    
     Content_Amoeba_Reply(int accept, String value)
     {
         this.accept = accept;
