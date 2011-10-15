@@ -11,9 +11,11 @@ package br.ufba.lasid.jds.prototyping.hddss;
  * @author Anne
  */
 public class Content_Amoeba {
-    private int[] missing;
-    private int last;
-    private String content;
+    int[] missing;
+    int accept;
+    int last;
+    String content;
+    Message contentMsg;
     Content_Acknowledge [] vack;
 
     Content_Amoeba(int last, int atual)
@@ -26,7 +28,7 @@ public class Content_Amoeba {
             missing[i] = missing[i-1]++;
     }
     
-Content_Amoeba(int last, int atual,  Content_Acknowledge [] acks)
+    Content_Amoeba(int last, int atual,  Content_Acknowledge [] acks)
     {
         this.last = last - 1;
         int total = atual - last;
@@ -35,6 +37,13 @@ Content_Amoeba(int last, int atual,  Content_Acknowledge [] acks)
         for(int i=1; i<total; i++)
             missing[i] = missing[i-1]++;
         vack = acks;
+    }
+
+    Content_Amoeba(int accept, Message content, Content_Acknowledge [] ack)
+    {
+        this.accept = accept;
+        this.contentMsg = content;
+        vack = ack;
     }
 
     Content_Amoeba(int last, int atual, String content)
@@ -79,6 +88,15 @@ Content_Amoeba(int last, int atual,  Content_Acknowledge [] acks)
         return last;
     }
 
+    public Message getContentMsg() {
+        return contentMsg;
+    }    
+    
+    public int getAccept()
+    {
+        return accept;
+    }    
+    
     public String toString() {
         return " (last = " + Integer.toString(last) + ")";
      }

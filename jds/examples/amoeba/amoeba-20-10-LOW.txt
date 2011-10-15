@@ -1,4 +1,4 @@
-FinalTime = 6000
+FinalTime = 60000
 NumberOfAgents = 10
 MaximumDeviation = 4
 Mode = clock
@@ -18,7 +18,7 @@ cpu.LoadCost = 0.000000001
 agent = br.ufba.lasid.jds.prototyping.hddss.Agent_AmoebaSequencer
 agent.DeltaMax = 100
 ; agent.Interval = 20
-agent.TS = 30
+agent.TS = 10
 agent.PacketGenerationProb = 0.05
 ; agent.ProbabilidadePerderPacote = 0.0
 

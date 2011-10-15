@@ -17,9 +17,17 @@ public class ChannelDeterministic extends Channel {
         delay = t;
     }
     
+    ChannelDeterministic () {
+
+    }
+    
     int delay() {
         return delay;
     }
+    
+    public void setDelay(String dt) {
+            delay = Integer.parseInt(dt);
+     }
     
     boolean status() {
         return true;
