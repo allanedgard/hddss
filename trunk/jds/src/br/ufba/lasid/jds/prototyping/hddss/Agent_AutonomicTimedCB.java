@@ -70,9 +70,6 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
 
         super.receive(msg);
 
-    
-        
-        
     }
     
     @Override

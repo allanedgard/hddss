@@ -116,6 +116,13 @@ public class IntegerSet  implements Comparable<IntegerSet> {
                 
     }    
     
+    int [] toVector() {
+        int [] x =new int[c.size()];
+        for (int i =0;i<c.size();i++)
+            x[i]= ((Integer) c.get(i)).intValue();
+        return x;
+    }
+    
     IntegerSet intersection(IntegerSet x) {
         IntegerSet y = new IntegerSet();
         for (int i=0; i<x.c.size(); i++) {
