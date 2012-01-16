@@ -1,2 +1,0 @@
-WorkDir = /repositorio/hddss/jds/examples/timedCB/
-cenarios = timed-200-20-MEDIUM.txt, timed-200-20-LOW.txt,  timed-200-10-HIGH.txt, timed-200-10-MEDIUM.txt, timed-200-10-LOW.txt, timed-200-30-HIGH.txt, timed-200-30-MEDIUM.txt, timed-200-30-LOW.txt, timed-200-20-HIGH.txt, timed-200-40-HIGH.txt, timed-200-40-MEDIUM.txt, timed-200-40-LOW.txt
