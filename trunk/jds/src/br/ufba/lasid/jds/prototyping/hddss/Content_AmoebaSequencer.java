@@ -11,7 +11,7 @@ public class Content_AmoebaSequencer {
     IntegerSet DLVS;
     String content;
     Message contentMsg;
-    //Content_Acknowledge [] vack;
+    Content_Acknowledge [] vack;
 
     Content_AmoebaSequencer(int lastACK, String content)
     {

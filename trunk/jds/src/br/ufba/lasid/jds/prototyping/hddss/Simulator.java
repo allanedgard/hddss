@@ -17,6 +17,7 @@ public class Simulator  extends Thread implements RuntimeSupport
     //int n;
     //int tempofinal;
     public Agent p[];
+    String NAME;
     
     //SimulatedScheduler scheduler = new SimulatedScheduler();
 
@@ -41,13 +42,13 @@ public class Simulator  extends Thread implements RuntimeSupport
     
     public static final Reporter reporter = new Reporter();
 
-    public final int obtemAtraso(int i, int j)
+    public final int getDelay(int i, int j)
     {
                 return (int) (network.channels[i][j].delay());
          
     }
 
-    public final int obtemAtraso(int i, IProcessable data){
+    public final int getDelay(int i, IProcessable data){
        return (int) p[i].infra.cpu.exec(data);
     }
      
@@ -65,7 +66,7 @@ public class Simulator  extends Thread implements RuntimeSupport
         }
     }
 
-    public final void iniciaModoHwClock() {
+    public final void initiateSimulatedHwClockMode() {
         synchronized(this){
             int n = get(Variable.NumberOfAgents).<Integer>value();
             //int finalTime = get(Variable.FinalTime).<Integer>value();
@@ -110,7 +111,7 @@ public class Simulator  extends Thread implements RuntimeSupport
 
       return done;
     }
-    public final void inicia() {
+    public final void initiate() {
 
         synchronized(this){
 
@@ -132,7 +133,7 @@ public class Simulator  extends Thread implements RuntimeSupport
         }
     } 
     
-    public final void finaliza() {
+    public final void terminate() {
         synchronized(this){
             int n = get(Variable.NumberOfAgents).<Integer>value();
 
@@ -187,8 +188,12 @@ public class Simulator  extends Thread implements RuntimeSupport
         }
     }
     
+    @Override
     public final void run()
     {
+        java.util.Date data = new java.util.Date();
+        System.out.println();
+        System.out.println("Starting simulated scene: "+NAME+" at "+data.toString());
         int n = get(Variable.NumberOfAgents).<Integer>value();
         m = 0;
         p = new Agent[n];
@@ -197,7 +202,7 @@ public class Simulator  extends Thread implements RuntimeSupport
         
         if (get(Variable.Mode).<String>value().equals("t")) {
         
-        inicia();
+        initiate();
         
         try {
         verificaPausa();
@@ -205,22 +210,24 @@ public class Simulator  extends Thread implements RuntimeSupport
             e.printStackTrace();
         }
         
-        finaliza();
+        terminate();
         
         }
         
         else 
             
-        iniciaModoHwClock();
+        initiateSimulatedHwClockMode();
 
-        estatisticas();
+        statistics();
         
         // System.exit(0);
     }
 
-    public void estatisticas() {
-        System.out.println("simulation finished: ");
-        java.util.Date data = new java.util.Date();        
+    public synchronized void  statistics() {
+        java.util.Date data = new java.util.Date();
+        System.out.println("---------------------------------------------------");       
+        System.out.println("results for simulated scene: "+NAME);
+        System.out.println("simulation finished: ");      
         System.out.println(data.toString());
         if(formattedReport){
            reporter.report2FormattedTable(System.out);
@@ -321,8 +328,6 @@ public class Simulator  extends Thread implements RuntimeSupport
 
          a.infra.cpu.setClock(_clock);
 
-        //a.infra.scheduler = scheduler;
-
         a.init();
     }
 
@@ -348,39 +353,48 @@ public class Simulator  extends Thread implements RuntimeSupport
     {
         
         Configurations configGeral = getConfig(args);
-        String WorkDir = configGeral.getString("WorkDir", ".");
+        String WorkDir = configGeral.getString("workdir", ".");
         System.out.println("Configuring: ");
         System.out.println(WorkDir);
+        String modo = configGeral.getString("mode");
+        
         String[] classNames =
-        configGeral.getStringArray("cenarios");
-        if (classNames == null) {
-            classNames = new String[0];
-        }
-        Simulator simulador;
-        System.out.println("n = "+classNames.length);
-        for (int i = 0; i < classNames.length; i++) {
+            configGeral.getStringArray("scenes");
+            if (classNames == null) {
+                classNames = new String[0];
+            }
+        if (modo.equals("prototype")) {
+            System.out.println("Running prototype, only first scene will be started...");
+            int id = configGeral.getInteger("ID");
+            System.out.println("agent #"+id);
+            TestBed prot;
             java.util.Date data = new java.util.Date();
             System.out.println(data.toString());
-            System.out.println("cenario simulado: "+WorkDir+classNames[i]);
-            config = getConfig(new String[] {WorkDir+classNames[i]});
-            simulador = new Simulator(WorkDir+classNames[i]);
-            simulador.run();
-            simulador = null;
+            System.out.println("Starting prototyped scene: "+WorkDir+classNames[0]);
+            config = getConfig(new String[] {WorkDir+classNames[0]});
+            prot = new TestBed(config,WorkDir+classNames[0],id);
+            prot.start();
+        } 
+        else {
+            Simulator simulator;
+            System.out.println("n = "+classNames.length);
+            for (int i = 0; i < classNames.length; i++) {
+                config = getConfig(new String[] {WorkDir+classNames[i]});
+                simulator = new Simulator(WorkDir+classNames[i]);
+                simulator.start();
+                simulator = null;
+            }
         }
-
-        /*
-        config = getConfig(args);
-        Simulator simulador = new Simulator();
-        simulador.run();*/
     }
 
     Simulator(String filename)
     {
         clock = 0;
         fim = false;
+        NAME = filename;
 
         try {
-            out = new java.io.PrintStream(new java.io.FileOutputStream(filename+".saida.txt"));
+            out = new java.io.PrintStream(new java.io.FileOutputStream(filename+".out"));
         } catch (Exception e) {
             e.printStackTrace();
         }
