@@ -4,7 +4,7 @@ package br.ufba.lasid.jds.prototyping.hddss;
 public class Agent extends Thread implements IAgent{
     public int ID;
     public char tipo;
-    public transient Context contexto;
+    public transient Context context;
     public transient boolean done;
     public transient long exectime = 0;
     protected boolean shutdown = false;
@@ -20,12 +20,12 @@ public class Agent extends Thread implements IAgent{
         done = false;
     }
 
-    public Context getContexto() {
-        return contexto;
+    public Context getContext() {
+        return context;
     }
 
-    public void setContexto(Context contexto) {
-        this.contexto = contexto;
+    public void setContext(Context c) {
+        this.context = c;
     }
 
     public boolean isDone() {

@@ -81,18 +81,18 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
     public void estimateDelay(Message msg){
          double ro = infra.context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
         int maxro = infra.context.get(RuntimeSupport.Variable.MaxClockDeviation).<Integer>value();
-        if(msg.content instanceof Content_Amoeba){
-            Content_Amoeba content = (Content_Amoeba) msg.content;
-            Content_Acknowledge ack = content.vack[msg.destination];
+        if(msg.content instanceof Content_AmoebaSequencer){
+            //Content_Amoeba content = (Content_Amoeba) msg.content;
+            //Content_Acknowledge ack = content.vack[msg.destination];
 
             //compute the round-trip-time
-            double rtt = msg.receptionTime - ack.lsendTime;
+            //double rtt = msg.receptionTime - ack.lsendTime;
             
             //compute the remote proc time
-            double ptime = (ack.rsendTime - ack.rrecvTime) * (1 - maxro * ro);
+            //double ptime = (ack.rsendTime - ack.rrecvTime) * (1 - maxro * ro);
 
-            double delay = (rtt - ptime)/2;
-            //double delay = msg.receptionTime-msg.physicalClock;
+            //double delay = (rtt - ptime)/2;
+            double delay = msg.receptionTime-msg.physicalClock;
             
             if(dmean < 0) dmean = delay;
 
@@ -215,10 +215,11 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
         //double dtsOvh = (-1.0/maxTS) * (2.0/3.0)* error;
 
         double dt = now - old;
+        //double dtsOvh = (-1.0/maxTS) * (2.0/3.0)* error;
         double dtsOvh = (-1.0) * (2.0/3.0)* error;
-
-        double action =  (dtsOvh * dt)/10;
-        //double action = -error/100;
+        
+        double action =  (dtsOvh * dt);///10;
+        //double action =  1000 * dtsOvh * dt;
 
         ctrTS += action;
 

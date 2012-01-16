@@ -1,6 +1,5 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
-import br.ufba.lasid.jds.util.IDebugger;
 import java.util.ArrayList;
 
 /**
@@ -8,37 +7,19 @@ import java.util.ArrayList;
  * It allows to hide details about the execution infra of the agent.
  * @author aliriosa
  */
-public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugger{
-    public AbstractClock clock;
-    //public AbstractClock globalClock;
-    public CPU cpu;
-    public RuntimeSupport context;
+public class MiddlewareRuntimeContainer extends RuntimeContainer {
+
+    String IP[];
+    String PORT[];
     
-    Buffer nic_out; //send buffer
-    Buffer nic_in;  //receive buffer
-    Buffer app_in;  //deliver buffer
-    Buffer exc_in;  //execute buffer;
-
-    FaultModelAgent faultModel;
-
-    Agent  agent;
-
-    static int MAX_PROCESSA = 100;
-
-    int nprocess = 0;
 
     RuntimeVariables variables = new RuntimeVariables();
 
-    //public IScheduler scheduler;
-    
-    public RuntimeContainer(RuntimeSupport context){
-        this.context = context;
-        nic_in = new Buffer();
-        nic_out = new Buffer();
-        app_in = new Buffer();
-        exc_in = new Buffer();
-        nprocess = context.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value();   
+    MiddlewareRuntimeContainer(RuntimeSupport c) {
+        super(c);
     }
+    
+    //public IScheduler scheduler;
 
     public boolean register(Agent agent){
         this.agent = agent;
@@ -74,6 +55,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
         
     }
 
+    /*
     public final void increaseTick() {
         if (faultModel == null) {
             execute();
@@ -97,7 +79,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
     		e.printStackTrace();
     	}
     }
-
+*/
     @Override
     public void run() {
         int finalTime = context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
@@ -220,34 +202,24 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
             }
 
             Message msg;
-            Network network = context.get(Variable.Network).<Network>value();
 
             msg = (Message) a.get(0);
-            network.send(msg);
+            if ( msg.destination != context.get(Variable.NumberOfAgents).<Integer>value() ) {
+                System.out.println("from "+msg.sender+" to "+msg.destination);
+                
+            }
+            
+                
+                
+                
+                
+            //network.send(msg);
             reportEvent(msg, 's');
 
             return true;
        
     }
     
-    public final void reportEvent(Message msg, char ev) {
-        try{
-                String saida = ""+
-                agent.ID +"; "+
-                ev+"; "+
-                msg.sender+"; "+
-                msg.destination+"; "+
-                (int)cpu.value()+"; "+
-                //(int)clock.value()+"; "+
-                msg.physicalClock+"; "+
-                msg.logicalClock+"; "+
-                msg.type+"; "+
-                msg.content;
-                debug(saida);
-        } catch (Exception e) {
-                e.printStackTrace();
-        }
-    }
 
     private final int getAgentProcessingTime() {
         /*
@@ -260,14 +232,6 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
         else {
             return (int) (MAX_PROCESSA * Math.random());
         }
-    }
-
-    public final void debug(String d) {
-
-        boolean _debug = (Boolean)context.get(Variable.Debug).value();
-        java.io.PrintStream out = context.get(Variable.StdOutput).<java.io.PrintStream>value();
-        
-        if (_debug) out.println(d);
     }
 
     public Value get(Variable variable) {
