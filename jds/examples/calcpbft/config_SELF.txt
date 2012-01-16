@@ -1,0 +1,4 @@
+workdir = ./examples/calcpbft/
+mode = prototype
+ID=1
+scenes = rplSELF-100.txt
