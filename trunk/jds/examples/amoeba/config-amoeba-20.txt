@@ -1,0 +1,5 @@
+WorkDir = /repositorio/hddss/jds/examples/amoeba/
+cenarios = amoebaAC-20-10-LOW.txt, amoebaAC-20-10-HIGH.txt
+;amoebaAC-20-10-LOW.txt, amoebaAC-80-10-LOW.txt, amoebaAC-20-10-HIGH.txt, amoebaAC-80-10-HIGH.txt
+
+;amoeba-80-10-HIGH.txt,amoeba-NP-10-HIGH.txt,amoeba-10-10-HIGH.txt, amoeba-10-10-LOW.txt,amoeba-80-10-LOW.txt,amoeba-NP-10-LOW.txt 
