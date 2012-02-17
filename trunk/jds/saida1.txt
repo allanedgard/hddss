@@ -1,0 +1,36 @@
+Configuring: 
+/repositorio/hddss/jds/examples/amoeba/
+n = 1
+
+Starting simulated scene: /repositorio/hddss/jds/examples/amoeba/amoebaAC-80-10-LOW.txt at Sun Feb 05 12:41:19 BRST 2012
+---------------------------------------------------
+results for simulated scene: /repositorio/hddss/jds/examples/amoeba/amoebaAC-80-10-LOW.txt
+simulation finished: 
+Sun Feb 05 12:44:53 BRST 2012
+name; total
+network loopbacks;21559
+network loopbacks class 11;5908
+network loopbacks class 12;14217
+network loopbacks class 13;14
+network loopbacks class 14;1420
+network unicasts;49214
+network unicasts class 11;9463
+network unicasts class 12;22615
+network unicasts class 13;14890
+network unicasts class 14;2246
+
+name; value 
+
+name; mean; std; maximum; minimun
+blocking time; 62.86944018404906; 28.306362126819344; 182.0; 6.0
+network queue delay; 0.0013117202422075077; 5.998682412835337E-4; 0.0060; 0.0010
+send-delivery delay; 65.44919478527606; 28.34600889422781; 185.0; 7.0
+send-delivery delay agent0/agent0; 67.30011587485517; 27.535534308208554; 155.0; 12.0
+send-delivery delay agent0/agent1; 65.46739130434783; 27.467028590925466; 154.0; 10.0
+send-delivery delay agent0/agent2; 67.85022522522522; 27.28415507809922; 157.0; 10.0
+send-delivery delay agent1/agent0; 65.45865302642795; 29.287868119807335; 163.0; 9.0
+send-delivery delay agent1/agent1; 64.10921683537559; 28.965667959416283; 160.0; 7.0
+send-delivery delay agent1/agent2; 65.65355648535564; 28.81827443994396; 159.0; 8.0
+send-delivery delay agent2/agent0; 65.22561692126911; 27.998081479464357; 185.0; 12.0
+send-delivery delay agent2/agent1; 64.16141141141142; 28.14412697536595; 181.0; 9.0
+send-delivery delay agent2/agent2; 65.91981672394044; 28.766466907060302; 184.0; 8.0

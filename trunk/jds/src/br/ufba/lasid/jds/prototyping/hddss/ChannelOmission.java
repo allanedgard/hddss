@@ -1,9 +1,5 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
-/**
- *
- * @author allan
- */
 public abstract class ChannelOmission extends Channel {
     
     Randomize r;

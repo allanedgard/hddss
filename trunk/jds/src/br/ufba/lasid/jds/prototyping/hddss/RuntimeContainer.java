@@ -14,10 +14,10 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
     public CPU cpu;
     public RuntimeSupport context;
     
-    Buffer nic_out; //send buffer
-    Buffer nic_in;  //receive buffer
-    Buffer app_in;  //deliver buffer
-    Buffer exc_in;  //execute buffer;
+    public Buffer nic_out; //send buffer
+    public Buffer nic_in;  //receive buffer
+    public Buffer app_in;  //deliver buffer
+    public Buffer exc_in;  //execute buffer;
 
     FaultModelAgent faultModel;
 
@@ -25,7 +25,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
 
     static int MAX_PROCESSA = 100;
 
-    int nprocess = 0;
+    public int nprocess = 0;
 
     RuntimeVariables variables = new RuntimeVariables();
 

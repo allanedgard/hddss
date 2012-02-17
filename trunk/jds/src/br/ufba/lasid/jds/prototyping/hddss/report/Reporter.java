@@ -75,7 +75,18 @@ public class Reporter {
 
       r.insert(value);
    }
-
+   
+   public double getMean(String name){
+      // REMENDO
+      Report r = getReport(name);
+      if(r == null){
+         return 0.0;
+      }
+      org.apache.commons.math.stat.descriptive.DescriptiveStatistics a =
+              (org.apache.commons.math.stat.descriptive.DescriptiveStatistics) r.getResult();
+      return a.getMean();
+   }
+   
    public void assign(String name, double value){
       Report r = getReport(name);
       if(r == null){

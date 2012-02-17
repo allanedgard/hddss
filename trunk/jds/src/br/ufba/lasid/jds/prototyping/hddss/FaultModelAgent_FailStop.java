@@ -1,14 +1,5 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/**
- *
- * @author ALLAN
- */
 public class FaultModelAgent_FailStop extends FaultModelAgent {
 
     boolean parado;

@@ -1,5 +1,8 @@
-package br.ufba.lasid.jds.prototyping.hddss;
+package br.ufba.lasid.jds.prototyping.hddss.instances;
 
+import br.ufba.lasid.jds.prototyping.hddss.Message;
+import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport;
+import br.ufba.lasid.jds.prototyping.hddss.Simulator;
 import java.util.Hashtable;
 
 public class Agent_AutonomicTimedCB extends Agent_TimedCB{
@@ -153,7 +156,14 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
         return (int) round(dmin, 0);
     }
 
-
+    @Override
+    public void execute() {
+    super.execute();
+    infra.debug("p" + ID + "," + infra.clock.value() + "," + meanOVH+", "+Simulator.reporter.getMean("blocking time")+", "+ts+", "+RC+", "+RCRef);
+    if ((int)infra.clock.value() >= 10000) 
+                RCRef = .50;
+    }
+    
     @Override
     public void deliver(Message msg) {
         super.deliver(msg);
@@ -231,6 +241,7 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
 
     public void actuate(double value){
         ts = (int)value;
-        //System.nic_out.println("p" + ID + "," + dmean + "," + meanOVH + "," +ts + "," + RC);
+        
+        //infra.debug("p" + ID + "," + dmean + "," + meanOVH + "," +ts + "," + RC);
     }    
 }

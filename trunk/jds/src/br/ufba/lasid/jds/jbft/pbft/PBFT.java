@@ -9,7 +9,7 @@ import br.ufba.lasid.jds.group.IGroup;
 import br.ufba.lasid.jds.DistributedProtocol;
 import br.ufba.lasid.jds.architectures.Architecture;
 import br.ufba.lasid.jds.security.IMessageAuthenticator;
-import br.ufba.lasid.jds.util.IClock;
+import br.ufba.lasid.jds.prototyping.hddss.IClock;
 import br.ufba.lasid.jds.util.IScheduler;
 import br.ufba.lasid.jds.jbft.pbft.util.PBFTStateLog;
 

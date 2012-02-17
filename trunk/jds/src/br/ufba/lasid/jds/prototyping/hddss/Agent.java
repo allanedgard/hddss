@@ -1,5 +1,4 @@
 package br.ufba.lasid.jds.prototyping.hddss;
-//
 
 public class Agent extends Thread implements IAgent{
     public int ID;

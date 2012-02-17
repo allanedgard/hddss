@@ -1,9 +1,11 @@
-package br.ufba.lasid.jds.prototyping.hddss;
+package br.ufba.lasid.jds.prototyping.hddss.instances;
 
 
 import br.ufba.lasid.jds.prototyping.hddss.Message;
+import br.ufba.lasid.jds.prototyping.hddss.Message;
+import java.io.Serializable;
 
-public class Content_AmoebaSequencer {
+public class Content_AmoebaSequencer implements Serializable {
     int[] missing;
     int LastDLV;
     int LastACK;

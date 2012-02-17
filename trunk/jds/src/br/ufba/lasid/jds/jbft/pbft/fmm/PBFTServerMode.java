@@ -30,7 +30,7 @@ import br.ufba.lasid.jds.jbft.pbft.comm.PBFTServerMessage;
 import br.ufba.lasid.jds.jbft.pbft.comm.PBFTStatusActive;
 import br.ufba.lasid.jds.jbft.pbft.server.IPBFTServer;
 import br.ufba.lasid.jds.security.IMessageAuthenticator;
-import br.ufba.lasid.jds.util.IClock;
+import br.ufba.lasid.jds.prototyping.hddss.IClock;
 import br.ufba.lasid.jds.util.IScheduler;
 import java.lang.reflect.Method;
 import java.util.Hashtable;

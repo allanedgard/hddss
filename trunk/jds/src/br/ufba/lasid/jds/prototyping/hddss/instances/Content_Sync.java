@@ -1,4 +1,4 @@
-package br.ufba.lasid.jds.prototyping.hddss;
+package br.ufba.lasid.jds.prototyping.hddss.instances;
 
 /*
  * Sinc_Conteudo.java

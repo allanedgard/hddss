@@ -13,6 +13,12 @@ import org.rosuda.JRI.RList;
 import org.rosuda.JRI.RVector;
 import org.rosuda.JRI.RMainLoopCallbacks;
 
+/*
+ *    install.packages("rJava")
+ *    include at PATH the R bin directory and i386 or x64 subdiretory
+ * 
+ */
+
 public class IntegrationR {
 
     Rengine re;

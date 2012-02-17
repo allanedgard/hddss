@@ -19,10 +19,20 @@ public class Teste {
      */
     public static void main(String[] args) {
         try {
-            Network x = (Network) Factory.create("br.ufba.lasid.hddss.MulticastNetwork<br.ufba.lasid.hddss.NetworkDeterministic>",
-                br.ufba.lasid.jds.prototyping.hddss.Network.class.getName());
+            //Network x = (Network) Factory.create("br.ufba.lasid.hddss.MulticastNetwork<br.ufba.lasid.hddss.NetworkDeterministic>",
+            //    br.ufba.lasid.jds.prototyping.hddss.Network.class.getName());
+            ChannelProbabilistic c = new ChannelProbabilistic();
+            System.out.println("oi");
+            c.setDistribution("R(\"rnorm(1, mean=10, sd=5)\")");
+            System.out.println("some delays:");
+            System.out.println(c.delay());
+            System.out.println(c.delay());
+            System.out.println(c.delay());
+            System.out.println(c.delay());
+            
+            // ,22,\"211\"
         } catch (Exception ex) {
-            Logger.getLogger(Teste.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(Teste.class.getName()).log(Level.SEVERE, null, ex);
             ex.printStackTrace();
         }
     }

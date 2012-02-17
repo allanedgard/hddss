@@ -1,10 +1,5 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
-/**
- * SimulatedAgent encapsules the specific behavior of the Agent that is done by
- * simulation
- * @author aliriosa
- */
 public class SimulatedAgent extends Agent{
 
     /**
@@ -46,7 +41,6 @@ public class SimulatedAgent extends Agent{
         }
         else infra.faultModel.sendMessage(realClock,msg);
     }
-
 
     /**
      * relayMessage forwards a message that will be sent by the simulator

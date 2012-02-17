@@ -1,4 +1,10 @@
-package br.ufba.lasid.jds.prototyping.hddss;
+package br.ufba.lasid.jds.prototyping.hddss.instances;
+
+import br.ufba.lasid.jds.prototyping.hddss.Buffer;
+import br.ufba.lasid.jds.prototyping.hddss.Message;
+import br.ufba.lasid.jds.prototyping.hddss.Randomize;
+import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport;
+import br.ufba.lasid.jds.prototyping.hddss.SimulatedAgent;
 
 public class Agent_protocoloA extends SimulatedAgent {
 

@@ -1,5 +1,7 @@
-package br.ufba.lasid.jds.prototyping.hddss;
+package br.ufba.lasid.jds.prototyping.hddss.instances;
 
+import br.ufba.lasid.jds.prototyping.hddss.Message;
+import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport;
 import java.util.Hashtable;
 
 public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{

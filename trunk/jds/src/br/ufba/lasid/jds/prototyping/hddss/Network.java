@@ -5,15 +5,6 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template nic_in the editor.
- */
-
-/**
- *
- * @author aliriosa
- */
 public abstract class Network extends Thread{
     Buffer net_in;
     Simulator conteiner;
@@ -31,9 +22,9 @@ public abstract class Network extends Thread{
     static final String TAG = "network";
 
 
-    int broadcasts[];
-    int unicasts[];
-    int multicasts[];
+    public int broadcasts[];
+    public int unicasts[];
+    public int multicasts[];
 
     
     Network(){

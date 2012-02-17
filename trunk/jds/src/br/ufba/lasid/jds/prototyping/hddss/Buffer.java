@@ -19,7 +19,7 @@ public  class Buffer {
 
     TreeMap inside;
    
-     Buffer() {
+     public Buffer() {
          inside = new TreeMap();
          min = -1;
          max = -1;

@@ -1,32 +1,20 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
-/*
- * Mensagem.java
- *
- * Created on 22 de Julho de 2008, 05:33
- *
- * To change this template, choose Tools | Template Manager
- * and open the template in the editor.
- */
+import java.io.Serializable;
 
-/**
- *
- * @author allan
- */
+public class Message  implements Comparable<Message>, Serializable {
 
-public class Message  implements Comparable<Message> {
-
-    int sender;
-    int relayFrom;
-    int relayTo;
-    int destination;
-    int type;
-    int logicalClock;
-    int physicalClock;
-    int receptionTime;
-    int hops;
-    Object content;
-    boolean payload;
+    public int sender;
+    public int relayFrom;
+    public int relayTo;
+    public int destination;
+    public int type;
+    public int logicalClock;
+    public int physicalClock;
+    public int receptionTime;
+    public int hops;
+    public Object content;
+    public boolean payload;
     
     /*FIELDS ADDED BY ALIRIO SÁ*/
     boolean multicast = false;

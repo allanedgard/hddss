@@ -3,7 +3,9 @@
  * and open the template in the editor.
  */
 
-package br.ufba.lasid.jds.prototyping.hddss;
+package br.ufba.lasid.jds.prototyping.hddss.instances;
+
+import br.ufba.lasid.jds.prototyping.hddss.Message;
 
 
 /**
