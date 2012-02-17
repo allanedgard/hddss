@@ -1,18 +1,8 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
-
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/**
- *
- * @author aliriosa
- */
 public class Factory {
 
     public static Configurations config = null;
@@ -27,9 +17,7 @@ public class Factory {
         while (properties.hasNext()) {
            
             String value = (String) properties.next();
-            /*this keeps the compatibility with previous versions*/
-//            System.out.println(obj instanceof  Agent);
-//            System.out.println(value);
+
             if(isInstanceof(obj, Agent.class) && value.contains("FaultModel")){
                   ((Agent)obj).infra.setFaultModel(config.getString(value));
             }else{

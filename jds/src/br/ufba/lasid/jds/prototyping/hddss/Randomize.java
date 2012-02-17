@@ -1,18 +1,21 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+import java.lang.reflect.Method;
 
-/**
- *
- * @author allan
- */
+
 public class Randomize {
-    
+    IntegrationR R;
     java.util.Random z; 
-    
+
+    String dist;
+    Object obj;
+    Class genericClass;
+    int paramInt1, paramInt2;
+    double paramDouble1, paramDouble2;
+    String paramString1, paramString2;
+    int TYPE;
+    Method method;
+
     public Randomize() {
         z = new java.util.Random();
     }
@@ -20,6 +23,202 @@ public class Randomize {
     public Randomize (int seed) {
         z = new java.util.Random();        
         z.setSeed(seed);
+    }
+    
+    public void setDistribution(String dt) {
+        /*
+         *  
+         */
+        dist = dt;
+        int i,j;
+        try {
+            genericClass = Class.forName("br.ufba.lasid.jds.prototyping.hddss.Randomize");
+            obj = genericClass.newInstance();
+            i = dist.indexOf('(');
+            System.out.println(i);
+            String methodName = dist.substring(0, i);
+            int b, c;
+            b=i+1;
+            do {
+                c = b;
+                b=dist.indexOf(')', b+1);
+            } while (b>0);
+            //String parameters = dist.substring(i+1,dist.indexOf(')'));
+            String parameters = dist.substring(i+1,c);
+            System.out.println(parameters);
+            i = parameters.indexOf(','); 
+            if ( (i<0) || methodName.equals("R") ) {
+                System.out.println("um parametro");
+                i = parameters.indexOf('\"');
+                j = parameters.substring(1).indexOf('\"');
+                if  ( (i==0) && (j==parameters.length()-2) ) {
+                  System.out.println("string");
+                  String x = parameters.substring(1, parameters.length()-1);
+                  TYPE = 2;
+                  paramString1 = x;
+                  System.out.println(x);
+                  method = genericClass.getMethod(methodName, String.class);
+                } else {
+                    i=parameters.indexOf('.');
+                    if (i >=0) {
+                        System.out.println("duplo");
+                        TYPE = 1;
+                        paramDouble1 = Double.parseDouble(parameters);
+                        method = genericClass.getMethod(methodName, double.class);
+                    } else {
+                        System.out.println("inteiro");
+                        TYPE = 3;
+                        paramInt1 = Integer.parseInt(parameters);
+                        method = genericClass.getMethod(methodName, int.class);
+                    }
+                 } 
+                
+            } else {
+                i = parameters.indexOf(',');
+                System.out.println("aqui");
+                String param1 = parameters.substring(0, i);
+                String param2 = parameters.substring(i+1);
+                System.out.println(i);
+                System.out.println(param1);
+                System.out.println(param2);
+                i = param1.indexOf('\"');
+                j = param1.substring(1).indexOf('\"');
+                if  ( (i==0) && (j==param1.length()-2) ) {
+                  System.out.println("string");
+                  String x = parameters.substring(1, param1.length()-1);
+                  TYPE = 5;
+                  paramString1 = x;
+                } else {
+                    i=param1.indexOf('.');
+                    if (i >=0) {
+                        System.out.println("duplo");
+                        TYPE = 4;
+                        paramDouble1 = Double.parseDouble(param1);
+                    } else {
+                        System.out.println("inteiro");
+                        TYPE = 6;
+                        paramInt1 = Integer.parseInt(param1);                    
+                    }
+                }
+                i = param2.indexOf('\"');
+                j = param2.substring(1).indexOf('\"');
+                if  ( (i==0) && (j==param2.length()-2) ) {
+                  System.out.println("string");
+                  String x = param2.substring(1, param2.length()-1);
+                  paramString1 = x;
+                  switch (TYPE) {
+                      case 4: // DBL, STR
+                                TYPE = 45;
+                                method = genericClass.getMethod(methodName, double.class, String.class);
+                                break;
+                      case 5: // STR, STR
+                                TYPE = 55;
+                                method = genericClass.getMethod(methodName, String.class, String.class);
+                                break;
+                      case 6: // INT, STR
+                                TYPE = 65;
+                                method = genericClass.getMethod(methodName, int.class, String.class);
+                                break;
+                  }
+                  
+                  
+                } else {
+                    i=param2.indexOf('.');
+                    if (i >=0) {
+                        System.out.println("duplo");
+                        paramDouble2 = Double.parseDouble(param2);
+                        switch (TYPE) {
+                            case 4: // DBL, DBL
+                                TYPE = 44;
+                                method = genericClass.getMethod(methodName, double.class, double.class);
+                                break;
+                            case 5: // STR, DBL
+                                TYPE = 54;
+                                method = genericClass.getMethod(methodName, String.class, double.class);
+                                break;
+                            case 6: // INT, DBL
+                                TYPE = 64;
+                                method = genericClass.getMethod(methodName, int.class, double.class);
+                                break;
+                        }
+                    } else {
+                        System.out.println("inteiro");
+                        paramInt2 = Integer.parseInt(param2);                    
+                        switch (TYPE) {
+                            case 4: // DBL, INT
+                                TYPE = 46;
+                                method = genericClass.getMethod(methodName, int.class, double.class);
+                                break;
+                            case 5: // STR, DBL
+                                TYPE = 56;
+                                method = genericClass.getMethod(methodName, String.class, int.class);
+                                break;
+                            case 6: // INT, DBL
+                                TYPE = 66;
+                                method = genericClass.getMethod(methodName, int.class, int.class);
+                                break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) 
+        {
+        };  
+    }    
+    
+   public double genericDistribution() {
+        double dly=0.0;
+        try {
+            switch (TYPE) {
+                case 1: 
+                     dly = (Double) method.invoke(this, paramDouble1);
+                     break;
+                case 2:
+                     dly = (Double) method.invoke(this, paramString1);
+                     break;
+                case 3:
+                     dly = (Double) method.invoke(this, paramInt1);
+                     break;
+                case 44: 
+                     dly = (Double) method.invoke(this, paramDouble1, paramDouble2);
+                     break;
+                case 45:
+                     dly = (Double) method.invoke(this, paramDouble1, paramString2);
+                     break;
+                case 46:
+                     dly = (Double) method.invoke(this, paramDouble1, paramInt2);
+                     break;
+                case 54: 
+                     dly = (Double) method.invoke(this, paramString1, paramDouble2);
+                     break;
+                case 55: 
+                     dly = (Double) method.invoke(this, paramString1, paramString2);
+                     break;
+                case 56: 
+                     dly = (Double) method.invoke(this, paramString1, paramInt2);
+                     break;
+                case 64: 
+                     dly = (Double) method.invoke(this, paramInt1, paramDouble2);
+                     break;
+                case 65:
+                     dly = (Double) method.invoke(this, paramInt1, paramString2);
+                     break;
+                case 66:
+                     dly = (Double) method.invoke(this, paramInt1, paramInt2);
+                     break;
+                default: 
+                    dly = 0.0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return dly;
+   }
+    
+    public double R(String funcao) {
+        if (R == null)
+            R = new IntegrationR();
+        return R.evaluateDouble(funcao);
     }
     
     public double expntl (double x) {
@@ -33,7 +232,7 @@ public class Randomize {
         return(-(x/k)*Math.log(w));
     }
     
-    public int irandom(int i,int n) { /* 'random' returns an integer equiprobably selected from the   */
+    public double irandom(int i,int n) { /* 'random' returns an integer equiprobably selected from the   */
       /* set of integers i, i+1, i+2, . . , n.                        */
       n-=i; n=(int) ((n+1.0)*z.nextDouble());
       return(i+n);

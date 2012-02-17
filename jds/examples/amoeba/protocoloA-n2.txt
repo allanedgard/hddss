@@ -1,7 +1,9 @@
-FinalTime = 120000
-NumberOfAgents = 3
+FinalTime = 6000
+NumberOfAgents = 2
 MaximumDeviation = 4
 Mode = clock
+IPort[0] = 127.0.0.11:1001
+IPort[1] = 127.0.0.11:1002
 Debug = false
 FormattedReport = false
 
@@ -15,20 +17,19 @@ cpu.ProcessingRate = 9446400
 /* LoadCost in seconds (e.g. 0.000000000001 seconds is equal to 1 picosecond) if simulation time in millisenconds then use 0.000000001 ms*/
 cpu.LoadCost = 0.000000001
 
-agent = br.ufba.lasid.jds.prototyping.hddss.Agent_AutonomicAmoeba
+agent = br.ufba.lasid.jds.prototyping.hddss.Agent_protocoloA
 agent.DeltaMax = 100
 ; agent.Interval = 20
-agent.TS = 1
-agent.PacketGenerationProb = 0.15
+agent.TS = 20
+agent.PacketGenerationProb = 0.05
 ; agent.ProbabilidadePerderPacote = 0.0
-agent.DesiredResourceConsumption = .50
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal
-channel.MaxDelay = 10
+channel.Mean = 10
 channel.MinDelay = 1
 channel.Std = 5
 
-//network = br.ufba.lasid.jds.prototyping.hddss.PayloadAwareNetwork
+// network = br.ufba.lasid.jds.prototyping.hddss.PayloadAwareNetwork
 network = br.ufba.lasid.jds.prototyping.hddss.NetworkDeterministic
 network.ProcessingTime = .001
 

@@ -1,4 +1,6 @@
-package br.ufba.lasid.jds.prototyping.hddss;
+package br.ufba.lasid.jds.prototyping.hddss.instances;
+
+import br.ufba.lasid.jds.prototyping.hddss.HashCodeUtil;
 
 /*
  * To change this template, choose Tools | Templates

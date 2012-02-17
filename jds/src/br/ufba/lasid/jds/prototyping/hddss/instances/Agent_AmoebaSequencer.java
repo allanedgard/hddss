@@ -1,4 +1,11 @@
-package br.ufba.lasid.jds.prototyping.hddss;
+package br.ufba.lasid.jds.prototyping.hddss.instances;
+
+import br.ufba.lasid.jds.prototyping.hddss.Buffer;
+import br.ufba.lasid.jds.prototyping.hddss.Message;
+import br.ufba.lasid.jds.prototyping.hddss.Randomize;
+import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport;
+import br.ufba.lasid.jds.prototyping.hddss.SimulatedAgent;
+import br.ufba.lasid.jds.prototyping.hddss.Simulator;
 
 public class Agent_AmoebaSequencer extends SimulatedAgent {
 
@@ -128,7 +135,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
         public void execute() {
             int clock = (int)infra.clock.value();
             Content_AmoebaSequencer ca = new Content_AmoebaSequencer(LastACK, "stuff");
-            if ( (r.uniform() <= prob) && !bloquearEntrega && clock < .5*finalTime ) {
+            if ( (r.uniform() <= prob)){ // && !bloquearEntrega ){ //&& clock < .5*finalTime ) {
                 SENT = clock;    // Registering clock of the last SENT 
                 ca.ACKS.add(ACKS);
                 this.createMessage(clock, ID, Leader, REQ_SEQ, ca, -1);

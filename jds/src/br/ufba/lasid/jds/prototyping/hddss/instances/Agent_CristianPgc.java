@@ -1,4 +1,11 @@
-package br.ufba.lasid.jds.prototyping.hddss;
+package br.ufba.lasid.jds.prototyping.hddss.instances;
+
+import br.ufba.lasid.jds.prototyping.hddss.Message;
+import br.ufba.lasid.jds.prototyping.hddss.Network;
+import br.ufba.lasid.jds.prototyping.hddss.Randomize;
+import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport;
+import br.ufba.lasid.jds.prototyping.hddss.SimulatedAgent;
+import br.ufba.lasid.jds.prototyping.hddss.Simulator;
 
 public class Agent_CristianPgc extends SimulatedAgent {
         int lastClock;

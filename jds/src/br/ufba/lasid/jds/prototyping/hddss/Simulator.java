@@ -11,27 +11,15 @@ import org.apache.commons.math.stat.descriptive.*;
 public class Simulator  extends Thread implements RuntimeSupport
 {
     java.io.PrintStream out;
-    //char modo;
     int clock;
     int m;
-    //int n;
-    //int tempofinal;
     public Agent p[];
     String NAME;
     
-    //SimulatedScheduler scheduler = new SimulatedScheduler();
-
     Network network;
-    CPU cpu;
-//    DescriptiveStatistics receptionDelay;
-//    DescriptiveStatistics tempo_transmissao;
-//    DescriptiveStatistics deliveryDelay;
-//    DescriptiveStatistics atraso_fila;
 
-    //double DESVIO;
-    //boolean debug_mode;
-    boolean fim;
-    //char tipo;
+    boolean end;
+
     int charge;
     public static double ro = .001;
     public static int maxro = 5;
@@ -56,7 +44,7 @@ public class Simulator  extends Thread implements RuntimeSupport
         synchronized(this){
             m++;
             if (m==get(Variable.NumberOfAgents).<Integer>value().intValue()) {
-                fim = true;
+                end = true;
                 try {
                     this.notifyAll();
                 } catch (Exception e) {
@@ -81,8 +69,6 @@ public class Simulator  extends Thread implements RuntimeSupport
                 p[i].startup();
             }
 
-            //scheduler.startup();
-
             boolean done = false;
 
             while(!(done = advance()));
@@ -103,7 +89,8 @@ public class Simulator  extends Thread implements RuntimeSupport
             p[i].getInfra().increaseTick();
          }
          
-         /* if simulation time isn't over and p is not crashed then it hasn't been done yet. */
+         /* if simulation time isn't over and p is not crashed,
+          * then it hasn't been done yet. */
          done = done && ((p[i].getInfra().clock.value() >= finalTime) || !p[i].status());
       }
 
@@ -136,7 +123,6 @@ public class Simulator  extends Thread implements RuntimeSupport
     public final void terminate() {
         synchronized(this){
             int n = get(Variable.NumberOfAgents).<Integer>value();
-
 
             for(int i = 0; i < n; i++)
             {
@@ -182,7 +168,7 @@ public class Simulator  extends Thread implements RuntimeSupport
     
     private final void verificaPausa() throws InterruptedException {
         synchronized(this){
-            while (!fim) {
+            while (!end) {
                 wait();
             }
         }
@@ -236,14 +222,6 @@ public class Simulator  extends Thread implements RuntimeSupport
         }
         out.close();
     }
-
-
-    /*
-     * O método connect() e o
-     * método main podem ser sobre-carregados
-     * para se implementar protocolos de agentes 
-     * específicos
-     */ 
     
     public final void perform(RuntimeContainer rc) {
          synchronized(rc.agent.lock){
@@ -252,10 +230,7 @@ public class Simulator  extends Thread implements RuntimeSupport
     }
 
     public void init() {
-        /*
-         * Neste ponto se inicia os agentes e
-         * os meios de comunicacao entre estes
-         */
+
         int n = get(Variable.NumberOfAgents).<Integer>value();
         try {
             Factory.config = config;
@@ -266,8 +241,6 @@ public class Simulator  extends Thread implements RuntimeSupport
             Factory.setup(network, Network.TAG);
 
             set(Variable.Network, network);
-
-            //prepareAgent(scheduler);
             
             //initing and setuping the agents
             for(int i = 0; i < n; i++){
@@ -301,9 +274,7 @@ public class Simulator  extends Thread implements RuntimeSupport
     	} catch (Exception e) {
     		e.printStackTrace();
     	}
-
-        //System.nic_out.println("Sistema inicializado!");
-        
+       
     }
 
     public void prepareAgent(Agent a) throws Exception{
@@ -390,7 +361,7 @@ public class Simulator  extends Thread implements RuntimeSupport
     Simulator(String filename)
     {
         clock = 0;
-        fim = false;
+        end = false;
         NAME = filename;
 
         try {
@@ -416,8 +387,6 @@ public class Simulator  extends Thread implements RuntimeSupport
         set(Variable.FileName, filename);
 
         formattedReport =  config.getBoolean("FormattedReport", true);
-        
-        //set(Variable.Scheduler, scheduler);
         
     }
     

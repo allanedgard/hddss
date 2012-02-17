@@ -1,6 +1,11 @@
-package br.ufba.lasid.jds.prototyping.hddss;
+package br.ufba.lasid.jds.prototyping.hddss.instances;
 
+import br.ufba.lasid.jds.prototyping.hddss.Message;
+import br.ufba.lasid.jds.prototyping.hddss.Randomize;
+import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport;
 import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport.Variable;
+import br.ufba.lasid.jds.prototyping.hddss.SimulatedAgent;
+import br.ufba.lasid.jds.prototyping.hddss.Simulator;
 
 public class Agent_TimedCB extends SimulatedAgent {
     
@@ -286,7 +291,7 @@ public class Agent_TimedCB extends SimulatedAgent {
                         if (TC <= finalTime)
                                 if (scheduler[TC] < blocknumber) {
                                     scheduler[TC] = blocknumber;
-                                    infra.debug("p"+ID+" bloco "+blocknumber+" expira em "+TC+" criado em "+clock+" sender = "+sender);
+                                    //infra.debug("p"+ID+" bloco "+blocknumber+" expira em "+TC+" criado em "+clock+" sender = "+sender);
                                 }
                         /*
                                 if (verAgenda(TC) < numbloco) {
@@ -315,7 +320,7 @@ public class Agent_TimedCB extends SimulatedAgent {
                 sendGroupMsg(clock, TIMEDCB_APP, new Content_TimedCB("payload", LCB[ID], acks, payloadSize), logicalClock, true );
                 blockRegister(logicalClock, ID, clock);
             }
-            
+
             /*
              *  Se há silêncio, invoca o mecanismo de time-silence
              *  o mecanismo é invocado mesmo sem blocos completos?
@@ -358,7 +363,7 @@ public class Agent_TimedCB extends SimulatedAgent {
             if (scheduler[clock] != -1) {
                  if (getMin() < scheduler[clock]) {
                     for (int i = getMin()+1; i<=scheduler[clock];i++) {
-                        infra.debug("p"+Integer.toString(ID)+": timeout in block "+Integer.toString(i) + " in "+Integer.toString(clock));
+                        //infra.debug("p"+Integer.toString(ID)+": timeout in block "+Integer.toString(i) + " in "+Integer.toString(clock));
                         notifyExpiredBlocks(i);
                         IntegerSet x = retornaExpirados(i);
                         if (!blockingDelivery) {
@@ -526,7 +531,7 @@ public class Agent_TimedCB extends SimulatedAgent {
                         Simulator.reporter.stats("blocking time", clock-m.receptionTime);
                 }
             }
-        infra.debug("p"+ID+" delivers "+cont+" msgs of block "+min);
+        //infra.debug("p"+ID+" delivers "+cont+" msgs of block "+min);
         /*
          *  Atualiza Unstable Messages retirando mensagens estáveis
          * 
@@ -574,7 +579,7 @@ public class Agent_TimedCB extends SimulatedAgent {
         }
         msgBuffer.removeAll(remover);
 
-        infra.debug("p"+ID+" delivers "+cont+" msgs of block "+min);
+        //infra.debug("p"+ID+" delivers "+cont+" msgs of block "+min);
     }
         
         /* 
@@ -610,7 +615,7 @@ public class Agent_TimedCB extends SimulatedAgent {
                     for (int i=0;i<infra.nprocess;i++)
                         output = output+" "+BM[i];
                     output=output+" RECV "+RECV+" SENT "+SENT+ " LSB "+getStableMin()+" LCB "+getMin();
-                    infra.debug(output);
+                    //infra.debug(output);
 
                     break;
                 case CHANGE_VIEW_REQUEST:
@@ -784,7 +789,7 @@ public class Agent_TimedCB extends SimulatedAgent {
         void addView(Content_Unstable uC) {
             if (!proposedView.exists(uC.id)) {
                 proposedView.add(uC.id);
-                infra.debug(proposedView.toString());
+                //infra.debug(proposedView.toString());
                 for (int i = 0; i < uC.conteudo.size(); i++ )
                     if (!allUnstableMsgs.contains(uC.conteudo.get(i)))
                         allUnstableMsgs.add(uC.conteudo.get(i));
@@ -809,11 +814,11 @@ public class Agent_TimedCB extends SimulatedAgent {
             
             liveOk = (live.size()==live.intersection(proposedView).size());
             
-            infra.debug("live ok? "+liveOk);
-            infra.debug("tam live="+live.size());
-            infra.debug("tam live inter View="+live.intersection(proposedView).size());
-            infra.debug("live = "+live);
-            infra.debug("view = "+proposedView);
+            //infra.debug("live ok? "+liveOk);
+            //infra.debug("tam live="+live.size());
+            //infra.debug("tam live inter View="+live.intersection(proposedView).size());
+            //infra.debug("live = "+live);
+            //infra.debug("view = "+proposedView);
             
             int contaUncertain=proposedView.intersection(uncertain).size();
 
@@ -824,8 +829,8 @@ public class Agent_TimedCB extends SimulatedAgent {
                 uncertainOk = true;
             
             boolean ret = (liveOk&&uncertainOk);
-            infra.debug("ok? "+ ret);
-            infra.debug("end check");
+            //infra.debug("ok? "+ ret);
+            //infra.debug("end check");
             return (liveOk && uncertainOk);
         }
 

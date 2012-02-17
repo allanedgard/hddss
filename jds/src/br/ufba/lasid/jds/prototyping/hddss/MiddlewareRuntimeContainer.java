@@ -1,18 +1,27 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 import java.util.ArrayList;
 
-/**
- * A RuntimeContainer can be a Operating System, a Middleware or a Simulator.
- * It allows to hide details about the execution infra of the agent.
- * @author aliriosa
- */
 public class MiddlewareRuntimeContainer extends RuntimeContainer {
 
     String IP[];
     String PORT[];
+    DatagramSocket serverSocket;
+    int ID;
+    Message[] receiveData;
+    Message[] sendData;
+    ObjectOutputStream output;
+    ObjectInputStream input;
+    HDDSS_UDPSocket s;
     
-
     RuntimeVariables variables = new RuntimeVariables();
 
     MiddlewareRuntimeContainer(RuntimeSupport c) {
@@ -23,6 +32,7 @@ public class MiddlewareRuntimeContainer extends RuntimeContainer {
 
     public boolean register(Agent agent){
         this.agent = agent;
+        ID = agent.ID;
         return true;
     }
     
@@ -43,14 +53,7 @@ public class MiddlewareRuntimeContainer extends RuntimeContainer {
             }
            
             while(send());
-//            long ftime = cpu.value();
 
-//            for(long curr = clock.value(); curr <= ftime; curr ++){
-//               while(send(curr));
-//            }
-
-
-            
          }
         
     }
@@ -83,6 +86,12 @@ public class MiddlewareRuntimeContainer extends RuntimeContainer {
     @Override
     public void run() {
         int finalTime = context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
+        try {
+            s = new HDDSS_UDPSocket(nic_in, 
+                  Integer.getInteger(this.PORT[ID]));
+            s.start();
+        } catch (Exception e) {
+        }
         agent.startup();
         while (clock.value() < finalTime) {
             context.perform(this);
@@ -136,9 +145,9 @@ public class MiddlewareRuntimeContainer extends RuntimeContainer {
 
     }
 
-    public boolean receive(){
-
-       Message m = receive(clock.value());
+    public boolean receive()  {
+       // COLOCAR EM UMA THREAD QUE AO RECEBER MENSAGENS BUFFERIZA!
+       Message m = receive(0);
        if(m != null){
             agent.receive(m);
 //             context.get(Variable.TxDelayTrace).<DescriptiveStatistics>value().addValue(
@@ -150,9 +159,8 @@ public class MiddlewareRuntimeContainer extends RuntimeContainer {
             return true;
        }
 
-       return false;
-          
-    }
+       return false;   
+ }
 
     public Message receive(long now){
 
@@ -207,15 +215,41 @@ public class MiddlewareRuntimeContainer extends RuntimeContainer {
             if ( msg.destination != context.get(Variable.NumberOfAgents).<Integer>value() ) {
                 System.out.println("from "+msg.sender+" to "+msg.destination);
                 
+                try {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    ObjectOutputStream oos = new ObjectOutputStream(baos);
+                    oos.writeObject(msg);
+                    oos.flush();
+                    // get the byte array of the object
+                    byte[] Buf= baos.toByteArray();
+
+                    int number = Buf.length;
+                    System.out.println(number);
+                    byte[] data = new byte[4];
+
+                    // int -> byte[]
+                    for (int i = 0; i < 4; ++i) {
+                        int shift = i << 3; // i * 8
+                        data[3-i] = (byte)((number & (0xff << shift)) >>> shift);
+                    }
+
+                    System.out.println("PORTA="+PORT[msg.destination]);                    
+                    DatagramSocket socket = new DatagramSocket(Integer.getInteger(PORT[msg.sender]));
+                    InetAddress client = InetAddress.getByName(IP[msg.destination]);
+                    DatagramPacket packet = new DatagramPacket(data, 4, client, Integer.getInteger(PORT[msg.destination]));
+                    socket.send(packet);
+
+                    // now send the payload
+                    packet = new DatagramPacket(Buf, Buf.length, client, Integer.getInteger(PORT[msg.destination]));
+                    socket.send(packet);
+
+                    System.out.println("ENVIOU");
+                } catch(Exception e) {
+                        e.printStackTrace();
+                }
             }
-            
-                
-                
-                
-                
             //network.send(msg);
             reportEvent(msg, 's');
-
             return true;
        
     }

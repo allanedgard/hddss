@@ -1,13 +1,5 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template nic_in the editor.
- */
-/**
- *
- * @author allan
- */
 public abstract class Channel {
     
     Agent p_i, p_j;

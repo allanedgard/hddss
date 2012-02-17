@@ -1,9 +1,5 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
-/**
- *
- * @author Administrador
- */
 public abstract class FaultModelAgent {
    RuntimeContainer infra;
    static final String TAG = "ftmodel";

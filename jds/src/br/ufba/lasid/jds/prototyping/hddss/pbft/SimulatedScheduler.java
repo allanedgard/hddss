@@ -6,7 +6,7 @@
 package br.ufba.lasid.jds.prototyping.hddss.pbft;
 
 import br.ufba.lasid.jds.util.Agenda;
-import br.ufba.lasid.jds.util.IClock;
+import br.ufba.lasid.jds.prototyping.hddss.IClock;
 import br.ufba.lasid.jds.util.ISchedule;
 import br.ufba.lasid.jds.util.ITask;
 import br.ufba.lasid.jds.util.IScheduler;

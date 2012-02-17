@@ -7,11 +7,7 @@ package br.ufba.lasid.jds.prototyping.hddss;
 
 import br.ufba.lasid.jds.util.XObject;
 
-/**
- *
- * @author aliriosa
- */
-public class PayloadAwareNetwork extends Network{
+public class NetworkPayloadAware extends Network{
     double transferrate = 0;
     double scost = 0;
     int mtu;

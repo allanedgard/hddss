@@ -11,7 +11,7 @@ import br.ufba.lasid.jds.util.XObject;
  *
  * @author aliriosa
  */
-public class LoadAwareCPU extends CPU{
+public class CPULoadAware extends CPU{
 
    @Override
    public double proc(Object data) {

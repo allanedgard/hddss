@@ -5,10 +5,6 @@
 
 package br.ufba.lasid.jds.prototyping.hddss;
 
-/**
- *
- * @author aliriosa
- */
 public interface Algorithm<T> {
     public T getOutput();
     public void setInput(T input);

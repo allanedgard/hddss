@@ -1,4 +1,4 @@
-FinalTime = 600000
+FinalTime = 120000
 NumberOfAgents = 3
 MaximumDeviation = 4
 Mode = clock
@@ -21,7 +21,7 @@ agent.DeltaMax = 100
 agent.TS = 1
 agent.PacketGenerationProb = 0.05
 ; agent.ProbabilidadePerderPacote = 0.0
-agent.DesiredResourceConsumption = .80
+agent.DesiredResourceConsumption = .50
 
 channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal
 channel.MaxDelay = 10

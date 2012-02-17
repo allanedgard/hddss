@@ -1,4 +1,7 @@
-package br.ufba.lasid.jds.prototyping.hddss;
+package br.ufba.lasid.jds.prototyping.hddss.instances;
+
+import br.ufba.lasid.jds.prototyping.hddss.HashCodeUtil;
+import java.io.Serializable;
 
 /*
  * To change this template, choose Tools | Templates
@@ -9,7 +12,7 @@ package br.ufba.lasid.jds.prototyping.hddss;
  *
  * @author allan
  */
-public class IntegerSet  implements Comparable<IntegerSet> {
+public class IntegerSet  implements Comparable<IntegerSet>, Serializable {
     
     private java.util.ArrayList c;
     
