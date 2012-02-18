@@ -21,26 +21,37 @@ import org.rosuda.JRI.RMainLoopCallbacks;
 
 public class IntegrationR {
 
-    Rengine re;
+    private Rengine re;
+    static IntegrationR IntR = null;
 
-    IntegrationR() {
+    private IntegrationR() {
 
         if (!Rengine.versionCheck()) {
 	    System.err.println("** Version mismatch - Java files don't match library version for R.");
 	    System.exit(1);
 	}
 	String[] args = new String[0];
-        re = new Rengine(args, false, new TextConsole());
-
+            re = new Rengine(args, false, new TextConsole());
+        
         if (!re.waitForR()) {
             System.out.println("Cannot load R");
             return;
         }
 
     }
+    
+    public synchronized static IntegrationR getInstance() {  
+      if (IntR == null) {  
+         IntR = new IntegrationR();  
+      }  
+      return IntR;  
+   }  
 
-    public void end() {
+       
+    void end() {
         try {
+            System.out.println("finishing...");
+            re.eval("q(save=\"no\")");
             re.end();
         } catch (Exception e) {
 			System.out.println("EX:"+e);
@@ -79,7 +90,7 @@ double[] evaluateDoubleArray(String parse) {
     return r;
     }
 
-void assignDoubleArray(String val, double[] num) {
+private void assignDoubleArray(String val, double[] num) {
             try {
                  re.assign(val, num);
             } catch (Exception e) {

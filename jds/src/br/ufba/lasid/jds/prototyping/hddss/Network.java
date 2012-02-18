@@ -50,16 +50,38 @@ public final void handshaking(int p_i, int p_j) {
             if(!conteiner.config.getString(TAG, "null").equals("null"))
             {
                 channels[p_i][p_j] = (Channel)Factory.create(TAG, Channel.class.getName());
-                channels[p_i][p_j].connect(conteiner.p[p_i], conteiner.p[p_j]);
+                /*  #agent
+                 *  channels[p_i][p_j].connect(conteiner.p[p_i], conteiner.p[p_j]);
+                 */
+                channels[p_i][p_j].connect(conteiner.scenario.p[p_i], conteiner.scenario.p[p_j]);
                 Factory.setup(channels[p_i][p_j], TAG);
             }
             else
             {
                 channels[p_i][p_j] = (Channel)Factory.create(Channel.TAG, Channel.class.getName());
-                channels[p_i][p_j].connect(conteiner.p[p_i], conteiner.p[p_j]);
+                /*  #scenario
+                 *  channels[p_i][p_j].connect(conteiner.p[p_i], conteiner.p[p_j]);
+                 */
+                channels[p_i][p_j].connect(conteiner.scenario.p[p_i], conteiner.scenario.p[p_j]);
                 Factory.setup(channels[p_i][p_j], Channel.TAG);
             }
 
+
+        } catch (Exception e) {
+                e.printStackTrace();
+        }
+    }
+
+    /*  #scenarios
+     *  included
+     */
+    public final void handshaking(int p_i, int p_j, int type) {
+        try {
+            String TAG = Channel.TAG + "["+type+"]";
+
+            channels[p_i][p_j] = (Channel)Factory.create(TAG, Channel.class.getName());
+            channels[p_i][p_j].connect(conteiner.scenario.p[p_i], conteiner.scenario.p[p_j]);
+            Factory.setup(channels[p_i][p_j], TAG);
 
         } catch (Exception e) {
                 e.printStackTrace();
@@ -232,7 +254,10 @@ public final void handshaking(int p_i, int p_j) {
             if(msg.type >=0) Simulator.reporter.count("network loopbacks class " + msg.type);
 
             int address = msg.sender;
-            Agent p = conteiner.p[address];
+            /*  #scenario
+             *  Agent p = conteiner.p[address];
+             */
+            Agent p = conteiner.scenario.p[address];
             p.getInfra().nic_in.add((int)(p.getInfra().cpu.value())+1, msg);
         }
     }

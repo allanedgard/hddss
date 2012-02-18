@@ -13,9 +13,13 @@ public class Simulator  extends Thread implements RuntimeSupport
     java.io.PrintStream out;
     int clock;
     int m;
-    public Agent p[];
+    /*  #scenarios
+     *  public Agent p[];
+     */
+    
     String NAME;
     
+    Scenario scenario;
     Network network;
 
     boolean end;
@@ -37,7 +41,10 @@ public class Simulator  extends Thread implements RuntimeSupport
     }
 
     public final int getDelay(int i, IProcessable data){
-       return (int) p[i].infra.cpu.exec(data);
+       /*   #scenarios
+         *  return (int) p[i].infra.cpu.exec(data);
+         */
+        return (int) scenario.p[i].infra.cpu.exec(data);
     }
      
     public final void ok() {
@@ -66,7 +73,11 @@ public class Simulator  extends Thread implements RuntimeSupport
             }
 
             for (int i=0;i<n;i++) {
-                p[i].startup();
+                scenario.p[i].startup();
+                /*  #scenario
+                *   p[i].startup();
+                * 
+                */
             }
 
             boolean done = false;
@@ -85,13 +96,22 @@ public class Simulator  extends Thread implements RuntimeSupport
 
       for(int i = 0; i < n; i++){
          
-         synchronized(p[i].lock){
-            p[i].getInfra().increaseTick();
+         synchronized(scenario.p[i].lock){
+            scenario.p[i].getInfra().increaseTick();
+            /*  #scenario
+             *  synchronized(p[i].lock){
+             *      p[i].getInfra().increaseTick();
+             */
          }
          
          /* if simulation time isn't over and p is not crashed,
           * then it hasn't been done yet. */
-         done = done && ((p[i].getInfra().clock.value() >= finalTime) || !p[i].status());
+         
+         done = done && ((scenario.p[i].getInfra().clock.value() >= finalTime) || !scenario.p[i].status());
+         /*     #scenario
+          *     done = done && ((p[i].getInfra().clock.value() >= finalTime) || !p[i].status());
+          */
+         
       }
 
       network.incTick();
@@ -115,7 +135,10 @@ public class Simulator  extends Thread implements RuntimeSupport
 
             for(int i = 0; i < n; i++)
             {
-                p[i].start();
+                scenario.p[i].start();
+                /*  #scenario
+                 *  p[i].start();
+                 */
             }  
         }
     } 
@@ -126,7 +149,10 @@ public class Simulator  extends Thread implements RuntimeSupport
 
             for(int i = 0; i < n; i++)
             {
-                p[i].shutdown();
+                scenario.p[i].shutdown();
+                /*  #scenario
+                 *  p[i].shutdown();
+                 */
             }
 
             //scheduler.shutdown();
@@ -145,11 +171,18 @@ public class Simulator  extends Thread implements RuntimeSupport
         double menor;
         menor = Double.MAX_VALUE;
         for (int i = 0;i<n;i++ ){
-            clockreal[i] = p[i].getInfra().clock.value() + ro * p[i].getInfra().clock.tickValue();
+            clockreal[i] = scenario.p[i].getInfra().clock.value() + ro * scenario.p[i].getInfra().clock.tickValue();
+            /*  #scenario
+             *  clockreal[i] = p[i].getInfra().clock.value() + ro * p[i].getInfra().clock.tickValue();
+             */
             if (clockreal[i] < menor) menor = clockreal[i];
         }
         for (int i = 0;i<n;i++ )
-            if ( (p[i].getTipo() == 's') && p[i].status() )
+            
+            if ( (scenario.p[i].getTipo() == 's') && scenario.p[i].status() )
+            /*  #scenario
+             *  if ( (p[i].getTipo() == 's') && p[i].status() )
+             */
                 if (Math.abs(clockreal[i] - clockreal[j]) > DESVIO ) {
                     if (clockreal[j] == menor) {
                             return true;            
@@ -159,10 +192,15 @@ public class Simulator  extends Thread implements RuntimeSupport
         return true;
     }
     
-    public final double calculaDiferenca(int i, int j) {
+    public final double calcDiff(int i, int j) {
         double clockr_i, clockr_j;
-        clockr_i = p[i].getInfra().clock.value() + ro * p[i].getInfra().clock.tickValue();
-        clockr_j = p[j].getInfra().clock.value() + ro * p[j].getInfra().clock.tickValue();
+        clockr_i = scenario.p[i].getInfra().clock.value() + ro * scenario.p[i].getInfra().clock.tickValue();
+        clockr_j = scenario.p[j].getInfra().clock.value() + ro * scenario.p[j].getInfra().clock.tickValue();
+        /*  #scenario
+         *  clockr_i = p[i].getInfra().clock.value() + ro * p[i].getInfra().clock.tickValue();
+         *  clockr_j = p[j].getInfra().clock.value() + ro * p[j].getInfra().clock.tickValue();
+         * 
+         */
         return Math.abs(clockr_i - clockr_j);
     }
     
@@ -182,8 +220,9 @@ public class Simulator  extends Thread implements RuntimeSupport
         System.out.println("Starting simulated scene: "+NAME+" at "+data.toString());
         int n = get(Variable.NumberOfAgents).<Integer>value();
         m = 0;
-        p = new Agent[n];
-        
+        /*  #scenario
+         *  p = new Agent[n];
+         */
         init();
         
         if (get(Variable.Mode).<String>value().equals("t")) {
@@ -242,7 +281,25 @@ public class Simulator  extends Thread implements RuntimeSupport
 
             set(Variable.Network, network);
             
-            //initing and setuping the agents
+            scenario = (Scenario) Factory.create(Scenario.TAG, Scenario.class.getName());
+            scenario.init(this);
+            Factory.setup(scenario, Scenario.TAG);
+            /*  #scenario
+             *  included
+             * 
+             */
+            
+             try {
+                scenario.initAgents();
+                scenario.initChannels();
+             } catch (Exception e) {
+    		e.printStackTrace();
+             }
+
+            /*
+              * #scenario
+             
+            //initing and setuping the agents             
             for(int i = 0; i < n; i++){
                 String TAG = Agent.TAG;
                 String TAGi = TAG + "["+i+"]";
@@ -270,6 +327,7 @@ public class Simulator  extends Thread implements RuntimeSupport
                 for(int j = 0; j < n; j++)
                     network.handshaking(i, j);
             
+            */
 
     	} catch (Exception e) {
     		e.printStackTrace();
@@ -277,6 +335,9 @@ public class Simulator  extends Thread implements RuntimeSupport
        
     }
 
+    /*
+     *  #scenario
+     *  remove method
     public void prepareAgent(Agent a) throws Exception{
         int n = get(Variable.NumberOfAgents).<Integer>value();
         a.infra = new RuntimeContainer(this);
@@ -301,6 +362,8 @@ public class Simulator  extends Thread implements RuntimeSupport
 
         a.init();
     }
+     
+     */
 
     public static Configurations getConfig(String[] args) {
 
