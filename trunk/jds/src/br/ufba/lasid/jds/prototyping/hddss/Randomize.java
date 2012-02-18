@@ -15,15 +15,23 @@ public class Randomize {
     String paramString1, paramString2;
     int TYPE;
     Method method;
-
+    double [] X;
+    int next;
+    String funcao;
+    
     public Randomize() {
         z = new java.util.Random();
+        next =0;
+        funcao="";
     }
     
     public Randomize (int seed) {
         z = new java.util.Random();        
         z.setSeed(seed);
+        next = 0;
+        funcao="";
     }
+    
     
     public void setDistribution(String dt) {
         /*
@@ -31,11 +39,11 @@ public class Randomize {
          */
         dist = dt;
         int i,j;
+        int next;
         try {
             genericClass = Class.forName("br.ufba.lasid.jds.prototyping.hddss.Randomize");
             obj = genericClass.newInstance();
             i = dist.indexOf('(');
-            System.out.println(i);
             String methodName = dist.substring(0, i);
             int b, c;
             b=i+1;
@@ -45,28 +53,22 @@ public class Randomize {
             } while (b>0);
             //String parameters = dist.substring(i+1,dist.indexOf(')'));
             String parameters = dist.substring(i+1,c);
-            System.out.println(parameters);
             i = parameters.indexOf(','); 
             if ( (i<0) || methodName.equals("R") ) {
-                System.out.println("um parametro");
                 i = parameters.indexOf('\"');
                 j = parameters.substring(1).indexOf('\"');
                 if  ( (i==0) && (j==parameters.length()-2) ) {
-                  System.out.println("string");
                   String x = parameters.substring(1, parameters.length()-1);
                   TYPE = 2;
                   paramString1 = x;
-                  System.out.println(x);
                   method = genericClass.getMethod(methodName, String.class);
                 } else {
                     i=parameters.indexOf('.');
                     if (i >=0) {
-                        System.out.println("duplo");
                         TYPE = 1;
                         paramDouble1 = Double.parseDouble(parameters);
                         method = genericClass.getMethod(methodName, double.class);
                     } else {
-                        System.out.println("inteiro");
                         TYPE = 3;
                         paramInt1 = Integer.parseInt(parameters);
                         method = genericClass.getMethod(methodName, int.class);
@@ -75,27 +77,20 @@ public class Randomize {
                 
             } else {
                 i = parameters.indexOf(',');
-                System.out.println("aqui");
                 String param1 = parameters.substring(0, i);
                 String param2 = parameters.substring(i+1);
-                System.out.println(i);
-                System.out.println(param1);
-                System.out.println(param2);
                 i = param1.indexOf('\"');
                 j = param1.substring(1).indexOf('\"');
                 if  ( (i==0) && (j==param1.length()-2) ) {
-                  System.out.println("string");
                   String x = parameters.substring(1, param1.length()-1);
                   TYPE = 5;
                   paramString1 = x;
                 } else {
                     i=param1.indexOf('.');
                     if (i >=0) {
-                        System.out.println("duplo");
                         TYPE = 4;
                         paramDouble1 = Double.parseDouble(param1);
                     } else {
-                        System.out.println("inteiro");
                         TYPE = 6;
                         paramInt1 = Integer.parseInt(param1);                    
                     }
@@ -103,7 +98,6 @@ public class Randomize {
                 i = param2.indexOf('\"');
                 j = param2.substring(1).indexOf('\"');
                 if  ( (i==0) && (j==param2.length()-2) ) {
-                  System.out.println("string");
                   String x = param2.substring(1, param2.length()-1);
                   paramString1 = x;
                   switch (TYPE) {
@@ -125,7 +119,6 @@ public class Randomize {
                 } else {
                     i=param2.indexOf('.');
                     if (i >=0) {
-                        System.out.println("duplo");
                         paramDouble2 = Double.parseDouble(param2);
                         switch (TYPE) {
                             case 4: // DBL, DBL
@@ -142,7 +135,6 @@ public class Randomize {
                                 break;
                         }
                     } else {
-                        System.out.println("inteiro");
                         paramInt2 = Integer.parseInt(param2);                    
                         switch (TYPE) {
                             case 4: // DBL, INT
@@ -216,11 +208,29 @@ public class Randomize {
    }
     
     public double R(String funcao) {
+        /*
         if (R == null)
             R = new IntegrationR();
         return R.evaluateDouble(funcao);
+        */
+        double n;
+        if (X == null)
+            X = R1(funcao);
+        if (!this.funcao.equals(funcao)) next = 0; // RESTART Sequence
+        this.funcao=funcao;
+        n = X[next];
+        next = (next + 1) % X.length;
+        return n;
     }
-    
+
+    public double[] R1(String funcao) {
+        double [] x;/*
+        if (R == null)
+            R = IntegrationR.getInstance();*/
+        x=IntegrationR.getInstance().evaluateDoubleArray(funcao);
+        return x;
+    }
+        
     public double expntl (double x) {
         return (-x * Math.log(z.nextDouble()));
     }
