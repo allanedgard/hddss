@@ -1,5 +1,8 @@
 workdir = /repositorio/hddss/jds/examples/amoeba/
-scenes = protocoloA-n100.txt, protocoloA-n200.txt, protocoloA-n300.txt, protocoloA-n400.txt, protocoloA-n500.txt, protocoloA-n600.txt, protocoloA-n700.txt, protocoloA-n800.txt, protocoloA-n900.txt, protocoloA-n1000.txt
+scenes = protocoloA-n2.txt
+
+
+//protocoloA-n100.txt, protocoloA-n200.txt, protocoloA-n300.txt, protocoloA-n400.txt, protocoloA-n500.txt, protocoloA-n600.txt, protocoloA-n700.txt, protocoloA-n800.txt, protocoloA-n900.txt, protocoloA-n1000.txt
 
 mode = simulation
 ;amoeba-80-10-HIGH.txt,amoeba-NP-10-HIGH.txt,amoeba-10-10-HIGH.txt, amoeba-10-10-LOW.txt,amoeba-80-10-LOW.txt,amoeba-NP-10-LOW.txt 

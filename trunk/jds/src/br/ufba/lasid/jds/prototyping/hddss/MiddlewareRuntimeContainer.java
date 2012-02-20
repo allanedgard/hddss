@@ -1,208 +1,69 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.util.ArrayList;
+import java.io.*;
+import java.net.*; 
+import java.util.*;
 
 public class MiddlewareRuntimeContainer extends RuntimeContainer {
 
+    /*
+     *  IP      - vector of IP data
+     *  PORT    - vector of PORT data
+     *  ID      - ID of the current agent
+     */
     String IP[];
     String PORT[];
-    DatagramSocket serverSocket;
     int ID;
+    
     Message[] receiveData;
     Message[] sendData;
     ObjectOutputStream output;
     ObjectInputStream input;
-    HDDSS_UDPSocket s;
     
-    RuntimeVariables variables = new RuntimeVariables();
-
+    /*
+     *      Socket for communication
+     */
+    HDDSS_Socket s;
+    
     MiddlewareRuntimeContainer(RuntimeSupport c) {
         super(c);
     }
     
-    //public IScheduler scheduler;
-
+    @Override
     public boolean register(Agent agent){
         this.agent = agent;
         ID = agent.ID;
         return true;
     }
     
+    @Override
     public synchronized void execute(){
-//         nic_in.toString();
-//         nic_out.toString();
-//         app_in.toString();
-//         exc_in.toString();
-
-         if(agent.status()){
-               while(receive());
-               while(deliver());
-
-            ((Clock_Virtual)clock).tick();
-           
-            if(((Clock_Virtual)clock).tickValue() == 1 && agent.status()) {
-               agent.execute();
-            }
-           
-            while(send());
-
-         }
-        
+            super.execute();
     }
 
-    /*
-    public final void increaseTick() {
-        if (faultModel == null) {
-            execute();
-        }
-        else faultModel.increaseTick();
-    }
-
-    public final void setFaultModel(String fault_model) {
-    	try {
-    		Class c = Class.forName(fault_model);
-
-    		faultModel =
-                    (FaultModelAgent)
-                    c.newInstance();
-
-                faultModel.initialize(this);
-
-                debug("Modelo de Falhas "+fault_model+" implantado em p"+agent.ID);
-
-    	} catch (Exception e) {
-    		e.printStackTrace();
-    	}
-    }
-*/
     @Override
     public void run() {
-        int finalTime = context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
+        System.out.println("Starting infra at agent "+this.ID);
         try {
-            s = new HDDSS_UDPSocket(nic_in, 
-                  Integer.getInteger(this.PORT[ID]));
+            s = new HDDSS_Socket(nic_in, IP[ID],
+                  Integer.parseInt(this.PORT[ID]));
             s.start();
         } catch (Exception e) {
         }
-        agent.startup();
-        while (clock.value() < finalTime) {
-            context.perform(this);
-            this.yield();
-            if (agent.done)
-                break;
-        }
-//        ri.end();
-        context.ok();
-
-        //super.run();
+        super.run();
     }
 
-
-
-    public boolean deliver(){
-       Message m = deliver(clock.value());
-       if(m != null){
-            agent.deliver(m);
-
-            reportEvent(m, 'd');
-
-//            if (m.payload) {
-//                context.get(Variable.DlvDelayTrace).<DescriptiveStatistics>value().addValue(
-//                        (int)clock.value() - m.physicalClock
-//                );
-//
-//                context.get(Variable.RxDelayTrace).<DescriptiveStatistics>value().addValue(
-//                        (int)clock.value() - m.receptionTime
-//                );
-//
-//            }
-
-          return true;
-       }
-
-       return false;
-    }
-
-    public Message deliver(long now){
-               ArrayList a = null;
-               a = app_in.getMsgs((int)now);
-               if (a.isEmpty()) {
-                   return null;
-               }
-
-            Message msg;
-            msg = (Message) a.get(0);
-
-            return msg;
-
-    }
-
+    @Override
     public boolean receive()  {
-       // COLOCAR EM UMA THREAD QUE AO RECEBER MENSAGENS BUFFERIZA!
        Message m = receive(0);
        if(m != null){
             agent.receive(m);
-//             context.get(Variable.TxDelayTrace).<DescriptiveStatistics>value().addValue(
-//                     (double)(m.receptionTime - m.physicalClock)
-//             );
-
             reportEvent(m, 'r');
-
             return true;
        }
-
        return false;   
  }
-
-    public Message receive(long now){
-
-            ArrayList a = null;
-
-               a = nic_in.getMsgs((int)now);
-               if (a.isEmpty()) {
-                   return null;
-               }
-
-            Message msg;
-            msg = (Message) a.get(0);
-
-            msg.receptionTime = (int)now;
-
-            return msg;
-
-    }
-
-    public Message pending(){
-       return pending(clock.value());
-    }
-    
-    public Message pending(long now){
-
-            ArrayList a = exc_in.getMsgs((int)now);
-
-            if (!(a != null && !a.isEmpty())) {
-               return null;
-            }
-
-            Message msg;
-            msg = (Message) a.get(0);
-
-            return msg;
-       
-    }
-    
-    public boolean send(){
-       return send(clock.value());
-    }
-
+  
     public boolean send(long now){
             ArrayList a = nic_out.getMsgs((int)now);
             if (a.isEmpty()) {
@@ -233,15 +94,16 @@ public class MiddlewareRuntimeContainer extends RuntimeContainer {
                         data[3-i] = (byte)((number & (0xff << shift)) >>> shift);
                     }
 
-                    System.out.println("PORTA="+PORT[msg.destination]);                    
-                    DatagramSocket socket = new DatagramSocket(Integer.getInteger(PORT[msg.sender]));
+                    System.out.println("PORTA="+PORT[msg.destination]);         
+                    System.out.println("PORTA="+PORT[msg.sender]);  
+                    // DatagramSocket socket = new DatagramSocket(Integer.parseInt(PORT[msg.sender]));
                     InetAddress client = InetAddress.getByName(IP[msg.destination]);
-                    DatagramPacket packet = new DatagramPacket(data, 4, client, Integer.getInteger(PORT[msg.destination]));
-                    socket.send(packet);
+                    DatagramPacket packet = new DatagramPacket(data, 4, client, Integer.parseInt(PORT[msg.destination]));
+                    s.socket.send(packet);
 
                     // now send the payload
-                    packet = new DatagramPacket(Buf, Buf.length, client, Integer.getInteger(PORT[msg.destination]));
-                    socket.send(packet);
+                    packet = new DatagramPacket(Buf, Buf.length, client, Integer.parseInt(PORT[msg.destination]));
+                    s.socket.send(packet);
 
                     System.out.println("ENVIOU");
                 } catch(Exception e) {
@@ -254,67 +116,4 @@ public class MiddlewareRuntimeContainer extends RuntimeContainer {
        
     }
     
-
-    private final int getAgentProcessingTime() {
-        /*
-         * Se o processo for síncrono o tempo de resposta do processament
-         * é de um tick, caso contrário é aleatório.
-         */
-        if (clock.getMode() =='s') {
-            return 1;
-        }
-        else {
-            return (int) (MAX_PROCESSA * Math.random());
-        }
-    }
-
-    public Value get(Variable variable) {
-        return variables.get(variable);
-    }
-
-    public <U> void set(Variable variable, U value){
-        variables.set(variable, value);
-    }
-    public Value get(String name) {
-        return variables.get(name);
-    }
-
-    public <U> void set(String name, U value) {
-        variables.set(name, value);
-    }
-
-    public void perform(RuntimeContainer rs) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public void ok() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public int getNumberOfProcess() {
-        return nprocess;
-    }
-
-    public void nicout(Message m){
-//        synchronized(this){
-            //nic_out.add((int)(clock.value()), m);
-            nic_out.add((int)(clock.value()), m);
-//        }
-    }
-
-   public boolean advance() {
-      return this.context.advance();
-   }
-
-   public long exec(Object data){
-      
-       return cpu.exec(data);
-//       long stime = clock.value();
-//       long ftime = stime + btime;
-
-//       for(long i = stime; i < ftime; i++){
-//          while(send(i));
-//       }
-
-   }
 }

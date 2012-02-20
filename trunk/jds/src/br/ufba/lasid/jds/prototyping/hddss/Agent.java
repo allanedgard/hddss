@@ -94,13 +94,9 @@ public class Agent extends Thread implements IAgent{
     }
     
     public void execute() {
-        /*
-         *   Este evento pode ser sobrecarregado pela ação específica
-         *   do protocolo
-         */
     }
     
-    public void receive(Message msg) {
+    public final void preReceive(Message msg) {
       /* Este evento pode ser sobrecarregado pela ação específica do protocolo (NO ANYMORE)*/
       long at = 0;
       infra.app_in.add((int)(at = this.infra.cpu.value()), msg);
@@ -109,15 +105,22 @@ public class Agent extends Thread implements IAgent{
       Simulator.reporter.stats("send-reception delay agent" + msg.sender + "/agent" + ID , at - msg.physicalClock);
       
     }
+
+    public void receive(Message msg) {
+    }    
     
-    
-    public void deliver(Message msg) {
+    public final void preDeliver(Message msg) {
          long at = 0;
          infra.exc_in.add((int)(at = this.infra.cpu.value()), msg);
          infra.debug("(p" + ID + ") delivered at " + at + " " + msg.content);
          Simulator.reporter.stats("send-delivery delay", at - msg.physicalClock);
          Simulator.reporter.stats("send-delivery delay agent" + msg.sender + "/agent" + ID, at - msg.physicalClock);
     }
+    
+    public void deliver(Message msg) {
+    }    
+    
+    
     long cur = 0;
     public final Message receive(){
          Message msg = null;

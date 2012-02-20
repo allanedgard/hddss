@@ -59,6 +59,19 @@ public class Teste {
             e.trigger();
             e.trigger();
             
+            e= new ProbabilisticEventGenerator();
+            e.setProb("0.3");
+            e.activationTime=10;
+            ((ProbabilisticEventGenerator)e).setDistribution("uniform(0.0,1.0)");
+            e.setAction(x, "teste");
+            System.out.println("a");
+            e.trigger(2);
+            e.trigger(2);
+            e.trigger(2);
+            e.trigger(1);
+            e.trigger(4);
+            e.trigger(5);
+            
             Tracing T1 = new Tracing();
             T1.setFilename("c:/users/allan/desktop/teste.txt");
             System.out.println(T1.getValue());
@@ -78,6 +91,13 @@ public class Teste {
             String value = "agent[1].FaultModelProperties.maxProb";
             String TAG = "agent[1]";
             System.out.println("t="+ value.substring(TAG.length() + 22));
+            c1.setDistribution("uniform()");
+            System.out.println(c1.delay());
+            System.out.println(c1.delay());
+            System.out.println(c1.delay());
+            System.out.println(c1.delay());
+            
+            
             IntegrationR.getInstance().end();
         } catch (Exception ex) {
             //Logger.getLogger(Teste.class.getName()).log(Level.SEVERE, null, ex);

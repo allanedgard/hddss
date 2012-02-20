@@ -21,7 +21,8 @@ public class Simulator  extends Thread implements RuntimeSupport
     
     Scenario scenario;
     Network network;
-
+    static int numInstances =0;
+    static int numFinishedInstances=0;
     boolean end;
 
     int charge;
@@ -260,6 +261,9 @@ public class Simulator  extends Thread implements RuntimeSupport
             reporter.report2UnformattedTable(System.out);
         }
         out.close();
+        numFinishedInstances ++;
+        if (numFinishedInstances == numInstances)
+            IntegrationR.getInstance().end();
     }
     
     public final void perform(RuntimeContainer rc) {
@@ -412,6 +416,8 @@ public class Simulator  extends Thread implements RuntimeSupport
         else {
             Simulator simulator;
             System.out.println("n = "+classNames.length);
+            numInstances = classNames.length;
+            numFinishedInstances = 0;
             for (int i = 0; i < classNames.length; i++) {
                 config = getConfig(new String[] {WorkDir+classNames[i]});
                 simulator = new Simulator(WorkDir+classNames[i]);

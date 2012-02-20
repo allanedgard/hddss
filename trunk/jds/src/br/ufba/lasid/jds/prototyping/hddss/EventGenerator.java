@@ -11,7 +11,12 @@ public class EventGenerator {
         double prob, minProb, maxProb;
         Method m;
         Object o;
+        int activationTime=0;
     
+        void setActivationTime(int t) {
+            activationTime=t;
+        }    
+        
         EventGenerator() {
             r = new Randomize();
         }
@@ -37,6 +42,12 @@ public class EventGenerator {
             }
         }
         
+        boolean hasEvent(int t) {
+            if (t<activationTime) 
+                return false;
+            return hasEvent();
+        }
+        
         boolean hasEvent() {
             double x1;
             if (prob==0.0) {
@@ -47,6 +58,17 @@ public class EventGenerator {
         
         public void trigger() {
             if (this.hasEvent())
+                try { m.invoke(o); }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            else {
+            }
+                
+        }
+        
+        public void trigger(int t) {
+            if (this.hasEvent(t))
                 try { m.invoke(o); }
                 catch (Exception e) {
                     e.printStackTrace();

@@ -1,29 +1,35 @@
 
 package br.ufba.lasid.jds.prototyping.hddss;
 
-import java.io.ByteArrayInputStream;
-import java.io.ObjectInputStream;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
+import java.io.*;
+import java.net.*;
 
 /**
  *
  * @author Allan
  */
-public class HDDSS_UDPSocket extends Thread {
+public class HDDSS_Socket extends Thread {
+    DatagramSocket socket;
+    //Socket socket;
+
     Buffer nic_in;
     int port;
     
-    HDDSS_UDPSocket(Buffer nic_in, int port) {
+    HDDSS_Socket(Buffer nic_in, String ad, int port) {
         this.nic_in = nic_in;
         this.port = port;
+        try {
+            socket = new DatagramSocket(port);
+            //socket = new Socket(ad, port);
+            System.out.println("Connected to "+socket.getLocalSocketAddress());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-    
+
     @Override
     public final void run() {
         try {
-            DatagramSocket socket = new DatagramSocket(port);
-
             while (true) {
                 byte[] data = new byte[4];
                 DatagramPacket packet = new DatagramPacket(data, data.length );
@@ -44,7 +50,7 @@ public class HDDSS_UDPSocket extends Thread {
                 ObjectInputStream oos = new ObjectInputStream(baos);
                 Message m = (Message)oos.readObject();
                 nic_in.add(0, m);
-                System.out.println("RECEBEU");
+                System.out.println("RECEBEU m from p"+m.sender);
             }
         } catch(Exception e) {
             e.printStackTrace();

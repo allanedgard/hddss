@@ -11,6 +11,11 @@ public class ProbabilisticEventGenerator extends EventGenerator {
     }
 
     @Override
+    boolean hasEvent(int t) {
+            return hasEvent();
+    }
+    
+    @Override
     boolean hasEvent() {
             double x1;
             if (prob==0.0) {

@@ -68,11 +68,11 @@ public class Agent_protocoloA extends SimulatedAgent {
         Randomize r;
          
         
-        Agent_protocoloA() {
-        super();
+        public Agent_protocoloA() {
+            super();
         }
     
-    @Override
+        @Override
         public void setup() {
             finalTime = infra.context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
 
@@ -180,7 +180,7 @@ public class Agent_protocoloA extends SimulatedAgent {
                 
         @Override
         public void receive(Message msg) {
-            
+            super.receive(msg);
             Content_AmoebaSequencer ca;
             int clock = (int)infra.clock.value();
 
@@ -194,6 +194,7 @@ public class Agent_protocoloA extends SimulatedAgent {
                         ca = (Content_AmoebaSequencer) msg.content;
                         if (msg.logicalClock == sequencia) 
                             cont++;
+                        deliver(msg);
                     }
                     break;
             }
