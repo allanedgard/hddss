@@ -59,6 +59,7 @@ public class TestBed  extends Thread implements RuntimeSupport
 
             int n = get(Variable.NumberOfAgents).<Integer>value();
 
+           
             try {
                 out.println("modo thread");
             } catch (Exception e) {
@@ -184,16 +185,18 @@ public class TestBed  extends Thread implements RuntimeSupport
                     System.out.println(ip);
 
                     if (ip.indexOf(":") > -1) {
-                        IP[j]= ip.substring(0, ip.indexOf(":")-1);
+                        IP[j]= ip.substring(0, ip.indexOf(":"));
                         PORT[j] = ip.substring(ip.indexOf(":")+1);
-                        System.out.println("ip = "+IP[j]);
-                        System.out.println("port = "+PORT[j]);
+                        System.out.println("ip["+j+"] = "+IP[j]);
+                        System.out.println("port["+j+"] = "+PORT[j]);
                     }
                         
                 }else{
                     System.out.println(config.getString(TAGInfra));
                 }                      
             }
+            
+            
             
             System.out.println("Agent "+i);
             String TAG = Agent.TAG;
@@ -204,7 +207,11 @@ public class TestBed  extends Thread implements RuntimeSupport
             }else{
                     p[i] = (Agent) Factory.create(Agent.TAG, Agent.class.getName());
             }
-
+            
+            /*
+             *  NEW MOD
+             */
+                     
             prepareAgent(p[i]);
 
             Factory.setup(p[i], TAG);
@@ -229,13 +236,13 @@ public class TestBed  extends Thread implements RuntimeSupport
 
     public void prepareAgent(Agent a) throws Exception{
         int n = get(Variable.NumberOfAgents).<Integer>value();
+        a.ID = get("ID").<Integer>value();
         
         /* REVISAR ESTA PARTE */
-        a.infra = (RuntimeContainer) new br.ufba.lasid.jds.prototyping.hddss.MiddlewareRuntimeContainer(this);
+        a.infra = new br.ufba.lasid.jds.prototyping.hddss.MiddlewareRuntimeContainer(this);
         a.infra.register(a);
         a.infra.nprocess = n;
-        ((MiddlewareRuntimeContainer) a.infra).IP = IP;
-        ((MiddlewareRuntimeContainer) a.infra).PORT = PORT;        
+    
         
         /* REVISAR ESTA PARTE */
         AbstractClock _clock = (AbstractClock) Factory.create(AbstractClock.TAG, AbstractClock.class.getName());
@@ -253,8 +260,15 @@ public class TestBed  extends Thread implements RuntimeSupport
          Factory.setup(a.infra.cpu, CPU.TAG);
 
          a.infra.cpu.setClock(_clock);
-
-        //a.infra.scheduler = scheduler;
+        
+         
+        ((MiddlewareRuntimeContainer) (a.infra)).IP = new String[n];
+        ((MiddlewareRuntimeContainer) (a.infra)).PORT = new String[n];
+        for (int j=0;j<n;j++) {
+                
+                ((MiddlewareRuntimeContainer) (a.infra)).IP[j] = IP[j];
+                ((MiddlewareRuntimeContainer) (a.infra)).PORT[j] = PORT[j];
+        }
 
         a.init();
     }

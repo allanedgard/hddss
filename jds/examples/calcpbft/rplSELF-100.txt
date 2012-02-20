@@ -11,7 +11,7 @@ FormattedReport = false
 clock = br.ufba.lasid.jds.prototyping.hddss.Clock_Virtual
 clock.Mode = s
 
-cpu = br.ufba.lasid.jds.prototyping.hddss.LoadAwareCPU
+cpu = br.ufba.lasid.jds.prototyping.hddss.CPULoadAware
 
 /* transferRate in  bps  (e.g. 9Gbps is equal to 9000000000 bps, if simulation time in miliseconds then use 9Gbps / 1000  = 9Mb/ms */
 /*  ProcessingRate = 9446400 ~ i7 3.3GHz | 64 bits/instruction | PW = 147,6 MIPS */
@@ -94,7 +94,7 @@ channel.Contention = false
 channel.DeltaMaximo = 5
 channel.DeltaMinimo = 1
 
-network = br.ufba.lasid.jds.prototyping.hddss.PayloadAwareNetwork
+network = br.ufba.lasid.jds.prototyping.hddss.NetworkPayloadAware
 
 /* transferRate in  bps  (e.g. 10Mbps is equal to 10000000 bps, if simulation time in miliseconds then use 10Mbps / 1000  = 10Kb/ms*/
 network.TransferRate =  10000000

@@ -39,6 +39,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
         nprocess = context.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value();   
     }
 
+    
     public boolean register(Agent agent){
         this.agent = agent;
         return true;
@@ -118,6 +119,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
     public boolean deliver(){
        Message m = deliver(clock.value());
        if(m != null){
+            agent.preDeliver(m);
             agent.deliver(m);
 
             reportEvent(m, 'd');
@@ -157,6 +159,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
 
        Message m = receive(clock.value());
        if(m != null){
+            agent.preReceive(m);
             agent.receive(m);
 //             context.get(Variable.TxDelayTrace).<DescriptiveStatistics>value().addValue(
 //                     (double)(m.receptionTime - m.physicalClock)

@@ -5,17 +5,25 @@ import java.lang.reflect.*;
 public class ChannelProbabilistic extends Channel {
 
     Randomize x;
+    int minValue=0;
     
     ChannelProbabilistic () {
         x=new Randomize();
     }    
     
     public void setDistribution(String dt) {
-        x.setDistribution(dt);
+        String at = dt.substring(1, dt.length()-1);
+        x.setDistribution(at);
     }
-
+    
+    public void setMinValue(String dt) {
+        minValue = Integer.parseInt(dt);
+    }
     int delay() {
-        return (int) x.genericDistribution();
+        double d;
+        d = x.genericDistribution();
+        if (d < minValue)  d=minValue;
+        return (int) d;
     }
     
     boolean status() {

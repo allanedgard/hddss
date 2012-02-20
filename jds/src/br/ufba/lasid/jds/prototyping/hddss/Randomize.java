@@ -58,6 +58,11 @@ public class Randomize {
             } while (b>0);
             //String parameters = dist.substring(i+1,dist.indexOf(')'));
             String parameters = dist.substring(i+1,c);
+            if (parameters.length() ==0) {
+                TYPE=9;
+                method = genericClass.getMethod(methodName);
+                return;
+            }
             i = parameters.indexOf(','); 
             if ( (i<0) || methodName.equals("R") ) {
                 i = parameters.indexOf('\"');
@@ -167,6 +172,9 @@ public class Randomize {
         double dly=0.0;
         try {
             switch (TYPE) {
+                case 9:
+                     dly = (Double) method.invoke(this);
+                     break;
                 case 1: 
                      dly = (Double) method.invoke(this, paramDouble1);
                      break;
