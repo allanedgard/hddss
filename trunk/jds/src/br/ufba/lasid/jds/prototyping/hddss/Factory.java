@@ -17,16 +17,25 @@ public class Factory {
         while (properties.hasNext()) {
            
             String value = (String) properties.next();
-
-            if(isInstanceof(obj, Agent.class) && value.contains("FaultModel")){
-                  ((Agent)obj).infra.setFaultModel(config.getString(value));
-            }else{
-                try{
-                    setProperty(obj, value.substring(TAG.length() + 1), config.getString(value));
-                }catch(Exception e){
-                    setProperty(obj, value.substring(TAG.length() + 1), config.getVector(value, new ArrayList()).toString());
+            
+                /*
+                 *  DEFINE AS PROPRIEDADES DO MODELO DE FALHAS
+                 */
+                if(isInstanceof(obj, Agent.class) && value.contains("FaultModelProperties")){
+                  setProperty(((Agent)obj).infra.faultModel, value.substring(TAG.length() + 22), config.getString(value));
                 }
-            }
+                else
+            
+                if(isInstanceof(obj, Agent.class) && value.contains("FaultModel")){
+                  ((Agent)obj).infra.setFaultModel(config.getString(value));
+                }else{
+                    try{
+                        setProperty(obj, value.substring(TAG.length() + 1), config.getString(value));
+                    }catch(Exception e){
+                        setProperty(obj, value.substring(TAG.length() + 1), config.getVector(value, new ArrayList()).toString());
+                    }
+                }
+
         }        
     }
     

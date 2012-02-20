@@ -18,7 +18,11 @@ public class Randomize {
     double [] X;
     int next;
     String funcao;
+    Tracing trace;
     
+    /*
+     *  TRACING METHODS
+     */
     public Randomize() {
         z = new java.util.Random();
         next =0;
@@ -31,6 +35,7 @@ public class Randomize {
         next = 0;
         funcao="";
     }
+    
     
     
     public void setDistribution(String dt) {
@@ -205,8 +210,17 @@ public class Randomize {
             e.printStackTrace();
         }
         return dly;
-   }
-    
+    }
+
+    public double tracing(String filename, int column) {
+        if (trace == null) {
+            trace = new Tracing();
+        }
+        trace.setColumn(column);
+        trace.setFilename(filename);
+        return trace.getValue();
+    }
+   
     public double R(String funcao) {
         /*
         if (R == null)
