@@ -69,7 +69,15 @@ public class Teste {
             System.out.println(T1.getValue());
             System.out.println(T1.getValue());
             System.out.println(T1.getValue());
+            c1.setDistribution("tracing(\"c:/users/allan/desktop/teste.txt\",1)");
+            System.out.println(c1.delay());
+            System.out.println(c1.delay());
+            System.out.println(c1.delay());
+            System.out.println(c1.delay());
 
+            String value = "agent[1].FaultModelProperties.maxProb";
+            String TAG = "agent[1]";
+            System.out.println("t="+ value.substring(TAG.length() + 22));
             IntegrationR.getInstance().end();
         } catch (Exception ex) {
             //Logger.getLogger(Teste.class.getName()).log(Level.SEVERE, null, ex);

@@ -37,13 +37,16 @@ public class EventGenerator {
             }
         }
         
-        public void trigger() {
+        boolean hasEvent() {
             double x1;
             if (prob==0.0) {
                 x1 = r.uniform(minProb, maxProb);
             } else x1 = prob;
-            
-            if ( (r.uniform() <= x1)  )
+            return (r.uniform() <= x1);
+        }
+        
+        public void trigger() {
+            if (this.hasEvent())
                 try { m.invoke(o); }
                 catch (Exception e) {
                     e.printStackTrace();

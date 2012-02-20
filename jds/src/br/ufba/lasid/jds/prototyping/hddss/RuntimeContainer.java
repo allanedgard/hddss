@@ -6,7 +6,6 @@ import java.util.ArrayList;
 /**
  * A RuntimeContainer can be a Operating System, a Middleware or a Simulator.
  * It allows to hide details about the execution infra of the agent.
- * @author aliriosa
  */
 public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugger{
     public AbstractClock clock;
@@ -80,7 +79,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
         }
         else faultModel.increaseTick();
     }
-
+    
     public final void setFaultModel(String fault_model) {
     	try {
     		Class c = Class.forName(fault_model);
