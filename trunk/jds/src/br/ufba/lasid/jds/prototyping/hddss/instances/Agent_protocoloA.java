@@ -74,12 +74,12 @@ public class Agent_protocoloA extends SimulatedAgent {
     
         @Override
         public void setup() {
-            finalTime = infra.context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
+            finalTime = getInfra().context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
 
             bloquearEntrega = false;
   
             Leader = 1;
-            if (ID==Leader)
+            if (getAgentID()==Leader)
                 AmILeader = true;
             
             r = new Randomize();
@@ -98,8 +98,8 @@ public class Agent_protocoloA extends SimulatedAgent {
              */ 
             bloquearEntrega = false;
             
-            BM = new int[infra.nprocess];
-            for (int i=0;i<infra.nprocess;i++)
+            BM = new int[getInfra().nprocess];
+            for (int i=0;i<getInfra().nprocess;i++)
                 BM[i]=-1;
             
             count = 0;
@@ -139,7 +139,7 @@ public class Agent_protocoloA extends SimulatedAgent {
         
     @Override
         public void execute() {
-               int clock = (int)infra.clock.value();
+               int clock = (int)getInfra().clock.value();
         /*
        while there are packets to be transmitted
             send packet of sequence seq
@@ -152,7 +152,8 @@ public class Agent_protocoloA extends SimulatedAgent {
                 else
                     wait on E[Xt], the timeout handling time
         */
-        if ( ((cont==infra.getNumberOfProcess()) || (timeout-clock > DELTA) ) && (sequencia<TOTAL)) {
+        if ( ((cont==getInfra().getNumberOfProcess()) || (timeout-clock > DELTA) ) && (sequencia<TOTAL)) {
+            System.out.println("Enviando em "+clock);
             Content_AmoebaSequencer ca = new Content_AmoebaSequencer(LastACK, "stuff");
             sequencia++;
             sendGroupMsg(clock, APP, ca, sequencia, true);
@@ -162,18 +163,18 @@ public class Agent_protocoloA extends SimulatedAgent {
         }
         
         public void sendGroupMsg(int clock, int tipo, Object valor, int LC) {
-            for (int j=0; j<infra.nprocess;j++) {
-                this.createMessage(clock, this.ID, j, tipo, valor, LC);  }
+            for (int j=0; j<getInfra().nprocess;j++) {
+                this.createMessage(clock, this.getAgentID(), j, tipo, valor, LC);  }
         }
         
         public void sendGroupMsg(int clock, int tipo, Object valor, int LC, boolean pay) {
-            for (int j=0; j<infra.nprocess;j++) {
-                this.createMessage(clock, this.ID, j, tipo, valor, LC, pay);
+            for (int j=0; j<getInfra().nprocess;j++) {
+                this.createMessage(clock, this.getAgentID(), j, tipo, valor, LC, pay);
             }
         }
 
         public void relayGroupMsg(int clock, int i, int tipo, Object valor, int LC, boolean pay) {
-            for (int j=0; j<infra.nprocess;j++) {
+            for (int j=0; j<getInfra().nprocess;j++) {
                 this.createMessage(clock, i, j, tipo, valor, LC, pay);
             }
         }        
@@ -182,15 +183,25 @@ public class Agent_protocoloA extends SimulatedAgent {
         public void receive(Message msg) {
             super.receive(msg);
             Content_AmoebaSequencer ca;
-            int clock = (int)infra.clock.value();
+            int clock = (int)getInfra().clock.value();
 
             switch (msg.type) {
                 case APP:
+                    System.out.println("Recebendo APP em "+clock);
+                    System.out.println("enviada em = "+msg.physicalClock);
+                    System.out.println("seq = "+msg.logicalClock);
+                    System.out.println("id = "+msg.sender);
+                    System.out.println("myid = "+getAgentID());
                     ca = (Content_AmoebaSequencer) msg.content;
-                    this.createMessage(clock, ID, Leader, ACK, ca, msg.logicalClock);
+                    this.createMessage(clock, getAgentID(), Leader, ACK, ca, msg.logicalClock);
                     break;
                 case ACK:
                     if (AmILeader) {
+                    System.out.println("Recebendo ACK em "+clock);
+                    System.out.println("enviada em = "+msg.physicalClock);
+                    System.out.println("seq = "+msg.logicalClock);
+                    System.out.println("id = "+msg.sender);
+                    System.out.println("myid = "+getAgentID());
                         ca = (Content_AmoebaSequencer) msg.content;
                         if (msg.logicalClock == sequencia) 
                             cont++;

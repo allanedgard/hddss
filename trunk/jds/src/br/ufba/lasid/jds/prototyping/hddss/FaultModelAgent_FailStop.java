@@ -22,7 +22,7 @@ public class FaultModelAgent_FailStop extends FaultModelAgent {
     @Override
     public void increaseTick() {
             if (!parado)
-                infra.agent.done = true;
+                infra.agent.setDone(true);
                 if (r.uniform() <= prob) {
                     parado = true;
                 }

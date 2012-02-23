@@ -25,7 +25,7 @@ public class Agent_TimedCB extends SimulatedAgent {
         double minProb;
         double maxProb;
         int logicalClock;
-        int lastTimeSent;
+        long lastTimeSent;
         int payloadSize;
         final int TIMEDCB_APP = 4;
         final int TIMEDCB_TS = 5;
@@ -92,17 +92,17 @@ public class Agent_TimedCB extends SimulatedAgent {
 
     @Override
         public void setup() {
-            int finalTime = infra.context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
+            int finalTime = getInfra().context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
             schedule = new java.util.TreeMap();
             stableMode = 0;
             logicalClock = 0;
-            BM = new int[infra.nprocess];
-            LCB = new int[infra.nprocess];
-            ultimaMsgTimeStamp = new int[infra.nprocess];
+            BM = new int[getInfra().nprocess];
+            LCB = new int[getInfra().nprocess];
+            ultimaMsgTimeStamp = new int[getInfra().nprocess];
             payloadSize = 0;
-            acks = new Content_Acknowledge[infra.nprocess];
+            acks = new Content_Acknowledge[getInfra().nprocess];
             
-            r = new Randomize(ID);
+            r = new Randomize(this.getAgentID());
             scheduler = new int[finalTime*4];
  //           BM_Matrix = new char[controle.n][controle.tempofinal*2];
             for (int j = 0;j<scheduler.length ;j++) {
@@ -155,7 +155,7 @@ public class Agent_TimedCB extends SimulatedAgent {
             consensusArray = new Consensus[finalTime*2];
             
             // Inicia matriz de blocos e matriz de Last Complete Blocks
-            for (int i = 0;i<infra.nprocess;i++) {
+            for (int i = 0;i<getInfra().nprocess;i++) {
                 BM[i]=-1;
                 LCB[i]=-1;
                 acks[i] = new Content_Acknowledge();
@@ -188,7 +188,7 @@ public class Agent_TimedCB extends SimulatedAgent {
              *  Inicia conjuntos, incluindo todos os processos 
              *  como LIVE na visao!
              */ 
-            for (int i=0;i<infra.nprocess;i++) {
+            for (int i=0;i<getInfra().nprocess;i++) {
                 live.add(i);
                 view.add(i);
             }
@@ -250,17 +250,17 @@ public class Agent_TimedCB extends SimulatedAgent {
            return delta;
        }
        
-       void blockRegister(int blocknumber, int sender, int ti) {
+       void blockRegister(int blocknumber, int sender, long ti) {
                 int TC;
-                int finalTime = infra.context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
-                int DESVIO = infra.context.get(RuntimeSupport.Variable.MaxDeviation).<Integer>value();
+                int finalTime = getInfra().context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
+                int DESVIO = getInfra().context.get(RuntimeSupport.Variable.MaxDeviation).<Integer>value();
                 
                 Integer block = new Integer(blocknumber);
-                int clock = (int)infra.clock.value();
+                long clock = getInfra().clock.value();
 
-                String mode = infra.context.get(RuntimeSupport.Variable.Mode).<String>value();
-                double ro = infra.context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
-                int maxro = infra.context.get(RuntimeSupport.Variable.MaxClockDeviation).<Integer>value();
+                String mode = getInfra().context.get(RuntimeSupport.Variable.Mode).<String>value();
+                double ro = getInfra().context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
+                int maxro = getInfra().context.get(RuntimeSupport.Variable.MaxClockDeviation).<Integer>value();
                 
                 if (!blocks.containsKey(block)) {
                     /*
@@ -270,13 +270,13 @@ public class Agent_TimedCB extends SimulatedAgent {
                             lastBlock = block;
                         blocks.put(block, clock);
                         if (mode.equals("t")) {
-                            if (sender == ID) {
+                            if (sender == getAgentID()) {
                                 TC = (int) ( (clock+2 * getDeltaMax() + getMaxTS()) + DESVIO+1);
                             }
                             else
                                 TC = (int) ( (clock+2 * getDeltaMax() + getMaxTS()-getDeltaMin()) + DESVIO+1);
                         } else {
-                            if (sender == ID) {
+                            if (sender == getAgentID()) {
                                 TC = (int) ( (clock+2 *getDeltaMax() + getMaxTS() )* (1+ro*maxro))+1;
                             }
                             else
@@ -305,7 +305,7 @@ public class Agent_TimedCB extends SimulatedAgent {
         
     @Override
         public void execute() {
-            int clock = (int)infra.clock.value();
+            long clock = getInfra().clock.value();
             double x1;
             
             if (prob==0.0) {
@@ -317,8 +317,8 @@ public class Agent_TimedCB extends SimulatedAgent {
                 logicalClock ++;        // Ajusta o relógio lógico
                 //LastTimeSent = clock;   // Registra clock do ultimo envio
                 SENT = logicalClock;    // Registra numero do bloco do ultimo envio
-                sendGroupMsg(clock, TIMEDCB_APP, new Content_TimedCB("payload", LCB[ID], acks, payloadSize), logicalClock, true );
-                blockRegister(logicalClock, ID, clock);
+                sendGroupMsg(clock, TIMEDCB_APP, new Content_TimedCB("payload", LCB[getAgentID()], acks, payloadSize), logicalClock, true );
+                blockRegister(logicalClock, getAgentID(), clock);
             }
 
             /*
@@ -333,8 +333,8 @@ public class Agent_TimedCB extends SimulatedAgent {
                         logicalClock = max(logicalClock+1,lastBlock);
                         SENT = logicalClock;
 
-                        sendGroupMsg(clock, TIMEDCB_TS, new Content_TimedCB("time-silent", LCB[ID], acks), logicalClock );
-                        blockRegister(logicalClock, ID, clock);
+                        sendGroupMsg(clock, TIMEDCB_TS, new Content_TimedCB("time-silent", LCB[getAgentID()], acks), logicalClock );
+                        blockRegister(logicalClock, getAgentID(), clock);
                 }
             }
             
@@ -360,9 +360,9 @@ public class Agent_TimedCB extends SimulatedAgent {
                  }
             }*/
             
-            if (scheduler[clock] != -1) {
-                 if (getMin() < scheduler[clock]) {
-                    for (int i = getMin()+1; i<=scheduler[clock];i++) {
+            if (scheduler[(int) clock] != -1) {
+                 if (getMin() < scheduler[(int) clock]) {
+                    for (int i = getMin()+1; i<=scheduler[(int) clock];i++) {
                         //infra.debug("p"+Integer.toString(ID)+": timeout in block "+Integer.toString(i) + " in "+Integer.toString(clock));
                         notifyExpiredBlocks(i);
                         IntegerSet x = retornaExpirados(i);
@@ -386,23 +386,23 @@ public class Agent_TimedCB extends SimulatedAgent {
         /*
          *  Envia mensagem a grupo
          */
-        public void sendGroupMsg(int clock, int type, Object value, int LC) {
-            for (int j=0; j<infra.nprocess;j++){
+        public void sendGroupMsg(long clock, int type, Object value, int LC) {
+            for (int j=0; j<getInfra().nprocess;j++){
                 
                 if(value instanceof Content_TimedCB){
                     ((Content_TimedCB)value).vack[j].rsendTime = clock;
                 }
-                this.createMessage(clock, this.ID, j, type, value, LC);
+                this.createMessage(clock, this.getAgentID(), j, type, value, LC);
             }
         }
         
-        public void sendGroupMsg(int clock, int type, Object value, int LC, boolean pay) {
-            for (int j=0; j<infra.nprocess;j++){
+        public void sendGroupMsg(long clock, int type, Object value, int LC, boolean pay) {
+            for (int j=0; j<getInfra().nprocess;j++){
                 if(value instanceof Content_TimedCB){
                     ((Content_TimedCB)value).vack[j].rsendTime = clock;
                 }
 
-                this.createMessage(clock, this.ID, j, type, value, LC, pay);
+                this.createMessage(clock, this.getAgentID(), j, type, value, LC, pay);
             }
         }
         
@@ -431,7 +431,7 @@ public class Agent_TimedCB extends SimulatedAgent {
       */ 
      public int getMin() {
         int min = Integer.MAX_VALUE;
-        for (int i=0; i<infra.nprocess;i++){
+        for (int i=0; i<getInfra().nprocess;i++){
             if (view.exists(i)) {
                 if (BM[i] < min)
                     min = BM[i]; }
@@ -455,7 +455,7 @@ public class Agent_TimedCB extends SimulatedAgent {
      
      public int getStableMin() {
         int min = Integer.MAX_VALUE;
-        for (int i=0; i<infra.nprocess;i++){
+        for (int i=0; i<getInfra().nprocess;i++){
             if (view.exists(i))
                 if (LCB[i] < min)
                     min = LCB[i];
@@ -467,7 +467,7 @@ public class Agent_TimedCB extends SimulatedAgent {
       *  Ajusta a matriz de blocos com o resultado do consenso
       */
      public void informaBlocoPosConsenso(int x) {
-        for (int i=0; i<infra.nprocess;i++){
+        for (int i=0; i<getInfra().nprocess;i++){
             if (view.exists(i))
                 if (BM[i] < x)
                     BM[i]=x;
@@ -479,7 +479,7 @@ public class Agent_TimedCB extends SimulatedAgent {
       */
      public IntegerSet retornaExpirados(int bl) {
         IntegerSet x = new IntegerSet();
-        for (int i=0; i<infra.nprocess;i++){
+        for (int i=0; i<getInfra().nprocess;i++){
             if (view.exists(i))
                 if (BM[i] < bl)   
                     x.add(i);
@@ -493,10 +493,10 @@ public class Agent_TimedCB extends SimulatedAgent {
       *  Atualiza as mensagens instáveis
       */
      void checkCompletion() {
-        int n = infra.nprocess;
+        int n = getInfra().nprocess;
         int min = getMin();
-        LCB[ID] = min;
-        int clock = (int)infra.clock.value();
+        LCB[getAgentID()] = min;
+        long clock = getInfra().clock.value();
         int minStable = getStableMin();
         java.util.TreeSet key = new java.util.TreeSet();
         java.util.TreeMap sorting = new java.util.TreeMap();
@@ -526,9 +526,8 @@ public class Agent_TimedCB extends SimulatedAgent {
                 // System.nic_out.println("p"+ID+" min="+minimo+" ts log = "+m.relogioLogico);
                 if ( (m.logicalClock <= min)  ) {
                     cont++;
-                    infra.app_in.add(clock, m);
                     if (m.type == TIMEDCB_APP)
-                        Simulator.reporter.stats("blocking time", clock-m.receptionTime);
+                        this.preDeliver(m);
                 }
             }
         //infra.debug("p"+ID+" delivers "+cont+" msgs of block "+min);
@@ -590,7 +589,7 @@ public class Agent_TimedCB extends SimulatedAgent {
 
             Content_Unstable uC;
             Consensus c;
-            int clock = (int)infra.clock.value();
+            long clock = getInfra().clock.value();
             switch (msg.type) {
                 case TIMEDCB_APP:                    
                 case TIMEDCB_TS:
@@ -611,8 +610,8 @@ public class Agent_TimedCB extends SimulatedAgent {
                     blockRegister(msg.logicalClock, msg.sender, msg.physicalClock);
                     checkCompletion();
 
-                    String output = "p"+ID;
-                    for (int i=0;i<infra.nprocess;i++)
+                    String output = "p"+getAgentID();
+                    for (int i=0;i<getInfra().nprocess;i++)
                         output = output+" "+BM[i];
                     output=output+" RECV "+RECV+" SENT "+SENT+ " LSB "+getStableMin()+" LCB "+getMin();
                     //infra.debug(output);
@@ -645,7 +644,7 @@ public class Agent_TimedCB extends SimulatedAgent {
 
                             consensusArray[uC.bloco] = startConsensus(uC);
                             
-                            if (consensusArray[uC.bloco].getRound()%infra.nprocess == ID)
+                            if (consensusArray[uC.bloco].getRound()% (getInfra().nprocess)  == getAgentID())
                                 sendGroupMsg(clock, CONSENSUS_P1,consensusArray[uC.bloco], logicalClock);
                         
                         }
@@ -658,14 +657,14 @@ public class Agent_TimedCB extends SimulatedAgent {
                         consensusArray[c.number] = startConsensus( (Content_Unstable) c.estimated );
                     
                     if (c.getRound()==(consensusArray[c.number].getRound())) {
-                        if (msg.sender == c.getRound() % infra.nprocess) {
+                        if (msg.sender == c.getRound() % getInfra().nprocess) {
                             consensusArray[c.number].estimated = c.estimated;
                             sendGroupMsg(clock, CONSENSUS_P2,consensusArray[c.number], logicalClock);
                         }
                     }
                     else if  (c.getRound()<(consensusArray[c.number].getRound())){
                                 c.alteraRound(consensusArray[c.number].getRound() );
-                                if (msg.sender == c.getRound() % infra.nprocess) {
+                                if (msg.sender == c.getRound() % getInfra().nprocess) {
                                    consensusArray[c.number].estimated = c.estimated;
                                     sendGroupMsg(clock, CONSENSUS_P2,consensusArray[c.number], logicalClock);
                                 }
@@ -747,8 +746,8 @@ public class Agent_TimedCB extends SimulatedAgent {
                         view.clean();
                         view.add(proposedView);
                         System.out.println("Consenso Obtido em "+clock);
-                        System.out.println("Visao em p"+ID);
-                        for (int i=0; i<infra.nprocess; i++)
+                        System.out.println("Visao em p"+getAgentID());
+                        for (int i=0; i<getInfra().nprocess; i++)
                             if (view.exists(i) )
                                 System.out.print(i+" \t");
                         System.out.println("");
@@ -761,9 +760,9 @@ public class Agent_TimedCB extends SimulatedAgent {
          *  Altera o coordenador do consenso
          */
         void rotacionaCoordenador(int i) {
-            int clock = (int)infra.clock.value();
+            long clock = getInfra().clock.value();
             consensusArray[i].alteraRound(consensusArray[i].getRound()+1);
-            if (consensusArray[i].getRound()%infra.nprocess == ID)
+            if (consensusArray[i].getRound()%getInfra().nprocess == getAgentID())
                 sendGroupMsg(clock, CONSENSUS_P1,consensusArray[i], logicalClock);
         }
         

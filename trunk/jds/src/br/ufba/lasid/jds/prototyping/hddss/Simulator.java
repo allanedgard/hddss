@@ -24,16 +24,18 @@ public class Simulator  extends Thread implements RuntimeSupport
     static int numInstances =0;
     static int numFinishedInstances=0;
     boolean end;
-
     int charge;
-    public static double ro = .001;
+    
+    /*  COLOCAR NO ARQUIVO DE CONF ro E maxro */
+    public static double ro = .1;
     public static int maxro = 5;
+    
     public static Configurations config;
     boolean formattedReport = true;
     
     RuntimeVariables variables = new RuntimeVariables();
     
-    public static final Reporter reporter = new Reporter();
+    //public static final Reporter reporter = new Reporter();
 
     public final int getDelay(int i, int j)
     {
@@ -45,7 +47,7 @@ public class Simulator  extends Thread implements RuntimeSupport
        /*   #scenarios
          *  return (int) p[i].infra.cpu.exec(data);
          */
-        return (int) scenario.p[i].infra.cpu.exec(data);
+        return (int) scenario.p[i].getInfra().cpu.exec(data);
     }
      
     public final void ok() {
@@ -85,7 +87,7 @@ public class Simulator  extends Thread implements RuntimeSupport
 
             while(!(done = advance()));
             
-            network.done = true;
+            network.setDone(true);
         }
     } 
 
@@ -96,7 +98,6 @@ public class Simulator  extends Thread implements RuntimeSupport
       boolean done = true;
 
       for(int i = 0; i < n; i++){
-         
          synchronized(scenario.p[i].lock){
             scenario.p[i].getInfra().increaseTick();
             /*  #scenario
@@ -104,18 +105,16 @@ public class Simulator  extends Thread implements RuntimeSupport
              *      p[i].getInfra().increaseTick();
              */
          }
-         
          /* if simulation time isn't over and p is not crashed,
           * then it hasn't been done yet. */
-         
          done = done && ((scenario.p[i].getInfra().clock.value() >= finalTime) || !scenario.p[i].status());
          /*     #scenario
           *     done = done && ((p[i].getInfra().clock.value() >= finalTime) || !p[i].status());
           */
          
       }
-
-      network.incTick();
+      scenario.increaseTick();
+      network.increaseTick();
 
       return done;
     }
@@ -256,9 +255,9 @@ public class Simulator  extends Thread implements RuntimeSupport
         System.out.println("simulation finished: ");      
         System.out.println(data.toString());
         if(formattedReport){
-           reporter.report2FormattedTable(System.out);
+            scenario.reporter.report2FormattedTable(System.out);
         }else{
-            reporter.report2UnformattedTable(System.out);
+            scenario.reporter.report2UnformattedTable(System.out);
         }
         out.close();
         numFinishedInstances ++;
@@ -288,6 +287,8 @@ public class Simulator  extends Thread implements RuntimeSupport
             scenario = (Scenario) Factory.create(Scenario.TAG, Scenario.class.getName());
             scenario.init(this);
             Factory.setup(scenario, Scenario.TAG);
+            
+            network.setScenario(scenario);
             /*  #scenario
              *  included
              * 

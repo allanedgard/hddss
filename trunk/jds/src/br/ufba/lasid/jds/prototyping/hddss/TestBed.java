@@ -14,6 +14,9 @@ public class TestBed  extends Thread implements RuntimeSupport
     
     java.io.PrintStream out;
     
+    static int numInstances =0;
+    static int numFinishedInstances=0;
+    
     int clock;
     int m;
 
@@ -35,9 +38,12 @@ public class TestBed  extends Thread implements RuntimeSupport
     public static final Reporter reporter = new Reporter();
    
     public final void ok() {
+        /*
+         *  MODIFICADO
+         */
         synchronized(this){
             m++;
-            if (m==get(Variable.NumberOfAgents).<Integer>value().intValue()) {
+            if (m==1) {
                 fim = true;
                 try {
                     this.notifyAll();
@@ -78,13 +84,12 @@ public class TestBed  extends Thread implements RuntimeSupport
     public final void finaliza() {
         synchronized(this){
             int n = get(Variable.NumberOfAgents).<Integer>value();
-
-
-            for(int i = 0; i < n; i++)
-            {
-                p[i].shutdown();
-            }
-
+            ((MiddlewareRuntimeContainer) 
+                    p[get("ID").<Integer>value()].getInfra()).s.finish=true; 
+            
+            p[get("ID").<Integer>value()].shutdown();
+            ((MiddlewareRuntimeContainer) 
+                    p[get("ID").<Integer>value()].getInfra()).s.stop(); 
             //scheduler.shutdown();
 
             network.stop();
@@ -128,11 +133,12 @@ public class TestBed  extends Thread implements RuntimeSupport
         java.util.Date data = new java.util.Date();        
         System.out.println(data.toString());
         if(formattedReport){
-           reporter.report2FormattedTable(System.out);
+           TestBed.reporter.report2FormattedTable(System.out);
         }else{
-            reporter.report2UnformattedTable(System.out);
+           TestBed.reporter.report2UnformattedTable(System.out);
         }
         out.close();
+        System.exit(0);
     }
 
 
@@ -236,38 +242,37 @@ public class TestBed  extends Thread implements RuntimeSupport
 
     public void prepareAgent(Agent a) throws Exception{
         int n = get(Variable.NumberOfAgents).<Integer>value();
-        a.ID = get("ID").<Integer>value();
+        a.setAgentID( get("ID").<Integer>value() );
         
         /* REVISAR ESTA PARTE */
-        a.infra = new br.ufba.lasid.jds.prototyping.hddss.MiddlewareRuntimeContainer(this);
-        a.infra.register(a);
-        a.infra.nprocess = n;
-    
+        a.setInfra(  new br.ufba.lasid.jds.prototyping.hddss.MiddlewareRuntimeContainer(this) );
+        a.getInfra().register(a);
+        a.getInfra().nprocess = n;    
         
         /* REVISAR ESTA PARTE */
         AbstractClock _clock = (AbstractClock) Factory.create(AbstractClock.TAG, AbstractClock.class.getName());
         Factory.setup(_clock, AbstractClock.TAG);
 
-        a.infra.clock = _clock;
-        if(a.infra.clock instanceof Clock_Virtual){
-            ((Clock_Virtual)(a.infra.clock)).nticks = (int) (1/ro);
-            ((Clock_Virtual)(a.infra.clock)).rho =
+        a.getInfra().clock = _clock;
+        if(a.getInfra().clock instanceof Clock_Virtual){
+            //((Clock_Virtual)(a.getInfra().clock)).nticks = (int) (1/ro);
+            ((Clock_Virtual)(a.getInfra().clock)).rho =
                     ((new Randomize()).irandom(-maxro,maxro));
         }
 
-         a.infra.cpu = (CPU) Factory.create(CPU.TAG, CPU.class.getName());
+         a.getInfra().cpu = (CPU) Factory.create(CPU.TAG, CPU.class.getName());
          
-         Factory.setup(a.infra.cpu, CPU.TAG);
+         Factory.setup(a.getInfra().cpu, CPU.TAG);
 
-         a.infra.cpu.setClock(_clock);
+         a.getInfra().cpu.setClock(_clock);
         
          
-        ((MiddlewareRuntimeContainer) (a.infra)).IP = new String[n];
-        ((MiddlewareRuntimeContainer) (a.infra)).PORT = new String[n];
+        ((MiddlewareRuntimeContainer) (a.getInfra())).IP = new String[n];
+        ((MiddlewareRuntimeContainer) (a.getInfra())).PORT = new String[n];
         for (int j=0;j<n;j++) {
                 
-                ((MiddlewareRuntimeContainer) (a.infra)).IP[j] = IP[j];
-                ((MiddlewareRuntimeContainer) (a.infra)).PORT[j] = PORT[j];
+                ((MiddlewareRuntimeContainer) (a.getInfra())).IP[j] = IP[j];
+                ((MiddlewareRuntimeContainer) (a.getInfra())).PORT[j] = PORT[j];
         }
 
         a.init();

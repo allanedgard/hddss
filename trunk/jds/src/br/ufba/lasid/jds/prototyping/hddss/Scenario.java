@@ -6,6 +6,7 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
 import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport.Variable;
+import br.ufba.lasid.jds.prototyping.hddss.report.Reporter;
 
 /**
  *
@@ -17,15 +18,22 @@ public class Scenario {
     Simulator container;
 
     static final String TAG = "scenario";
-
+    public Reporter reporter;
+    public AbstractClock globalClock;
     Scenario() {
- 
+
     }
 
+    public void increaseTick() {
+        ((Clock_Virtual)globalClock).tick();
+    }
+    
     public void init(Simulator s) {
         container = s;
         int n = container.get(Variable.NumberOfAgents).<Integer>value().intValue();
         p = new Agent[n];
+        reporter = new Reporter();
+        globalClock = new Clock_Virtual();
     }
 
     public void initAgents() throws Exception{
@@ -44,7 +52,7 @@ public class Scenario {
                 p[i].setType(container.get(Variable.Type).<String>value().charAt(0));
 
                 prepareAgent(p[i]);
-
+                p[i].setScenario(this);
                 Factory.setup(p[i], TAG);
                 
                 if(!container.config.getString(TAGi, "null").equals("null")){
@@ -74,25 +82,26 @@ public class Scenario {
 
     public void prepareAgent(Agent a) throws Exception{
         int n = container.get(Variable.NumberOfAgents).<Integer>value().intValue();
-        a.infra = new RuntimeContainer(container);
-        a.infra.register(a);
-        a.infra.nprocess = n;
+        a.setInfra ( new RuntimeContainer(container) );
+        a.getInfra().register(a);
+        a.getInfra().nprocess = n;
 
         AbstractClock _clock = (AbstractClock) Factory.create(AbstractClock.TAG, AbstractClock.class.getName());
         Factory.setup(_clock, AbstractClock.TAG);
 
-        a.infra.clock = _clock;
-        if(a.infra.clock instanceof Clock_Virtual){
-            ((Clock_Virtual)(a.infra.clock)).nticks = (int) (1/container.ro);
-            ((Clock_Virtual)(a.infra.clock)).rho =
+        a.getInfra().clock = _clock;
+        if(a.getInfra().clock instanceof Clock_Virtual){
+            //((Clock_Virtual)(a.getInfra().clock)).nticks = (int) (1/container.ro);
+            Clock_Virtual.setNTicks((int) (1/container.ro));
+            ((Clock_Virtual)(a.getInfra().clock)).rho =
                     ((new Randomize()).irandom(-container.maxro,container.maxro));
         }
 
-         a.infra.cpu = (CPU) Factory.create(CPU.TAG, CPU.class.getName());
+         a.getInfra().cpu = (CPU) Factory.create(CPU.TAG, CPU.class.getName());
 
-         Factory.setup(a.infra.cpu, CPU.TAG);
+         Factory.setup(a.getInfra().cpu, CPU.TAG);
 
-         a.infra.cpu.setClock(_clock);
+         a.getInfra().cpu.setClock(_clock);
 
         //a.infra.scheduler = scheduler;
 

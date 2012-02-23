@@ -10,18 +10,19 @@ public class Message  implements Comparable<Message>, Serializable {
     public int destination;
     public int type;
     public int logicalClock;
-    public int physicalClock;
-    public int receptionTime;
+    public long physicalClock;
+    public long actualReceptionTime;
+    public long actualSendingTime;
+    public long receptionTime;    
     public int hops;
     public Object content;
     public boolean payload;
+    public long calculatedDelay =0; //  USO EXCLUSIVO COMO AUXILIO EM NETWORK
     
     /*FIELDS ADDED BY ALIRIO SÁ*/
     boolean multicast = false;
     transient static long SERIALNUMBER = -1;
     long serialnumber = -1;
-
-
 
     public Object getContent() {
         return content;
@@ -47,7 +48,7 @@ public class Message  implements Comparable<Message>, Serializable {
     }
 
     /** Creates a new instance of Mensagem */
-    public Message(int r, int d, int t, int rL, int rF, Object c) {
+    public Message(int r, int d, int t, int rL, long rF, Object c) {
         sender = r;
         destination = d;
         type = t;
@@ -61,7 +62,7 @@ public class Message  implements Comparable<Message>, Serializable {
         serialnumber = ++SERIALNUMBER;
     }
 
-    public Message(int r, int d, int t, int rL, int rF, Object c, boolean m) {
+    public Message(int r, int d, int t, int rL, long rF, Object c, boolean m) {
         sender = r;
         destination = d;
         type = t;
@@ -127,12 +128,15 @@ public class Message  implements Comparable<Message>, Serializable {
   @Override
     public String toString() {
                 return ""+
-                this.sender+"; "+
-                this.destination+"; "+
-                this.physicalClock+"; "+
-                this.logicalClock+"; "+
-                this.type+"; "+
-                this.content;
+                sender+"; "+
+                destination+"; "+
+                physicalClock+"; "+
+                logicalClock+"; "+
+                type+"; "+
+                actualSendingTime+"; "+
+                actualReceptionTime+"; "+
+                payload+"; "+                        
+                content;
   }
 
 }

@@ -11,16 +11,16 @@ package br.ufba.lasid.jds.prototyping.hddss.instances;
  */
 public class Content_PGC {
     
-    int V;
+    long V;
     int M;
     
-    Content_PGC(int v, int m) {
+    Content_PGC(long v, int m) {
         V = v;
         M = m;
     }
     
     public String toString() {
-        return "V = " + Integer.toString(V) + " M = " + Integer.toString(M);
+        return "V = " + Long.toString(V) + " M = " + Integer.toString(M);
      }
 
 }

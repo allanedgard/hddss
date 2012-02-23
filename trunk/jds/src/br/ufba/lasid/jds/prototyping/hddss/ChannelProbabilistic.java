@@ -21,8 +21,8 @@ public class ChannelProbabilistic extends Channel {
     }
     int delay() {
         double d;
-        d = x.genericDistribution();
-        if (d < minValue)  d=minValue;
+        d = minValue+ x.genericDistribution();
+        //if (d < minValue)  d=minValue;
         return (int) d;
     }
     

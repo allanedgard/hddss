@@ -34,11 +34,11 @@ public class FaultModelAgent_Crash extends FaultModelAgent {
     @Override
     public void increaseTick() {
             if (!parado) {
-                infra.agent.done = true;
+                infra.agent.setDone(true);
                 
                 if ( (r.uniform() <= prob)&& (infra.clock.value() >= 1000) )  {
                     this.crash();
-                    System.out.println("p" +infra.agent.ID+": falhou por crash em "+infra.clock.value());
+                    System.out.println("p" +infra.agent.getAgentID()+": falhou por crash em "+infra.clock.value());
                 }
                 else infra.execute();
                 /*

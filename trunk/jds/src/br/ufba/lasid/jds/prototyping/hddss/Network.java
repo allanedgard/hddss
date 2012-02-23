@@ -6,21 +6,19 @@ import java.util.Hashtable;
 import java.util.StringTokenizer;
 
 public abstract class Network extends Thread{
-    Buffer net_in;
-    Simulator conteiner;
-    Channel channels[][];
-    long[][] delaymap;
-    boolean fifo = false;
-    long next = 0;
-    long last = 0;
-    double tqueue = 0.0;
-    long clock = 0;
-    long tick = 0;
-    int totalticks = 0;
-    boolean done = false;
+    Buffer net_in;                  //  BUFFER DE MENSAGENS DE ENTRADA NA REDE
+    private Simulator container;    //  SIMULADOR É O CONTAINER
+    Channel channels[][];           //  GRAFO DE CANAIS ENTRE PROCESSOS
+    long[][] delaymap;              //  MAPA DE ULTIMOS ATRASOS ENTRE CANAIS PARA FIFO
+    private boolean fifo = false;   //  INDICA SE HÁ COMPORTAMENTO FIFO DA REDE
+    private long next = 0;          //            
+    private long last = 0;          //  
+    private double tqueue = 0.0;    //
+    private boolean done = false;   //
+    Scenario scenario;              //  SCENARIO DA REDE
+    AbstractClock networkClock;      //  RELOGIO DA REDE
     
     static final String TAG = "network";
-
 
     public int broadcasts[];
     public int unicasts[];
@@ -32,10 +30,22 @@ public abstract class Network extends Thread{
         broadcasts = new int[256];
         unicasts = new int[256];
         multicasts = new int[256];
-
+        networkClock = new Clock_Virtual();
+    }
+    
+    public final boolean hasDone() {
+        return done;
+    }
+    
+    public final void setDone(boolean d) {
+        done=d;
     }
     
     public final boolean verifyChannel(int i, int j) {
+        /*
+         *  RETORNA O ESTADO DE UM CANAL (OK=TRUE, NAO=FALSO)
+         *  SE O CANAL NAO ESTIVER NEGOCIADO RETORNA FALSO
+         */
         if (channels[i][j] == null) {
             return false;
         }
@@ -43,26 +53,32 @@ public abstract class Network extends Thread{
 
     }
 
-public final void handshaking(int p_i, int p_j) {
+    public final void setScenario(Scenario s) {
+        /*
+         *  ATRIBUI O SCENARIO DE NETWORK
+         *  UTILIZADO PARA REGISTRO DAS ESTATISTICAS E
+         *  E NEGOCIACAO DO SIMULADOR
+         */
+        scenario = s;
+    }
+    
+    public final void handshaking(int p_i, int p_j) {
+        /*
+         *  NEGOCIA OS CANAIS ENTRE PROCESSOS
+         */
         try {
             String TAG = Channel.TAG + "["+p_i+"]["+p_j+"]";
 
-            if(!conteiner.config.getString(TAG, "null").equals("null"))
+            if(!container.config.getString(TAG, "null").equals("null"))
             {
                 channels[p_i][p_j] = (Channel)Factory.create(TAG, Channel.class.getName());
-                /*  #agent
-                 *  channels[p_i][p_j].connect(conteiner.p[p_i], conteiner.p[p_j]);
-                 */
-                channels[p_i][p_j].connect(conteiner.scenario.p[p_i], conteiner.scenario.p[p_j]);
+                channels[p_i][p_j].connect(container.scenario.p[p_i], container.scenario.p[p_j]);
                 Factory.setup(channels[p_i][p_j], TAG);
             }
             else
             {
                 channels[p_i][p_j] = (Channel)Factory.create(Channel.TAG, Channel.class.getName());
-                /*  #scenario
-                 *  channels[p_i][p_j].connect(conteiner.p[p_i], conteiner.p[p_j]);
-                 */
-                channels[p_i][p_j].connect(conteiner.scenario.p[p_i], conteiner.scenario.p[p_j]);
+                channels[p_i][p_j].connect(container.scenario.p[p_i], container.scenario.p[p_j]);
                 Factory.setup(channels[p_i][p_j], Channel.TAG);
             }
 
@@ -76,11 +92,15 @@ public final void handshaking(int p_i, int p_j) {
      *  included
      */
     public final void handshaking(int p_i, int p_j, int type) {
+        /*
+         *  UTILIZADO PARA RECONFIGURACAO DE CANAIS DE UM CENARIO 
+         *  PRE-ESTABELECIDO PARA OUTRO
+         */
         try {
             String TAG = Channel.TAG + "["+type+"]";
 
             channels[p_i][p_j] = (Channel)Factory.create(TAG, Channel.class.getName());
-            channels[p_i][p_j].connect(conteiner.scenario.p[p_i], conteiner.scenario.p[p_j]);
+            channels[p_i][p_j].connect(container.scenario.p[p_i], container.scenario.p[p_j]);
             Factory.setup(channels[p_i][p_j], TAG);
 
         } catch (Exception e) {
@@ -90,45 +110,48 @@ public final void handshaking(int p_i, int p_j) {
 
 
     public final void init(Simulator cxt){
-        conteiner = cxt;
-        
+        /* 
+         *  INICIA A CONFIGURACAO DE NETWORK
+         */
+        container = cxt;
         int n = cxt.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value().intValue();
-
         channels = new Channel[n][n];
-        totalticks = (int)(1/conteiner.ro);
+        // totalticks = (int)(1/container.ro);
     }
 
-    public synchronized final void incTick() {
+    public synchronized final void increaseTick() {
+        /*
+         *  AO AVANCAR UM PASSO NA SIMULACAO, A REDE 
+         *  AVANÇA O RELOGIO E VERIFICA BUFFERs DE SAIDA
+         */
         this.clockTick();
-         outcoming();
+        outcoming();
     }
 
     @Override
     public final void run() {
 
         while (true) {
-            this.incTick();
+            this.increaseTick();
             this.yield();
             if (done)
                 break;
         }
-//        ri.end();
         
     }
 
-
     public synchronized final void clockTick() {
-      tick++;
-      this.yield();
-      if (tick > totalticks) {
-       clock++;
-       tick=0;
-      }
+        /*
+         *  AVANCA O CLOCK DO RELOGIO DA REDE
+         */
+            ((Clock_Virtual)networkClock).tick();
+            this.yield();
     }
 
     public void outcoming(){
+      long clock =  networkClock.value();
       while(true){
-         ArrayList buffer = net_in.getMsgs((int)clock);
+         ArrayList buffer = net_in.getMsgs(clock);
          if(buffer.isEmpty()){
             break;
          }
@@ -142,15 +165,22 @@ public final void handshaking(int p_i, int p_j) {
     }
     
     public void send(Message msg){
+        /*
+         *  AO RECEBER UMA MENSAGEM, A ESCALONA NUMA
+         *  FILA DE MENSAGENS 
+         * 
+         */
         synchronized(this){
-           //proc(msg);
-           // propagate(msg);
            incoming(msg);
         }
        
     }
 
-    public void proc(Message msg){
+    public void proc(Message msg) {
+        /*
+         *  CALCULA O TEMPO NA FILA E O ADICIONA AO ATRASO DA MENSAGEM
+         */
+         long clock =  networkClock.value();
          long dt = clock - last;
          last = clock;
          tqueue -= dt;
@@ -158,34 +188,55 @@ public final void handshaking(int p_i, int p_j) {
          //        long at = delay();
          tqueue += delay(msg);
          //conteiner.get(RuntimeSupport.Variable.QueueDelayTrace).<DescriptiveStatistics>value().addValue(tqueue);
-         Simulator.reporter.stats("network queue delay", tqueue);
+         scenario.reporter.stats("network queue delay", tqueue);
        
     }
 
     /* Simulate the travel of the message from agent to router network */
     double tripdelayBalance = 0.5;
     double inbalance(){
-       return tripdelayBalance;
+        /* 
+         *  RETORNA O PESO DO TEMPO DE ATRASO DO CANAL ANTES DO ENFILEIRAMENTO
+         */
+        return tripdelayBalance;
     }
 
     double outbalance(){
+        /* 
+         *  RETORNA O PESO DO TEMPO DE ATRASO DO CANAL APOS O ENFILEIRAMENTO
+         */
        return (1 - tripdelayBalance);
     }
 
-    private long tripdelay(int p_i, int p_j, double balance){
-         /* compute the timestamp of message arrival in network router */
-         long delay = (long)Math.round(channels[p_i][p_j].delay() * balance);
+    private long tripdelay(int p_i, int p_j, double balance, Message m){
+        /*
+         *  CALCULA O ATRASO DE ACORDO COM O BALANCEAMENTO
+         *  O CALCULO DO ATRASO DO CANAL É FEITO UMA ÚNICA VEZ
+         */
+         long calculatedDelay;
+         if (m.calculatedDelay==0) {
+                calculatedDelay = channels[p_i][p_j].delay();
+                m.calculatedDelay = calculatedDelay;
+         }  else {
+                calculatedDelay = m.calculatedDelay;
+         }
+         long delay = (long)Math.round(calculatedDelay * balance);
          return delay;
     }
     
-    protected long calcTimestamp(int p_i, int p_j, double balance){
-         
-         long timestamp = clock + tripdelay(p_i, p_j, balance);
+    protected long calcTimestamp(int p_i, int p_j, double balance, Message m){
+        /*
+         *  CALCULA O TIMESTAMP PARA INSERCAO NA FILA
+         *  SE O CANAL FOR FIFO, ESSE TIMESTAMP SEMPRE SERA SUPERIOR AO DO
+         *  ULTIMO TIMESTAMP
+         */
+         long clock = scenario.globalClock.value();
+         long timestamp = clock + tripdelay(p_i, p_j, balance, m);
 
          /* if network consider fifo service then the messages will arrive in fifo order */
          if(fifo){
             if(delaymap == null){
-               int n = conteiner.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value();
+               int n = container.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value();
                delaymap = new long[n][n];
             }
 
@@ -202,7 +253,13 @@ public final void handshaking(int p_i, int p_j) {
 
 
    private void incoming(Message m){
+       /*
+        *   INSERE MENSAGEM NO BUFFER ADEQUADO
+        */
        if(isLoopback(m)){
+           /*
+            *   SE FOR LOOPBACK INVOCA lookback
+            */
           loopback(m);
           return;
        }
@@ -211,19 +268,24 @@ public final void handshaking(int p_i, int p_j) {
        int p_j = m.destination;
 
        if(isMulticast(m)){
-         p_j = p_i;
+            p_j = p_i;
        }
 
        if(isBroadcast(m)){
-         p_j = p_i;
+            p_j = p_i;
        }
 
+       /*   INTERPRETACAO INCORRETA DO RELAY
        if(isRelay(m)){
-          p_i = m.relayFrom;
-          p_j = m.relayTo;
+            p_i = m.relayFrom;
+            p_j = m.relayTo;
        }
+        */
 
-       net_in.add((int)calcTimestamp(p_i, p_j, inbalance()), m);
+       /*
+        *   ENFILEIRA A MSG PARA RECEIVE CONFORME OS PROCESSOS ENVOLVIDOS
+        */
+       net_in.add(calcTimestamp(p_i, p_j, inbalance(), m), m);
 
     }
         
@@ -248,19 +310,27 @@ public final void handshaking(int p_i, int p_j) {
       }
     }
     public void loopback(Message msg){
+        /*
+         *  SE A MENSAGEM FOR DE loopback o ENVIO É 
+         *  AGENDADO PARA O PRÓXIMO clock
+         */
         synchronized(this){
-            Simulator.reporter.count("network loopbacks");
+            scenario.reporter.count("network loopbacks");
 
-            if(msg.type >=0) Simulator.reporter.count("network loopbacks class " + msg.type);
+            if(msg.type >=0) scenario.reporter.count("network loopbacks class " + msg.type);
 
             int address = msg.sender;
             /*  #scenario
              *  Agent p = conteiner.p[address];
              */
-            Agent p = conteiner.scenario.p[address];
-            p.getInfra().nic_in.add((int)(p.getInfra().cpu.value())+1, msg);
+            Agent p = container.scenario.p[address];
+            
+            //p.getInfra().nic_in.add((int)(p.getInfra().cpu.value())+1, msg);
+            // ALTERADO PARA RELOGIO GLOBAL
+            p.getInfra().nic_in.add((int)(scenario.globalClock.value())+1, msg);
         }
     }
+    
     public boolean isMulticast(Message msg){
        return msg.multicast;
     }
@@ -273,7 +343,7 @@ public final void handshaking(int p_i, int p_j) {
     }
 
     public boolean isBroadcast(Message msg){
-        int n = conteiner.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value().intValue();
+        int n = container.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value().intValue();
         return (msg.destination == n) && !msg.multicast;
     }
 
@@ -282,11 +352,15 @@ public final void handshaking(int p_i, int p_j) {
     }
 
     public void relay(Message msg){
+        /*
+         *  FAZ O RELAY
+         *  O CODIGO DE RELAY TEM QUE SER REVISADO
+         */
         synchronized(this){
 
-            Simulator.reporter.count("network relays");
+            scenario.reporter.count("network relays");
 
-            if(msg.type >=0) Simulator.reporter.count("network relays class " + msg.type);
+            if(msg.type >=0) scenario.reporter.count("network relays class " + msg.type);
 
             int p_i = msg.relayFrom;
             int p_j = msg.relayTo;
@@ -296,11 +370,15 @@ public final void handshaking(int p_i, int p_j) {
     }
     
     public void unicast(Message msg){
+        /*
+         *  FAZ A ENTREGA UNICAST, VERIFICANDO O ESTADO DO CANAL E 
+         *  TRANSFERINDO
+         */
         synchronized(this){
 
-            Simulator.reporter.count("network unicasts");
+            scenario.reporter.count("network unicasts");
 
-            if(msg.type >=0) Simulator.reporter.count("network unicasts class " + msg.type);
+            if(msg.type >=0) scenario.reporter.count("network unicasts class " + msg.type);
 
             //unicasts[msg.type]++;
             if (isLoopback(msg)) {
@@ -313,13 +391,17 @@ public final void handshaking(int p_i, int p_j) {
     }
 
     public void multicast(Message msg){
+        /*
+         *  OBTEM TODOS OS MEMBROS DO GRUPO
+         *  E PARA CADA MEMBRO FAZ A ENTREGA
+         */
       synchronized(this){
          NetworkGroup g = gtable.get(msg.destination);
          if(g != null){
             
-            Simulator.reporter.count("network multicasts");
+            scenario.reporter.count("network multicasts");
 
-            if(msg.type >=0) Simulator.reporter.count("network multicasts class " + msg.type);
+            if(msg.type >=0) scenario.reporter.count("network multicasts class " + msg.type);
 
             int p_i = msg.sender;
             
@@ -327,25 +409,39 @@ public final void handshaking(int p_i, int p_j) {
                if (p_i != p_j && verifyChannel(p_i, p_j)){
                   transfer(p_i, p_j, msg);
                }
+               else if (p_i == p_j && verifyChannel(p_i, p_j)) {
+                   loopback(msg);
+               }
             }
          }
       }
     }
 
     public void transfer(int p_i, int p_j, Message msg){
+        /*
+         *  FAZ A TRANSFERENCIA
+         *  AJUSTA O TEMPO CALCULADO COM O DESINCRONISMO NO RELOGIO DO RECEPTOR
+         */
         synchronized(this){
-            long delay = (long)(tripdelay(p_i, p_j, outbalance()) + tqueue);
-            channels[p_i][p_j].deliverMsg(msg, delay);//Math.ceil(clock + tqueue));
+            long delay =  (long) (tripdelay(p_i, p_j, outbalance(), msg)+ tqueue);
+            
+            /*
+            double ticksAdj = (((Clock_Virtual) scenario.p[p_j].getInfra().clock).rho);
+            double totalTicks = Clock_Virtual.getNTicks();
+            long adj = (long) ((msg.calculatedDelay+tqueue)* ( ((totalTicks+ticksAdj)/totalTicks) -1.0 ) );
+            */
+            
+            channels[p_i][p_j].deliverMsg(msg, delay);
         }
     }
 
     public void broadcast(Message msg){
         synchronized(this){
-            int n = conteiner.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value();
+            int n = container.get(RuntimeSupport.Variable.NumberOfAgents).<Integer>value();
 
-            Simulator.reporter.count("network broadcasts");
+            scenario.reporter.count("network broadcasts");
             
-            if(msg.type >=0) Simulator.reporter.count("network broadcasts class " + msg.type);
+            if(msg.type >=0) scenario.reporter.count("network broadcasts class " + msg.type);
 
             int p_i = msg.sender;
 
@@ -359,31 +455,45 @@ public final void handshaking(int p_i, int p_j) {
 
                         transfer(p_i, p_j, msg);
 
-                }//end else if
-            }//end for
+                }
+            }
         }
     }
     
     public final void debug(String d) {
-        boolean debug = conteiner.get(RuntimeSupport.Variable.Debug).<Boolean>value();
+        /*
+         *  SE DEBUG ESTIVER ATIVO, REGISTRA INFO DE DEBUG
+         */
+        boolean debug = container.get(RuntimeSupport.Variable.Debug).<Boolean>value();
         if (debug)
-            conteiner.out.println(d);
+            container.out.println(d);
     }
 
     public final void setFIFO(String fifo){
-       this.fifo = Boolean.parseBoolean(fifo);
+        /*
+         *  DEFINE SE O COMPORTAMENTO DOS CANAIS É FIFO OU NAO
+         */
+        this.fifo = Boolean.parseBoolean(fifo);
     }
 
     public final void setTripBalance(String b){
+        /*
+         *  DEFINE O BALANCO ENTRE P_i E A REDE E A REDE E P_j
+         */
        tripdelayBalance = Double.parseDouble(b);
 
        if(tripdelayBalance > 1) tripdelayBalance = 0.5;
     }
 
     abstract double delay(Message m);
+    /*
+     *  ATRASO DA REDE DEPENDE DA REDE ESPECIFICA
+     */
 
     public void setGroups(String gdefs){
-       
+        /*
+         *  DEFINE GRUPOS DE PROCESSOS
+         */
       gdefs = gdefs.replace('[', ' ');
       gdefs = gdefs.replace(']', ' ');
       gdefs = gdefs.trim();
@@ -400,6 +510,9 @@ public final void handshaking(int p_i, int p_j) {
     }
 
     public void setGroup(String gdef){
+        /*
+         *  DEFINE UM GRUPO DE PROCESSOS
+         */
       gdef = gdef.replace('[', ' ');
       gdef = gdef.replace(']', ' ');
       gdef = gdef.trim();
@@ -438,11 +551,12 @@ public final void handshaking(int p_i, int p_j) {
                g.add(h);
             }
          }
-
-         //System.out.println(g);
       }    
     }
 
+    /*
+     *  UTILIZADO PARA DEFINIR UM GRUPO DE REDE
+     */
     NetworkGrouptable gtable = new NetworkGrouptable();
     
     class NetworkGrouptable extends Hashtable<Integer, NetworkGroup>{

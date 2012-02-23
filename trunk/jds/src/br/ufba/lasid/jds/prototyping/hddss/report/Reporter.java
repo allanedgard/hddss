@@ -72,7 +72,6 @@ public class Reporter {
          r = new StatsReport(-1, name);
          addReport(r);
       }
-
       r.insert(value);
    }
    

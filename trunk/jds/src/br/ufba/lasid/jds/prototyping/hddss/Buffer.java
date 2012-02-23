@@ -14,8 +14,8 @@ import java.util.ArrayList;
 
 public  class Buffer {
     
-    int min;
-    int max;
+    long min;
+    long max;
 
     TreeMap inside;
    
@@ -25,8 +25,7 @@ public  class Buffer {
          max = -1;
      };
      
-     
-     public synchronized void add(int time, Message msg) {
+     public synchronized void add(long time, Message msg) {
          ArrayList a;
          if (checkTime(time)==false) {
              a = new ArrayList();
@@ -40,7 +39,7 @@ public  class Buffer {
          }
      }
      
-     public synchronized ArrayList getMsgs(int time) {
+     public synchronized ArrayList getMsgs(long time) {
          if (checkTime(time)==false) {
              return new ArrayList();
          }
@@ -64,7 +63,7 @@ public  class Buffer {
          
      }
      
-     public boolean checkTime(int time) {
+     public boolean checkTime(long time) {
          if ( inside.containsKey(time) ) {
              return true;
          }
@@ -72,10 +71,10 @@ public  class Buffer {
          
      }
 
-     synchronized int totalMsgs(int tempo) {
+     synchronized int totalMsgs(long tempo) {
          int j = 0;
          java.util.ArrayList a;
-         for(int i=tempo;i<this.getLast();i++) {
+         for(long i=tempo;i<this.getLast();i++) {
                       if (checkTime(i)!=false) {
                             a = (ArrayList) inside.get(i);
                             j += a.size();
@@ -84,7 +83,7 @@ public  class Buffer {
          return j;
      }
 
-     synchronized void forward(int dtime){
+     synchronized void forward(long dtime){
 
         if(!inside.isEmpty()){
            ArrayList<Integer> times = new ArrayList<Integer>(inside.keySet());
@@ -92,7 +91,7 @@ public  class Buffer {
 
            inside.clear();
 
-           for(int time : times){
+           for(long time : times){
               Object obj = temp.get(time);
               inside.put(time + dtime, obj);
            }
@@ -105,17 +104,17 @@ public  class Buffer {
         }
      }
      
-     synchronized int getLast() {
+     synchronized long getLast() {
         try{
-         return ((Integer) inside.lastKey()).intValue();
+         return ((Long) inside.lastKey()).intValue();
         }catch(Exception e){
            return -1;
         }
      }
 
-     synchronized int getFist() {
+     synchronized long getFist() {
         try{
-         return ((Integer) inside.firstKey()).intValue();
+         return ((Long) inside.firstKey()).intValue();
         }catch(Exception e){
            return -1;
         }

@@ -71,16 +71,16 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
     public void multicast(IMessage m, IGroup g) {
         
         synchronized(agent.lock){
-            int source = agent.ID;
+            int source = agent.getAgentID();
             //int now   = (int)agent.infra.clock.value();
-            int now   = (int)agent.infra.cpu.value();
+            int now   = (int)agent.getInfra().cpu.value();
             
             //for(Object p : g.getMembers()){
                 int dest = (Integer) g.getID();
                 int destin = dest;
                 int type  = getMSGTYPE(m);
 
-                agent.send(
+                agent.createMessage(
                  new br.ufba.lasid.jds.prototyping.hddss.Message(
                     source, destin, type, 0, now, m, true
                  )
@@ -98,10 +98,10 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
         synchronized(agent.lock){
             int dest = (Integer) p.getID();
 
-            int source = agent.ID;
+            int source = agent.getAgentID();
             int destin = dest;
-            //int now   = (int) agent.infra.clock.value();
-            int now   = (int) agent.infra.cpu.value();
+            //long now   = (long) agent.infra.clock.value();
+            long now   = agent.getInfra().cpu.value();
             int type  = getMSGTYPE(m);
 
             if(type == IPBFTServer.REPLY){
@@ -111,15 +111,15 @@ public class SimulatedPBFTCommunicator extends PBFTCommunicator{
                   long t0 = loggedRequest.getRequestReceiveTime();
                   long t1 = loggedRequest.getReplySendTime();
                   replies ++;
-                  Simulator.reporter.stats("response time of replicated state machine", t1 - t0);
-                  Simulator.reporter.stats("response time of server" + agent.ID , t1 - t0);
+                  getAgent().getReporter().stats("response time of replicated state machine", t1 - t0);
+                  getAgent().getReporter().stats("response time of server" + agent.getAgentID() , t1 - t0);
                   if(t1 > 0){
-                     Simulator.reporter.assign("general mean throughput server" + agent.ID , ((double)replies)/((double)t1));
+                     getAgent().getReporter().assign("general mean throughput server" + agent.getAgentID() , ((double)replies)/((double)t1));
                   }
                }
             }
             
-            agent.send(
+            agent.createMessage(
              new br.ufba.lasid.jds.prototyping.hddss.Message(
                 source, destin, type, 0, now, m
              )

@@ -35,7 +35,7 @@ public class SimulatedPBFTAgent extends Agent implements IProcess<Integer>, Seri
     }
     
     public Integer getID() {
-        return new Integer(this.ID);
+        return new Integer(this.getAgentID());
     }
 
     public void setID(Integer id) {
@@ -88,6 +88,8 @@ public class SimulatedPBFTAgent extends Agent implements IProcess<Integer>, Seri
               ((MessageHandler)getProtocol().getArchitecture().getThead("__PBFTServant")).handle();
             }
     }
+    
+    
 
     
 

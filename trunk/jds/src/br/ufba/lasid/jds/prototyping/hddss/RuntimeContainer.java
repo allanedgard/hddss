@@ -3,33 +3,32 @@ package br.ufba.lasid.jds.prototyping.hddss;
 import br.ufba.lasid.jds.util.IDebugger;
 import java.util.ArrayList;
 
-/**
- * A RuntimeContainer can be a Operating System, a Middleware or a Simulator.
- * It allows to hide details about the execution infra of the agent.
+/*
+ *  RuntimeContainer é uma camada que simula um OS ou se apresenta
+ *  como o MIDDLEWARE no modo PROTÓTIPO
+ * 
+ *  Runtime é a INFRA subjacente para o AGENTE
  */
+
 public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugger{
-    public AbstractClock clock;
-    //public AbstractClock globalClock;
-    public CPU cpu;
-    public RuntimeSupport context;
-    
-    public Buffer nic_out; //send buffer
-    public Buffer nic_in;  //receive buffer
-    public Buffer app_in;  //deliver buffer
-    public Buffer exc_in;  //execute buffer;
+    public AbstractClock clock;     //   Relogio LOCAL
+    public CPU cpu;                 //   CPU de execucao
+    public RuntimeSupport context;  //   Mantém um conjunto de VARIAVEIS 
+                                    //   que representam o CONTEXTO LOCAL
+            
+    public Buffer nic_out;          //   Buffer de ENVIO     (SEND)
+    public Buffer nic_in;           //   Buffer de RECEPCAO  (RECEIVE)
+    public Buffer app_in;           //   Buffer de ENTREGA   (DELIVER)
+    public Buffer exc_in;           //   Buffer de EXECUCAO  (EXECUTE)
 
-    FaultModelAgent faultModel;
+    FaultModelAgent faultModel;     //   MODELO DE FALHAS
 
-    Agent  agent;
+    Agent  agent;                   //   AGENTE que utiliza a INFRA
 
-    static int MAX_PROCESSA = 100;
-
-    public int nprocess = 0;
+    public int nprocess = 0;        //   NUMERO DE PROCESSOS
 
     RuntimeVariables variables = new RuntimeVariables();
 
-    //public IScheduler scheduler;
-    
     public RuntimeContainer(RuntimeSupport context){
         this.context = context;
         nic_in = new Buffer();
@@ -44,31 +43,21 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
         this.agent = agent;
         return true;
     }
-    
-    public synchronized void execute(){
-//         nic_in.toString();
-//         nic_out.toString();
-//         app_in.toString();
-//         exc_in.toString();
+          
+    public final synchronized void execute(){
+        /*
+         *  EXECUTA A ACAO DO AGENTE
+         */
 
          if(agent.status()){
                while(receive());
                while(deliver());
-
-            ((Clock_Virtual)clock).tick();
-           
-            if(((Clock_Virtual)clock).tickValue() == 1 && agent.status()) {
+            //((Clock_Virtual)clock).tick();
+            if( ((Clock_Virtual)clock).tick() && agent.status()) {
                agent.execute();
             }
            
             while(send());
-//            long ftime = cpu.value();
-
-//            for(long curr = clock.value(); curr <= ftime; curr ++){
-//               while(send(curr));
-//            }
-
-
             
          }
         
@@ -91,7 +80,7 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
 
                 faultModel.initialize(this);
 
-                debug("Modelo de Falhas "+fault_model+" implantado em p"+agent.ID);
+                debug("Modelo de Falhas "+fault_model+" implantado em p"+agent.getAgentID());
 
     	} catch (Exception e) {
     		e.printStackTrace();
@@ -105,100 +94,104 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
         while (clock.value() < finalTime) {
             context.perform(this);
             this.yield();
-            if (agent.done)
+            if (agent.isDone())
                 break;
         }
-//        ri.end();
         context.ok();
-
-        //super.run();
     }
-
-
-
-    public boolean deliver(){
-       Message m = deliver(clock.value());
+    
+    public final boolean deliver(){
+       /*
+         *  ESTE MÉTODO É INVOCADO AUTOMATICAMENTE NA SIMULACAO ou NA EMULACAO
+         *  DE UM AGENTE
+         * 
+         */
+       Message m = nextToDeliver(clock.value());
        if(m != null){
             agent.preDeliver(m);
             agent.deliver(m);
-
             reportEvent(m, 'd');
-
-//            if (m.payload) {
-//                context.get(Variable.DlvDelayTrace).<DescriptiveStatistics>value().addValue(
-//                        (int)clock.value() - m.physicalClock
-//                );
-//
-//                context.get(Variable.RxDelayTrace).<DescriptiveStatistics>value().addValue(
-//                        (int)clock.value() - m.receptionTime
-//                );
-//
-//            }
-
           return true;
        }
-
        return false;
     }
 
-    public Message deliver(long now){
+    private final Message nextToDeliver(long now){
+        /*
+         *  ESTE EVENTO É PRIVADO E AUXILIA o deliver(), PROVENDO A PRÓXIMA msg
+         *  A SER ENTREGUE
+         * 
+         */
                ArrayList a = null;
-               a = app_in.getMsgs((int)now);
+               a = app_in.getMsgs(now);
                if (a.isEmpty()) {
                    return null;
                }
-
             Message msg;
             msg = (Message) a.get(0);
-
             return msg;
-
     }
 
-    public boolean receive(){
-
-       Message m = receive(clock.value());
+    public final boolean receive(){
+       /*
+         *  ESTE MÉTODO É INVOCADO AUTOMATICAMENTE NA SIMULACAO ou NA EMULACAO
+         *  DE UM AGENTE
+         * 
+         */
+       
+       // Message m = nextToReceive(clock.value());
+        
+       // O BUFFER DE RECEBIMENTO USA O TEMPO DO RELOGIO GLOBAL
+        long at = 0;
+        
+        if (agent.getScenario() != null) {
+          at = agent.getScenario().globalClock.value();
+        }
+        else {
+          at = cpu.value();
+        }
+        
+       Message m = nextToReceive( at );
        if(m != null){
             agent.preReceive(m);
             agent.receive(m);
-//             context.get(Variable.TxDelayTrace).<DescriptiveStatistics>value().addValue(
-//                     (double)(m.receptionTime - m.physicalClock)
-//             );
-
             reportEvent(m, 'r');
-
             return true;
        }
-
-       return false;
-          
+       return false;  
     }
 
-    public Message receive(long now){
-
+    protected final Message nextToReceive(long now){
+        /*
+         *  ESTE EVENTO É PRIVADO E AUXILIA o receive(), PROVENDO A PRÓXIMA msg
+         *  A SER ENTREGUE
+         *  REVER USO DO receive(now)
+         */
             ArrayList a = null;
-
-               a = nic_in.getMsgs((int)now);
-               if (a.isEmpty()) {
+            a = nic_in.getMsgs(now);
+            if (a.isEmpty()) {
                    return null;
-               }
-
+            }
             Message msg;
             msg = (Message) a.get(0);
-
-            msg.receptionTime = (int)now;
-
             return msg;
-
     }
 
-    public Message pending(){
-       return pending(clock.value());
+    public final Message pending(){
+       /*
+         *  ESTE MÉTODO PODE SER INVOCADO PARA EXECUCAO DE MSGS
+         *  DO BUFFER DE EXECUCAO DE UM AGENTE
+         *  REVER SEU USO
+         */       
+       return nextPending(clock.value());
     }
     
-    public Message pending(long now){
-
-            ArrayList a = exc_in.getMsgs((int)now);
+    protected final Message nextPending(long now){
+        /*
+         *  ESTE EVENTO É PRIVADO E AUXILIA o pending(), PROVENDO A PRÓXIMA msg
+         *  A SER ENTREGUE
+         */
+            ArrayList a = exc_in.getMsgs(now);
 
             if (!(a != null && !a.isEmpty())) {
                return null;
@@ -208,62 +201,77 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
             msg = (Message) a.get(0);
 
             return msg;
-       
     }
     
-    public boolean send(){
-       return send(clock.value());
+    public final boolean send(){
+       /*
+         *  ESTE MÉTODO É INVOCADO AUTOMATICAMENTE NA SIMULACAO ou NA EMULACAO
+         *  DE UM AGENTE
+         * 
+         */
+       return nextToSend(clock.value());
     }
 
-    public boolean send(long now){
-            ArrayList a = nic_out.getMsgs((int)now);
+    private final boolean nextToSend(long now){
+        /*
+         *  ESTE EVENTO É PRIVADO E AUXILIA o send(), PROVENDO A PRÓXIMA msg
+         *  A SER ENTREGUE
+         */        
+            ArrayList a = nic_out.getMsgs(now);
             if (a.isEmpty()) {
                 return false;
             }
 
             Message msg;
-            Network network = context.get(Variable.Network).<Network>value();
+
 
             msg = (Message) a.get(0);
-            network.send(msg);
+            this.sendToNetwork(msg);
             reportEvent(msg, 's');
-
             return true;
-       
     }
     
+    public void sendToNetwork(Message m){
+        /*
+         *  ESTE EVENTO ENVIA A MENSAGEM PARA A REDE
+         *  NO CASO DE PROTOTIPO, O ENVIO É PARA A REDE REAL
+         *  SOBRESCRITO EM MIDDLEWARE
+         * 
+         */
+        Network network = context.get(Variable.Network).<Network>value();
+        network.send(m);
+    } 
+    
     public final void reportEvent(Message msg, char ev) {
+        /*
+         *  REPORTA EVENTOS PARA DEBUG (EX: sending, receiving e delivering)
+         * 
+         */
         try{
                 String saida = ""+
-                agent.ID +"; "+
+                agent.getAgentID() +"; "+
                 ev+"; "+
-                msg.sender+"; "+
-                msg.destination+"; "+
-                (int)cpu.value()+"; "+
-                //(int)clock.value()+"; "+
-                msg.physicalClock+"; "+
-                msg.logicalClock+"; "+
-                msg.type+"; "+
-                msg.content;
+                cpu.value()+"; "+
+                msg.toString();
                 debug(saida);
         } catch (Exception e) {
                 e.printStackTrace();
         }
     }
 
-    private final int getAgentProcessingTime() {
+/*    private final int getAgentProcessingTime() {
+        
+        return 1;
         /*
-         * Se o processo for síncrono o tempo de resposta do processament
-         * é de um tick, caso contrário é aleatório.
-         */
         if (clock.getMode() =='s') {
             return 1;
         }
         else {
             return (int) (MAX_PROCESSA * Math.random());
         }
+        
     }
-
+*/
     public final void debug(String d) {
 
         boolean _debug = (Boolean)context.get(Variable.Debug).value();
@@ -299,26 +307,14 @@ public class RuntimeContainer extends Thread implements RuntimeSupport, IDebugge
         return nprocess;
     }
 
-    public void nicout(Message m){
-//        synchronized(this){
-            //nic_out.add((int)(clock.value()), m);
-            nic_out.add((int)(clock.value()), m);
-//        }
-    }
-
    public boolean advance() {
       return this.context.advance();
    }
 
    public long exec(Object data){
-      
+       /*
+        *   RETORNA TEMPO DE EXECUCAO DA CPU PARA UM DADO OBJETO
+        */
        return cpu.exec(data);
-//       long stime = clock.value();
-//       long ftime = stime + btime;
-
-//       for(long i = stime; i < ftime; i++){
-//          while(send(i));
-//       }
-
    }
 }
