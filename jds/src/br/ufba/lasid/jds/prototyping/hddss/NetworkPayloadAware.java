@@ -35,9 +35,9 @@ public class NetworkPayloadAware extends Network{
             int nsegments = (int)Math.ceil((double)mbits / (double)mtu);
             delay = (double)mbits / (double)transferrate + ((double)nsegments -  1.0) * (double)scost;
 
-            Simulator.reporter.stats("message size", mbytes);
+            scenario.reporter.stats("message size", mbytes);
 
-            if(m.type >=0) Simulator.reporter.stats("message size class " + m.type, mbytes);
+            if(m.type >=0) scenario.reporter.stats("message size class " + m.type, mbytes);
 
          }catch(Exception e){
 

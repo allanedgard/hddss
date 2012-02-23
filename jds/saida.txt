@@ -2,35 +2,194 @@ Configuring:
 /repositorio/hddss/jds/examples/amoeba/
 n = 1
 
-Starting simulated scene: /repositorio/hddss/jds/examples/amoeba/amoebaAC-80-10-HIGH.txt at Sun Feb 05 12:54:22 BRST 2012
+Starting simulated scene: /repositorio/hddss/jds/examples/amoeba/deterministic-n2.txt at Thu Feb 23 00:08:43 BRST 2012
+envio clock = 100
+calc delay = 0
+clock=49
+clock p0=33
+clock p1=100
+calc timestamp = 49
+envio clock = 200
+calc delay = 0
+clock=99
+clock p0=66
+clock p1=200
+calc timestamp = 99
+Recebendo APP em 202
+enviada em = 100
+seq = 0
+id = 1
+myid = 1
+envio clock = 100
+calc delay = 0
+clock=149
+clock p0=100
+clock p1=299
+calc timestamp = 149
+envio clock = 300
+calc delay = 0
+clock=149
+clock p0=100
+clock p1=300
+calc timestamp = 149
+envio clock = 400
+calc delay = 0
+clock=199
+clock p0=133
+clock p1=400
+calc timestamp = 199
+Recebendo APP em 402
+enviada em = 200
+seq = 1
+id = 1
+myid = 1
+envio clock = 500
+calc delay = 0
+clock=249
+clock p0=166
+clock p1=500
+calc timestamp = 249
+envio clock = 200
+calc delay = 0
+clock=299
+clock p0=200
+clock p1=599
+calc timestamp = 299
+envio clock = 600
+calc delay = 0
+clock=299
+clock p0=200
+clock p1=600
+calc timestamp = 299
+Recebendo APP em 602
+enviada em = 300
+seq = 2
+id = 1
+myid = 1
+envio clock = 700
+calc delay = 0
+clock=349
+clock p0=233
+clock p1=700
+calc timestamp = 349
+envio clock = 800
+calc delay = 0
+clock=399
+clock p0=266
+clock p1=800
+calc timestamp = 399
+Recebendo APP em 802
+enviada em = 400
+seq = 3
+id = 1
+myid = 1
+envio clock = 300
+calc delay = 0
+clock=449
+clock p0=300
+clock p1=899
+calc timestamp = 449
+envio clock = 900
+calc delay = 0
+clock=449
+clock p0=300
+clock p1=900
+calc timestamp = 449
+envio clock = 1000
+calc delay = 0
+clock=499
+clock p0=333
+clock p1=1000
+calc timestamp = 499
+Recebendo APP em 1002
+enviada em = 500
+seq = 4
+id = 1
+myid = 1
+envio clock = 1100
+calc delay = 0
+clock=549
+clock p0=366
+clock p1=1100
+calc timestamp = 549
+envio clock = 400
+calc delay = 0
+clock=599
+clock p0=400
+clock p1=1199
+calc timestamp = 599
+envio clock = 1200
+calc delay = 0
+clock=599
+clock p0=400
+clock p1=1200
+calc timestamp = 599
+Recebendo APP em 1202
+enviada em = 600
+seq = 5
+id = 1
+myid = 1
+envio clock = 1300
+calc delay = 0
+clock=649
+clock p0=433
+clock p1=1300
+calc timestamp = 649
+envio clock = 1400
+calc delay = 0
+clock=699
+clock p0=466
+clock p1=1400
+calc timestamp = 699
+Recebendo APP em 1402
+enviada em = 700
+seq = 6
+id = 1
+myid = 1
+envio clock = 500
+calc delay = 0
+clock=749
+clock p0=500
+clock p1=1499
+calc timestamp = 749
+envio clock = 1500
+calc delay = 0
+clock=749
+clock p0=500
+clock p1=1500
+calc timestamp = 749
 ---------------------------------------------------
-results for simulated scene: /repositorio/hddss/jds/examples/amoeba/amoebaAC-80-10-HIGH.txt
+results for simulated scene: /repositorio/hddss/jds/examples/amoeba/deterministic-n2.txt
 simulation finished: 
-Sun Feb 05 12:58:22 BRST 2012
+Thu Feb 23 00:08:43 BRST 2012
 name; total
-network loopbacks;69463
-network loopbacks class 11;17917
-network loopbacks class 12;50036
-network loopbacks class 13;4
-network loopbacks class 14;1506
-network unicasts;206935
-network unicasts class 11;33506
-network unicasts class 12;90728
-network unicasts class 13;80026
-network unicasts class 14;2675
+network loopbacks;20
+network loopbacks class 12;20
 
 name; value 
 
 name; mean; std; maximum; minimun
-blocking time; 57.35860134540869; 23.6926100422616; 135.0; 5.0
-network queue delay; 0.001808311788725944; 9.72555105575977E-4; 0.009000000000000001; 0.0010
-send-delivery delay; 61.53117497444665; 23.931733021147792; 136.0; 6.0
-send-delivery delay agent0/agent0; 64.52802893309227; 23.87453448395978; 134.0; 11.0
-send-delivery delay agent0/agent1; 60.73339920948618; 23.825187519486445; 129.0; 12.0
-send-delivery delay agent0/agent2; 64.53125737202173; 23.955281607698634; 133.0; 13.0
-send-delivery delay agent1/agent0; 59.82806345150645; 23.629237319709148; 136.0; 8.0
-send-delivery delay agent1/agent1; 56.053840757628905; 23.509782980647557; 129.0; 6.0
-send-delivery delay agent1/agent2; 59.971185192975064; 23.641521752465003; 135.0; 9.0
-send-delivery delay agent2/agent0; 64.8211129687127; 23.833612560622285; 132.0; 12.0
-send-delivery delay agent2/agent1; 61.05337162095259; 23.713614971707134; 127.0; 9.0
-send-delivery delay agent2/agent2; 64.87987243090008; 23.858533723900315; 133.0; 15.0
+APP send-reception delay; 202.0; 108.01234497346434; 352.0; 52.0
+send-reception delay; 202.0; 108.01234497346434; 352.0; 52.0
+send-reception delay agent1/agent1; 202.0; 108.01234497346434; 352.0; 52.0
+
+R version 2.14.1 (2011-12-22)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-pc-mingw32/x64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+finishing...

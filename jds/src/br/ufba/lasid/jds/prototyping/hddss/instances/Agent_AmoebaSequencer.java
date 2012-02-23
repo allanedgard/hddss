@@ -16,8 +16,8 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                 
         int LastACK;    // Last Message ACKnowledged
         int LastDLV;    // Last Message DELivered
-        int SENT;    
-        int DSENT;
+        long SENT;    
+        long DSENT;
         IntegerSet ACKS;
         IntegerSet DLVS;
         
@@ -67,18 +67,18 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
         int [] timeout;
         int [] quorum;        
         
-        Agent_AmoebaSequencer() {
+        public Agent_AmoebaSequencer() {
         super();
         }
     
     @Override
         public void setup() {
-            finalTime = infra.context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
+            finalTime = getInfra().context.get(RuntimeSupport.Variable.FinalTime).<Integer>value();
 
             bloquearEntrega = false;
   
             Leader = 1;
-            if (ID==Leader)
+            if (getAgentID()==Leader)
                 AmILeader = true;
             
             r = new Randomize();
@@ -97,8 +97,8 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
              */ 
             bloquearEntrega = false;
             
-            BM = new int[infra.nprocess];
-            for (int i=0;i<infra.nprocess;i++)
+            BM = new int[getInfra().nprocess];
+            for (int i=0;i<getInfra().nprocess;i++)
                 BM[i]=-1;
             
             quorum= new int[1000000];
@@ -133,44 +133,44 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
         
     @Override
         public void execute() {
-            int clock = (int)infra.clock.value();
+            long clock = (long)getInfra().clock.value();
             Content_AmoebaSequencer ca = new Content_AmoebaSequencer(LastACK, "stuff");
             if ( (r.uniform() <= prob)){ // && !bloquearEntrega ){ //&& clock < .5*finalTime ) {
                 SENT = clock;    // Registering clock of the last SENT 
                 ca.ACKS.add(ACKS);
-                this.createMessage(clock, ID, Leader, REQ_SEQ, ca, -1);
+                this.createMessage(clock, getAgentID(), Leader, REQ_SEQ, ca, -1);
                 ACKS.clean();
                 count++;
             }
             if ( (clock - SENT >= ts) && (ACKS.size() >0 ) ) {
                         ca.ACKS.add(ACKS);
-                        this.createMessage(clock, ID, Leader, ACK, ca, -1);
+                        this.createMessage(clock, getAgentID(), Leader, ACK, ca, -1);
                         ACKS.clean();              
                         SENT = clock;
-                        infra.debug("p"+ID+" FLUSHED ACKS = "+ACKS.size());
+                        getInfra().debug("p"+getAgentID()+" FLUSHED ACKS = "+ACKS.size());
                     }
             if ( (AmILeader) && (clock - DSENT >= ts)&& (DLVS.size() >0 ) ) {
                             ca.DLVS.add(DLVS);
                             this.sendGroupMsg(clock, DLV, ca, ca.DLVS.min());
-                            infra.debug("Enviando");
+                            getInfra().debug("Enviando");
                             DLVS.clean();
                             DSENT = clock;
                         }
         }
         
-        public void sendGroupMsg(int clock, int tipo, Object valor, int LC) {
-            for (int j=0; j<infra.nprocess;j++) {
-                this.createMessage(clock, this.ID, j, tipo, valor, LC);  }
+        public void sendGroupMsg(long clock, int tipo, Object valor, int LC) {
+            for (int j=0; j<getInfra().nprocess;j++) {
+                this.createMessage(clock, this.getAgentID(), j, tipo, valor, LC);  }
         }
         
-        public void sendGroupMsg(int clock, int tipo, Object valor, int LC, boolean pay) {
-            for (int j=0; j<infra.nprocess;j++) {
-                this.createMessage(clock, this.ID, j, tipo, valor, LC, pay);
+        public void sendGroupMsg(long clock, int tipo, Object valor, int LC, boolean pay) {
+            for (int j=0; j<getInfra().nprocess;j++) {
+                this.createMessage(clock, this.getAgentID(), j, tipo, valor, LC, pay);
             }
         }
 
         public void relayGroupMsg(int clock, int i, int tipo, Object valor, int LC, boolean pay) {
-            for (int j=0; j<infra.nprocess;j++) {
+            for (int j=0; j<getInfra().nprocess;j++) {
                 this.createMessage(clock, i, j, tipo, valor, LC, pay);
             }
         }        
@@ -182,17 +182,17 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
          */
         
         void checkingQuorum(Message msg, Content_AmoebaSequencer ca ) {
-                        int clock = (int) this.infra.clock.value();
+                        long clock = (long) this.getInfra().clock.value();
                         //infra.debug("Sequencer: RECEIVING ACKS of p"+msg.sender+" = "+ca.ACKS);
                         for (int i=0;i<ca.ACKS.size();i++) {
                             int numSeq = ca.ACKS.toVector()[i];
                             quorum[numSeq]++;
-                            infra.debug("seqpart "+numSeq+": count "+quorum[numSeq]);
-                            if ( quorum[numSeq] == infra.nprocess ) {
+                            getInfra().debug("seqpart "+numSeq+": count "+quorum[numSeq]);
+                            if ( quorum[numSeq] == getInfra().nprocess ) {
                                 DLVS.add(numSeq);
                                 ca.DLVS.add(DLVS);
-                                infra.debug("being DELIVERING "+ca.DLVS);
-                                infra.debug("seq "+numSeq+": count "+quorum[numSeq]);
+                                getInfra().debug("being DELIVERING "+ca.DLVS);
+                                getInfra().debug("seq "+numSeq+": count "+quorum[numSeq]);
                             }
                         }
                         /*
@@ -208,7 +208,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                             DLVS.clean();
                             DSENT = clock;
                         } else
-                            infra.debug("avoid DELIVERING "+DLVS);
+                            getInfra().debug("avoid DELIVERING "+DLVS);
                         
                 
         }
@@ -217,7 +217,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
         public void receive(Message msg) {
             
             Content_AmoebaSequencer ca;
-            int clock = (int)infra.clock.value();
+            long clock = (long)getInfra().clock.value();
 
             switch (msg.type) {
                 case REQ_SEQ:
@@ -256,7 +256,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                     ca.ACKS.add(ACKS);
                     //infra.debug("p"+msg.sender+" STATE ACKS = "+ca.ACKS);
                     if (clock - SENT >= ts) {
-                        this.createMessage(clock, ID, Leader, ACK, ca, msg.logicalClock);
+                        this.createMessage(clock, getAgentID(), Leader, ACK, ca, msg.logicalClock);
                         ACKS.clean();              
                         SENT = clock;
                         //infra.debug("p"+msg.sender+" FLUSHED ACKS = "+ACKS.size());
@@ -273,8 +273,8 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                     break;
                 case DLV:
                     ca = (Content_AmoebaSequencer) msg.content;
-                    infra.debug("p"+ID+" DELIVERING MSG = "+msg.logicalClock);
-                    infra.debug("p"+ID+" DELIVERING = "+ca.DLVS);
+                    getInfra().debug("p"+getAgentID()+" DELIVERING MSG = "+msg.logicalClock);
+                    getInfra().debug("p"+getAgentID()+" DELIVERING = "+ca.DLVS);
                     Message m;
                     for (int i=0;i<ca.DLVS.size();i++) {
                             int numSeq = ca.DLVS.toVector()[i];
@@ -282,9 +282,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                             
                             if (msgs.checkTime(numSeq)){
                                  m = (Message) msgs.getMsgs(numSeq).get(0);
-                                infra.app_in.add(clock, m);
-                                infra.debug("p"+ID+" delivering m"+numSeq);
-                                Simulator.reporter.stats("blocking time", clock - m.receptionTime);
+                                 this.preDeliver(m);
                             }
                         }
                     break;

@@ -18,7 +18,7 @@ public class FaultModelAgent_BizantineValue extends FaultModelAgent {
     }   
 
     @Override
-    public void sendMessage(int c, Message msg) {
+    public void sendMessage(long c, Message msg) {
         if (r.uniform() <= prob) {
                     super.sendMessage(c, msg);
                 }

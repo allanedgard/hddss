@@ -1,48 +1,126 @@
 package br.ufba.lasid.jds.prototyping.hddss;
 
+import br.ufba.lasid.jds.prototyping.hddss.report.Reporter;
+
 public class Agent extends Thread implements IAgent{
-    public int ID;
-    public char tipo;
+    private int ID;
+    private char tipo;
     public transient Context context;
-    public transient boolean done;
+    private transient boolean done;
     public transient long exectime = 0;
     protected boolean shutdown = false;
     public static transient final String TAG = "agent";
-    public transient RuntimeContainer infra;
+    private transient RuntimeContainer infra;
     public transient final Object lock = this;
+    private Scenario scenario;
 
+    
+   /*
+     *  ESTE MÉTODO INFORMA O VALOR REAL DO TEMPO, SERVINDO PARA CÁLCULOS DE 
+     *  ATRASOS REAIS DE receive e deliver
+     */
+   private long getActualClockValue() {
+        long at;
+        if (scenario != null) {
+            at = scenario.globalClock.value();
+        }
+        else {
+            at = this.infra.cpu.value();
+        }
+        return at;
+   }
+   
+   /*
+    *   ESTE MÉTODO INFORMA O REPORTER A SER UTILIZADO PARA REGISTRAR A stat
+    */
+   
+    protected Scenario getScenario() {
+        /*
+         *  O ACESSO AO SCENARIO É SOMENTE PARA ALGUMAS ATIVIDADES DO
+         *  FRAMEWORK DE SIMULACAO
+         */
+        return scenario;
+    }
+   
+    public Reporter getReporter() {
+        if (scenario!=null) {
+            return scenario.reporter;
+        }
+        else return TestBed.reporter;
+    }
+
+    /*
+     *  UNICA FORMA DE OBTER O ID DO AGENTE
+     */
     public int getAgentID() {
         return ID;
     }    
+    
+    public void setAgentID(int i){
+        ID = i;
+    }
 
+    /*
+     *  AO INICIAR O AGENTE, SETA O FLAG done=false
+     */
     public Agent() {
         done = false;
     }
-
+    
+    /*
+     *  OBTEM O CONTEXTO, ESTE CONCEITO AINDA NAO FOI IMPLEMENTADO
+     */
     public Context getContext() {
         return context;
     }
 
+    /*
+     *  DEFINE O CONTEXTO, ESTE CONCEITO AINDA NAO FOI IMPLEMENTADO
+     */
     public void setContext(Context c) {
         this.context = c;
+    }    
+    
+    /*
+     *  UTILIZADO APOS O INIT DO AGENT PARA ASSOCIAR UM SCENARIO AO MESMO
+     *  EM MODO SIMULACAO
+     */
+    public void setScenario(Scenario s) {
+        scenario = s;
     }
 
-    public boolean isDone() {
-        return done;
-    }
-
-    public void setDone(boolean done) {
-        this.done = done;
-    }
-
-    public RuntimeContainer getInfra() {
-        return infra;
-    }
-
+    /*
+     *  UTILIZADO APOS O INIT DO AGENT PARA ASSOCIAR UMA INFRA AO MESMO
+     *  INCLUINDO CPU E CLOCK
+     */
     public void setInfra(RuntimeContainer infra) {
         this.infra = infra;
     }
 
+    /*  
+     *  OBTEM A INFRA DO AGENTE
+     */
+    public RuntimeContainer getInfra() {
+        return infra;
+    }    
+    
+    /*
+     *  AGENTE TERMINOU EXECUCAO???
+     */
+    public boolean isDone() {
+        return done;
+    }
+    
+    /*
+     *  AGENTE DELIBERADAMENTE TERMINOU EXECUCAO    
+     */
+    public void setDone(boolean done) {
+        this.done = done;
+    }
+
+    /*
+     *   WTF é TIPO
+     */
     public char getTipo() {
         return tipo;
     }
@@ -51,15 +129,12 @@ public class Agent extends Thread implements IAgent{
         this.tipo = tipo;
     }
     
-    /**
-     * this method is used to perform particular configurations in the agent.
+    /*
+     *  CONFIGURAR O AGENTE  
      */
     public void setup() {
-    }
-
-    public void setAgentID(int i){
-        ID = i;
-    }
+        
+    };
 
     public void setType(char tp){
         tipo = tp;
@@ -68,8 +143,7 @@ public class Agent extends Thread implements IAgent{
     public final void init() {
         setup();
     }
- 
-
+    
    public final boolean status() {
         if (infra.faultModel == null) {
             return true;
@@ -77,18 +151,94 @@ public class Agent extends Thread implements IAgent{
             return infra.faultModel.status();
         }
     }
-
     
     @Override
     public final void run() {
        infra.start();
     }
-   
+    
+   /*
    public final void send(Message msg){
-      long at;
-      infra.nic_out.add((int)(at = infra.cpu.value()), msg);
-      infra.debug("(p" + ID + ") sent at " + at  + " " + msg.content);
+       infra.send(msg);
    }
+     * 
+     */
+   
+   public final void createMessage(long realClock, int sender, int destination, int type, Object content, int logicalClock) {
+        Message msg = new Message(sender, destination, type, logicalClock, realClock, content);
+        
+        long at = 0;
+        if (scenario != null) {
+          at = scenario.globalClock.value();
+        }
+        else {
+          at = this.infra.cpu.value();
+        }
+        msg.actualSendingTime=at;
+        
+        if (infra.faultModel == null) {
+          infra.nic_out.add(realClock, msg);
+        }
+        else infra.faultModel.sendMessage(realClock,msg);
+    }
+
+   public final void createMessage(Message msg) {
+
+        long at = 0;
+        if (scenario != null) {
+          at = scenario.globalClock.value();
+        }
+        else {
+          at = this.infra.cpu.value();
+        }
+        msg.actualSendingTime=at;
+        
+        if (infra.faultModel == null) {
+            infra.nic_out.add(msg.physicalClock, msg);
+        }
+        else infra.faultModel.sendMessage(msg.physicalClock,msg);
+    }
+   
+   public final void createMessage(long realClock, int sender, int destination,
+            int type, Object content, int logicalClock, boolean payload) {
+        Message msg = new Message(sender, destination, type, logicalClock, realClock, content);
+        msg.payload = payload;
+        
+        long at = 0;
+        if (scenario != null) {
+          at = scenario.globalClock.value();
+        }
+        else {
+          at = this.infra.cpu.value();
+        }
+        msg.actualSendingTime=at;
+        
+        if (infra.faultModel == null) {
+            infra.nic_out.add(realClock, msg);
+        }
+        else infra.faultModel.sendMessage(realClock,msg);
+    }
+
+    public final void relayMessage(long realClock, Message msg, int to) {
+        msg.relayFrom = ID;
+        msg.relayTo = to;
+        
+        long at = 0;
+        if (scenario != null) {
+          at = scenario.globalClock.value();
+        }
+        else {
+          at = this.infra.cpu.value();
+        }
+        msg.actualSendingTime=at;
+        
+        if (infra.faultModel == null) {
+            infra.nic_out.add(realClock, msg);
+        }
+        else infra.faultModel.sendMessage(realClock,msg);
+    }
+   
+   
    
     public void startup(){
     }
@@ -99,22 +249,52 @@ public class Agent extends Thread implements IAgent{
     public final void preReceive(Message msg) {
       /* Este evento pode ser sobrecarregado pela ação específica do protocolo (NO ANYMORE)*/
       long at = 0;
-      infra.app_in.add((int)(at = this.infra.cpu.value()), msg);
-      infra.debug("(p" + ID + ") received at " + at + " " + msg.content);
-      Simulator.reporter.stats("send-reception delay", at - msg.physicalClock);
-      Simulator.reporter.stats("send-reception delay agent" + msg.sender + "/agent" + ID , at - msg.physicalClock);
+      long at1 = 0;
+      at1 = this.infra.cpu.value();
+      if (scenario != null) {
+          at = scenario.globalClock.value();
+      }
+      else {
+          at = at1;
+      }
+      /* SETA O TEMPO REAL DE RECEPCAO */
       
-    }
+      /* TEMPO DE RECEPCAO MEDIDO LOCALMENTE */
+      msg.receptionTime = at1;
+      msg.actualReceptionTime = at;
+      
+      infra.debug("(p" + ID + ") received at local time" + msg.receptionTime + " " + msg.content);
+      infra.debug("(p" + ID + ") received at global time" + msg.actualReceptionTime + " " + msg.content);
+      
+      this.getReporter().stats("send-reception delay", msg.actualReceptionTime - msg.actualSendingTime);
+      this.getReporter().stats("send-reception delay agent" + msg.sender + "/agent" + ID , msg.actualReceptionTime - msg.actualSendingTime);
+      if (msg.payload) {
+          this.getReporter().stats("APP send-reception delay", msg.actualReceptionTime - msg.actualSendingTime);          
+      }
+ }
 
     public void receive(Message msg) {
     }    
     
     public final void preDeliver(Message msg) {
-         long at = 0;
-         infra.exc_in.add((int)(at = this.infra.cpu.value()), msg);
-         infra.debug("(p" + ID + ") delivered at " + at + " " + msg.content);
-         Simulator.reporter.stats("send-delivery delay", at - msg.physicalClock);
-         Simulator.reporter.stats("send-delivery delay agent" + msg.sender + "/agent" + ID, at - msg.physicalClock);
+        long at = 0;
+        long at1 = 0;
+        at1 = this.infra.cpu.value();
+        if (scenario != null) {
+          at = scenario.globalClock.value();
+        }
+        else {
+          at = at1;
+        }
+        infra.exc_in.add(this.infra.cpu.value(), msg);
+
+        getInfra().debug("p"+getAgentID()+" delivering m"+msg.logicalClock+" from "+msg.sender);
+        infra.debug("(p" + ID + ") delivered at local time" + at1 + " " + msg.content);
+        infra.debug("(p" + ID + ") delivered at global time" + at + " " + msg.content);
+        
+        this.getReporter().stats("send-delivery delay", at - msg.actualSendingTime);
+        this.getReporter().stats("send-delivery delay agent" + msg.sender + "/agent" + ID, at - msg.actualSendingTime);
+        this.getReporter().stats("blocking time", at - msg.actualReceptionTime);        
     }
     
     public void deliver(Message msg) {
@@ -122,6 +302,8 @@ public class Agent extends Thread implements IAgent{
     
     
     long cur = 0;
+    
+    
     public final Message receive(){
          Message msg = null;
          long now = infra.cpu.value();
@@ -129,7 +311,7 @@ public class Agent extends Thread implements IAgent{
          long t = 0;
          while(cur <= now){
             t = cur;
-            msg = infra.pending(cur);
+            msg = infra.nextPending(cur);
             if(msg != null){
                break;
             }
@@ -153,10 +335,10 @@ public class Agent extends Thread implements IAgent{
         return "Agent{" + "ID=" + ID + '}';
     }
 
-
     public final void exec(Object data){
       long cpuQueue = this.infra.exec(data);
-      Simulator.reporter.stats("cpu queue delay of agent" + ID , cpuQueue);       
+      scenario.reporter.stats("cpu queue delay of agent" + ID , cpuQueue);       
     }
+
 
 }

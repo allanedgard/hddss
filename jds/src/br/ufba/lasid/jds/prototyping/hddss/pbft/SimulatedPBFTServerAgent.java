@@ -33,16 +33,16 @@ public abstract class SimulatedPBFTServerAgent extends SimulatedPBFTAgent implem
     public void setup() {
 
         super.setup();
-         JDSUtility.debug = infra.debug;
-         JDSUtility.out = infra.context.get(Variable.StdOutput).<java.io.PrintStream>value();
+         JDSUtility.debug = getInfra().debug;
+         JDSUtility.out = getInfra().context.get(Variable.StdOutput).<java.io.PrintStream>value();
 
-        SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.clock);
+        SimulatedScheduler scheduler = new SimulatedScheduler(this.getInfra().clock);
         getProtocol().setCommunicator(new SimulatedPBFTCommunicator(this, getProtocol()));
         getProtocol().setLocalProcess(this);
-        getProtocol().setClock(this.infra.cpu);
+        getProtocol().setClock(this.getInfra().cpu);
         getProtocol().setScheduler(scheduler);
         ((IPBFTServer)getProtocol()).setServer(this);
-        String fname = infra.context.get(Variable.FileName).<String>value() + "replica" + this.getID();
+        String fname = getInfra().context.get(Variable.FileName).<String>value() + "replica" + this.getID();
         ((IPBFTServer)getProtocol()).setDefaultFileName(fname);
         getProtocol().setLocalGroup(getGroup());
 

@@ -3,7 +3,7 @@ package br.ufba.lasid.jds.prototyping.hddss;
 public abstract class CPU implements IClock{
 
    double tqueue = 0.0;
-   Simulator conteiner;
+   Simulator container;
    long last = 0;
 
    double procrate = 0.0;
@@ -15,8 +15,6 @@ public abstract class CPU implements IClock{
       objects = new int[256];
       objectsTAGs = new String[256];
    }
-
-
 
    static final String TAG = "cpu";
    IClock _clock;

@@ -50,10 +50,10 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
     public void setup() {
         super.setup();
 
-        iarrv = new double[infra.nprocess];
-        larrv = new double[infra.nprocess];
+        iarrv = new double[getInfra().nprocess];
+        larrv = new double[getInfra().nprocess];
 
-        for(int i = 0; i < infra.nprocess; i++) {
+        for(int i = 0; i < getInfra().nprocess; i++) {
             iarrv[i]  = 0;
             larrv[i]  = 0;
         }
@@ -81,8 +81,8 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
     }
 
     public void estimateDelay(Message msg){
-         double ro = infra.context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
-        int maxro = infra.context.get(RuntimeSupport.Variable.MaxClockDeviation).<Integer>value();
+         double ro = getInfra().context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
+        int maxro = getInfra().context.get(RuntimeSupport.Variable.MaxClockDeviation).<Integer>value();
         if(msg.content instanceof Content_AmoebaSequencer){
             //Content_Amoeba content = (Content_Amoeba) msg.content;
             //Content_Acknowledge ack = content.vack[msg.destination];
@@ -168,7 +168,7 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
     @Override
     public void deliver(Message msg) {
         super.deliver(msg);
-        int clock = (int)infra.clock.value();
+        int clock = (int)getInfra().clock.value();
 
         if(msg.type == APP){
 
@@ -187,7 +187,7 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
     public void estimateTSMax(){
 
         double sum = 0.0;
-        for(int i =0; i < infra.nprocess; i++){
+        for(int i =0; i < getInfra().nprocess; i++){
             sum += (double)iarrv[i];
 
             if(iarrv[i] > maxTS){
@@ -197,7 +197,7 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
             }
         }
 
-        sum = sum / infra.nprocess;
+        sum = sum / getInfra().nprocess;
 
         if(meanIA < 0.0) meanIA = sum;
 

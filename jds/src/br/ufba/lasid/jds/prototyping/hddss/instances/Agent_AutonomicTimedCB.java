@@ -42,7 +42,7 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
 
     public double computeSetPoint(){
         
-        double maxOVH = (((double)(infra.nprocess - 1))/infra.nprocess);
+        double maxOVH = (((double)(getInfra().nprocess - 1))/getInfra().nprocess);
         return (maxOVH * (RCRef - RC));
 
     }
@@ -51,10 +51,10 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
     public void setup() {
         super.setup();
 
-        iarrv = new double[infra.nprocess];
-        larrv = new double[infra.nprocess];
+        iarrv = new double[getInfra().nprocess];
+        larrv = new double[getInfra().nprocess];
 
-        for(int i = 0; i < infra.nprocess; i++) {
+        for(int i = 0; i < getInfra().nprocess; i++) {
             iarrv[i]  = 0;
             larrv[i]  = 0;
         }
@@ -82,8 +82,8 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
     }
 
     public void estimateDelay(Message msg){
-        double ro = infra.context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
-        int maxro = infra.context.get(RuntimeSupport.Variable.MaxClockDeviation).<Integer>value();
+        double ro = getInfra().context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
+        int maxro = getInfra().context.get(RuntimeSupport.Variable.MaxClockDeviation).<Integer>value();
         if(msg.content instanceof Content_TimedCB){
             Content_TimedCB content = (Content_TimedCB) msg.content;
             Content_Acknowledge ack = content.vack[msg.destination];
@@ -159,15 +159,15 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
     @Override
     public void execute() {
     super.execute();
-    infra.debug("p" + ID + "," + infra.clock.value() + "," + meanOVH+", "+Simulator.reporter.getMean("blocking time")+", "+ts+", "+RC+", "+RCRef);
-    if ((int)infra.clock.value() >= 10000) 
+    getInfra().debug("p" + getAgentID() + "," + getInfra().clock.value() + "," + meanOVH+", "+this.getReporter().getMean("blocking time")+", "+ts+", "+RC+", "+RCRef);
+    if (getInfra().clock.value() >= 10000) 
                 RCRef = .50;
     }
     
     @Override
     public void deliver(Message msg) {
         super.deliver(msg);
-        int clock = (int)infra.clock.value();
+        int clock = (int)getInfra().clock.value();
 
         if(msg.type == TIMEDCB_APP){
 
@@ -185,7 +185,7 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
 
     public void estimateTSMax(){
         double sum = 0.0;
-        for(int i =0; i < infra.nprocess; i++){
+        for(int i =0; i < getInfra().nprocess; i++){
             sum += (double)iarrv[i];
 
             if(iarrv[i] > maxTS){
@@ -195,7 +195,7 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
             }
         }
 
-        sum = sum / infra.nprocess;
+        sum = sum / getInfra().nprocess;
 
         if(meanIA < 0.0) meanIA = sum;
 
@@ -213,7 +213,7 @@ public class Agent_AutonomicTimedCB extends Agent_TimedCB{
     public void control(){
         double error = computeSetPoint() - sensing();
 
-        double dtsOvh = (-1.0/maxTS) * ((infra.nprocess - 1)/((double)infra.nprocess)) * error;
+        double dtsOvh = (-1.0/maxTS) * ((getInfra().nprocess - 1)/((double)getInfra().nprocess)) * error;
 
         double dt = now - old;
         

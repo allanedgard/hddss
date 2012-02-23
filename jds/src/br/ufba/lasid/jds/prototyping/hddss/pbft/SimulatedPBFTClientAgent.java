@@ -32,14 +32,14 @@ public abstract class SimulatedPBFTClientAgent extends SimulatedPBFTAgent implem
 
 
 
-        JDSUtility.debug = infra.debug;
-        JDSUtility.out = infra.context.get(Variable.StdOutput).<java.io.PrintStream>value();
+        JDSUtility.debug = getInfra().debug;
+        JDSUtility.out = getInfra().context.get(Variable.StdOutput).<java.io.PrintStream>value();
 
-        SimulatedScheduler scheduler = new SimulatedScheduler(this.infra.clock);
+        SimulatedScheduler scheduler = new SimulatedScheduler(this.getInfra().clock);
         
         getProtocol().setCommunicator(new SimulatedPBFTCommunicator(this, getProtocol()));
         getProtocol().setLocalProcess(this);
-        getProtocol().setClock(this.infra.cpu);
+        getProtocol().setClock(this.getInfra().cpu);
         getProtocol().setScheduler(scheduler);
         getProtocol().setLocalGroup(getGroup());
         getProtocol().setRemoteProcess(getGroup());

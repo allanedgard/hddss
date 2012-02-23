@@ -31,48 +31,26 @@ public class MiddlewareRuntimeContainer extends RuntimeContainer {
     
     @Override
     public boolean register(Agent agent){
-        this.agent = agent;
-        ID = agent.ID;
-        return true;
-    }
-    
-    @Override
-    public synchronized void execute(){
-            super.execute();
+        ID = agent.getAgentID();
+        return super.register(agent);
     }
 
     @Override
     public void run() {
         System.out.println("Starting infra at agent "+this.ID);
         try {
-            s = new HDDSS_Socket(nic_in, IP[ID],
+            s = new HDDSS_Socket(agent, IP[ID],
                   Integer.parseInt(this.PORT[ID]));
-            s.start();
+            if (s.waitRegister())
+                s.start();
         } catch (Exception e) {
         }
         super.run();
     }
-
+   
     @Override
-    public boolean receive()  {
-       Message m = receive(0);
-       if(m != null){
-            agent.receive(m);
-            reportEvent(m, 'r');
-            return true;
-       }
-       return false;   
- }
-  
-    public boolean send(long now){
-            ArrayList a = nic_out.getMsgs((int)now);
-            if (a.isEmpty()) {
-                return false;
-            }
+    public void sendToNetwork(Message msg){
 
-            Message msg;
-
-            msg = (Message) a.get(0);
             if ( msg.destination != context.get(Variable.NumberOfAgents).<Integer>value() ) {
                 System.out.println("from "+msg.sender+" to "+msg.destination);
                 
@@ -112,8 +90,8 @@ public class MiddlewareRuntimeContainer extends RuntimeContainer {
             }
             //network.send(msg);
             reportEvent(msg, 's');
-            return true;
-       
     }
+    
+  
     
 }

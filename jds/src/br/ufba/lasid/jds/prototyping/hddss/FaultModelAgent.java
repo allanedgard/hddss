@@ -27,7 +27,7 @@ public abstract class FaultModelAgent {
         return true;
    }
 
-   public void sendMessage(int c, Message msg) {
+   public void sendMessage(long c, Message msg) {
        infra.nic_out.add(c, msg);
    }
 

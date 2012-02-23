@@ -15,15 +15,15 @@ public class Agent_CristianPgc extends SimulatedAgent {
         int DELTA;
         int LogicalClock;
         int Clock_Renewal_Time;
-        int CRT; 
+        long CRT; 
         final int PG_APP = 1;
         final int PG_NEW_GROUP = 2;
         final int PG_PRESENT = 3;
         final int CK_REQ = 255;
         final int CK_REP = 254;
         int resiliencia;
-        int [] membership;
-        int Renewal_Time;
+        long [] membership;
+        long Renewal_Time;
         int pi;
         Randomize r;
         java.util.ArrayList msgRecebidas;
@@ -34,9 +34,9 @@ public class Agent_CristianPgc extends SimulatedAgent {
         }
 
         public void setup() {
-            membership = new int[infra.nprocess];
+            membership = new long[getInfra().nprocess];
             Renewal_Time = -1;
-            r = new Randomize(ID);
+            r = new Randomize(getAgentID());
             LogicalClock = 0;
             msgRecebidas = new java.util.ArrayList();
             resiliencia = 0;
@@ -66,20 +66,20 @@ public class Agent_CristianPgc extends SimulatedAgent {
 
     @Override
         public void startup(){
-            for (int i = 0;i<infra.nprocess;i++) {
+            for (int i = 0;i<getInfra().nprocess;i++) {
                 membership[i]=0;
             }
-            int clock = (int)infra.clock.value();
-            this.createMessage(clock, this.ID, infra.nprocess, PG_NEW_GROUP, new Content_PGC(clock+DELTA, ID), -1 );
+            int clock = (int)getInfra().clock.value();
+            this.createMessage(clock, this.getAgentID(), getInfra().nprocess, PG_NEW_GROUP, new Content_PGC(clock+DELTA, getAgentID() ), -1 );
         }
     
         public boolean[] visao() {
-            int max=0;
-            for (int i = 0;i<infra.nprocess;i++) {
+            long max=0;
+            for (int i = 0;i<getInfra().nprocess;i++) {
                 if (membership[i]> max) max = membership[i];
             }
-            boolean [] vs = new boolean[infra.nprocess];
-            for (int i = 0;i<infra.nprocess;i++) {
+            boolean [] vs = new boolean[getInfra().nprocess];
+            for (int i = 0;i<getInfra().nprocess;i++) {
                 if (membership[i]== max) {
                     vs[i]= true; }
                 else
@@ -90,24 +90,24 @@ public class Agent_CristianPgc extends SimulatedAgent {
         
         public void execute() {
             boolean [] vs = visao();
-            int clock = (int)infra.clock.value();
-            int tick  = (int)infra.clock.tickValue();
-            double ro = infra.context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
-            infra.debug("p"+ID+": clock="+clock);
+            long clock = getInfra().clock.value();
+            long tick  = getInfra().clock.tickValue();
+            double ro = getInfra().context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
+            getInfra().debug("p"+getAgentID()+": clock="+clock);
             if (r.uniform() <= prob) {
                 LogicalClock ++;
-                this.createMessage(clock, this.ID, infra.nprocess, PG_APP, "payload", LogicalClock, true );
+                this.createMessage(clock, this.getAgentID(), getInfra().nprocess, PG_APP, "payload", LogicalClock, true );
             }
             if (clock == Renewal_Time) {
                 Renewal_Time = -1;
-                this.createMessage(clock, this.ID, infra.nprocess, PG_PRESENT, new Content_PGC(clock, ID), -1);
+                this.createMessage(clock, this.getAgentID(), getInfra().nprocess, PG_PRESENT, new Content_PGC(clock, this.getAgentID()), -1);
                 Renewal_Time = clock + pi;
             }
             if (clock == CRT) {
-                infra.debug("p"+ID+": sinc, clock="+clock);
+                getInfra().debug("p"+getAgentID()+": sinc, clock="+clock);
                 Content_Sync sc = new Content_Sync(clock + ro * tick);
                 lastClock++;
-                this.createMessage(clock,this.ID,infra.nprocess,CK_REQ,sc,lastClock);
+                this.createMessage(clock,this.getAgentID(),getInfra().nprocess,CK_REQ,sc,lastClock);
                 somaClocks = 0.0;
                 numeroClocks = 0;
                 CRT = clock + Clock_Renewal_Time;
@@ -117,8 +117,7 @@ public class Agent_CristianPgc extends SimulatedAgent {
 
         public void deliver(Message msg) {
             if (msg.type == PG_APP)
-                   Simulator.reporter.stats("blocking time",
-                           (int)infra.clock.value()-msg.receptionTime);
+                   this.preDeliver(msg);
             if (msg.logicalClock > LogicalClock) {
                 LogicalClock = msg.logicalClock+1;
             }
@@ -132,20 +131,20 @@ public class Agent_CristianPgc extends SimulatedAgent {
             *   Este evento pode ser sobrecarregado pela ação específica 
             *   do protocolo
             */
-            int V;
+            long V;
             int M;
-            int clock = (int)infra.clock.value();
-            int tick  = (int)infra.clock.tickValue();
-            double DESVIO = infra.context.get(RuntimeSupport.Variable.MaxDeviation).<Double>value();
-            double ro = infra.context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
-            Network network = infra.context.get(RuntimeSupport.Variable.Network).<Network>value();
+            int clock = (int)getInfra().clock.value();
+            int tick  = (int)getInfra().clock.tickValue();
+            double DESVIO = getInfra().context.get(RuntimeSupport.Variable.MaxDeviation).<Double>value();
+            double ro = getInfra().context.get(RuntimeSupport.Variable.ClockDeviation).<Double>value();
+            Network network = getInfra().context.get(RuntimeSupport.Variable.Network).<Network>value();
             Content_Sync sc;
             switch (msg.type) {
                 case PG_NEW_GROUP: 
                     V = ( (Content_PGC) msg.content).V;
                     M = ( (Content_PGC) msg.content).M;
                     // if (V <= clock) {
-                        this.createMessage(V, this.ID, infra.nprocess, PG_PRESENT, new Content_PGC(V, ID), 0 );
+                        this.createMessage(V, this.getAgentID(), getInfra().nprocess, PG_PRESENT, new Content_PGC(V, getAgentID()), 0 );
                         Renewal_Time = V+pi;
                     // }                    
                     break;
@@ -158,18 +157,18 @@ public class Agent_CristianPgc extends SimulatedAgent {
                     /* Alterado para incluir Flood
                      * 
                      */
-                    int t_e = msg.physicalClock + (int) DESVIO + (1+resiliencia) * DELTA;
+                    long t_e = msg.physicalClock + (int) DESVIO + (1+resiliencia) * DELTA;
                     if (msgRecebidas.contains(msg.getId()) == false) {
-                        infra.debug("p"+ID+": relayed from "+msg.sender);
+                        getInfra().debug("p"+getAgentID()+": relayed from "+msg.sender);
                         msgRecebidas.add(msg.getId());
                         if (msg.hops < resiliencia) {
                             msg.hops++;
-                            for (int i=0; i< infra.nprocess; i++) {
-                                if (  (i != ID) && (i != msg.relayFrom) )
+                            for (int i=0; i< getInfra().nprocess; i++) {
+                                if (  (i != getAgentID()) && (i != msg.relayFrom) )
                                 relayMessage(clock, msg, i);
                             }
                         };
-                        infra.app_in.add(t_e, msg);
+                        getInfra().app_in.add(t_e, msg);
                     } else {
                         network.unicasts[msg.type]++;
                     }                        
@@ -180,7 +179,7 @@ public class Agent_CristianPgc extends SimulatedAgent {
                 case CK_REQ:
                     sc = (Content_Sync) msg.content;
                     sc.atual = clock + ro * tick;
-                    this.createMessage(clock,this.ID,msg.sender,CK_REP,sc, msg.logicalClock);
+                    this.createMessage(clock,this.getAgentID(),msg.sender,CK_REP,sc, msg.logicalClock);
                     break;
                 case CK_REP:
                     double agora = clock + ro * tick;
@@ -189,18 +188,18 @@ public class Agent_CristianPgc extends SimulatedAgent {
                         //System.nic_out.println("CLK");
                         numeroClocks++;
                         somaClocks += sc.atual+(agora-sc.inicio)/2;
-                        if (numeroClocks == infra.nprocess) {
-                            infra.debug("p"+ID+" clock atual:"+clock+" tick:"+tick);
+                        if (numeroClocks == getInfra().nprocess) {
+                            getInfra().debug("p"+getAgentID()+" clock atual:"+clock+" tick:"+tick);
                             double ajusta = somaClocks/numeroClocks;
                             double atual = clock + ro * tick;
                             somaClocks = .0;
                             numeroClocks=0;
                             if (ajusta < atual){
-                                infra.clock.adjustCorrection((int) ( (atual - ajusta)*(1/ro) ));
+                                getInfra().clock.adjustCorrection((int) ( (atual - ajusta)*(1/ro) ));
                             }
                             else {
-                                infra.clock.adjustValue((int)ajusta);
-                                infra.clock.adjustTickValue((int) (((ajusta - (int) ajusta)) * (1/ro)));
+                                getInfra().clock.adjustValue((int)ajusta);
+                                getInfra().clock.adjustTickValue((int) (((ajusta - (int) ajusta)) * (1/ro)));
                             }
                         }
                     }
