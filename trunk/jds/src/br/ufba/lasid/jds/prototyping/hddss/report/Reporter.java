@@ -131,8 +131,8 @@ public class Reporter {
       
    }
 
-   public void report2UnformattedTable(PrintStream out){
-      out.print(count2Table() + "\n" + valued2Table() + "\n" + stats2Table());
+   public void report2UnformattedTable(String text, PrintStream out){
+      out.print(text+ count2Table() + "\n" + valued2Table() + "\n" + stats2Table());
    }
 
    public String valued2Table(){
@@ -171,9 +171,9 @@ public class Reporter {
         return outString;
    }
 
-   public void report2FormattedTable(PrintStream out){
+   public void report2FormattedTable(String text, PrintStream out){
         /* for each count report in reporter database */
-        out.println(format(count2Table()) + "\n" + format(valued2Table()) + "\n" + format(stats2Table()));
+        out.println(format(text + count2Table()) + "\n" + format(valued2Table()) + "\n" + format(stats2Table()));
 
    }
 

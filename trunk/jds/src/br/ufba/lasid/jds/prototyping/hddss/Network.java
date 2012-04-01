@@ -481,7 +481,7 @@ public abstract class Network extends Thread{
          *  DEFINE O BALANCO ENTRE P_i E A REDE E A REDE E P_j
          */
        tripdelayBalance = Double.parseDouble(b);
-
+       if(tripdelayBalance <= 0) tripdelayBalance = 0.001;
        if(tripdelayBalance > 1) tripdelayBalance = 0.5;
     }
 

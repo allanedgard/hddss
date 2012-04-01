@@ -23,6 +23,7 @@ public abstract class Channel {
       if ( this.status() ) {
           long d = 0; //delay();
           long at = (long) (d + a);
+          /*
           System.out.println("-------------------- ");
           System.out.println("atraso na entrega: "+at);
           System.out.println("tempo de envio em p_i: "+m.physicalClock);
@@ -32,7 +33,7 @@ public abstract class Channel {
           System.out.println("clock global: "+p_j.getScenario().globalClock.value());
           System.out.println("rho de p_i: "+((Clock_Virtual) p_i.getInfra().clock).rho);
           System.out.println("rho de p_j: "+((Clock_Virtual) p_j.getInfra().clock).rho);
-          
+          */
           // USA O TEMPO GLOBAL PARA RECEIVE
           //long nextDelivery =(p_j.getInfra().clock.value())+at;
           long nextDelivery =(p_j.getScenario().globalClock.value())+at;
@@ -61,6 +62,13 @@ public abstract class Channel {
     
     abstract int delay();
     
-    abstract boolean status(); 
+    boolean status() {
+        return true;
+    }
+    
+    @Override
+    public String toString() {
+        return this.getClass().getName();
+    }
             
 }

@@ -53,6 +53,7 @@ public class Scenario_Spa extends Scenario{
         asynchronous = Integer.parseInt(a);
     }
 
+    /*
     @Override
     public void initAgents() throws Exception{
         int z=-1;
@@ -82,6 +83,8 @@ public class Scenario_Spa extends Scenario{
             }
         }
     }
+     * 
+     */
 
     @Override
     public void initChannels() {
