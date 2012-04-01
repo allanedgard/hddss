@@ -250,14 +250,13 @@ public class Simulator  extends Thread implements RuntimeSupport
 
     public synchronized void  statistics() {
         java.util.Date data = new java.util.Date();
-        System.out.println("---------------------------------------------------");       
-        System.out.println("results for simulated scene: "+NAME);
-        System.out.println("simulation finished: ");      
-        System.out.println(data.toString());
+        String text = "Results for simulated scene: "+NAME+"\n";
+        text = text + "simulation finished: \n";
+        text = text + data.toString() + "\n";
         if(formattedReport){
-            scenario.reporter.report2FormattedTable(System.out);
+            scenario.reporter.report2FormattedTable(text, System.out);
         }else{
-            scenario.reporter.report2UnformattedTable(System.out);
+            scenario.reporter.report2UnformattedTable(text, System.out);
         }
         out.close();
         numFinishedInstances ++;

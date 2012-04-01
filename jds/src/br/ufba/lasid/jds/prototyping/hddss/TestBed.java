@@ -131,11 +131,12 @@ public class TestBed  extends Thread implements RuntimeSupport
     public void estatisticas() {
         System.out.println("simulation finished: ");
         java.util.Date data = new java.util.Date();        
-        System.out.println(data.toString());
+        String text = "simulation finished: \n";
+        text = text + data.toString() + "\n";
         if(formattedReport){
-           TestBed.reporter.report2FormattedTable(System.out);
+           TestBed.reporter.report2FormattedTable(text, System.out);
         }else{
-           TestBed.reporter.report2UnformattedTable(System.out);
+           TestBed.reporter.report2UnformattedTable(text, System.out);
         }
         out.close();
         System.exit(0);

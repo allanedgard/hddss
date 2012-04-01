@@ -1,5 +1,5 @@
 FinalTime = 10000
-NumberOfAgents = 200
+NumberOfAgents = 10
 MaximumDeviation = 4
 Mode = clock
 IPort[0] = 127.0.0.11:1001

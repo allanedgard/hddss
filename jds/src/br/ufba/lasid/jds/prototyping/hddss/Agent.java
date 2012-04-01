@@ -25,7 +25,7 @@ public class Agent extends Thread implements IAgent{
             at = scenario.globalClock.value();
         }
         else {
-            at = this.infra.cpu.value();
+            at = this.infra.clock.value();
         }
         return at;
    }
@@ -172,7 +172,7 @@ public class Agent extends Thread implements IAgent{
           at = scenario.globalClock.value();
         }
         else {
-          at = this.infra.cpu.value();
+          at = this.infra.clock.value();
         }
         msg.actualSendingTime=at;
         
@@ -189,7 +189,7 @@ public class Agent extends Thread implements IAgent{
           at = scenario.globalClock.value();
         }
         else {
-          at = this.infra.cpu.value();
+          at = this.infra.clock.value();
         }
         msg.actualSendingTime=at;
         
@@ -209,7 +209,7 @@ public class Agent extends Thread implements IAgent{
           at = scenario.globalClock.value();
         }
         else {
-          at = this.infra.cpu.value();
+          at = this.infra.clock.value();
         }
         msg.actualSendingTime=at;
         
@@ -228,7 +228,7 @@ public class Agent extends Thread implements IAgent{
           at = scenario.globalClock.value();
         }
         else {
-          at = this.infra.cpu.value();
+          at = this.infra.clock.value();
         }
         msg.actualSendingTime=at;
         
@@ -250,7 +250,7 @@ public class Agent extends Thread implements IAgent{
       /* Este evento pode ser sobrecarregado pela ação específica do protocolo (NO ANYMORE)*/
       long at = 0;
       long at1 = 0;
-      at1 = this.infra.cpu.value();
+      at1 = this.infra.clock.value();
       if (scenario != null) {
           at = scenario.globalClock.value();
       }
@@ -279,14 +279,14 @@ public class Agent extends Thread implements IAgent{
     public final void preDeliver(Message msg) {
         long at = 0;
         long at1 = 0;
-        at1 = this.infra.cpu.value();
+        at1 = this.infra.clock.value();
         if (scenario != null) {
           at = scenario.globalClock.value();
         }
         else {
           at = at1;
         }
-        infra.exc_in.add(this.infra.cpu.value(), msg);
+        infra.exc_in.add(this.infra.clock.value(), msg);
 
         getInfra().debug("p"+getAgentID()+" delivering m"+msg.logicalClock+" from "+msg.sender);
         infra.debug("(p" + ID + ") delivered at local time" + at1 + " " + msg.content);
@@ -305,6 +305,10 @@ public class Agent extends Thread implements IAgent{
     
     
     public final Message receive(){
+        /*
+         *  ESTE METODO SERÁ REVISADO NO AJUSTE DO CODIGO DA CPU
+         * 
+         */
          Message msg = null;
          long now = infra.cpu.value();
          cur = infra.clock.value();

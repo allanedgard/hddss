@@ -21,18 +21,22 @@ public class Scenario {
     public Reporter reporter;
     public AbstractClock globalClock;
     Scenario() {
-
+        reporter = new Reporter();
     }
 
-    public void increaseTick() {
+    public final void increaseTick() {
         ((Clock_Virtual)globalClock).tick();
+        this.execute();
     }
     
-    public void init(Simulator s) {
+    public void execute() {
+        
+    }
+    
+    public final void init(Simulator s) {
         container = s;
         int n = container.get(Variable.NumberOfAgents).<Integer>value().intValue();
         p = new Agent[n];
-        reporter = new Reporter();
         globalClock = new Clock_Virtual();
     }
 

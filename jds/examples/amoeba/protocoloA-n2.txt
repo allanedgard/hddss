@@ -1,4 +1,4 @@
-FinalTime = 6000
+FinalTime = 10000
 NumberOfAgents = 2
 MaximumDeviation = 4
 Mode = clock
@@ -18,25 +18,38 @@ cpu.ProcessingRate = 9446400
 cpu.LoadCost = 0.000000001
 
 agent = br.ufba.lasid.jds.prototyping.hddss.instances.Agent_protocoloA
-agent.DeltaMax = 100
+agent.DeltaMax = 15
 ; agent.Interval = 20
 agent.TS = 20
 agent.PacketGenerationProb = 0.05
 ; agent.ProbabilidadePerderPacote = 0.0
 
-channel = br.ufba.lasid.jds.prototyping.hddss.ChannelProbabilistic
-channel.MinValue = 1
+channel[0] = br.ufba.lasid.jds.prototyping.hddss.ChannelProbabilistic
+channel[0].MinValue = 1
+channel[0].Distribution = uniform(10.0,5.0)
+
+;;R("rnorm(1000000,20,5)")
+
+channel[1] = br.ufba.lasid.jds.prototyping.hddss.ChannelProbabilisticOmission
+channel[1].MinValue = 1
+channel[1].Distribution = uniform(10.0,5.0)
+
+;;R("rnorm(1000000,20,5)")
+
 ; channel.Mean = 10
 ; channel.MinDelay = 1
 ; channel.Std = 5
 ;channel.Distribution = uniform(10.0,20.0)
-channel.Distribution = R("rnorm(10000,20,5)")
+
 
 // network = br.ufba.lasid.jds.prototyping.hddss.PayloadAwareNetwork
 network = br.ufba.lasid.jds.prototyping.hddss.NetworkDeterministic
 network.ProcessingTime = .001
 
-scenario = br.ufba.lasid.jds.prototyping.hddss.Scenario
+scenario = br.ufba.lasid.jds.prototyping.hddss.Scenario_ProtocoloA
+scenario.ReliableChannelType = 0
+scenario.UnreliableChannelType = 1
+
 
 /* transferRate in  bps  (e.g. 10Mbps is equal to 10000000 bps, if simulation time in miliseconds then use 10Mbps / 1000  = 10Kb/ms*/
 //network.TransferRate =  10000000

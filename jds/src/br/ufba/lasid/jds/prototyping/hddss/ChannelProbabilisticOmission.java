@@ -1,14 +1,20 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package br.ufba.lasid.jds.prototyping.hddss;
 
-import java.lang.reflect.*;
-
-public class ChannelProbabilistic extends Channel {
-
+/**
+ *
+ * @author Allan
+ */
+public class ChannelProbabilisticOmission extends ChannelOmission {
+    
     Randomize x;
     int minValue=0;
     
-    ChannelProbabilistic () {
-        //super(.05);
+    ChannelProbabilisticOmission () {
+        super(.05);
         x=new Randomize();
     }    
     
@@ -27,9 +33,5 @@ public class ChannelProbabilistic extends Channel {
         return (int) d;
     }
     
-    /*
-    boolean status() {
-        return true;
-    }
-    */
+    
 }
