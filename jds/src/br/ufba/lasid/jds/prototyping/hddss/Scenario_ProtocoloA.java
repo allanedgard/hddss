@@ -73,7 +73,7 @@ public class Scenario_ProtocoloA extends Scenario {
                         container.network.handshaking(i, j, reliable);
                     else
                         container.network.handshaking(i, j, unreliable);
-                    System.out.println("["+i+"]"+"["+j+"]"+"=>"+container.network.channels[i][j]);
+                    //System.out.println("["+i+"]"+"["+j+"]"+"=>"+container.network.channels[i][j]);
                 }
         }    
     }
