@@ -211,27 +211,26 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
     }
 
     public void control(){
-
+        //System.out.println("pre p"+getAgentID()+"> " + ((double) (nts) ) / nrecv + ","+ computeSetPoint() + ","+ sensing() + "," + RCRef + "," +ts + "," + ctrTS);
+        
         double error = computeSetPoint() - sensing();
         //double error = RCRef - ((double) (nts) ) / nrecv;
         //double dtsOvh = (-1.0/maxTS) * (2.0/3.0)* error;
-
+        
         double dt = now - old;
         //double dtsOvh = (-1.0/maxTS) * (2.0/3.0)* error;
         double dtsOvh = (-1.0) * (2.0/3.0)* error;
         
-        double action =  (dtsOvh * dt);///10;
-        //double action =  1000 * dtsOvh * dt;
+        //double action =  (dtsOvh * dt)/20;///10;
+        double action =  dtsOvh * dt;
 
         ctrTS += action;
 
         //if(ctrTS > maxTS) ctrTS = maxTS;
-        if(ctrTS > 80.0) ctrTS = 80.0;
+        if(ctrTS > 500.0) ctrTS = 500.0;
         if(ctrTS < 0) ctrTS = 0;
-        
-        //System.out.println("p" + ID + "," + ((double) (nts) ) / nrecv + "," + RCRef + "," +ts + "," + ctrTS);
+        //System.out.println("pos p"+getAgentID()+"> " + ((double) (nts) ) / nrecv + ","+ computeSetPoint() + ","+ sensing() + "," + RCRef + "," + RC + "," +ts + "," + ctrTS);
         actuate(ctrTS);
-        
     }
     
     public double sensing(){
@@ -246,6 +245,5 @@ public class Agent_AutonomicAmoeba extends Agent_AmoebaSequencer{
 
     public void actuate(double value){
         ts = (int)value;
-        
     }    
 }

@@ -135,7 +135,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
         public void execute() {
             long clock = (long)getInfra().clock.value();
             Content_AmoebaSequencer ca = new Content_AmoebaSequencer(LastACK, "stuff");
-            if ( (r.uniform() <= prob)){ // && !bloquearEntrega ){ //&& clock < .5*finalTime ) {
+            if ( (r.uniform() <= prob)  && !bloquearEntrega  && clock < .2*finalTime ) {
                 SENT = clock;    // Registering clock of the last SENT 
                 ca.ACKS.add(ACKS);
                 this.createMessage(clock, getAgentID(), Leader, REQ_SEQ, ca, -1);
@@ -283,6 +283,7 @@ public class Agent_AmoebaSequencer extends SimulatedAgent {
                             if (msgs.checkTime(numSeq)){
                                  m = (Message) msgs.getMsgs(numSeq).get(0);
                                  this.preDeliver(m);
+                                 deliver(m);
                             }
                         }
                     break;
