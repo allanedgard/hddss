@@ -8,12 +8,12 @@ package br.ufba.lasid.jds.prototyping.hddss;
  *
  * @author Allan
  */
-public class ChannelProbabilisticOmission extends ChannelOmission {
+public class OmissionChannelProbabilistic extends ChannelOmission {
     
     Randomize x;
     int minValue=0;
     
-    ChannelProbabilisticOmission () {
+    OmissionChannelProbabilistic () {
         super(.05);
         x=new Randomize();
     }    
