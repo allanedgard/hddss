@@ -1,2 +1,3 @@
-WorkDir = ./examples/calcpbft/
-cenarios = rpl1.txt
+workdir = ./examples/calcpbft/
+mode = simulation
+scenes = replica1.txt

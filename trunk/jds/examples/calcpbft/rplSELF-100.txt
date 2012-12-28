@@ -2,11 +2,11 @@
  * GENERAL SIMULATION OPTIONS
  ***********************************************************/
 FinalTime = 1200000
-NumberOfAgents = 6
+NumberOfAgents = 14
 MaximumDeviation = 0
 Mode = clock
 Debug = false
-FormattedReport = false
+FormattedReport = true
 
 clock = br.ufba.lasid.jds.prototyping.hddss.Clock_Virtual
 clock.Mode = s
@@ -89,10 +89,10 @@ agent.MinPayload = 8192
 agent.MaxPayloadResponse = 8192
 agent.MinPayloadResponse = 8192
 
-channel = br.ufba.lasid.jds.prototyping.hddss.ChannelDeterministicInterval
+channel = br.ufba.lasid.jds.prototyping.hddss.ChannelProbabilistic
 channel.Contention = false	
-channel.DeltaMaximo = 5
-channel.DeltaMinimo = 1
+channel.MinValue = 1
+channel.Distribution = uniform(10.0,5.0)
 
 network = br.ufba.lasid.jds.prototyping.hddss.NetworkPayloadAware
 
