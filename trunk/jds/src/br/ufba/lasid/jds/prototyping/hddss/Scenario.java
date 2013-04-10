@@ -24,6 +24,10 @@ public class Scenario {
         reporter = new Reporter();
     }
 
+    public Simulator getContainer() {
+        return container;
+    }
+    
     public final void increaseTick() {
         ((Clock_Virtual)globalClock).tick();
         this.execute();
@@ -83,7 +87,7 @@ public class Scenario {
                 for(int j = 0; j < n; j++)
                     container.network.handshaking(i, j);
     }
-
+    
     public void prepareAgent(Agent a) throws Exception{
         int n = container.get(Variable.NumberOfAgents).<Integer>value().intValue();
         a.setInfra ( new RuntimeContainer(container) );
