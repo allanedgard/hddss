@@ -52,6 +52,11 @@ public abstract class Network extends Thread{
         return channels[i][j].status();
 
     }
+    
+    public final Channel informChannel(int p_i, int p_j) {
+        return channels[p_i][p_j];
+    }    
+    
 
     public final void setScenario(Scenario s) {
         /*
@@ -61,6 +66,8 @@ public abstract class Network extends Thread{
          */
         scenario = s;
     }
+    
+
     
     public final void handshaking(int p_i, int p_j) {
         /*

@@ -43,6 +43,10 @@ public class Simulator  extends Thread implements RuntimeSupport
          
     }
 
+    public final Network getNetwork() {
+        return network;
+    }
+    
     public final int getDelay(int i, IProcessable data){
        /*   #scenarios
          *  return (int) p[i].infra.cpu.exec(data);

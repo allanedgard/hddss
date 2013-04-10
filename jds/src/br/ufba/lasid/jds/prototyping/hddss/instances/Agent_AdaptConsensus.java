@@ -7,9 +7,8 @@ import br.ufba.lasid.jds.prototyping.hddss.RuntimeSupport.Variable;
 import br.ufba.lasid.jds.prototyping.hddss.SimulatedAgent;
 import br.ufba.lasid.jds.prototyping.hddss.Simulator;
 
-public class Agent_TimedCB extends SimulatedAgent {
-    
-    
+public class Agent_AdaptConsensus extends SimulatedAgent {
+     
     /*
      * O detector de defeitos  está incorporado ao timeout do TimedCB
      * contudo o detector de estados não
@@ -29,11 +28,13 @@ public class Agent_TimedCB extends SimulatedAgent {
         int payloadSize;
         final int TIMEDCB_APP = 4;
         final int TIMEDCB_TS = 5;
-        final int CHANGE_VIEW_REQUEST = 6;
-        final int UNSTABLE = 7;
+        final int CONSENSUS_REQUEST = 6;
         final int CONSENSUS_P1 = 8;
         final int CONSENSUS_P2 = 9;
         final int DECIDED = 10;
+        final int DOWN = 11;
+        final int UNCERTAIN = 12;
+                
         int RECV;
         int SENT;
         
@@ -42,33 +43,28 @@ public class Agent_TimedCB extends SimulatedAgent {
         int minExpiredBlock = Integer.MAX_VALUE;
         int [] BM;
         int [] LCB;
-   //     char [] [] BM_Matrix;
         Consensus [] consensusArray;
         int [] scheduler;
-        int [] ultimaMsgTimeStamp;
-        Content_Acknowledge [] acks;
         int lastBlock;
         java.util.TreeMap blocks;
         java.util.ArrayList msgBuffer;
         java.util.ArrayList unstableMsgBuffer;
         java.util.ArrayList expiredBlocks;
-        java.util.ArrayList unstableSentMsgs;
-        java.util.ArrayList allUnstableMsgs;
         java.util.TreeMap schedule;
         IntegerSet proposedView;
                 
         IntegerSet down;
         IntegerSet live;
         IntegerSet uncertain;
-        IntegerSet suspected;
         IntegerSet view;
+        Content_Acknowledge [] acks;
                 
         boolean blockingDelivery;
         boolean consensus;
         
         Randomize r;
         
-        public Agent_TimedCB() {
+        public Agent_AdaptConsensus() {
         super();
         }
         
@@ -86,6 +82,7 @@ public class Agent_TimedCB extends SimulatedAgent {
             else if (verAgenda(t)<B) {
                 schedule.remove(t);
                 schedule.put(t, B);
+                
             }
         }
         
@@ -98,13 +95,10 @@ public class Agent_TimedCB extends SimulatedAgent {
             logicalClock = 0;
             BM = new int[getInfra().nprocess];
             LCB = new int[getInfra().nprocess];
-            ultimaMsgTimeStamp = new int[getInfra().nprocess];
             payloadSize = 0;
-            acks = new Content_Acknowledge[getInfra().nprocess];
             
             r = new Randomize(this.getAgentID());
             scheduler = new int[finalTime*4];
- //           BM_Matrix = new char[controle.n][controle.tempofinal*2];
             for (int j = 0;j<scheduler.length ;j++) {
                     scheduler[j]=-1;
             }   
@@ -119,7 +113,6 @@ public class Agent_TimedCB extends SimulatedAgent {
             unstableMsgBuffer =  new java.util.ArrayList();
             blocks = new java.util.TreeMap();
             expiredBlocks = new java.util.ArrayList();
-            unstableSentMsgs = new java.util.ArrayList();
             
             /*
              *  Ultimo bloco completo e ultimo tempo de envio
@@ -141,19 +134,15 @@ public class Agent_TimedCB extends SimulatedAgent {
             down = new IntegerSet();
             live = new IntegerSet();
             uncertain = new IntegerSet();
-            suspected = new IntegerSet();
             view = new IntegerSet();
             
             proposedView = new IntegerSet();
             
             initializeSets();
-            
-            // Mensagens instáveis que serão usadas no consenso
-            allUnstableMsgs =  new java.util.ArrayList();
-            
+                       
             // Consensos que podem ser mantidos por bloco
             consensusArray = new Consensus[finalTime*2];
-            
+            acks = new Content_Acknowledge[getInfra().nprocess];
             // Inicia matriz de blocos e matriz de Last Complete Blocks
             for (int i = 0;i<getInfra().nprocess;i++) {
                 BM[i]=-1;
@@ -162,26 +151,6 @@ public class Agent_TimedCB extends SimulatedAgent {
             }
             
         }
-
-//        public int estimaTS() {
-/*            int ts_atual  = ts/2;
-            int alpha  = (1 - 1/40);
-            int beta = 1 - alpha;
-            double m_p = .1;
-            int TC = (int) ((ts +2 *DELTA )* (1+controle.ro*controle.maxro));
-            int Ks = TC;
-            int errorold = 0;
-            int Kp = (int) ( ( alpha - Math.exp(-4/TC) ) / (beta * delta )   );
-            int Kd = (int) (  ( Math.exp(-8/TC) + Math.exp(-4/TC)* Math.cos( (4*Math.PI*Math.log(Math.E)) / (TC) )   - (2*alpha + 1)     ) / (beta * delta )   );
-            int N = estimaN();
-
-            return ts;*/
-//            return ts;
-//        }
-
-//        public int estimaN() {
-//            return 0;
-//        };
 
         public void initializeSets() {
             /*
@@ -302,25 +271,68 @@ public class Agent_TimedCB extends SimulatedAgent {
                 }
         }
        
-        
+    int consensusNumber = 0;
+    final int CONSENSUS_MAX = 10000;
+    int timeout=0;
+    int proposedValueConsensus[] = new int[CONSENSUS_MAX];
+    int decidedValueConsensus[] = new int[CONSENSUS_MAX];
+    long startConsensus[] = new long[CONSENSUS_MAX];
+    long finalConsensus[] = new long[CONSENSUS_MAX];
+    
+           
     @Override
         public void execute() {
             long clock = getInfra().clock.value();
-            double x1;
             
-            if (prob==0.0) {
-                x1 = r.uniform(minProb, maxProb);
-            } else x1 = prob;
+            /*
+             *  execute usa o timedCB apenas para poder 
+             *  implementar o detector de defeitos
+             *  por simplificacao, o ID=0 gera os blocos novos
+             *  e os demais respondem por meio do time-silence
+             */
+
+            /*  Falta implantar inicio e fim do consenso
+             * 
+             */
             
-            if ( (r.uniform() <= x1)  ) {
+            
+            if (this.getAgentID()==1) {
+                if (proposedValueConsensus[consensusNumber]==0) {
+                    proposedValueConsensus[consensusNumber] = this.getAgentID();
+                    sendGroupMsg(clock, CONSENSUS_REQUEST, 
+                            new Integer(proposedValueConsensus[consensusNumber]),
+                                consensusNumber, true);
+                    startConsensus[consensusNumber] = clock;
+                    
+                    }
+                 /*       ((cont==getInfra().getNumberOfProcess()) || (getInfra().clock.value()  - timeout > DELTA) ) && (sequencia<TOTAL)) {
+                    //System.out.println("Enviando em "+getInfra().clock.value());
+                    sequencia++;
+                    sendGroupMsg(APP, "stuff", sequencia, true);
+                    timeout = getInfra().clock.value() + DELTA;
+                    cont=0;*/
+                }   
+            
+            
+            
+            //System.out.println("myID"+this.getAgentID());
+            if (this.getAgentID()==1) {
 
-                logicalClock ++;        // Ajusta o relógio lógico
-                //LastTimeSent = clock;   // Registra clock do ultimo envio
-                SENT = logicalClock;    // Registra numero do bloco do ultimo envio
-                sendGroupMsg(clock, TIMEDCB_APP, new Content_TimedCB("payload", LCB[getAgentID()], acks, payloadSize), logicalClock, true );
-                blockRegister(logicalClock, getAgentID(), clock);
-            }
-
+                if (getInfra().clock.value()  - SENT > 4*DELTA) {
+                    /*
+                    System.out.println("enviando...");
+                    System.out.println("SENT="+ SENT);
+                    System.out.print("DIFF="+ (getInfra().clock.value()  - SENT));
+                    System.out.println("LIMITE="+4*DELTA);*/
+                    logicalClock ++;
+                    SENT = logicalClock;
+                    sendGroupMsg(clock, TIMEDCB_APP, 
+                            new Content_TimedCB("payload", LCB[getAgentID()], 
+                                acks, payloadSize), 
+                                    logicalClock, true );
+                    blockRegister(logicalClock, getAgentID(), clock);}
+                }
+                
             /*
              *  Se há silêncio, invoca o mecanismo de time-silence
              *  o mecanismo é invocado mesmo sem blocos completos?
@@ -335,52 +347,64 @@ public class Agent_TimedCB extends SimulatedAgent {
 
                         sendGroupMsg(clock, TIMEDCB_TS, new Content_TimedCB("time-silent", LCB[getAgentID()], acks), logicalClock );
                         blockRegister(logicalClock, getAgentID(), clock);
+                        
+                        boolean isTimely=false;
+                        for (int j=0; j<getInfra().nprocess;j++){
+                            if (view.exists(j)) {
+                                if (getScenario().
+                                    getContainer().
+                                        getNetwork().
+                                            informChannel( (int) this.getAgentID(), j) 
+                                                instanceof
+                                                    br.ufba.lasid.jds.prototyping.hddss.ChannelDeterministic) {
+                                    isTimely=true;
+                                }
+                            }
+                        }
+                        if (isTimely == false) {
+                            if (live.exists((int) this.getAgentID())) {
+                                // MUDA O PROCESSO PARA UNCERTAIN
+                                live.remove((int) this.getAgentID());
+                                uncertain.add((int) this.getAgentID());
+                                this.sendGroupMsg(clock, UNCERTAIN, (int) this.getAgentID(), 0, false);                                
+                            }
+                        }
+                
+                        
+                        
                 }
             }
-            
-            /*
-             *  Verifica se há bloco expirado
-             *  Se houver envia CHANGE VIEW REQUEST
-             *  atualiza down, live e suspected
-             *
-            if (verAgenda(clock) != -1) {
-                 if (obtemMinimo() < verAgenda(clock) ) {
-                    for (int i = obtemMinimo()+1; i<=verAgenda(clock) ;i++) {
-                        debug("p"+Integer.toString(ID)+": timeout nic_in block "+Integer.toString(i) + " nic_in "+Integer.toString(clock));
-                        enviaMensagemGrupo(clock, CHANGE_VIEW_REQUEST, Integer.toString(i), LogicalClock);
-                        informaBlocoExpirado(i);
-                        ConjuntoInteiro x = retornaExpirados(i);
-
-                        down.adiciona(live.interseccao(x));
-                        live.remove(x);
-                        suspected.limpa();
-                        suspected.adiciona(uncertain.interseccao(x));
-                    }
-
-                 }
-            }*/
-            
+                       
             if (scheduler[(int) clock] != -1) {
                  if (getMin() < scheduler[(int) clock]) {
                     for (int i = getMin()+1; i<=scheduler[(int) clock];i++) {
                         //infra.debug("p"+Integer.toString(ID)+": timeout in block "+Integer.toString(i) + " in "+Integer.toString(clock));
                         notifyExpiredBlocks(i);
                         IntegerSet x = retornaExpirados(i);
-                        if (!blockingDelivery) {
-                            sendGroupMsg(clock, CHANGE_VIEW_REQUEST, Integer.toString(i), logicalClock);
-                            blockingDelivery=true;
+                        int vetor[] = x.toVector();
+                        for (int j=0;j<vetor.length;j++) {
+                            
+                            if (getScenario().
+                                   getContainer().
+                                      getNetwork().
+                                         informChannel( (int) this.getAgentID(), j) 
+                                            instanceof
+                                               br.ufba.lasid.jds.prototyping.hddss.ChannelDeterministic) {
+                                // RETIRA O PROCESSO DE LIVE E PASSA PARA DOWN (CERTEZA NA FALHA)
+                                if ( live.exists(j) ) {
+                                    down.add(j);
+                                    live.remove(j);
+                                    view.remove(j);
+                                    this.sendGroupMsg(clock, DOWN, j, 0, false);
+                                }
+                                
+                                // INCLUIR INFORMAR AOS DEMAIS DA FALHA
+                                // INCLUIR INFORMAR AOS DEMAIS QUANDO UM PROCESSO SE TORNA UNCERTAIN
+                            }
                         }
-                        down.add(live.intersection(x));
-                        live.remove(x);
-                        suspected.clean();
-                        suspected.add(uncertain.intersection(x));
                     }
-                    //if (!bloquearEntrega)
-                    //enviaMensagemGrupo(clock, CHANGE_VIEW_REQUEST, Integer.toString(agendador[clock]), LogicalClock);
-
                  }
             }
-            //alterarAgenda(clock-1, -1);
         }
         
         /*
@@ -439,20 +463,7 @@ public class Agent_TimedCB extends SimulatedAgent {
         }
         return min;
      }
-     
-     
-     /*
-     public int obtemMaximo() {
-        int maximo = Integer.MIN_VALUE;
-        for (int i=0; i<controle.n;i++){
-            if (visao.existe(i))
-                if (BM[i] > maximo)
-                    maximo = BM[i];
-        }
-        return maximo;
-     }
-      */
-     
+         
      public int getStableMin() {
         int min = Integer.MAX_VALUE;
         for (int i=0; i<getInfra().nprocess;i++){
@@ -461,17 +472,6 @@ public class Agent_TimedCB extends SimulatedAgent {
                     min = LCB[i];
         }
         return min;
-     }
-     
-     /*
-      *  Ajusta a matriz de blocos com o resultado do consenso
-      */
-     public void informaBlocoPosConsenso(int x) {
-        for (int i=0; i<getInfra().nprocess;i++){
-            if (view.exists(i))
-                if (BM[i] < x)
-                    BM[i]=x;
-        }
      }
      
      /*
@@ -581,16 +581,28 @@ public class Agent_TimedCB extends SimulatedAgent {
         //infra.debug("p"+ID+" delivers "+cont+" msgs of block "+min);
     }
         
-        /* 
-         *   Este evento pode ser sobrecarregado pela ação específica 
-         *   do protocolo, execute a recepção de mensagens
-         */
         public void receive(Message msg) {
 
             Content_Unstable uC;
             Consensus c;
+            int j;
             long clock = getInfra().clock.value();
             switch (msg.type) {
+                case DOWN:
+                    j = ((Integer) msg.getContent()).intValue();
+                    if ( live.exists(j) ) {
+                                    down.add(j);
+                                    live.remove(j);
+                                    view.remove(j);
+                    }
+                    break;
+                case UNCERTAIN:
+                    j = ((Integer) msg.getContent()).intValue();
+                    if ( live.exists(j) ) {
+                                    uncertain.add(j);
+                                    live.remove(j);
+                    }                    
+                    break;                                
                 case TIMEDCB_APP:                    
                 case TIMEDCB_TS:
                     if (msg.logicalClock > BM[msg.sender]) {
@@ -617,44 +629,17 @@ public class Agent_TimedCB extends SimulatedAgent {
                     //infra.debug(output);
 
                     break;
-                case CHANGE_VIEW_REQUEST:
-                    if ( unstableSentMsgs.contains(msg.content) )
-                            break;
-                    unstableSentMsgs.add(msg.content);
-                    blockingDelivery = true;
-                    int b = Integer.parseInt((String) msg.content);
-                    uC = new Content_Unstable(b, unstableMsgBuffer, msg.sender, down);
-                    sendGroupMsg(clock, UNSTABLE, uC, logicalClock);
-                    break;
-                case UNSTABLE:
-                    if (!consensus) {
-                        uC = (Content_Unstable) msg.content;
-                        // DOWN = DOWN U DOWN PERCEBIDO!
-                        down.add(uC.down);
-                        addView(uC);
-                        if (gotUnstableMsgs() ) {
-                            consensus = true;
-                            down.add(live);
-                            live.add(down);
-                            down.remove(proposedView);
-                            uC.down.clean();
-                            uC.down.add(down);
-                            uC.visaoProposta.clean();
-                            uC.visaoProposta.add(this.proposedView);
-
-                            consensusArray[uC.bloco] = startConsensus(uC);
-                            
-                            if (consensusArray[uC.bloco].getRound()% (getInfra().nprocess)  == getAgentID())
-                                sendGroupMsg(clock, CONSENSUS_P1,consensusArray[uC.bloco], logicalClock);
-                        
-                        }
+                case CONSENSUS_REQUEST:
+                    consensusArray[msg.logicalClock] = startConsensus(msg);
+                    if (consensusArray[msg.logicalClock].getRound()%(getInfra().nprocess)  == getAgentID()) {                               
+                        sendGroupMsg(clock, CONSENSUS_P1,consensusArray[msg.logicalClock], logicalClock);
                     }
                     break;
                 case CONSENSUS_P1:
                     c = (Consensus) msg.content;
                     // Mensagem do mesmo round
                     if (consensusArray[c.number]==null)
-                        consensusArray[c.number] = startConsensus( (Content_Unstable) c.estimated );
+                        consensusArray[c.number] = c;
                     
                     if (c.getRound()==(consensusArray[c.number].getRound())) {
                         if (msg.sender == c.getRound() % getInfra().nprocess) {
@@ -680,17 +665,17 @@ public class Agent_TimedCB extends SimulatedAgent {
                      *        conjunto de mensagens recebidas
                      */
                     if (consensusArray[c.number]==null)
-                        consensusArray[c.number] = startConsensus( (Content_Unstable) c.estimated );
+                        consensusArray[c.number] = c;
                     
                     if (!consensusArray[c.number].gotQuorum) {
                         consensusArray[c.number].quorum.add(msg.sender);
                         // adicionaREC(c.numero, (UnstableContent) c.estimado);
-                        if ( ((Content_Unstable) c.estimated).tamanho() != 0)
+                        if ( (consensusArray[c.number].rec == null) && (c!=null))
                                 consensusArray[c.number].rec = c.estimated;
                         if (gotConsensusQuorum(c.number)) {
-                            if ( ((Content_Unstable) c.estimated).tamanho() == 0)
+                            if ( c.estimated == null)
                                 consensusArray[c.number].noneREC = true;
-                            if ( ( (Content_Unstable) consensusArray[c.number].rec).conteudo.size() == 0)
+                            if ( consensusArray[c.number].rec == null)
                             {
                                 if (consensusArray[c.number].noneREC) {
                                 /*      - se sim, se a decisão é somente {_|_} 
@@ -726,35 +711,26 @@ public class Agent_TimedCB extends SimulatedAgent {
                     if (consensusArray[c.number].active) {
                         consensusArray[c.number].active = false;
                         consensusArray[c.number].estimated = c.rec;
-                        uC  =  (Content_Unstable) consensusArray[c.number].estimated;
-                        java.util.ArrayList x = (java.util.ArrayList) uC.conteudo;
-                        for (int i=0;i<x.size();i++) {
-                            Message m = (Message) x.get(i);
-                            if (m.logicalClock > BM[m.sender])
-                                BM[m.sender] = m.logicalClock;
-                            msgBuffer.add(m);
-                            blockRegister(m.logicalClock, m.sender, m.physicalClock);
+                        decidedValueConsensus[c.number] = (Integer) c.rec;
+                        if (consensusNumber == c.number) {
+                            finalConsensus[consensusNumber] = clock;
+                            if (this.getAgentID()==1) {
+                                this.getReporter().stats("consensus delay", finalConsensus[consensusNumber] - startConsensus[consensusNumber]);
+                                this.getReporter().count("consensus total number");
+                            }
+                            consensusNumber++;
+
                         }
-                        informaBlocoPosConsenso(c.number);
-                        blockingDelivery = false;
-                        checkCompletion();
-                        down.add(live);
-                        live = live.intersection(uC.visaoProposta);
-                        uncertain = uncertain.intersection(uC.visaoProposta);
-                        down.remove(uC.visaoProposta);
-                        suspected.clean();
-                        view.clean();
-                        view.add(proposedView);
-                        System.out.println("Consenso Obtido em "+clock);
-                        System.out.println("Visao em p"+getAgentID());
-                        for (int i=0; i<getInfra().nprocess; i++)
-                            if (view.exists(i) )
-                                System.out.print(i+" \t");
+                        /*
+                        System.out.println("Consenso " +c.number +" Obtido em "+clock);
+                        System.out.println("valor = "+decidedValueConsensus[c.number]);
                         System.out.println("");
+                        */ 
+                        }
                     }
             }
             
-        }
+
         
         /*
          *  Altera o coordenador do consenso
@@ -770,8 +746,8 @@ public class Agent_TimedCB extends SimulatedAgent {
         /*
          *  Cria um novo consenso
          */
-        Consensus startConsensus(Content_Unstable uC) {
-            Consensus c = new Consensus(uC.bloco,0,uC);
+        Consensus startConsensus(Message m) {
+            Consensus c = new Consensus(m.logicalClock,0,m.content);
             return c;
         }
 
@@ -782,57 +758,6 @@ public class Agent_TimedCB extends SimulatedAgent {
                 return b;
         }
         
-        /* 
-         *  Cria uma nova visão com os processos que participaram
-         */
-        void addView(Content_Unstable uC) {
-            if (!proposedView.exists(uC.id)) {
-                proposedView.add(uC.id);
-                //infra.debug(proposedView.toString());
-                for (int i = 0; i < uC.conteudo.size(); i++ )
-                    if (!allUnstableMsgs.contains(uC.conteudo.get(i)))
-                        allUnstableMsgs.add(uC.conteudo.get(i));
-            }
-        }
-        
-        /*
-         *   Adiciona aos valores recebidos na construção do consenso
-         */
-        void addRec(int number, Content_Unstable uC) {
-            for (int i = 0; i < uC.conteudo.size(); i++ )
-                    if (! ( ((java.util.ArrayList) consensusArray[number].rec).contains(uC.conteudo.get(i))  )  )
-                        ((java.util.ArrayList) consensusArray[number].rec).add(uC.conteudo.get(i));
-        }
-        
-        /*
-         *   Verifica se obteve todas as UnstableMensagens
-         */
-        boolean gotUnstableMsgs() {
-            boolean liveOk;
-            boolean uncertainOk;
-            
-            liveOk = (live.size()==live.intersection(proposedView).size());
-            
-            //infra.debug("live ok? "+liveOk);
-            //infra.debug("tam live="+live.size());
-            //infra.debug("tam live inter View="+live.intersection(proposedView).size());
-            //infra.debug("live = "+live);
-            //infra.debug("view = "+proposedView);
-            
-            int contaUncertain=proposedView.intersection(uncertain).size();
-
-            if (uncertain.size() >0) {
-                float perc = contaUncertain / uncertain.size();
-                if (perc>.5) {uncertainOk = true;} else {uncertainOk = false;};
-            } else 
-                uncertainOk = true;
-            
-            boolean ret = (liveOk&&uncertainOk);
-            //infra.debug("ok? "+ ret);
-            //infra.debug("end check");
-            return (liveOk && uncertainOk);
-        }
-
         /*
          *   Verifica se obteve todas as UnstableMensagens
          */
