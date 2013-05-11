@@ -105,7 +105,7 @@ public class IntegerSet  implements Comparable<IntegerSet>, Serializable {
         return v;
     }
     
-    int size () {
+    public int size () {
         return  c.size();
     }
 
