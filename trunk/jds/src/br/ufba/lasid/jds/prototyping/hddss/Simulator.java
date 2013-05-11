@@ -396,12 +396,13 @@ public class Simulator  extends Thread implements RuntimeSupport
         
         Configurations configGeral = getConfig(args);
         String WorkDir = configGeral.getString("workdir", ".");
-        System.out.println("Configuring: ");
+        System.out.println("Configuring...");
         System.out.println(WorkDir);
         String modo = configGeral.getString("mode");
         
         String[] classNames =
             configGeral.getStringArray("scenes");
+        System.out.println(classNames.length);
             if (classNames == null) {
                 classNames = new String[0];
             }
@@ -419,7 +420,7 @@ public class Simulator  extends Thread implements RuntimeSupport
         } 
         else {
             Simulator simulator;
-            System.out.println("n = "+classNames.length);
+            System.out.println("num = "+classNames.length);
             numInstances = classNames.length;
             numFinishedInstances = 0;
             for (int i = 0; i < classNames.length; i++) {

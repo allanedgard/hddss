@@ -53,10 +53,10 @@ public class Agent_AdaptConsensus extends SimulatedAgent {
         java.util.TreeMap schedule;
         IntegerSet proposedView;
                 
-        IntegerSet down;
-        IntegerSet live;
-        IntegerSet uncertain;
-        IntegerSet view;
+        public IntegerSet down;
+        public IntegerSet live;
+        public IntegerSet uncertain;
+        public IntegerSet view;
         Content_Acknowledge [] acks;
                 
         boolean blockingDelivery;
@@ -295,7 +295,7 @@ public class Agent_AdaptConsensus extends SimulatedAgent {
              * 
              */
             
-            
+            /* BLOQUEIA PRA TESTE!!
             if (this.getAgentID()==1) {
                 if (proposedValueConsensus[consensusNumber]==0) {
                     proposedValueConsensus[consensusNumber] = this.getAgentID();
@@ -305,14 +305,9 @@ public class Agent_AdaptConsensus extends SimulatedAgent {
                     startConsensus[consensusNumber] = clock;
                     
                     }
-                 /*       ((cont==getInfra().getNumberOfProcess()) || (getInfra().clock.value()  - timeout > DELTA) ) && (sequencia<TOTAL)) {
-                    //System.out.println("Enviando em "+getInfra().clock.value());
-                    sequencia++;
-                    sendGroupMsg(APP, "stuff", sequencia, true);
-                    timeout = getInfra().clock.value() + DELTA;
-                    cont=0;*/
-                }   
-            
+                
+               }   
+            */
             
             
             //System.out.println("myID"+this.getAgentID());
@@ -347,7 +342,7 @@ public class Agent_AdaptConsensus extends SimulatedAgent {
 
                         sendGroupMsg(clock, TIMEDCB_TS, new Content_TimedCB("time-silent", LCB[getAgentID()], acks), logicalClock );
                         blockRegister(logicalClock, getAgentID(), clock);
-                        
+                        //System.out.println("falha");
                         boolean isTimely=false;
                         for (int j=0; j<getInfra().nprocess;j++){
                             if (view.exists(j)) {
@@ -357,17 +352,20 @@ public class Agent_AdaptConsensus extends SimulatedAgent {
                                             informChannel( (int) this.getAgentID(), j) 
                                                 instanceof
                                                     br.ufba.lasid.jds.prototyping.hddss.ChannelDeterministic) {
+                                    //System.out.println("canal deterministico "+(int) this.getAgentID()+" "+j);
                                     isTimely=true;
                                 }
                             }
                         }
+                        //System.out.println(isTimely);
                         if (isTimely == false) {
-                            if (live.exists((int) this.getAgentID())) {
+                            //if (live.exists((int) this.getAgentID())) {
                                 // MUDA O PROCESSO PARA UNCERTAIN
+                                //System.out.println("uncertain "+(int) this.getAgentID());
                                 live.remove((int) this.getAgentID());
                                 uncertain.add((int) this.getAgentID());
                                 this.sendGroupMsg(clock, UNCERTAIN, (int) this.getAgentID(), 0, false);                                
-                            }
+                            //}
                         }
                 
                         
@@ -715,6 +713,7 @@ public class Agent_AdaptConsensus extends SimulatedAgent {
                         if (consensusNumber == c.number) {
                             finalConsensus[consensusNumber] = clock;
                             if (this.getAgentID()==1) {
+                                System.out.println("consenso "+consensusNumber+ " at "+clock);
                                 this.getReporter().stats("consensus delay", finalConsensus[consensusNumber] - startConsensus[consensusNumber]);
                                 this.getReporter().count("consensus total number");
                             }

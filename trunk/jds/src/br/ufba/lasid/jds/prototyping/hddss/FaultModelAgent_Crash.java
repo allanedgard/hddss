@@ -36,7 +36,7 @@ public class FaultModelAgent_Crash extends FaultModelAgent {
             if (!parado) {
                 infra.agent.setDone(true);
                 
-                if ( (r.uniform() <= prob)&& (infra.clock.value() >= 1000) )  {
+                if ( (r.uniform() <= prob)&& (infra.clock.value() >= 25) )  {
                     this.crash();
                     System.out.println("p" +infra.agent.getAgentID()+": falhou por crash em "+infra.clock.value());
                 }
