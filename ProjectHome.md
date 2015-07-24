@@ -1,0 +1,1 @@
+This project is a framework that allows to evaluate distributed algorithms through simulation.

@@ -1,0 +1,8 @@
+# Introduction #
+
+This is the very first page for Hybrid and Dynamic Distributed Systems Simulator. Here we will publish as soon as possible how to use our framework and how to explore the code and change (if necessary) it.
+
+
+# Details #
+
+Follow there is the details about implementation.
