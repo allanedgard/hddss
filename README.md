@@ -1,4 +1,5 @@
-# hddss
+# HDDSS - Hybrid and Dynamic Distributed Systems Simulator
+
 This project is a framework that allows to evaluate distributed algorithms through simulation.
 
 INSTALL GUIDE
