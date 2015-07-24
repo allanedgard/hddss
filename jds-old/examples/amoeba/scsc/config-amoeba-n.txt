@@ -1,0 +1,7 @@
+workdir = /repositorio/hddss/jds/examples/amoeba/scsc
+scenes = amoeba-n02.txt,amoeba-n03.txt,amoeba-n04.txt,amoeba-n05.txt,amoeba-n06.txt,amoeba-n07.txt,amoeba-n08.txt,amoeba-n09.txt,amoeba-n10.txt,amoeba-n11.txt,amoeba-n12.txt,amoeba-n13.txt,amoeba-n14.txt,amoeba-n15.txt,amoeba-n16.txt
+
+;, amoeba-n4.txt
+
+mode = simulation
+;amoeba-80-10-HIGH.txt,amoeba-NP-10-HIGH.txt,amoeba-10-10-HIGH.txt, amoeba-10-10-LOW.txt,amoeba-80-10-LOW.txt,amoeba-NP-10-LOW.txt 

@@ -1,0 +1,6 @@
+workdir = examples/amoeba/
+scenes = protocoloA-n2.txt
+
+;,protocoloA-n3.txt,protocoloA-n4.txt,protocoloA-n5.txt,protocoloA-n6.txt,protocoloA-n7.txt,protocoloA-n8.txt,protocoloA-n9.txt,protocoloA-n10.txt,protocoloA-n11.txt,protocoloA-n12.txt,protocoloA-n13.txt,protocoloA-n14.txt,protocoloA-n15.txt,protocoloA-n16.txt,protocoloA-n17.txt,protocoloA-n18.txt,protocoloA-n19.txt,protocoloA-n2.txt,protocoloA-n2.txt,protocoloA-n2.txt,protocoloA-n2.txt,protocoloA-n10.txt,protocoloA-n20.txt,protocoloA-n30.txt,protocoloA-n40.txt,protocoloA-n50.txt,protocoloA-n60.txt,protocoloA-n70.txt,protocoloA-n80.txt,protocoloA-n90.txt,protocoloA-n100.txt,protocoloA-n110.txt,protocoloA-n120.txt,protocoloA-n130.txt,protocoloA-n140.txt,protocoloA-n150.txt,protocoloA-n160.txt,protocoloA-n170.txt,protocoloA-n180.txt,protocoloA-n190.txt,protocoloA-n200.txt
+mode = simulation
+;amoeba-80-10-HIGH.txt,amoeba-NP-10-HIGH.txt,amoeba-10-10-HIGH.txt, amoeba-10-10-LOW.txt,amoeba-80-10-LOW.txt,amoeba-NP-10-LOW.txt 

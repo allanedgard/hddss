@@ -1,5 +1,5 @@
-FinalTime = 10000
-NumberOfAgents = 10
+FinalTime = 40000
+NumberOfAgents = 120
 MaximumDeviation = 4
 Mode = clock
 Debug = false
@@ -39,11 +39,11 @@ channel[1].Delay = 2
 network = br.ufba.lasid.jds.prototyping.hddss.NetworkDeterministic
 network.ProcessingTime = .001
 
-scenario = br.ufba.lasid.jds.prototyping.hddss.Scenario_ProtocoloHibridoDinamico
+scenario = br.ufba.lasid.jds.prototyping.hddss.Scenario_ProtocoloHibridoDinamico1
 scenario.DeterministicChannelType = 1
 scenario.ProbabilisticChannelType = 0
-scenario.InitialAlt = 7
-scenario.EndingAlt = 9
+scenario.InitialAlt = 0
+scenario.EndingAlt = 0
 
 
 /* transferRate in  bps  (e.g. 10Mbps is equal to 10000000 bps, if simulation time in miliseconds then use 10Mbps / 1000  = 10Kb/ms*/

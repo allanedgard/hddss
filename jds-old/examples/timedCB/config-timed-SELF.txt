@@ -1,0 +1,5 @@
+workdir = /repositorio/hddss/jds/examples/timedCB/
+scenes = timed-SELF-20-VARYING.txt
+mode = simulation
+
+//scenarios = timed-SELF-40-HIGH.txt, timed-SELF-40-MEDIUM.txt, timed-SELF-40-LOW.txt, timed-SELF-40-VARYING.txt, timed-SELF-30-HIGH.txt, timed-SELF-30-MEDIUM.txt, timed-SELF-30-LOW.txt, timed-SELF-30-VARYING.txt, timed-SELF-20-HIGH.txt, timed-SELF-20-MEDIUM.txt, timed-SELF-20-LOW.txt, timed-SELF-20-VARYING.txt, timed-SELF-10-HIGH.txt, timed-SELF-10-MEDIUM.txt, timed-SELF-10-LOW.txt, timed-SELF-10-VARYING.txt

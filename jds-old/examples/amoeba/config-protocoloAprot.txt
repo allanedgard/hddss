@@ -1,0 +1,5 @@
+workdir = /repositorio/hddss/jds/examples/amoeba/
+scenes = protocoloA-n2.txt
+mode = prototype
+ID=1
+;amoeba-80-10-HIGH.txt,amoeba-NP-10-HIGH.txt,amoeba-10-10-HIGH.txt, amoeba-10-10-LOW.txt,amoeba-80-10-LOW.txt,amoeba-NP-10-LOW.txt 
