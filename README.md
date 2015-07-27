@@ -127,7 +127,11 @@ A full reference of HDDSS and a discussion on distributed systems simulation may
 REFERENCES:
 
 [1] Talking r through Java. Available at http://binfalse.de/2011/02/20/talking-r-through-java/ (A useful reference for rJava integration on Linux)
+
 [2] rJava - Low-level R to Java interface. Available at https://www.rforge.net/rJava/index.html
+
 [3] The R Project for Statistical Computing. Available at https://www.r-project.org/
+
 [4] FREITAS, A. E. S. "Simulação de Sistemas Distribuídos Híbridos e Dinâmicos". PhD Thesis. Computer Science Department. Federal University of Bahia. 2013.
+
 [5] FREITAS, A. E. S. and MACEDO, R. J. A. "A performance evaluation tool for hybrid and dynamic distributed systems". Operating Systems Review, v. 48, p. 11-18, 2014. Available at http://dx.doi.org/10.1145/2626401.2626404
