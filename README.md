@@ -122,7 +122,7 @@ You may use index (from 0 to n-1) to define different types of communication cha
 	channel[1]= br.ufba.lasid.jds.prototyping.hddss.ChannelExponential
 	channel[1].Mean = 10 
 
-A full reference of HDDSS and a discussion on distributed systems simulation may be found in this PhD Thesis [4] (Portuguese only) or on that paper [5].
+A full reference of HDDSS and a discussion on distributed systems simulation may be found in this PhD Thesis [4] -- Portuguese only --, or on that paper [5].
 
 REFERENCES:
 
