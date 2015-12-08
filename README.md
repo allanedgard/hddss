@@ -119,10 +119,13 @@ You may use index (from 0 to n-1) to define different types of communication cha
 	channel[0].DeltaMinimo = 5
 	channel[0].DeltaMaximo = 10
 
-	channel[1]= br.ufba.lasid.jds.prototyping.hddss.ChannelExponential
-	channel[1].Mean = 10 
+	channel[1]= br.ufba.lasid.jds.prototyping.hddss.ChannelProbabilistic
+	channel[1].MinValue = 1
+	channel[1].Distribution = normal(10.0,5.0)
 
 A full reference of HDDSS and a discussion on distributed systems simulation may be found in this PhD Thesis [4] - Portuguese only -, or in this paper [5].
+
+KNOWN BUGS: setting true to FormattedReport option on a simulation file.
 
 REFERENCES:
 
