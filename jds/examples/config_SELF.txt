@@ -1,0 +1,3 @@
+workdir = ./examples/
+mode = simulation
+scenes = rplSELF-100.txt

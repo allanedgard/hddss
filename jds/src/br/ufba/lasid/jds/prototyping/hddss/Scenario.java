@@ -15,12 +15,14 @@ import br.ufba.lasid.jds.prototyping.hddss.report.Reporter;
 public class Scenario {
 
     public Agent p[];
-    Simulator container;
+    public Simulator container;
 
     static final String TAG = "scenario";
     public Reporter reporter;
     public AbstractClock globalClock;
-    Scenario() {
+    
+    
+    public Scenario() {
         reporter = new Reporter();
     }
 

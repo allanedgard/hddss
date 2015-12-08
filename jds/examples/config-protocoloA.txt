@@ -1,0 +1,4 @@
+workdir = examples/
+scenes = protocoloA-n2.txt
+mode = simulation
+

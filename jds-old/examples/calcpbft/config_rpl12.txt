@@ -1,2 +1,0 @@
-WorkDir = ./examples/calcpbft/
-cenarios = rpl12.txt

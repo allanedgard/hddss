@@ -1,3 +1,0 @@
-workdir = ./examples/calcpbft/
-mode = simulation
-scenes = replica1.txt

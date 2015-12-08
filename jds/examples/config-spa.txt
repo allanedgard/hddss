@@ -1,0 +1,4 @@
+workdir = examples/
+mode = simulation
+scenes = spa.txt
+

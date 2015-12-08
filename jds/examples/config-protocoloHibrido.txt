@@ -1,0 +1,3 @@
+workdir = examples/
+scenes = protocoloHibrido-n80.txt
+mode = simulation

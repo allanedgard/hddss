@@ -1,3 +1,0 @@
-workdir = /repositorio/hddss/jds/examples/amoeba/
-scenes = amoebaAC-80-10-HIGH.txt
-mode = simulation

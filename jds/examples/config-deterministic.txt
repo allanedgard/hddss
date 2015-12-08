@@ -1,0 +1,4 @@
+workdir = examples/
+scenes = deterministic-n2.txt
+mode = simulation
+

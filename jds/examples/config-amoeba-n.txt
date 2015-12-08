@@ -1,0 +1,4 @@
+workdir = examples/
+scenes = amoeba-n02.txt
+mode = simulation
+

@@ -20,7 +20,7 @@ public class Simulator  extends Thread implements RuntimeSupport
     String NAME;
     
     Scenario scenario;
-    Network network;
+    public Network network;
     static int numInstances =0;
     static int numFinishedInstances=0;
     boolean end;

@@ -20,9 +20,6 @@ public class Randomize {
     String funcao;
     Tracing trace;
     
-    /*
-     *  TRACING METHODS
-     */
     public Randomize() {
         z = new java.util.Random();
         next =0;
@@ -230,11 +227,6 @@ public class Randomize {
     }
    
     public double R(String funcao) {
-        /*
-        if (R == null)
-            R = new IntegrationR();
-        return R.evaluateDouble(funcao);
-        */
         double n;
         if (X == null)
             X = R1(funcao);
@@ -246,9 +238,7 @@ public class Randomize {
     }
 
     public double[] R1(String funcao) {
-        double [] x;/*
-        if (R == null)
-            R = IntegrationR.getInstance();*/
+        double [] x;
         x=IntegrationR.getInstance().evaluateDoubleArray(funcao);
         return x;
     }

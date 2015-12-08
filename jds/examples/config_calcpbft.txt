@@ -1,0 +1,3 @@
+workdir = examples/
+scenes = replica1.txt
+mode = simulation

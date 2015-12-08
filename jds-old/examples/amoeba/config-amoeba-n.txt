@@ -1,7 +1,0 @@
-workdir = /repositorio/hddss/jds/examples/amoeba/
-scenes = amoeba-n2.txt
-
-;, amoeba-n4.txt
-
-mode = simulation
-;amoeba-80-10-HIGH.txt,amoeba-NP-10-HIGH.txt,amoeba-10-10-HIGH.txt, amoeba-10-10-LOW.txt,amoeba-80-10-LOW.txt,amoeba-NP-10-LOW.txt 

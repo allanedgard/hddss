@@ -1,3 +1,0 @@
-WorkDir = ./examples/helloworldcs/
-
-cenarios = helloworldcs.txt

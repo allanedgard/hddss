@@ -1,2 +1,0 @@
-WorkDir = ./examples/calcpbft/
-cenarios = replica1.txt, replica2.txt
