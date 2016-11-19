@@ -49,11 +49,6 @@ II) On Windows
 	
 		(d) PATH to add R and rJava binaries, example: 	"<OLDPATH>;C:\Users\myUser\Documents\R\win-library\3.2\rJava\jri\i386;C:\Program Files\R\R-3.2.1\bin\i386"
 
-
-	export R_HOME=/usr/lib/R
-	export CLASSPATH=.:/usr/local/lib/R/site-library/rJava/jri
-	export LD_LIBRARY_PATH=/usr/local/lib/R/site-library/rJava/jri:/usr/lib/R/lib:/usr/lib
-
 5) Run a test simulation, from hddss base directory:
 
 	java -jar dist/jds.jar examples/config-timed-20.txt
@@ -68,34 +63,34 @@ mode = simulation  					--> simulation for a simulation or prototype for running
 
 2) Structure of a simulation file:
 
-FinalTime = 6000					--> time units of simulation
-NumberOfAgents = 3					--> number of agents running
-MaximumDeviation = 4					--> max deviation for clocks (that is \rho)
-Mode = clock						--> set to clock for clocks running according \rho 
-Debug = true						--> debugging or not (true or false)
-FormattedReport = false					--> presenting a human-readable report or a machine one (true or false)
+	FinalTime = 6000					--> time units of simulation
+	NumberOfAgents = 3					--> number of agents running
+	MaximumDeviation = 4					--> max deviation for clocks (that is \rho)
+	Mode = clock						--> set to clock for clocks running according \rho 
+	Debug = true						--> debugging or not (true or false)
+	FormattedReport = false					--> presenting a human-readable report or a machine one (true or false)
 
-clock = br.ufba.lasid.jds.prototyping.hddss.Clock_Virtual	--> class for clock
-clock.Mode = s							--> properties of that class
+	clock = br.ufba.lasid.jds.prototyping.hddss.Clock_Virtual	--> class for clock
+	clock.Mode = s							--> properties of that class
 
-cpu = br.ufba.lasid.jds.prototyping.hddss.LoadAwareCPU		--> class for processors
-cpu.ProcessingRate = 9446400 					--> properties of that class
-cpu.LoadCost = 0.000000001
+	cpu = br.ufba.lasid.jds.prototyping.hddss.LoadAwareCPU		--> class for processors
+	cpu.ProcessingRate = 9446400 					--> properties of that class
+	cpu.LoadCost = 0.000000001
 
-agent = br.ufba.lasid.jds.prototyping.hddss.Agent_AmoebaSequencer	--> class for agent
-agent.DeltaMax = 100							--> properties of that class
-agent.TS = 200
-agent.PacketGenerationProb = 0.15
+	agent = br.ufba.lasid.jds.prototyping.hddss.Agent_AmoebaSequencer	--> class for agent
+	agent.DeltaMax = 100							--> properties of that class
+	agent.TS = 200
+	agent.PacketGenerationProb = 0.15
 
-channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal		--> class for communication channels between agents
-channel.Mean = 10							--> properties of that class
-channel.MinDelay = 1
-channel.Std = 5
+	channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal		--> class for communication channels between agents
+	channel.Mean = 10							--> properties of that class
+	channel.MinDelay = 1
+	channel.Std = 5
 
-network = br.ufba.lasid.jds.prototyping.hddss.NetworkDeterministic	--> class for networking
-network.ProcessingTime = .001						--> properties of that class
-network.FIFO = true
-network.TripBalance = 0.5
+	network = br.ufba.lasid.jds.prototyping.hddss.NetworkDeterministic	--> class for networking
+	network.ProcessingTime = .001						--> properties of that class
+	network.FIFO = true
+	network.TripBalance = 0.5
 
 3) Useful notes
 
