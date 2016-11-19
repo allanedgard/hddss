@@ -57,9 +57,9 @@ III) Instalation Notes
 
 1) Structure of configuration file:
 
-workdir = /repositorio/hddss/jds/examples/amoeba/ 	--> it references to the working directory (that is, the folder where scenario files are)
-scenes = amoebaAC-80-10-HIGH.txt 			--> name of scenario files separated by commas
-mode = simulation  					--> simulation for a simulation or prototype for running at real environment (prototype is broken for now)
+	workdir = /repositorio/hddss/jds/examples/amoeba/ 	--> it references to the working directory (that is, the folder where scenario files are)
+	scenes = amoebaAC-80-10-HIGH.txt 			--> name of scenario files separated by commas
+	mode = simulation  					--> simulation for a simulation or prototype for running at real environment (prototype is broken for now)
 
 2) Structure of a simulation file:
 
