@@ -27,7 +27,7 @@ I) On Debian/Ubuntu Linux:
 
 5) Run a test simulation, from hddss base directory:
 
-	java -Djava.library.path=.:/usr/local/lib/R/site-library/rJava/jri -jar dist/jds.jar examples/timedCB/config-timed-20.txt
+	java -Djava.library.path=.:/usr/local/lib/R/site-library/rJava/jri -jar dist/jds.jar examples/config-timed-20.txt
 
 II) On Windows
 
@@ -56,7 +56,7 @@ II) On Windows
 
 5) Run a test simulation, from hddss base directory:
 
-	java -jar dist/jds.jar examples/timedCB/config-timed-20.txt
+	java -jar dist/jds.jar examples/config-timed-20.txt
 
 III) Instalation Notes
 
