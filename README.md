@@ -75,11 +75,10 @@
     <meta content="fc262a9f56a336b97fb32fae2cb215e4bdb58f77" name="form-nonce" />
 
     <meta http-equiv="x-pjax-version" content="bbcf531292370b32e4fed7e4a29fe988">
-    
-
-      
+          
   <meta name="description" content="hddss - This project is a framework that allows to evaluate distributed algorithms through simulation.">
   <meta name="go-import" content="github.com/allanedgard/hddss git https://github.com/allanedgard/hddss.git">
+	java -Djava.library.path=.:/usr/local/lib/R/site-library/rJava/jri -jar dist/jds.jar examples/config-timed-20.txt
 
   <meta content="13489238" name="octolytics-dimension-user_id" /><meta content="allanedgard" name="octolytics-dimension-user_login" /><meta content="39656099" name="octolytics-dimension-repository_id" /><meta content="allanedgard/hddss" name="octolytics-dimension-repository_nwo" /><meta content="true" name="octolytics-dimension-repository_public" /><meta content="false" name="octolytics-dimension-repository_is_fork" /><meta content="39656099" name="octolytics-dimension-repository_network_root_id" /><meta content="allanedgard/hddss" name="octolytics-dimension-repository_network_root_nwo" />
   <link href="https://github.com/allanedgard/hddss/commits/master.atom" rel="alternate" title="Recent Commits to hddss:master" type="application/atom+xml">
@@ -640,13 +639,13 @@
   <div id="readme" class="readme blob instapaper_body">
     <article class="markdown-body entry-content" itemprop="text"><h1><a id="user-content-hddss---hybrid-and-dynamic-distributed-systems-simulator" class="anchor" href="#hddss---hybrid-and-dynamic-distributed-systems-simulator" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>HDDSS - Hybrid and Dynamic Distributed Systems Simulator</h1>
 
-<p>This project is a framework that allows to evaluate distributed algorithms through simulation.</p>
+<p>That project is a framework that allows to evaluate distributed algorithms through simulation.</p>
 
 <p>INSTALL GUIDE</p>
 
 <p>I) On Debian/Ubuntu Linux:</p>
 
-<p>1) Install a JAVA environment :</p>
+<p>1) Install a JAVA environment:</p>
 
 <pre><code>sudo apt-get install openjdk-7-*
 sudo R CMD javareconf
@@ -662,6 +661,9 @@ sudo R CMD javareconf
 <p>4) Do some hacks to adjust environment variables (you should check the correct path to each case): </p>
 
 <pre><code>ln -s /usr/local/lib/R/site-library/rJava/jri/libjri.so /usr/local/lib/libjri.so
+5) Run a test simulation, from hddss base directory:
+
+	java -jar dist/jds.jar examples/config-timed-20.txt
 
 export R_HOME=/usr/lib/R
 export CLASSPATH=.:/usr/local/lib/R/site-library/rJava/jri
@@ -672,6 +674,9 @@ export LD_LIBRARY_PATH=/usr/local/lib/R/site-library/rJava/jri:/usr/lib/R/lib:/u
 
 <pre><code>java -Djava.library.path=.:/usr/local/lib/R/site-library/rJava/jri -jar dist/jds.jar examples/config-timed-20.txt
 </code></pre>
+	workdir = /repositorio/hddss/jds/examples/amoeba/ 	--> it references to the working directory (that is, the folder where scenario files are)
+	scenes = amoebaAC-80-10-HIGH.txt 			--> name of scenario files separated by commas
+	mode = simulation  					--> simulation for a simulation or prototype for running at real environment (prototype is broken for now)
 
 <p>II) On Windows</p>
 
@@ -780,6 +785,34 @@ channel[1].Distribution = normal(10.0,5.0)
 <p>[3] The R Project for Statistical Computing. Available at <a href="https://www.r-project.org/">https://www.r-project.org/</a></p>
 
 <p>[4] FREITAS, A. E. S. "Simulação de Sistemas Distribuídos Híbridos e Dinâmicos". PhD Thesis. Computer Science Department. Federal University of Bahia. 2013.</p>
+	FinalTime = 6000					--> time units of simulation
+	NumberOfAgents = 3					--> number of agents running
+	MaximumDeviation = 4					--> max deviation for clocks (that is \rho)
+	Mode = clock						--> set to clock for clocks running according \rho 
+	Debug = true						--> debugging or not (true or false)
+	FormattedReport = false					--> presenting a human-readable report or a machine one (true or false)
+
+	clock = br.ufba.lasid.jds.prototyping.hddss.Clock_Virtual	--> class for clock
+	clock.Mode = s							--> properties of that class
+
+	cpu = br.ufba.lasid.jds.prototyping.hddss.LoadAwareCPU		--> class for processors
+	cpu.ProcessingRate = 9446400 					--> properties of that class
+	cpu.LoadCost = 0.000000001
+
+	agent = br.ufba.lasid.jds.prototyping.hddss.Agent_AmoebaSequencer	--> class for agent
+	agent.DeltaMax = 100							--> properties of that class
+	agent.TS = 200
+	agent.PacketGenerationProb = 0.15
+
+	channel = br.ufba.lasid.jds.prototyping.hddss.ChannelLogNormal		--> class for communication channels between agents
+	channel.Mean = 10							--> properties of that class
+	channel.MinDelay = 1
+	channel.Std = 5
+
+	network = br.ufba.lasid.jds.prototyping.hddss.NetworkDeterministic	--> class for networking
+	network.ProcessingTime = .001						--> properties of that class
+	network.FIFO = true
+	network.TripBalance = 0.5
 
 <p>[5] FREITAS, A. E. S. and MACEDO, R. J. A. "A performance evaluation tool for hybrid and dynamic distributed systems". Operating Systems Review, v. 48, p. 11-18, 2014. Available at <a href="http://dx.doi.org/10.1145/2626401.2626404">http://dx.doi.org/10.1145/2626401.2626404</a> </p>
 </article>
@@ -868,3 +901,4 @@ channel[1].Distribution = normal(10.0,5.0)
   </body>
 </html>
 
+[5] FREITAS, A. E. S. and MACEDO, R. J. A. "A performance evaluation tool for hybrid and dynamic distributed systems". Operating Systems Review, v. 48, p. 11-18, 2014. Available at http://dx.doi.org/10.1145/2626401.2626404 
