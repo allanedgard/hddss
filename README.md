@@ -8,10 +8,13 @@ I) On Debian/Ubuntu Linux:
 
 1) Install a JAVA environment:
 
-	sudo apt-get install openjdk-7-*
-	sudo R CMD javareconf
-
+	sudo apt-get install openjdk-8-*
+	
 2) Install R environment, according to https://www.r-project.org/
+
+	sudo apt-get install r-base
+
+	sudo R CMD javareconf
 
 3) install rJava in R via R command line:
 
@@ -22,7 +25,9 @@ I) On Debian/Ubuntu Linux:
 	ln -s /usr/local/lib/R/site-library/rJava/jri/libjri.so /usr/local/lib/libjri.so
 
 	export R_HOME=/usr/lib/R
+	
 	export CLASSPATH=.:/usr/local/lib/R/site-library/rJava/jri
+	
 	export LD_LIBRARY_PATH=/usr/local/lib/R/site-library/rJava/jri:/usr/lib/R/lib:/usr/lib
 
 5) Run a test simulation, from hddss base directory:
@@ -43,8 +48,11 @@ II) On Windows
 4) Do some hacks to adjust environment variables (you should check the correct path to each case): 
 
 	In Computer - Properties - Advanced ... Environment Variables set 
+		
 		(a) R_HOME to the value indicated by R command R.home()
+		
 		(b) CLASSPATH to reference current directory and rJava folder, example: ".;C:\Users\ads\Documents\R\win-library\3.2\rJava\jri"		
+		
 		(c) JAVA_HOME to local of your java instalation, example "C:\Progra~1\Java\jdk1.8.0_51"
 	
 		(d) PATH to add R and rJava binaries, example: 	"<OLDPATH>;C:\Users\myUser\Documents\R\win-library\3.2\rJava\jri\i386;C:\Program Files\R\R-3.2.1\bin\i386"
