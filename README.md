@@ -65,9 +65,9 @@ III) Instalation Notes
 
 1) Structure of configuration file:
 
-	workdir = /repositorio/hddss/jds/examples/amoeba/ 	--> it references to the working directory (that is, the folder where scenario files are)
-	scenes = amoebaAC-80-10-HIGH.txt 			--> name of scenario files separated by commas
-	mode = simulation  					--> simulation for a simulation or prototype for running at real environment (prototype is broken for now)
+	workdir = /repositorio/hddss/jds/examples/amoeba/	--> it references to the working directory (that is, the folder where scenario files are)
+	scenes = amoebaAC-80-10-HIGH.txt			--> name of scenario files separated by commas
+	mode = simulation					--> simulation for a simulation or prototype for running at real environment (prototype is broken for now)
 
 2) Structure of a simulation file:
 
@@ -82,7 +82,7 @@ III) Instalation Notes
 	clock.Mode = s							--> properties of that class
 
 	cpu = br.ufba.lasid.jds.prototyping.hddss.LoadAwareCPU		--> class for processors
-	cpu.ProcessingRate = 9446400 					--> properties of that class
+	cpu.ProcessingRate = 9446400					--> properties of that class
 	cpu.LoadCost = 0.000000001
 
 	agent = br.ufba.lasid.jds.prototyping.hddss.Agent_AmoebaSequencer	--> class for agent
